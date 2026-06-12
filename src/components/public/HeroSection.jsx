@@ -15,8 +15,8 @@ export default function HeroSection() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const heroTitle = settings.hero_title || "Sua carga, no prazo certo.";
-  const heroSubtitle = settings.hero_subtitle || "Transporte de cargas com segurança, tecnologia e pontualidade. Mais de 20 anos de experiência conectando origens a destinos.";
+  const heroTitle = settings?.hero_title || "Sua carga, no prazo certo.";
+  const heroSubtitle = settings?.hero_subtitle || "Transporte de cargas com segurança, tecnologia e pontualidade. Mais de 20 anos de experiência conectando origens a destinos.";
 
   // Split last word for amber highlight
   const words = heroTitle.split(" ");

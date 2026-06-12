@@ -30,13 +30,13 @@ export default function PublicFooter() {
             </p>
             {/* Social links */}
             <div className="flex gap-3 mt-4">
-              {settings.social_instagram && (
+              {settings?.social_instagram && (
                 <a href={settings.social_instagram} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-velox-amber text-xs transition-colors">Instagram</a>
               )}
-              {settings.social_linkedin && (
+              {settings?.social_linkedin && (
                 <a href={settings.social_linkedin} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-velox-amber text-xs transition-colors">LinkedIn</a>
               )}
-              {settings.social_facebook && (
+              {settings?.social_facebook && (
                 <a href={settings.social_facebook} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-velox-amber text-xs transition-colors">Facebook</a>
               )}
             </div>
@@ -70,9 +70,9 @@ export default function PublicFooter() {
           <div>
             <h4 className="font-heading font-bold text-sm uppercase tracking-wider text-white/70 mb-4">Contato</h4>
             <div className="space-y-2.5 text-white/40 text-sm">
-              {settings.phone && <p>{settings.phone}</p>}
-              {settings.email && <p>{settings.email}</p>}
-              {settings.cnpj && <p>CNPJ: {settings.cnpj}</p>}
+              {settings?.phone && <p>{settings.phone}</p>}
+              {settings?.email && <p>{settings.email}</p>}
+              {settings?.cnpj && <p>CNPJ: {settings.cnpj}</p>}
             </div>
           </div>
         </div>
@@ -80,7 +80,7 @@ export default function PublicFooter() {
         {/* Divider + copyright */}
         <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-white/30 text-xs">
-            © {new Date().getFullYear()} {settings.company_name}. Todos os direitos reservados.
+            © {new Date().getFullYear()} {settings?.company_name || "Velox Transportadora"}. Todos os direitos reservados.
           </p>
           <div className="flex gap-4">
             <button onClick={() => setModal("privacy")} className="text-white/30 hover:text-velox-amber text-xs transition-colors">Política de Privacidade</button>

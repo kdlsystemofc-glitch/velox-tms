@@ -148,7 +148,7 @@ C:/vl/velox-tms/
 │   │   ├── query-client.js       # Configuração do React Query
 │   │   └── utils.js              # Utilitários (cn, etc.)
 │   ├── hooks/
-│   │   ├── useCompanySettings.js # Hook + cache em memória de CompanySettings
+│   │   ├── useCompanySettings.js # Hook + cache em memória de CompanySettings; sempre retorna objeto com SETTINGS_DEFAULTS — nunca undefined
 │   │   ├── useFileUpload.js      # Hook para upload de arquivos
 │   │   └── useFormValidation.js  # Hook para validação de formulários
 │   ├── utils/
@@ -266,12 +266,14 @@ C:/vl/velox-tms/
 
 ## 7. Variáveis de ambiente
 
-Arquivo: `.env.local` (nunca commitar)
+Arquivo: `.env` local (nunca commitar — listado no `.gitignore`)
 
 ```env
 VITE_SUPABASE_URL=https://[projeto].supabase.co
 VITE_SUPABASE_ANON_KEY=[chave_anon]
 ```
+
+**Produção (Vercel):** as variáveis devem ser configuradas manualmente em **Vercel → Project Settings → Environment Variables**. Elas **não** estão no repositório. Se não configuradas, o Supabase client cria com `undefined` e todas as queries falham silenciosamente — o site fica em branco.
 
 A chave da Google Maps API é armazenada no banco (`company_settings.google_maps_api_key`) e lida em runtime — não é uma variável de ambiente.
 

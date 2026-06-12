@@ -42,9 +42,9 @@ export default function ContactSection() {
     setSending(false);
   };
 
-  const phone = settings.phone;
-  const email = settings.email;
-  const address = settings.address;
+  const phone = settings?.phone;
+  const email = settings?.email;
+  const address = settings?.address;
 
   return (
     <section id="contato" className="py-24 bg-white">
