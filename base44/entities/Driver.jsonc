@@ -1,0 +1,130 @@
+{
+  "name": "Driver",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "cpf": {
+      "type": "string"
+    },
+    "cnh_number": {
+      "type": "string"
+    },
+    "cnh_category": {
+      "type": "string",
+      "enum": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "AB",
+        "AC",
+        "AD",
+        "AE"
+      ]
+    },
+    "cnh_expiry": {
+      "type": "string",
+      "format": "date"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "address": {
+      "type": "object",
+      "properties": {
+        "cep": {
+          "type": "string"
+        },
+        "street": {
+          "type": "string"
+        },
+        "number": {
+          "type": "string"
+        },
+        "complement": {
+          "type": "string"
+        },
+        "neighborhood": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        }
+      }
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "hire_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "motorista",
+        "ajudante",
+        "administrativo"
+      ],
+      "default": "motorista"
+    },
+    "base_salary": {
+      "type": "number"
+    },
+    "contract_type": {
+      "type": "string",
+      "enum": [
+        "clt",
+        "pj",
+        "diarista"
+      ]
+    },
+    "bank_info": {
+      "type": "object",
+      "properties": {
+        "bank": {
+          "type": "string"
+        },
+        "agency": {
+          "type": "string"
+        },
+        "account": {
+          "type": "string"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "away",
+        "terminated"
+      ],
+      "default": "active"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Linked system user ID"
+    }
+  },
+  "required": [
+    "name",
+    "cpf"
+  ]
+}

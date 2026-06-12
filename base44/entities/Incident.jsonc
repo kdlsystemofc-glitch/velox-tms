@@ -1,0 +1,70 @@
+{
+  "name": "Incident",
+  "type": "object",
+  "properties": {
+    "order_id": {
+      "type": "string"
+    },
+    "trip_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "avaria",
+        "atraso",
+        "tentativa_entrega",
+        "roubo",
+        "acidente",
+        "carga_recusada",
+        "outro"
+      ],
+      "description": "Tipo de ocorr\u00eancia"
+    },
+    "description": {
+      "type": "string"
+    },
+    "photo_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reported_by_name": {
+      "type": "string"
+    },
+    "reported_by_role": {
+      "type": "string",
+      "enum": [
+        "motorista",
+        "admin",
+        "operador"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "resolved"
+      ],
+      "default": "open"
+    },
+    "resolution_notes": {
+      "type": "string"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notify_client": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "order_id",
+    "type",
+    "description"
+  ]
+}

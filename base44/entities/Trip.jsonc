@@ -1,0 +1,171 @@
+{
+  "name": "Trip",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "planned"
+    },
+    "driver_id": {
+      "type": "string"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "truck_id": {
+      "type": "string"
+    },
+    "truck_plate": {
+      "type": "string"
+    },
+    "order_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "order_protocols": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "departure_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "arrival_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stops": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "departure",
+              "collection",
+              "delivery"
+            ]
+          },
+          "order_id": {
+            "type": "string"
+          },
+          "recipient_name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "arrived",
+              "completed"
+            ],
+            "default": "pending"
+          },
+          "arrived_at": {
+            "type": "string"
+          },
+          "completed_at": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "photo_url": {
+            "type": "string"
+          },
+          "nf_signed_url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "estimated_km": {
+      "type": "number"
+    },
+    "real_km": {
+      "type": "number"
+    },
+    "fuel_liters": {
+      "type": "number"
+    },
+    "fuel_cost": {
+      "type": "number"
+    },
+    "tolls_cost": {
+      "type": "number"
+    },
+    "other_costs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "total_revenue": {
+      "type": "number"
+    },
+    "total_cost": {
+      "type": "number"
+    },
+    "net_profit": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "user": {
+            "type": "string"
+          },
+          "photo_url": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "driver_id",
+    "truck_id"
+  ]
+}

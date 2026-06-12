@@ -1,0 +1,341 @@
+{
+  "name": "Order",
+  "type": "object",
+  "properties": {
+    "protocol": {
+      "type": "string",
+      "description": "Protocolo VLX-YYYY-NNNNN"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "client_cpf_cnpj": {
+      "type": "string"
+    },
+    "client_phone": {
+      "type": "string"
+    },
+    "client_email": {
+      "type": "string"
+    },
+    "requester_name": {
+      "type": "string",
+      "description": "Nome do respons\u00e1vel pelo agendamento"
+    },
+    "requester_role": {
+      "type": "string",
+      "description": "Cargo ou setor do respons\u00e1vel"
+    },
+    "preferred_contact": {
+      "type": "string",
+      "enum": [
+        "phone",
+        "whatsapp",
+        "email"
+      ],
+      "default": "whatsapp"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "confirmed",
+        "collecting",
+        "in_transit",
+        "delivered",
+        "cancelled"
+      ],
+      "default": "new"
+    },
+    "freight_type": {
+      "type": "string",
+      "enum": [
+        "dedicated",
+        "shared",
+        "urgent"
+      ],
+      "default": "shared"
+    },
+    "freight_payer": {
+      "type": "string",
+      "enum": [
+        "cif",
+        "fob"
+      ],
+      "default": "cif",
+      "description": "CIF = remetente paga, FOB = destinat\u00e1rio paga"
+    },
+    "transport_modal": {
+      "type": "string",
+      "enum": [
+        "road",
+        "urgent_road",
+        "air"
+      ],
+      "default": "road"
+    },
+    "payment_terms": {
+      "type": "string",
+      "enum": [
+        "after_delivery",
+        "monthly",
+        "7_days",
+        "15_days",
+        "30_days"
+      ],
+      "default": "after_delivery"
+    },
+    "cte_number": {
+      "type": "string",
+      "description": "N\u00famero do Conhecimento de Transporte Eletr\u00f4nico"
+    },
+    "origin": {
+      "type": "object",
+      "properties": {
+        "cep": {
+          "type": "string"
+        },
+        "street": {
+          "type": "string"
+        },
+        "number": {
+          "type": "string"
+        },
+        "complement": {
+          "type": "string"
+        },
+        "neighborhood": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        }
+      }
+    },
+    "collection_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "collection_time": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "afternoon",
+        "to_arrange"
+      ]
+    },
+    "collection_notes": {
+      "type": "string"
+    },
+    "recipients": {
+      "type": "array",
+      "description": "Lista de destinat\u00e1rios",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "cpf_cnpj": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "cep": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "complement": {
+            "type": "string"
+          },
+          "neighborhood": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "delivery_notes": {
+            "type": "string"
+          },
+          "delivery_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "collected",
+              "delivered",
+              "failed"
+            ],
+            "default": "pending"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nf_number": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "ncm": {
+                  "type": "string",
+                  "description": "C\u00f3digo NCM da mercadoria"
+                },
+                "package_type": {
+                  "type": "string"
+                },
+                "volumes": {
+                  "type": "number"
+                },
+                "weight_kg": {
+                  "type": "number"
+                },
+                "height_cm": {
+                  "type": "number"
+                },
+                "width_cm": {
+                  "type": "number"
+                },
+                "length_cm": {
+                  "type": "number"
+                },
+                "declared_value": {
+                  "type": "number"
+                },
+                "fragile": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "dangerous": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "nf_original_url": {
+                  "type": "string"
+                },
+                "nf_signed_url": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "total_volumes": {
+      "type": "number"
+    },
+    "total_weight_kg": {
+      "type": "number"
+    },
+    "total_declared_value": {
+      "type": "number"
+    },
+    "freight_value": {
+      "type": "number"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "pix",
+        "boleto",
+        "transfer",
+        "check",
+        "cash"
+      ]
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "overdue"
+      ],
+      "default": "pending"
+    },
+    "driver_id": {
+      "type": "string"
+    },
+    "truck_id": {
+      "type": "string"
+    },
+    "trip_id": {
+      "type": "string"
+    },
+    "general_notes": {
+      "type": "string"
+    },
+    "status_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "user": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "scheduled_truck_id": {
+      "type": "string"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "scheduled_start_time": {
+      "type": "string"
+    },
+    "scheduled_lunch_start": {
+      "type": "string"
+    },
+    "scheduled_lunch_end": {
+      "type": "string"
+    },
+    "scheduled_end_time": {
+      "type": "string"
+    },
+    "schedule_notes": {
+      "type": "string"
+    },
+    "schedule_status": {
+      "type": "string",
+      "enum": [
+        "unscheduled",
+        "scheduled",
+        "in_progress",
+        "done"
+      ],
+      "default": "unscheduled"
+    }
+  },
+  "required": [
+    "protocol",
+    "client_name"
+  ]
+}

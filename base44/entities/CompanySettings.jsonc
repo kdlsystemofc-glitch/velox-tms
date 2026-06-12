@@ -1,0 +1,290 @@
+{
+  "name": "CompanySettings",
+  "type": "object",
+  "properties": {
+    "company_name": {
+      "type": "string",
+      "default": "Velox Transportadora"
+    },
+    "cnpj": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "whatsapp": {
+      "type": "string"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "mission": {
+      "type": "string"
+    },
+    "vision": {
+      "type": "string"
+    },
+    "values": {
+      "type": "string"
+    },
+    "about_text": {
+      "type": "string"
+    },
+    "fleet_photo_url": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "social_instagram": {
+      "type": "string"
+    },
+    "social_linkedin": {
+      "type": "string"
+    },
+    "social_facebook": {
+      "type": "string"
+    },
+    "hero_title": {
+      "type": "string",
+      "default": "Sua carga, no prazo certo."
+    },
+    "hero_subtitle": {
+      "type": "string",
+      "default": "Transporte de cargas com seguran\u00e7a, tecnologia e pontualidade."
+    },
+    "google_maps_api_key": {
+      "type": "string",
+      "description": "Chave da API do Google Maps (Distance Matrix)"
+    },
+    "pricing": {
+      "type": "object",
+      "properties": {
+        "price_per_kg": {
+          "type": "number",
+          "default": 0.5
+        },
+        "price_per_km": {
+          "type": "number",
+          "default": 2.0
+        },
+        "fixed_fee": {
+          "type": "number",
+          "default": 50
+        },
+        "minimum_freight": {
+          "type": "number",
+          "default": 150
+        },
+        "gris_percent": {
+          "type": "number",
+          "default": 0
+        },
+        "ad_valorem_percent": {
+          "type": "number",
+          "default": 0
+        },
+        "tde_per_nf": {
+          "type": "number",
+          "default": 0
+        },
+        "tda_per_nf": {
+          "type": "number",
+          "default": 0
+        },
+        "toll_per_kg": {
+          "type": "number",
+          "default": 0
+        }
+      }
+    },
+    "route_pricing": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "origin_state": {
+            "type": "string"
+          },
+          "dest_state": {
+            "type": "string"
+          },
+          "price_per_kg": {
+            "type": "number"
+          },
+          "price_per_km": {
+            "type": "number"
+          },
+          "fixed_fee": {
+            "type": "number"
+          },
+          "minimum_freight": {
+            "type": "number"
+          },
+          "gris_percent": {
+            "type": "number"
+          },
+          "ad_valorem_percent": {
+            "type": "number"
+          },
+          "tde_per_nf": {
+            "type": "number"
+          },
+          "tda_per_nf": {
+            "type": "number"
+          },
+          "toll_per_kg": {
+            "type": "number"
+          },
+          "delivery_days": {
+            "type": "number"
+          },
+          "active": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      }
+    },
+    "maintenance_km_alerts": {
+      "type": "object",
+      "description": "Limiares de km para alertas de manuten\u00e7\u00e3o preventiva",
+      "properties": {
+        "oil_change_km": {
+          "type": "number",
+          "default": 20000
+        },
+        "general_review_km": {
+          "type": "number",
+          "default": 40000
+        },
+        "tire_change_km": {
+          "type": "number",
+          "default": 60000
+        }
+      }
+    },
+    "km_per_day": {
+      "type": "number",
+      "default": 600
+    },
+    "delivery_days_table": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string"
+          },
+          "days": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "alert_days_cnh": {
+      "type": "number",
+      "default": 60
+    },
+    "alert_days_crlv": {
+      "type": "number",
+      "default": 60
+    },
+    "alert_days_insurance": {
+      "type": "number",
+      "default": 30
+    },
+    "tax_rate_percent": {
+      "type": "number",
+      "default": 5
+    },
+    "monthly_depreciation": {
+      "type": "number",
+      "default": 800
+    },
+    "service_type": {
+      "type": "string",
+      "enum": [
+        "dedicated_only",
+        "fractional",
+        "both"
+      ],
+      "default": "dedicated_only"
+    },
+    "coverage_type": {
+      "type": "string",
+      "enum": [
+        "states",
+        "cities",
+        "cep_range"
+      ]
+    },
+    "coverage_states": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "coverage_cities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "coverage_cep_ranges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "coverage_message": {
+      "type": "string",
+      "default": "Infelizmente n\u00e3o atendemos esta regi\u00e3o no momento."
+    },
+    "min_advance_days": {
+      "type": "number",
+      "default": 2
+    },
+    "working_days": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "default": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    }
+  },
+  "required": [
+    "company_name"
+  ]
+}

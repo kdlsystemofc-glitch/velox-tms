@@ -1,0 +1,54 @@
+{
+  "name": "Alert",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "cnh_expiring",
+        "cnh_expired",
+        "crlv_expiring",
+        "crlv_expired",
+        "insurance_expiring",
+        "insurance_expired",
+        "tachograph_expiring",
+        "maintenance_due",
+        "order_no_driver",
+        "bill_due",
+        "bill_overdue",
+        "oil_maintenance_km",
+        "review_km"
+      ]
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "critical"
+      ],
+      "default": "warning"
+    },
+    "message": {
+      "type": "string"
+    },
+    "reference_id": {
+      "type": "string"
+    },
+    "reference_type": {
+      "type": "string"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "resolved": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "type",
+    "message"
+  ]
+}

@@ -1,0 +1,181 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "C\u00f3digo sequencial do cliente (CLI00001)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "pj",
+        "pf"
+      ],
+      "default": "pj"
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Raz\u00e3o Social ou Nome"
+    },
+    "cpf_cnpj": {
+      "type": "string"
+    },
+    "state_registration": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "address": {
+      "type": "object",
+      "properties": {
+        "cep": {
+          "type": "string"
+        },
+        "street": {
+          "type": "string"
+        },
+        "number": {
+          "type": "string"
+        },
+        "complement": {
+          "type": "string"
+        },
+        "neighborhood": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        }
+      }
+    },
+    "contacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "whatsapp": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "additional_addresses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "cep": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "complement": {
+            "type": "string"
+          },
+          "neighborhood": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "sede",
+              "coleta",
+              "entrega"
+            ]
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "client_type": {
+      "type": "string",
+      "enum": [
+        "recorrente",
+        "eventual"
+      ],
+      "default": "eventual"
+    },
+    "billing_type": {
+      "type": "string",
+      "enum": [
+        "per_trip",
+        "monthly"
+      ],
+      "default": "per_trip",
+      "description": "Por viagem ou faturamento mensal"
+    },
+    "billing_day": {
+      "type": "number",
+      "description": "Dia do m\u00eas para fechamento da fatura (1-28)"
+    },
+    "payment_term_days": {
+      "type": "number",
+      "description": "Prazo em dias ap\u00f3s o fechamento (ex: 30)"
+    },
+    "custom_pricing": {
+      "type": "object",
+      "properties": {
+        "price_per_kg": {
+          "type": "number"
+        },
+        "price_per_km": {
+          "type": "number"
+        },
+        "fixed_fee": {
+          "type": "number"
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "company_name",
+    "cpf_cnpj"
+  ]
+}

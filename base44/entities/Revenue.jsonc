@@ -1,0 +1,52 @@
+{
+  "name": "Revenue",
+  "type": "object",
+  "properties": {
+    "order_id": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "receivable",
+        "received",
+        "overdue"
+      ],
+      "default": "receivable"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "pix",
+        "boleto",
+        "transfer",
+        "check",
+        "cash"
+      ]
+    },
+    "received_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "amount",
+    "due_date"
+  ]
+}

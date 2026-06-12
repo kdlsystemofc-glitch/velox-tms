@@ -1,0 +1,79 @@
+{
+  "name": "Supplier",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Raz\u00e3o Social / Nome"
+    },
+    "code": {
+      "type": "string",
+      "description": "C\u00f3digo sequencial do fornecedor (FOR00001)"
+    },
+    "cnpj_cpf": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "fuel",
+        "maintenance",
+        "tires",
+        "insurance",
+        "other"
+      ],
+      "default": "maintenance"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "Nome do contato principal (legado)"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "whatsapp": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "contacts": {
+      "type": "array",
+      "description": "Contatos do fornecedor",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "whatsapp": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

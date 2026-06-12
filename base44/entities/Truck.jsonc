@@ -1,0 +1,154 @@
+{
+  "name": "Truck",
+  "type": "object",
+  "properties": {
+    "plate": {
+      "type": "string",
+      "description": "Placa do ve\u00edculo"
+    },
+    "model": {
+      "type": "string"
+    },
+    "manufacturer": {
+      "type": "string"
+    },
+    "year": {
+      "type": "number"
+    },
+    "truck_type": {
+      "type": "string",
+      "enum": [
+        "truck",
+        "carreta",
+        "vuc",
+        "toco",
+        "bitruck",
+        "outro"
+      ]
+    },
+    "capacity_kg": {
+      "type": "number",
+      "description": "Capacidade de carga em kg"
+    },
+    "dimensions": {
+      "type": "object",
+      "properties": {
+        "length_m": {
+          "type": "number"
+        },
+        "width_m": {
+          "type": "number"
+        },
+        "height_m": {
+          "type": "number"
+        }
+      }
+    },
+    "renavam": {
+      "type": "string"
+    },
+    "chassis": {
+      "type": "string"
+    },
+    "color": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "on_route",
+        "maintenance",
+        "inactive"
+      ],
+      "default": "available"
+    },
+    "main_driver_id": {
+      "type": "string",
+      "description": "ID do motorista titular"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "crlv_url": {
+      "type": "string"
+    },
+    "crlv_expiry": {
+      "type": "string",
+      "format": "date"
+    },
+    "insurance_url": {
+      "type": "string"
+    },
+    "insurance_expiry": {
+      "type": "string",
+      "format": "date"
+    },
+    "tachograph_last": {
+      "type": "string",
+      "format": "date"
+    },
+    "tachograph_next": {
+      "type": "string",
+      "format": "date"
+    },
+    "total_km": {
+      "type": "number",
+      "default": 0,
+      "description": "Quilometragem total (od\u00f4metro)"
+    },
+    "km_alert_oil": {
+      "type": "number",
+      "description": "Km para alerta de troca de \u00f3leo (ex: 20000)"
+    },
+    "km_alert_review": {
+      "type": "number",
+      "description": "Km para alerta de revis\u00e3o geral (ex: 40000)"
+    },
+    "km_alert_tires": {
+      "type": "number",
+      "description": "Km para alerta de troca de pneus (ex: 60000)"
+    },
+    "maintenance_history": {
+      "type": "array",
+      "description": "Hist\u00f3rico de manuten\u00e7\u00f5es do ve\u00edculo",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "km": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "provider_id": {
+            "type": "string"
+          },
+          "next_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "created_at": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "plate"
+  ]
+}

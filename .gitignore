@@ -1,0 +1,30 @@
+# Dependências
+node_modules/
+dist/
+.dist/
+
+# Variáveis de ambiente (NUNCA commitar o .env com valores reais)
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+/dist
+/build

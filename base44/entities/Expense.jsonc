@@ -1,0 +1,88 @@
+{
+  "name": "Expense",
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string",
+      "enum": [
+        "fuel",
+        "maintenance",
+        "tires",
+        "tolls",
+        "salaries",
+        "taxes",
+        "insurance",
+        "rent",
+        "administrative",
+        "marketing",
+        "other"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "pix",
+        "boleto",
+        "transfer",
+        "check",
+        "cash",
+        "card"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "installment"
+      ],
+      "default": "pending"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "paid_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "trip_id": {
+      "type": "string"
+    },
+    "truck_id": {
+      "type": "string"
+    },
+    "driver_id": {
+      "type": "string"
+    },
+    "supplier_id": {
+      "type": "string",
+      "description": "ID do fornecedor"
+    },
+    "supplier_name": {
+      "type": "string",
+      "description": "Nome do fornecedor (desnormalizado)"
+    },
+    "receipt_url": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "category",
+    "amount",
+    "date"
+  ]
+}

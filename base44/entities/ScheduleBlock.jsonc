@@ -1,0 +1,41 @@
+{
+  "name": "ScheduleBlock",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data bloqueada ou parcialmente dispon\u00edvel"
+    },
+    "truck_id": {
+      "type": "string",
+      "description": "Se null: bloqueia todas as carretas. Se preenchido: bloqueia s\u00f3 esta carreta"
+    },
+    "block_type": {
+      "type": "string",
+      "enum": [
+        "full_block",
+        "partial",
+        "maintenance",
+        "holiday"
+      ],
+      "description": "Tipo do bloqueio"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Motivo do bloqueio (uso interno)"
+    },
+    "remaining_kg": {
+      "type": "number",
+      "description": "kg ainda dispon\u00edveis. Se null: completamente bloqueado"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Nome/ID do usu\u00e1rio que criou o bloqueio"
+    }
+  },
+  "required": [
+    "date",
+    "block_type"
+  ]
+}
