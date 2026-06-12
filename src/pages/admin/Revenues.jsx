@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { todayLocalISO } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -122,7 +123,7 @@ export default function Revenues() {
                     </td>
                     <td className="py-3 px-4 text-right">
                       {r.status === "receivable" && (
-                        <Button variant="ghost" size="sm" onClick={() => markReceivedMutation.mutate({ id: r.id, date: new Date().toISOString().split("T")[0] })} className="h-7 text-xs gap-1 text-green-600">
+                        <Button variant="ghost" size="sm" onClick={() => markReceivedMutation.mutate({ id: r.id, date: todayLocalISO() })} className="h-7 text-xs gap-1 text-green-600">
                           <CheckCircle2 className="w-3 h-3" /> Recebido
                         </Button>
                       )}

@@ -30,10 +30,6 @@ function buildCalendarDays(settings) {
     if (!isNaN(parsed) && parsed >= 0) minAdvance = parsed;
   }
 
-  // Log de diagnóstico (remover após confirmar)
-  console.log("[VeloxDatePicker] working_days finais:", workingDays);
-  console.log("[VeloxDatePicker] minAdvance final:", minAdvance);
-
   // Calcular a primeira data disponível
   let firstAvailable = null;
   {
@@ -63,8 +59,6 @@ function buildCalendarDays(settings) {
       }
     }
   }
-
-  console.log("[VeloxDatePicker] Primeira data disponível:", firstAvailable?.toLocaleDateString("pt-BR"));
 
   // Gerar os próximos 42 dias a partir de amanhã
   const days = [];

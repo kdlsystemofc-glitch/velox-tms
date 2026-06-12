@@ -155,7 +155,10 @@ C:/vl/velox-tms/
 │   │   ├── freightCalculator.js  # Motor de cálculo de frete (calcCubicWeight, calculateFreightFull)
 │   │   ├── availabilityChecker.js # Disponibilidade de frota por data
 │   │   ├── coverageChecker.js    # Verificação de área de cobertura
+│   │   ├── dateUtils.js          # Datas timezone-safe (todayLocalISO, toLocalISO, parseLocalDate, formatDateBR) — USAR SEMPRE para datas YYYY-MM-DD
+│   │   ├── revenueHelper.js      # ensureRevenueForOrder (anti-duplicação) e cancelRevenuesForOrder (estorno)
 │   │   ├── generateDeliveryReceipt.js # Geração de PDF de comprovante
+│   │   ├── generateTripManifest.js # Romaneio de carga (manifesto de viagem) em PDF
 │   │   ├── routePlanner.js       # Planejamento de rotas
 │   │   └── index.ts              # Re-exports de utils
 │   ├── pages/
@@ -337,12 +340,29 @@ git push
 
 - Imports: `@/` aponta para `src/` (alias Vite)
 - Queries: `useQuery` com `queryKey` descritivo + `staleTime` quando cacheável
-- Mutações: `useMutation` com `onSuccess` invalidando queries relacionadas
+- Mutações: `useMutation` com `onSuccess` invalidando queries relacionadas; sempre incluir `onError` com toast
 - Formulários: state local com `useState`, sem react-hook-form
 - Toasts: `useToast()` do shadcn/ui, duração padrão 5000ms
 - Datas: `date-fns` com locale `ptBR`
 - Valores monetários: `Number.toLocaleString("pt-BR", { minimumFractionDigits: 2 })`
 - CEP: busca automática via ViaCEP `https://viacep.com.br/ws/{cep}/json/`
+
+### Regras obrigatórias (lições de bugs corrigidos)
+
+1. **Datas de negócio (`YYYY-MM-DD`) — NUNCA usar `toISOString()` nem `new Date("YYYY-MM-DD")` direto.**
+   `toISOString()` devolve UTC (após ~21h no Brasil vira o dia seguinte) e `new Date("YYYY-MM-DD")` interpreta como UTC-midnight (exibe -1 dia). Usar `src/utils/dateUtils.js`: `todayLocalISO()`, `toLocalISO(date)`, `parseLocalDate(str)`, `formatDateBR(str)`.
+
+2. **Receita de frete — nunca criar `Revenue` direto na confirmação de pedido.**
+   Usar `ensureRevenueForOrder(order, { amount, dueDate, paymentMethod })` de `src/utils/revenueHelper.js` (verifica duplicata por `order_id`). No cancelamento do pedido, chamar `cancelRevenuesForOrder(orderId)` para estornar.
+
+3. **Protocolo — `base44.functions.invoke("generateProtocol")` retorna `{ data: { protocol } }`.**
+   Implementação em `supabaseClient.js`: sequencial por ano (consulta o maior `VLX-{ano}-NNNNN` no banco e incrementa), com fallback aleatório + verificação de colisão.
+
+4. **Páginas públicas não devem carregar dados de outras entidades** (pedidos, frota) — privacidade e performance.
+
+### Migration pendente de aplicação no Supabase
+
+`supabase/migrations/20260612_revenue_status_cancelled.sql` — adiciona `'cancelled'` ao CHECK de `revenues.status`. Enquanto não aplicada, o estorno faz fallback para DELETE da receita.
 
 ---
 

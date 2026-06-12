@@ -13,6 +13,7 @@ import { NumericInput } from "@/components/shared/NumericInput";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { calculateFreightFull } from "@/utils/freightCalculator";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { todayLocalISO } from "@/utils/dateUtils";
 
 const emptyItem = {
   nf_number: "", description: "", package_type: "caixa", volumes: 1,
@@ -164,7 +165,7 @@ export default function NewOrder() {
     if (submittingRef.current) return;
     submittingRef.current = true;
     clearAll();
-    const today = new Date().toISOString().split("T")[0];
+    const today = todayLocalISO();
     const isValid = validate({
       client_name: {
         condition: !form.client_name.trim() || form.client_name.trim().length < 3,
@@ -197,8 +198,16 @@ export default function NewOrder() {
     });
     if (!isValid) { submittingRef.current = false; return; }
 
-    const { data } = await base44.functions.invoke("generateProtocol", {});
-    const protocol = data.protocol;
+    let protocol;
+    try {
+      const { data } = await base44.functions.invoke("generateProtocol", {});
+      protocol = data?.protocol;
+      if (!protocol) throw new Error("Protocolo vazio");
+    } catch {
+      submittingRef.current = false;
+      toast({ title: "Erro ao gerar protocolo", description: "Verifique sua conexão e tente novamente.", variant: "destructive" });
+      return;
+    }
 
     // Helper: converte string pt-BR "1.234,56" OU en-US "1114.50" para número
     const parseBR = (v) => {

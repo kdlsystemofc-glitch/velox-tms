@@ -36,10 +36,15 @@ export default function ContactSection() {
     if (Object.keys(e2).length > 0) { setErrors(e2); return; }
     setErrors({});
     setSending(true);
-    await base44.entities.ContactMessage.create({ name: form.name, email: form.email, phone: form.phone, message: form.message, read: false });
-    toast({ title: "Mensagem enviada!", description: "Entraremos em contato em breve." });
-    setForm({ name: "", email: "", phone: "", message: "" });
-    setSending(false);
+    try {
+      await base44.entities.ContactMessage.create({ name: form.name, email: form.email, phone: form.phone, message: form.message, read: false });
+      toast({ title: "Mensagem enviada!", description: "Entraremos em contato em breve." });
+      setForm({ name: "", email: "", phone: "", message: "" });
+    } catch {
+      toast({ title: "Erro ao enviar mensagem", description: "Verifique sua conexão e tente novamente.", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
   };
 
   const phone = settings?.phone;

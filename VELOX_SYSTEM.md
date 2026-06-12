@@ -245,11 +245,16 @@
 | `amount` | numeric | — |
 | `due_date` | date | Vencimento |
 | `received_date` | date | Data de recebimento efetivo |
-| `status` | text | `receivable` / `received` / `overdue` |
+| `status` | text | `receivable` / `received` / `overdue` / `cancelled` (estorno) |
 | `payment_method` | text | `pix` / `boleto` / `transfer` / `cash` |
 | `order_id` | uuid FK → orders | — |
 | `client_id` | uuid FK → clients | — |
 | `created_date` | timestamptz | — |
+
+**Regras de negócio da receita de frete:**
+- Criada automaticamente na confirmação do pedido via `ensureRevenueForOrder()` — **uma única receita ativa por pedido** (verificação por `order_id` evita duplicatas entre Agenda, Detalhe do Pedido e programação automática).
+- Ao **cancelar/recusar** um pedido, as receitas pendentes (`receivable`/`overdue`) são estornadas para `cancelled` via `cancelRevenuesForOrder()`. Receitas já `received` não são tocadas.
+- O cancelamento de pedido pelo painel exige **motivo**, gravado no `status_history`.
 
 ---
 
@@ -412,9 +417,9 @@ Total    = MAX(subtotal, minimum_freight)
 
 ### 4.2 Protocolo de pedido
 
-Formato: `VLX-{ano}-{5 dígitos aleatórios}`  
-Exemplo: `VLX-2026-47291`  
-Gerado pela função `generateProtocol()` em `supabaseClient.js`.
+Formato: `VLX-{ano}-{NNNNN}` (sequencial por ano, 5 dígitos com zeros à esquerda)  
+Exemplo: `VLX-2026-00042`  
+Gerado pela função `generateProtocol()` em `supabaseClient.js`: consulta o maior protocolo do ano no banco e incrementa. Fallback aleatório com verificação de colisão se a consulta falhar. Retorna `{ data: { protocol } }`.
 
 ### 4.3 Fluxo de status de pedido
 
@@ -574,6 +579,13 @@ Prioridade:
 - Simulador de carregamento de baú
 - Configurações completas (preços, cobertura, agendamento, rotas por corredor)
 - RLS no banco — dados protegidos por autenticação
+- Romaneio de carga (manifesto de viagem) em PDF
+- Protocolo sequencial único por ano
+- Receita automática anti-duplicação + estorno no cancelamento (com motivo obrigatório)
+- KPIs do dashboard clicáveis (navegam para listas filtradas)
+- Datas timezone-safe em todo o fluxo (utils/dateUtils.js)
+
+> Roadmap completo com análise de mercado: ver `VELOX_ROADMAP.md`.
 
 ### 🔴 Pendente / Não implementado
 - Integração GPS real-time (MapPage tem placeholder)

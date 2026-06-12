@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { format, addDays, startOfWeek, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { todayLocalISO, toLocalISO } from "@/utils/dateUtils";
+import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
 
 function suggestTruckForOrder(order, trucks, existingOrders) {
   const targetDate = order.collection_date;
@@ -50,7 +52,7 @@ export default function AgendaPage() {
   const [scheduleOrder, setScheduleOrder] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({ truck_id: "", date: "", freight_value: "", payment_method: "pix" });
   const [showSmartModal, setShowSmartModal] = useState(false);
-  const [smartDate, setSmartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [smartDate, setSmartDate] = useState(todayLocalISO());
 
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 300) });
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
@@ -71,31 +73,35 @@ export default function AgendaPage() {
         payment_method: form.payment_method || undefined,
         status_history: [...(order.status_history || []), { status: "confirmed", timestamp: new Date().toISOString(), user: "Admin", note: "Confirmado via Programação" }],
       });
-      if (fv > 0) {
-        await base44.entities.Revenue.create({
-          order_id: order.id,
-          description: `Frete ${order.protocol} — ${order.client_name}`,
-          amount: fv,
-          due_date: form.date || order.collection_date || new Date().toISOString().split("T")[0],
-          status: "receivable",
-          payment_method: form.payment_method || undefined,
-          client_id: order.client_id || undefined,
-        });
-      }
+      await ensureRevenueForOrder(order, {
+        amount: fv,
+        dueDate: form.date || order.collection_date || todayLocalISO(),
+        paymentMethod: form.payment_method,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["revenues"] });
       setScheduleOrder(null);
       toast({ title: "Pedido confirmado e programado!" });
+    },
+    onError: (e) => {
+      toast({ title: "Erro ao confirmar pedido", description: e?.message || "Tente novamente.", variant: "destructive" });
     },
   });
 
   const rejectMutation = useMutation({
-    mutationFn: (order) => base44.entities.Order.update(order.id, {
-      status: "cancelled",
-      status_history: [...(order.status_history || []), { status: "cancelled", timestamp: new Date().toISOString(), user: "Admin", note: "Recusado" }],
-    }),
+    mutationFn: async (order) => {
+      await base44.entities.Order.update(order.id, {
+        status: "cancelled",
+        status_history: [...(order.status_history || []), { status: "cancelled", timestamp: new Date().toISOString(), user: "Admin", note: "Recusado" }],
+      });
+      await cancelRevenuesForOrder(order.id);
+    },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["orders"] }); toast({ title: "Pedido recusado." }); },
+    onError: (e) => {
+      toast({ title: "Erro ao recusar pedido", description: e?.message || "Tente novamente.", variant: "destructive" });
+    },
   });
 
   const openSchedule = (order) => {
@@ -277,35 +283,36 @@ export default function AgendaPage() {
               targetDate={smartDate}
               onClose={() => setShowSmartModal(false)}
               onConfirm={async (plan) => {
-                for (const slot of plan) {
-                  for (const order of slot.orders) {
-                    const est = calculateFreight(order.total_weight_kg, null, settings);
-                    await base44.entities.Order.update(order.id, {
-                      status: "confirmed",
-                      scheduled_truck_id: slot.truck.id,
-                      scheduled_date: smartDate,
-                      freight_value: est || 0,
-                      status_history: [...(order.status_history || []), {
+                try {
+                  for (const slot of plan) {
+                    for (const order of slot.orders) {
+                      const est = calculateFreight(order.total_weight_kg, null, settings);
+                      await base44.entities.Order.update(order.id, {
                         status: "confirmed",
-                        timestamp: new Date().toISOString(),
-                        user: "Sistema",
-                        note: "Programado automaticamente pelo sistema",
-                      }],
-                    });
-                    if (est > 0) {
-                      await base44.entities.Revenue.create({
-                        order_id: order.id,
-                        description: `Frete ${order.protocol} — ${order.client_name}`,
+                        scheduled_truck_id: slot.truck.id,
+                        scheduled_date: smartDate,
+                        freight_value: est || 0,
+                        status_history: [...(order.status_history || []), {
+                          status: "confirmed",
+                          timestamp: new Date().toISOString(),
+                          user: "Sistema",
+                          note: "Programado automaticamente pelo sistema",
+                        }],
+                      });
+                      await ensureRevenueForOrder(order, {
                         amount: est,
-                        due_date: smartDate,
-                        status: "receivable",
-                        payment_method: order.payment_method || "pix",
+                        dueDate: smartDate,
+                        paymentMethod: order.payment_method || "pix",
                       });
                     }
                   }
+                  queryClient.invalidateQueries({ queryKey: ["orders"] });
+                  queryClient.invalidateQueries({ queryKey: ["revenues"] });
+                  toast({ title: `${plan.reduce((s, p) => s + p.orders.length, 0)} pedidos programados!` });
+                } catch (e) {
+                  toast({ title: "Erro na programação automática", description: e?.message || "Alguns pedidos podem não ter sido programados.", variant: "destructive" });
+                  queryClient.invalidateQueries({ queryKey: ["orders"] });
                 }
-                queryClient.invalidateQueries({ queryKey: ["orders"] });
-                toast({ title: `${plan.reduce((s, p) => s + p.orders.length, 0)} pedidos programados!` });
                 setShowSmartModal(false);
               }}
             />
@@ -445,7 +452,7 @@ function WeekCalendar({ orders, trucks }) {
                   <p className="text-muted-foreground">{(truck.capacity_kg || 0).toLocaleString("pt-BR")} kg</p>
                 </td>
                 {days.map((day, di) => {
-                  const dayStr = day.toISOString().split("T")[0];
+                  const dayStr = toLocalISO(day);
                   const dayOrders = orders.filter(o => o.scheduled_truck_id === truck.id && o.scheduled_date === dayStr);
                   const usedKg = dayOrders.reduce((s, o) => s + (o.total_weight_kg || 0), 0);
                   const pct = truck.capacity_kg > 0 ? (usedKg / truck.capacity_kg) * 100 : 0;

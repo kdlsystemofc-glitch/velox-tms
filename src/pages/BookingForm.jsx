@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { todayLocalISO } from "@/utils/dateUtils";
 import { isAddressInCoverage } from "@/utils/coverageChecker";
 import PublicNavbar from "@/components/public/PublicNavbar";
 import PublicFooter from "@/components/public/PublicFooter";
@@ -44,19 +44,7 @@ export default function BookingForm() {
   const [loadingCep, setLoadingCep] = useState(false);
   const { errors, validate, clearError, clearAll } = useFormValidation();
   const { settings } = useCompanySettings();
-
-  const { data: trucks = [] } = useQuery({
-    queryKey: ["trucks-public"],
-    queryFn: () => base44.entities.Truck.list(),
-  });
-  const { data: allOrders = [] } = useQuery({
-    queryKey: ["orders-public"],
-    queryFn: () => base44.entities.Order.list("-created_date", 200),
-  });
-  const { data: scheduleBlocks = [] } = useQuery({
-    queryKey: ["schedule-blocks-public"],
-    queryFn: () => base44.entities.ScheduleBlock.list("-date", 100),
-  });
+  const [submitError, setSubmitError] = useState(null);
 
   const [clientFoundFeedback, setClientFoundFeedback] = useState(false);
 
@@ -248,7 +236,7 @@ export default function BookingForm() {
       });
     }
     if (currentStep === 2) {
-      const today = new Date().toISOString().split("T")[0];
+      const today = todayLocalISO();
       const rules = {
         origin_cep: {
           condition: form.origin_cep.replace(/\D/g, "").length !== 8,
@@ -310,10 +298,13 @@ export default function BookingForm() {
 
   const handleSubmit = async () => {
     setSubmitting(true);
+    setSubmitError(null);
     const totals = getTotals();
 
+    try {
     const { data } = await base44.functions.invoke("generateProtocol", {});
-    const proto = data.protocol;
+    const proto = data?.protocol;
+    if (!proto) throw new Error("Não foi possível gerar o protocolo. Tente novamente.");
 
     await base44.entities.Order.create({
       protocol: proto,
@@ -351,7 +342,11 @@ export default function BookingForm() {
 
     setProtocol(proto);
     setSuccess(true);
-    setSubmitting(false);
+    } catch (e) {
+      setSubmitError(e?.message || "Erro ao enviar a solicitação. Verifique sua conexão e tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const steps = [
@@ -468,6 +463,14 @@ export default function BookingForm() {
                 {step === 5 && <Step5 form={form} totals={getTotals()} settings={settings} />}
               </motion.div>
             </AnimatePresence>
+
+            {/* Erro de envio */}
+            {submitError && step === 5 && (
+              <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-red-700">{submitError}</p>
+              </div>
+            )}
 
             {/* Navigation */}
             <div className="flex justify-between mt-8 pt-6 border-t border-gray-100">

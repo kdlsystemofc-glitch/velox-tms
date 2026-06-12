@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { todayLocalISO } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,7 +67,7 @@ export default function Expenses() {
 
   const openPayModal = (e) => {
     setPayingExpense(e);
-    setPayForm({ paid_date: new Date().toISOString().split("T")[0], payment_method: "pix", receipt_url: "" });
+    setPayForm({ paid_date: todayLocalISO(), payment_method: "pix", receipt_url: "" });
   };
 
   const confirmPayment = async () => {

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import KPICard from "@/components/admin/KPICard";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { useAuth } from "@/lib/AuthContext";
+import { toLocalISO, todayLocalISO } from "@/utils/dateUtils";
 import { format, addDays, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -47,12 +48,12 @@ export default function Dashboard() {
   }, []);
 
   const now = new Date();
+  const todayStr = todayLocalISO();
 
   // KPIs linha 1
   const newOrders = orders.filter(o => o.status === "new");
   const collectingToday = orders.filter(o =>
-    o.status === "collecting" && o.collection_date &&
-    new Date(o.collection_date).toDateString() === now.toDateString()
+    o.status === "collecting" && o.collection_date === todayStr
   );
   const deliveredToday = orders.filter(o => {
     if (o.status !== "delivered") return false;
@@ -70,7 +71,7 @@ export default function Dashboard() {
   // Programação da semana (7 dias a partir de hoje)
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = addDays(now, i);
-    const dayStr = d.toISOString().split("T")[0];
+    const dayStr = toLocalISO(d);
     const dayOrders = orders.filter(o => o.collection_date === dayStr && o.status !== "cancelled");
     const availableTrucks = trucks.filter(t => t.status === "available").length;
     const totalTrucks = trucks.filter(t => t.status !== "inactive").length;
@@ -164,6 +165,7 @@ export default function Dashboard() {
           icon={Package}
           color="bg-blue-500"
           subtitle="Aguardando confirmação"
+          to="/admin/agenda"
         />
         <KPICard
           title="Em Coleta Hoje"
@@ -171,6 +173,7 @@ export default function Dashboard() {
           icon={Truck}
           color="bg-velox-amber"
           subtitle="Coletas agendadas para hoje"
+          to="/admin/coletas?status=collecting"
         />
         <KPICard
           title="Entregues Hoje"
@@ -178,6 +181,7 @@ export default function Dashboard() {
           icon={CheckCircle2}
           color="bg-green-500"
           subtitle="Confirmadas hoje"
+          to="/admin/coletas?status=delivered"
         />
         <KPICard
           title="Alertas Ativos"
@@ -185,6 +189,7 @@ export default function Dashboard() {
           icon={Bell}
           color={alerts.length > 0 ? "bg-red-500" : "bg-gray-400"}
           subtitle={alerts.length > 0 ? `${criticalAlerts.length} crítico(s)` : "Tudo em ordem"}
+          to="/admin/config"
         />
       </div>
 
@@ -197,6 +202,7 @@ export default function Dashboard() {
             icon={DollarSign}
             color="bg-green-500"
             subtitle="Receitas pendentes"
+            to="/admin/financeiro?aba=receitas"
           />
           <KPICard
             title="A Pagar"
@@ -204,6 +210,7 @@ export default function Dashboard() {
             icon={DollarSign}
             color="bg-red-500"
             subtitle="Despesas pendentes"
+            to="/admin/financeiro?aba=despesas"
           />
         </div>
       )}

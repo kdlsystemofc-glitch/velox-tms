@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { todayLocalISO } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -91,7 +92,7 @@ export default function TruckDetailPage() {
           category: "maintenance",
           description: `Manutenção (${maintForm.type}) — ${truck.plate}: ${maintForm.description || ""}`.trim(),
           amount: maintAmount,
-          date: maintForm.date || new Date().toISOString().split("T")[0],
+          date: maintForm.date || todayLocalISO(),
           status: "pending",
           truck_id: truck.id,
           notes: `Fornecedor: ${maintForm.provider || "não informado"}. Confirme a forma de pagamento em Financeiro → Despesas.`,

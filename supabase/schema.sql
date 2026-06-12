@@ -249,7 +249,7 @@ CREATE TABLE IF NOT EXISTS revenues (
   description TEXT,
   amount NUMERIC NOT NULL,
   due_date DATE NOT NULL,
-  status TEXT DEFAULT 'receivable' CHECK (status IN ('receivable','received','overdue')),
+  status TEXT DEFAULT 'receivable' CHECK (status IN ('receivable','received','overdue','cancelled')),
   payment_method TEXT CHECK (payment_method IN ('pix','boleto','transfer','check','cash')),
   received_date DATE,
   client_id UUID REFERENCES clients(id),

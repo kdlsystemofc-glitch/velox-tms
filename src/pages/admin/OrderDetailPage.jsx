@@ -20,6 +20,8 @@ import FileUploadButton from "@/components/shared/FileUploadButton";
 import { calculateFreight, calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
 import { FreightBreakdown } from "@/components/shared/FreightBreakdown";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { todayLocalISO, formatDateBR } from "@/utils/dateUtils";
+import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -46,6 +48,7 @@ export default function OrderDetailPage() {
   const [paymentTerms, setPaymentTerms] = useState("after_delivery");
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
   const [cte, setCte] = useState("");
   const [showDistanceModal, setShowDistanceModal] = useState(false);
   const [distanceInfo, setDistanceInfo] = useState(null);
@@ -102,7 +105,7 @@ export default function OrderDetailPage() {
   const currentStep = STATUS_FLOW.indexOf(order.status);
   const nextAction = NEXT_ACTION[order.status];
 
-  const handleStatusChange = async (newStatus) => {
+  const handleStatusChange = async (newStatus, note) => {
     const history = order.status_history || [];
     await updateMutation.mutateAsync({
       status: newStatus,
@@ -110,9 +113,20 @@ export default function OrderDetailPage() {
         status: newStatus,
         timestamp: new Date().toISOString(),
         user: "Admin",
-        note: `Status alterado para ${STATUS_LABELS[newStatus]}`,
+        note: note || `Status alterado para ${STATUS_LABELS[newStatus]}`,
       }],
     });
+
+    // Estornar receitas pendentes ao cancelar o pedido
+    if (newStatus === "cancelled") {
+      try {
+        const n = await cancelRevenuesForOrder(order.id);
+        queryClient.invalidateQueries({ queryKey: ["revenues"] });
+        if (n > 0) toast({ title: "Receita estornada", description: `${n} receita(s) pendente(s) cancelada(s).` });
+      } catch (e) {
+        console.error("Falha ao estornar receitas:", e);
+      }
+    }
     // Calcular distância real ao confirmar pedido (se API key configurada)
     if (newStatus === "confirmed" && settings?.google_maps_api_key) {
       try {
@@ -143,30 +157,27 @@ export default function OrderDetailPage() {
       }
     }
 
-    // Criar receita automaticamente ao confirmar pedido
+    // Criar receita automaticamente ao confirmar pedido (sem duplicar)
     if (newStatus === "confirmed") {
       const freightVal = Number(freightValue) || Number(order.freight_value) || 0;
-      if (freightVal >= 0) {
-        try {
-          await base44.entities.Revenue.create({
-            description: `Frete ${order.protocol} — ${order.client_name}`,
-            amount: freightVal,
-            due_date: order.collection_date || new Date().toISOString().split("T")[0],
-            payment_method: paymentMethod || order.payment_method || "pix",
-            status: "receivable",
-            order_id: order.id,
-          });
+      try {
+        const { created } = await ensureRevenueForOrder(order, {
+          amount: freightVal,
+          dueDate: order.collection_date || todayLocalISO(),
+          paymentMethod: paymentMethod || order.payment_method || "pix",
+        });
+        if (created) {
           queryClient.invalidateQueries({ queryKey: ["revenues"] });
           toast({
             title: "Receita criada",
-            description: freightVal > 0
-              ? `R$ ${freightVal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} adicionado em Financeiro → Receitas`
-              : "Receita criada (valor R$ 0 — atualize o frete)",
+            description: `R$ ${freightVal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} adicionado em Financeiro → Receitas`,
             duration: 4000,
           });
-        } catch (e) {
-          console.error("Falha ao criar receita automática:", e);
+        } else if (freightVal <= 0) {
+          toast({ title: "Receita não criada", description: "Defina o valor do frete para gerar a receita.", duration: 4000 });
         }
+      } catch (e) {
+        console.error("Falha ao criar receita automática:", e);
       }
     }
   };
@@ -318,7 +329,7 @@ export default function OrderDetailPage() {
                   <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={() => updateMutation.mutate({ cte_number: cte })}>Salvar</Button>
                 </div>
               </div>
-              <div><p className="text-muted-foreground text-xs">Data Coleta</p><p>{order.collection_date ? format(new Date(order.collection_date), "dd/MM/yyyy") : "—"}</p></div>
+              <div><p className="text-muted-foreground text-xs">Data Coleta</p><p>{formatDateBR(order.collection_date)}</p></div>
               <div><p className="text-muted-foreground text-xs">Período</p>
                 <p>{order.collection_time === "morning" ? "Manhã" : order.collection_time === "afternoon" ? "Tarde" : "A combinar"}</p>
               </div>
@@ -365,9 +376,12 @@ export default function OrderDetailPage() {
                           <table className="w-full text-xs">
                             <thead>
                               <tr className="border-b border-border">
+                                <th className="text-left py-2 text-muted-foreground font-medium">Nº NF</th>
+                                <th className="text-left py-2 text-muted-foreground font-medium">NCM</th>
                                 <th className="text-left py-2 text-muted-foreground font-medium">Descrição</th>
                                 <th className="text-right py-2 text-muted-foreground font-medium">Volumes</th>
                                 <th className="text-right py-2 text-muted-foreground font-medium">Peso (kg)</th>
+                                <th className="text-right py-2 text-muted-foreground font-medium">Dimensões (cm)</th>
                                 <th className="text-right py-2 text-muted-foreground font-medium">Valor</th>
                                 <th className="text-right py-2 text-muted-foreground font-medium">NF Assinada</th>
                               </tr>
@@ -375,9 +389,20 @@ export default function OrderDetailPage() {
                             <tbody>
                               {r.items.map((item, ii) => (
                                 <tr key={ii} className="border-b border-border/40">
-                                  <td className="py-2">{item.description || "—"}</td>
+                                  <td className="py-2 font-mono">{item.nf_number || "—"}</td>
+                                  <td className="py-2 font-mono">{item.ncm || "—"}</td>
+                                  <td className="py-2">
+                                    {item.description || "—"}
+                                    {item.fragile && <span className="ml-1 text-[10px] bg-amber-100 text-amber-700 px-1 py-0.5 rounded font-semibold">Frágil</span>}
+                                    {item.dangerous && <span className="ml-1 text-[10px] bg-red-100 text-red-700 px-1 py-0.5 rounded font-semibold">Perigoso</span>}
+                                  </td>
                                   <td className="py-2 text-right">{item.volumes || 0}</td>
                                   <td className="py-2 text-right">{item.weight_kg || 0}</td>
+                                  <td className="py-2 text-right text-muted-foreground">
+                                    {(item.height_cm || item.width_cm || item.length_cm)
+                                      ? `${item.height_cm || "?"}×${item.width_cm || "?"}×${item.length_cm || "?"}`
+                                      : "—"}
+                                  </td>
                                   <td className="py-2 text-right">{item.declared_value ? `R$ ${Number(item.declared_value).toFixed(2)}` : "—"}</td>
                                   <td className="py-2 text-right">
                                     {item.nf_signed_url
@@ -688,9 +713,28 @@ export default function OrderDetailPage() {
                 <Card className="border-red-200 bg-red-50">
                   <CardContent className="pt-4 space-y-2">
                     <p className="text-sm font-medium text-red-700">Confirmar cancelamento?</p>
+                    <Textarea
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                      placeholder="Motivo do cancelamento (obrigatório)"
+                      rows={2}
+                      className="text-sm resize-none bg-white"
+                    />
+                    <p className="text-[11px] text-red-600">Receitas pendentes deste pedido serão estornadas.</p>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => setCancelConfirm(false)}>Não</Button>
-                      <Button size="sm" className="flex-1 bg-red-600 hover:bg-red-700 text-white" onClick={() => { handleStatusChange("cancelled"); setCancelConfirm(false); }}>Cancelar</Button>
+                      <Button size="sm" variant="outline" className="flex-1" onClick={() => { setCancelConfirm(false); setCancelReason(""); }}>Não</Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                        disabled={!cancelReason.trim()}
+                        onClick={() => {
+                          handleStatusChange("cancelled", `Cancelado — motivo: ${cancelReason.trim()}`);
+                          setCancelConfirm(false);
+                          setCancelReason("");
+                        }}
+                      >
+                        Cancelar Pedido
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

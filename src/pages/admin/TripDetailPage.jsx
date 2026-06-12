@@ -11,9 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/components/ui/use-toast";
 import {
   ArrowLeft, MapPin, CheckCircle2, Circle, Truck, Package,
-  DollarSign, X, Play, Square, Plus, Trash2, FileText, AlertTriangle
+  DollarSign, X, Play, Square, Plus, Trash2, FileText, AlertTriangle, FileDown
 } from "lucide-react";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import FileUploadButton from "@/components/shared/FileUploadButton";
+import { todayLocalISO } from "@/utils/dateUtils";
 import { format } from "date-fns";
 
 export default function TripDetailPage() {
@@ -24,6 +26,8 @@ export default function TripDetailPage() {
   const { user } = useAuth();
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [closeForm, setCloseForm] = useState({ real_km: "", fuel_liters: "", fuel_cost: "", tolls_cost: "", notes: "", other_costs: [] });
+  const [generatingManifest, setGeneratingManifest] = useState(false);
+  const { settings } = useCompanySettings();
 
   const { data: trip } = useQuery({
     queryKey: ["trip", id],
@@ -173,7 +177,7 @@ export default function TripDetailPage() {
     });
 
     // Criar despesas automaticamente dos gastos da viagem
-    const today = new Date().toISOString().split("T")[0];
+    const today = todayLocalISO();
     const expensesToCreate = [];
     if (Number(closeForm.fuel_cost) > 0) {
       expensesToCreate.push({
@@ -267,6 +271,37 @@ export default function TripDetailPage() {
           </div>
           <p className="text-muted-foreground text-sm">{trip.driver_name} · {trip.truck_plate}</p>
         </div>
+        <Button
+          variant="outline"
+          className="gap-2"
+          disabled={generatingManifest}
+          onClick={async () => {
+            setGeneratingManifest(true);
+            try {
+              const orderIds = trip.order_ids || [];
+              const linkedOrders = [];
+              for (const oid of orderIds) {
+                const res = await base44.entities.Order.filter({ id: oid });
+                if (res?.[0]) linkedOrders.push(res[0]);
+              }
+              const { generateTripManifest } = await import("@/utils/generateTripManifest");
+              const blob = generateTripManifest(trip, linkedOrders, settings);
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `Romaneio-${trip.truck_plate || "viagem"}-${todayLocalISO()}.pdf`;
+              a.click();
+              URL.revokeObjectURL(url);
+            } catch (e) {
+              toast({ title: "Erro ao gerar romaneio", description: e?.message || "Tente novamente.", variant: "destructive" });
+            } finally {
+              setGeneratingManifest(false);
+            }
+          }}
+        >
+          <FileDown className="w-4 h-4" />
+          {generatingManifest ? "Gerando..." : "Romaneio PDF"}
+        </Button>
         {trip.status === "planned" && (
           <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2" onClick={startTrip}>
             <Play className="w-4 h-4" /> Iniciar

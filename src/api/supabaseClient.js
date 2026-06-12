@@ -259,8 +259,29 @@ export const functions = {
     // Funções simples implementadas no cliente
     if (functionName === 'generateProtocol') {
       const year = new Date().getFullYear();
-      const num = Math.floor(10000 + Math.random() * 90000);
-      return { data: `VLX-${year}-${num}` };
+      const prefix = `VLX-${year}-`;
+      try {
+        // Sequencial: busca o maior protocolo do ano e incrementa
+        const { data: rows } = await supabase
+          .from('orders')
+          .select('protocol')
+          .like('protocol', `${prefix}%`)
+          .order('protocol', { ascending: false })
+          .limit(1);
+        const last = rows?.[0]?.protocol;
+        const lastNum = last ? parseInt(last.slice(prefix.length), 10) : 0;
+        const next = (isNaN(lastNum) ? 0 : lastNum) + 1;
+        return { data: { protocol: `${prefix}${String(next).padStart(5, '0')}` } };
+      } catch {
+        // Fallback: aleatório com verificação de colisão
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const candidate = `${prefix}${Math.floor(10000 + Math.random() * 90000)}`;
+          const { data: clash } = await supabase
+            .from('orders').select('id').eq('protocol', candidate).limit(1);
+          if (!clash || clash.length === 0) return { data: { protocol: candidate } };
+        }
+        return { data: { protocol: `${prefix}${Date.now() % 100000}` } };
+      }
     }
 
     if (functionName === 'getClientByCnpj') {

@@ -1,13 +1,15 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 
-export default function KPICard({ title, value, icon: Icon, trend, trendLabel, color = "bg-velox-amber" }) {
-  return (
-    <Card className="p-5 hover:shadow-md transition-shadow">
+export default function KPICard({ title, value, icon: Icon, trend, trendLabel, subtitle, to, color = "bg-velox-amber" }) {
+  const card = (
+    <Card className={`p-5 transition-shadow hover:shadow-md ${to ? "cursor-pointer hover:border-velox-amber/40" : ""}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
           <p className="text-2xl font-bold text-foreground mt-1 font-mono">{value}</p>
+          {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
           {trend !== undefined && (
             <div className="flex items-center gap-1 mt-2">
               <span className={`text-xs font-semibold ${trend >= 0 ? "text-velox-success" : "text-velox-danger"}`}>
@@ -23,4 +25,6 @@ export default function KPICard({ title, value, icon: Icon, trend, trendLabel, c
       </div>
     </Card>
   );
+
+  return to ? <Link to={to} className="block">{card}</Link> : card;
 }

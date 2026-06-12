@@ -67,13 +67,15 @@
 - Exibição completa do pedido
 - `FreightBreakdown` detalhando todos os componentes do frete
 - Botão "Confirmar Agendamento":
-  - `base44.functions.invoke("generateProtocol")` → protocolo
+  - `base44.functions.invoke("generateProtocol")` → `{ data: { protocol } }` (sequencial por ano)
   - `base44.entities.Order.create({...formData, status: "new"})`
   - Exibe protocolo gerado + opção de copiar
+  - Submit envolto em try/catch — falha exibe banner de erro vermelho acima dos botões (estado `submitError`)
 
 **Comportamentos especiais:**
 - Se vier de `/cotacao` com `location.state.prefill`: pré-preenche com dados da cotação
 - Form reseta após submissão bem-sucedida (toast 5s)
+- A página NÃO carrega pedidos/frota/bloqueios (dados internos não são expostos no site público)
 
 ---
 
@@ -214,12 +216,12 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Rota:** `/admin`  
 **Acesso:** operador + admin
 
-**KPIs (cards):**
-- Pedidos Novos (status=new, hoje)
-- Em Coleta Hoje (status=collecting, scheduled_date=hoje)
-- Entregues Hoje (status=delivered, updated_date=hoje)
-- Alertas Ativos (alerts não resolvidos)
-- **Somente admin:** A Receber (receitas status=receivable), A Pagar (despesas status=pending)
+**KPIs (cards) — todos CLICÁVEIS (navegam para a lista filtrada):**
+- Pedidos Novos (status=new) → `/admin/agenda`
+- Em Coleta Hoje (status=collecting, collection_date=hoje) → `/admin/coletas?status=collecting`
+- Entregues Hoje → `/admin/coletas?status=delivered`
+- Alertas Ativos (alerts não resolvidos) → `/admin/config`
+- **Somente admin:** A Receber → `/admin/financeiro?aba=receitas`, A Pagar → `/admin/financeiro?aba=despesas`
 
 **Calendário semanal:** 7 dias a partir de hoje, com `getAvailabilityForDate()` para cada dia, cor por status (verde/âmbar/vermelho/cinza)
 
@@ -248,7 +250,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 **Filtros:**
 - Busca por texto (protocolo, cliente, origem, destino)
-- Filtro status (todos/new/confirmed/collecting/in_transit/delivered/cancelled)
+- Filtro status (todos/new/confirmed/collecting/in_transit/delivered/cancelled) — sincronizado com a URL via `?status=` (permite links diretos, ex.: KPIs do dashboard)
 - Filtro tipo (CIF/FOB)
 
 **Tabela colunas:** Protocolo, Cliente, Origem→Destinos, Data coleta, Peso/Volumes, Status, Frete  
@@ -306,9 +308,8 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 **Seção Destinatários:**
 - Collapsible por destinatário
-- Tabela de itens (NF, descrição, volumes, peso, dimensões, valor declarado)
+- Tabela de itens: colunas **Nº NF, NCM, Descrição (badges Frágil/Perigoso), Volumes, Peso, Dimensões A×L×C cm, Valor declarado, NF Assinada** (link ou upload)
 - Badge de delivery_status por destinatário
-- Botão "Ver NF assinada" se disponível
 
 **Seção Incidentes:**
 - Lista de `incidents` vinculados ao pedido
@@ -323,14 +324,16 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 - Campo CT-e (editável inline)
 - Status de pagamento + método
 - Observações
-- Botão "Cancelar Pedido" (somente admin)
+- Botão "Cancelar Pedido": exige **motivo** em textarea (botão desabilitado sem motivo); ao confirmar, estorna receitas pendentes via `cancelRevenuesForOrder()` e grava `"Cancelado — motivo: ..."` no `status_history`
 - Botão "Comprovante PDF" (somente quando `status = "delivered"`)
   - Chama `generateDeliveryReceipt(order, trip, company)` → download do blob
 
 **Confirmação de pedido:**
 - Botão "Confirmar Pedido" (status: new → confirmed)
 - Ao confirmar: opcionalmente chama `calculateDistance` via Google Maps
-- Cria Revenue `receivable` automaticamente
+- Cria Revenue `receivable` via `ensureRevenueForOrder()` — não duplica se já houver receita ativa do pedido
+
+**Datas:** exibição com `formatDateBR()` (timezone-safe — nunca `new Date("YYYY-MM-DD")`)
 
 **Queries:** orders filter by id, trips filter by order_id, company_settings
 
@@ -350,8 +353,8 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 - Sugestão automática de caminhão: `suggestTruckForOrder()` (bin-packing)
 - Botão "Confirmar": abre Sheet de agendamento manual
   - Campos no Sheet: data de coleta (date picker), caminhão (select com capacidade), valor do frete, forma de pagamento
-  - Ao salvar: `order.update({ status: "confirmed", scheduled_date, scheduled_truck_id, freight_value })` + Revenue criado
-- Botão "Recusar": cancela o pedido
+  - Ao salvar: `order.update({ status: "confirmed", scheduled_date, scheduled_truck_id, freight_value })` + Revenue via `ensureRevenueForOrder()` (anti-duplicação)
+- Botão "Recusar": cancela o pedido + estorna receitas pendentes (`cancelRevenuesForOrder`)
 - Botão ⚡ (raio): abre `SmartScheduleModal` para auto-agendamento
 
 #### Aba "Programado" (calendário semanal)
@@ -491,6 +494,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Acesso:** operador + admin
 
 **Cabeçalho:** driver + placa + status badge  
+**Botão "Romaneio PDF"** (sempre visível): busca os pedidos vinculados (`order_ids`) e gera o manifesto de carga via `generateTripManifest(trip, orders, settings)` (import dinâmico — chunk separado) → download `Romaneio-{placa}-{data}.pdf`  
 **Botão "Iniciar"** (se planned): `startTrip()` → status `in_progress` + caminhão `on_route` + pedidos `collecting`  
 **Botão "Encerrar Viagem"** (se in_progress): abre modal de encerramento
 
