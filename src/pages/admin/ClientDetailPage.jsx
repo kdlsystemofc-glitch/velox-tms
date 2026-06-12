@@ -8,9 +8,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Building2, TrendingUp, Plus, Trash2, MessageCircle, FileText, Receipt, Pencil } from "lucide-react";
+import { ArrowLeft, Building2, TrendingUp, Plus, Trash2, MessageCircle, FileText, Receipt, Pencil, DollarSign } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import StatusBadge from "@/components/admin/StatusBadge";
+import { toLocalISO } from "@/utils/dateUtils";
+
+const PRICING_FIELDS = [
+  { key: "price_per_kg", label: "R$ / kg", step: "0.01" },
+  { key: "price_per_km", label: "R$ / km", step: "0.01" },
+  { key: "fixed_fee", label: "Taxa fixa (R$)", step: "0.01" },
+  { key: "minimum_freight", label: "Frete mínimo (R$)", step: "0.01" },
+  { key: "gris_percent", label: "GRIS (%)", step: "0.01" },
+  { key: "ad_valorem_percent", label: "Ad Valorem (%)", step: "0.01" },
+  { key: "tde_per_nf", label: "TDE por NF (R$)", step: "0.01" },
+  { key: "tda_per_nf", label: "TDA por NF (R$)", step: "0.01" },
+  { key: "toll_per_kg", label: "Pedágio (R$/kg)", step: "0.001" },
+];
 
 export default function ClientDetailPage() {
   const { id } = useParams();
@@ -24,6 +37,8 @@ export default function ClientDetailPage() {
   const [editingContactIndex, setEditingContactIndex] = useState(null);
   const [editContact, setEditContact] = useState(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [editingPricing, setEditingPricing] = useState(false);
+  const [pricingForm, setPricingForm] = useState({});
 
   const { data: client } = useQuery({
     queryKey: ["client", id],
@@ -365,6 +380,77 @@ export default function ClientDetailPage() {
         </div>
 
         <div className="space-y-4">
+          {/* Tabela de frete personalizada (B3) */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-velox-amber" /> Tabela de Frete
+                </CardTitle>
+                <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => {
+                  setPricingForm(client.custom_pricing || {});
+                  setEditingPricing(!editingPricing);
+                }}>
+                  {editingPricing ? "Cancelar" : "Editar"}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {editingPricing ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground mb-2">Campos em branco usam a tabela padrão da empresa. Esta tabela tem prioridade sobre rotas e padrão.</p>
+                  {PRICING_FIELDS.map(f => (
+                    <div key={f.key} className="flex items-center justify-between gap-2">
+                      <label className="text-xs text-muted-foreground flex-1">{f.label}</label>
+                      <Input
+                        type="number"
+                        step={f.step}
+                        className="h-8 w-28 text-sm font-mono text-right"
+                        value={pricingForm[f.key] ?? ""}
+                        onChange={e => setPricingForm(p => ({ ...p, [f.key]: e.target.value }))}
+                      />
+                    </div>
+                  ))}
+                  <div className="flex gap-2 pt-2">
+                    <Button size="sm" variant="outline" className="flex-1 text-xs text-red-600" onClick={async () => {
+                      await base44.entities.Client.update(client.id, { custom_pricing: {} });
+                      queryClient.invalidateQueries({ queryKey: ["client", id] });
+                      setEditingPricing(false);
+                      toast({ title: "Tabela personalizada removida", description: "Cliente voltou a usar a tabela padrão." });
+                    }}>Limpar</Button>
+                    <Button size="sm" className="flex-1 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold text-xs" onClick={async () => {
+                      const cleaned = {};
+                      PRICING_FIELDS.forEach(f => {
+                        const v = pricingForm[f.key];
+                        if (v !== "" && v != null && !isNaN(Number(v))) cleaned[f.key] = Number(v);
+                      });
+                      await base44.entities.Client.update(client.id, { custom_pricing: cleaned });
+                      queryClient.invalidateQueries({ queryKey: ["client", id] });
+                      setEditingPricing(false);
+                      toast({ title: "Tabela de frete salva!" });
+                    }}>Salvar</Button>
+                  </div>
+                </div>
+              ) : (
+                (() => {
+                  const cp = client.custom_pricing || {};
+                  const hasCustom = Object.keys(cp).some(k => cp[k] !== "" && cp[k] != null);
+                  if (!hasCustom) return <p className="text-sm text-muted-foreground">Usa a tabela padrão da empresa.</p>;
+                  return (
+                    <div className="space-y-1">
+                      {PRICING_FIELDS.filter(f => cp[f.key] != null && cp[f.key] !== "").map(f => (
+                        <div key={f.key} className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">{f.label}</span>
+                          <span className="font-mono font-medium">{Number(cp[f.key]).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      ))}
+                      <p className="text-[10px] text-velox-amber pt-1">★ Tabela negociada — prioridade sobre rotas e padrão</p>
+                    </div>
+                  );
+                })()
+              )}
+            </CardContent>
+          </Card>
           {/* Billing info card */}
           {client.billing_type === "monthly" && (
             <Card className="border-amber-200 bg-amber-50/50">
@@ -457,7 +543,7 @@ export default function ClientDetailPage() {
                       await base44.entities.Revenue.create({
                         description: `Fatura mensal — ${client.company_name} (${now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })})`,
                         amount: total,
-                        due_date: dueDate.toISOString().split("T")[0],
+                        due_date: toLocalISO(dueDate),
                         client_id: client.id,
                         status: "receivable",
                       });

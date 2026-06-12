@@ -397,6 +397,9 @@ export default function TripDetailPage() {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Receita total</span><span className="font-mono font-semibold text-green-600">R$ {(trip.total_revenue || 0).toFixed(2)}</span></div>
+              {Number(trip.advance_amount) > 0 && (
+                <div className="flex justify-between"><span className="text-muted-foreground">Adiantamento pago</span><span className="font-mono text-amber-600">R$ {Number(trip.advance_amount).toFixed(2)}</span></div>
+              )}
               {trip.status === "completed" && (
                 <>
                   <div className="flex justify-between"><span className="text-muted-foreground">Custo total</span><span className="font-mono text-red-600">R$ {(trip.total_cost || 0).toFixed(2)}</span></div>
@@ -469,9 +472,12 @@ export default function TripDetailPage() {
               <Textarea placeholder="Ocorrências, observações sobre a rota, etc." rows={2} value={closeForm.notes} onChange={e => setCloseForm(f => ({ ...f, notes: e.target.value }))} className="resize-none" />
             </div>
 
-            <div className="p-3 bg-muted/30 rounded-lg text-sm">
+            <div className="p-3 bg-muted/30 rounded-lg text-sm space-y-0.5">
               <div className="flex justify-between"><span>Receita</span><span className="font-mono text-green-600">R$ {(trip.total_revenue || 0).toFixed(2)}</span></div>
               <div className="flex justify-between"><span>Custo estimado</span><span className="font-mono text-red-600">R$ {(Number(closeForm.fuel_cost || 0) + Number(closeForm.tolls_cost || 0) + closeForm.other_costs.reduce((s, c) => s + Number(c.amount || 0), 0)).toFixed(2)}</span></div>
+              {Number(trip.advance_amount) > 0 && (
+                <div className="flex justify-between text-xs text-amber-700"><span>Adiantamento já pago (acerto)</span><span className="font-mono">R$ {Number(trip.advance_amount).toFixed(2)}</span></div>
+              )}
             </div>
 
             <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold" onClick={closeTrip} disabled={updateMutation.isPending}>

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, Package, Plus, Eye } from "lucide-react";
 import StatusBadge, { orderStatusConfig } from "@/components/admin/StatusBadge";
+import { TableSkeleton } from "@/components/shared/TableSkeleton";
 
 export default function Orders() {
   const navigate = useNavigate();
@@ -93,9 +94,7 @@ export default function Orders() {
                 </tr>
               </thead>
               <tbody>
-                {isLoading && (
-                  <tr><td colSpan={7} className="py-10 text-center"><div className="w-6 h-6 border-4 border-velox-amber/20 border-t-velox-amber rounded-full animate-spin mx-auto" /></td></tr>
-                )}
+                {isLoading && <TableSkeleton rows={8} cols={8} />}
                 {!isLoading && filtered.length === 0 && (
                   <tr><td colSpan={8} className="py-12 text-center text-muted-foreground">
                     <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />

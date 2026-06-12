@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Plus, Trash2, MapPin, User, Package, DollarSign, AlertCircle, Search } from "lucide-react";
 import { NumericInput } from "@/components/shared/NumericInput";
@@ -14,9 +15,10 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { calculateFreightFull } from "@/utils/freightCalculator";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO } from "@/utils/dateUtils";
+import { validateNFeKey, nfNumberFromKey } from "@/utils/nfeUtils";
 
 const emptyItem = {
-  nf_number: "", description: "", package_type: "caixa", volumes: 1,
+  nf_number: "", nf_key: "", description: "", package_type: "caixa", volumes: 1,
   weight_kg: "", height_cm: "", width_cm: "", length_cm: "",
   declared_value: "", ncm: "", fragile: false, dangerous: false,
 };
@@ -62,20 +64,60 @@ function FieldError({ message }) {
 
 export default function NewOrder() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { errors, validate, clearAll } = useFormValidation();
   const submittingRef = useRef(false);
 
-  const [form, setForm] = useState({
-    client_name: "", client_cpf_cnpj: "", client_phone: "", client_email: "",
-    preferred_contact: "whatsapp",
-    freight_type: "shared",
-    origin: { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "" },
-    collection_date: "", collection_time: "morning", collection_notes: "",
-    recipients: [{ ...emptyRecipient, items: [{ ...emptyItem }] }],
-    freight_value: "", freight_payer: "cif", payment_method: "pix", payment_status: "pending",
-    driver_id: "", truck_id: "", general_notes: "",
+  // Duplicação de pedido: vem de OrderDetailPage via location.state
+  const dup = location.state?.duplicate;
+
+  const [form, setForm] = useState(() => {
+    const base = {
+      client_name: "", client_cpf_cnpj: "", client_phone: "", client_email: "",
+      preferred_contact: "whatsapp",
+      freight_type: "shared",
+      origin: { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "" },
+      collection_date: "", collection_time: "morning", collection_notes: "",
+      recipients: [{ ...emptyRecipient, items: [{ ...emptyItem }] }],
+      freight_value: "", freight_payer: "cif", payment_method: "pix", payment_status: "pending",
+      driver_id: "", truck_id: "", general_notes: "",
+    };
+    if (!dup) return base;
+    // Copia dados do pedido original, zerando o que é específico (datas, NFs assinadas, status de entrega)
+    return {
+      ...base,
+      client_id: dup.client_id || undefined,
+      client_name: dup.client_name || "",
+      client_cpf_cnpj: dup.client_cpf_cnpj || "",
+      client_phone: dup.client_phone || "",
+      client_email: dup.client_email || "",
+      preferred_contact: dup.preferred_contact || "whatsapp",
+      freight_type: dup.freight_type || "shared",
+      origin: { ...base.origin, ...(dup.origin || {}) },
+      collection_time: dup.collection_time || "morning",
+      collection_notes: dup.collection_notes || "",
+      recipients: (dup.recipients || []).map(r => ({
+        ...emptyRecipient,
+        name: r.name || "", cnpj_cpf: r.cpf_cnpj || r.cnpj_cpf || "", phone: r.phone || "",
+        cep: r.cep || "", street: r.street || "", number: r.number || "",
+        complement: r.complement || "", neighborhood: r.neighborhood || "",
+        city: r.city || "", state: r.state || "", delivery_notes: r.delivery_notes || "",
+        items: (r.items || [{ ...emptyItem }]).map(it => ({
+          ...emptyItem,
+          description: it.description || "", package_type: it.package_type || "caixa",
+          volumes: it.volumes || 1, weight_kg: it.weight_kg || "",
+          height_cm: it.height_cm || "", width_cm: it.width_cm || "", length_cm: it.length_cm || "",
+          declared_value: it.declared_value || "", ncm: it.ncm || "",
+          fragile: !!it.fragile, dangerous: !!it.dangerous,
+        })),
+      })),
+      freight_value: dup.freight_value || "",
+      freight_payer: dup.freight_payer || "cif",
+      payment_method: dup.payment_method || "pix",
+      general_notes: dup.general_notes || "",
+    };
   });
 
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
@@ -89,33 +131,28 @@ export default function NewOrder() {
     ? clients.filter(c => c.company_name?.toLowerCase().includes(clientSearch.toLowerCase()) || c.cpf_cnpj?.includes(clientSearch)).slice(0, 5)
     : [];
 
+  const [createClientPrompt, setCreateClientPrompt] = useState(null); // { protocol } quando cliente não cadastrado
+
+  const finishAndNavigate = (protocol) => {
+    toast({ title: "Pedido criado!", description: `Protocolo: ${protocol}` });
+    navigate("/admin/coletas");
+  };
+
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Order.create(data),
-    onSuccess: async (order) => {
+    onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       submittingRef.current = false;
-      // Auto-criar cliente se não estiver cadastrado
+      // Cliente não cadastrado → pergunta via dialog (não bloqueia com window.confirm)
       if (!form.client_id && form.client_name?.trim()) {
-        const shouldCreate = window.confirm(
-          `"${form.client_name}" não está cadastrado. Deseja criar um cadastro de cliente automaticamente?`
-        );
-        if (shouldCreate) {
-          await base44.entities.Client.create({
-            company_name: form.client_name,
-            cpf_cnpj: form.client_cpf_cnpj || "",
-            phone: form.client_phone || "",
-            email: form.client_email || "",
-            client_type: "eventual",
-            status: "active",
-          });
-          queryClient.invalidateQueries({ queryKey: ["clients"] });
-        }
+        setCreateClientPrompt({ protocol: order.protocol });
+      } else {
+        finishAndNavigate(order.protocol);
       }
-      toast({ title: "Pedido criado!", description: `Protocolo: ${order.protocol}` });
-      navigate("/admin/coletas");
     },
-    onError: () => {
+    onError: (e) => {
       submittingRef.current = false;
+      toast({ title: "Erro ao criar pedido", description: e?.message || "Tente novamente.", variant: "destructive" });
     },
   });
 
@@ -230,6 +267,8 @@ export default function NewOrder() {
         cpf_cnpj: cnpj_cpf || "",
         items: r.items.map(item => ({
           nf_number:      item.nf_number     || undefined,
+          nf_key:         item.nf_key        || undefined,
+          ncm:            item.ncm           || undefined,
           description:    item.description   || undefined,
           package_type:   item.package_type  || undefined,
           fragile:        !!item.fragile,
@@ -284,14 +323,21 @@ export default function NewOrder() {
     const allItems = form.recipients.flatMap(r => r.items || []);
     const nfCount = allItems.filter(i => i.nf_number).length || 1;
     const firstDestState = form.recipients[0]?.state || null;
+    // Tabela negociada do cliente tem prioridade máxima (se preenchida)
+    const selectedClient = clients.find(c => c.id === form.client_id);
+    const cp = selectedClient?.custom_pricing;
+    const clientPricing = cp && Object.keys(cp).some(k => cp[k] != null && cp[k] !== "")
+      ? { ...(settings?.pricing || {}), ...cp }
+      : null;
     return calculateFreightFull({
       items: allItems, distanceKm: null, nfCount,
       pricing: settings?.pricing,
+      clientPricing,
       settings,
       originState: form.origin?.state || null,
       destState: firstDestState,
     });
-  }, [form.recipients, form.origin?.state, settings?.pricing]);
+  }, [form.recipients, form.origin?.state, form.client_id, clients, settings?.pricing]);
 
   const section = (icon, title, children) => (
     <Card>
@@ -313,7 +359,9 @@ export default function NewOrder() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin/coletas")}><ArrowLeft className="w-5 h-5" /></Button>
         <div>
           <h1 className="font-display text-3xl font-extrabold text-foreground">Nova Coleta</h1>
-          <p className="text-muted-foreground text-sm">Cadastro interno de frete</p>
+          <p className="text-muted-foreground text-sm">
+            {dup ? <>Duplicado de <span className="font-mono font-semibold">{dup.protocol}</span> — confira os dados e defina a data de coleta</> : "Cadastro interno de frete"}
+          </p>
         </div>
       </div>
 
@@ -654,6 +702,29 @@ export default function NewOrder() {
                         <Input type="text" inputMode="numeric" placeholder="ex: 12" value={item.volumes} onChange={e => setItem(ri, ii, "volumes", e.target.value.replace(/\D/g, ""))} className="h-8 text-sm" />
                       </div>
                     </div>
+                    {/* Linha 1b: Chave NF-e (opcional, com validação) */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Chave de acesso NF-e (44 dígitos, opcional)</label>
+                      <Input
+                        placeholder="ex: 3526 0612 3456 7800 0190 5500 1000 0012 3410 0012 3456"
+                        value={item.nf_key || ""}
+                        onChange={e => {
+                          const digits = e.target.value.replace(/\D/g, "").slice(0, 44);
+                          setItem(ri, ii, "nf_key", digits);
+                          if (digits.length === 44 && !item.nf_number) {
+                            const num = nfNumberFromKey(digits);
+                            if (num) setItem(ri, ii, "nf_number", num);
+                          }
+                        }}
+                        className={`h-8 text-xs font-mono ${item.nf_key && item.nf_key.length > 0 ? (validateNFeKey(item.nf_key).valid ? "border-green-400" : "border-red-400") : ""}`}
+                      />
+                      {item.nf_key && item.nf_key.length > 0 && !validateNFeKey(item.nf_key).valid && (
+                        <p className="text-[11px] text-red-500">Chave inválida — {validateNFeKey(item.nf_key).reason}</p>
+                      )}
+                      {item.nf_key && validateNFeKey(item.nf_key).valid && (
+                        <p className="text-[11px] text-green-600">✓ Chave válida</p>
+                      )}
+                    </div>
                     {/* Linha 2: Descrição */}
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-muted-foreground">Descrição da mercadoria <span className="text-red-500">*</span></label>
@@ -820,6 +891,46 @@ export default function NewOrder() {
           {createMutation.isPending ? "Criando..." : "Criar Coleta"}
         </Button>
       </div>
+
+      {/* Dialog: criar cadastro do cliente novo */}
+      <Dialog open={!!createClientPrompt} onOpenChange={(open) => {
+        if (!open && createClientPrompt) { finishAndNavigate(createClientPrompt.protocol); setCreateClientPrompt(null); }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Criar cadastro de cliente?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            <strong>"{form.client_name}"</strong> não está na base de clientes. Deseja criar o cadastro automaticamente com os dados informados?
+          </p>
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" size="sm" onClick={() => {
+              const proto = createClientPrompt?.protocol;
+              setCreateClientPrompt(null);
+              finishAndNavigate(proto);
+            }}>Não, só o pedido</Button>
+            <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" onClick={async () => {
+              const proto = createClientPrompt?.protocol;
+              try {
+                await base44.entities.Client.create({
+                  company_name: form.client_name,
+                  cpf_cnpj: form.client_cpf_cnpj || "",
+                  phone: form.client_phone || "",
+                  email: form.client_email || "",
+                  client_type: "eventual",
+                  status: "active",
+                });
+                queryClient.invalidateQueries({ queryKey: ["clients"] });
+                toast({ title: "Cliente cadastrado!" });
+              } catch {
+                toast({ title: "Erro ao cadastrar cliente", variant: "destructive" });
+              }
+              setCreateClientPrompt(null);
+              finishAndNavigate(proto);
+            }}>Criar cadastro</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

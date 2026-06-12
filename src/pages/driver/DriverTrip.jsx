@@ -7,10 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, CheckCircle2, MapPin, AlertTriangle, FileText } from "lucide-react";
+import { ArrowLeft, CheckCircle2, MapPin, AlertTriangle, FileText, ClipboardCheck } from "lucide-react";
 import { format } from "date-fns";
 import FileUploadButton from "@/components/shared/FileUploadButton";
 import { useToast } from "@/components/ui/use-toast";
+
+const CHECKLIST_ITEMS = [
+  { key: "tires", label: "Pneus calibrados e em bom estado" },
+  { key: "lights", label: "Luzes e setas funcionando" },
+  { key: "docs", label: "Documentos do veículo (CRLV) a bordo" },
+  { key: "cargo", label: "Carga conferida e amarrada" },
+  { key: "fluids", label: "Nível de óleo e água verificados" },
+];
 
 export default function DriverTrip() {
   const { id } = useParams();
@@ -22,6 +30,7 @@ export default function DriverTrip() {
   const [incident, setIncident] = useState({ type: "", description: "", photo_url: "" });
   const [stopActions, setStopActions] = useState({});
   const [currentOrderId, setCurrentOrderId] = useState(null);
+  const [checklist, setChecklist] = useState({});
 
   const { data: trip, isLoading } = useQuery({
     queryKey: ["trip", id],
@@ -48,6 +57,22 @@ export default function DriverTrip() {
   );
 
   const driverName = driver?.name || user?.full_name || "Motorista";
+
+  // Checklist de saída: gravado como evento da viagem (não exige migration)
+  const checklistDone = (trip.events || []).some(e => e.type === "checklist");
+  const allChecked = CHECKLIST_ITEMS.every(item => checklist[item.key]);
+  const submitChecklist = () => {
+    updateMutation.mutate({
+      events: [...(trip.events || []), {
+        type: "checklist",
+        description: `Checklist de saída concluído: ${CHECKLIST_ITEMS.map(i => i.label).join("; ")}`,
+        items: CHECKLIST_ITEMS.map(i => ({ key: i.key, label: i.label, ok: true })),
+        timestamp: new Date().toISOString(),
+        user: driverName,
+      }],
+    });
+    toast({ title: "Checklist concluído!", description: "Boa viagem!" });
+  };
 
   const handleArrived = (index) => {
     const stops = [...(trip.stops || [])];
@@ -154,6 +179,42 @@ export default function DriverTrip() {
       </div>
 
       <div className="flex-1 px-4 py-4 max-w-sm mx-auto w-full space-y-3 pb-24">
+        {/* Checklist de saída do veículo */}
+        {!checklistDone && (trip.status === "planned" || trip.status === "in_progress") && (
+          <div className="rounded-xl border border-velox-amber/40 bg-velox-amber/10 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <ClipboardCheck className="w-5 h-5 text-velox-amber" />
+              <h2 className="font-semibold text-sm text-white">Checklist de saída</h2>
+            </div>
+            <div className="space-y-2">
+              {CHECKLIST_ITEMS.map(item => (
+                <label key={item.key} className="flex items-start gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!checklist[item.key]}
+                    onChange={e => setChecklist(prev => ({ ...prev, [item.key]: e.target.checked }))}
+                    className="w-4 h-4 mt-0.5 accent-velox-amber"
+                  />
+                  <span className="text-xs text-white/80">{item.label}</span>
+                </label>
+              ))}
+            </div>
+            <Button
+              size="sm"
+              className="w-full mt-3 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold text-xs"
+              disabled={!allChecked || updateMutation.isPending}
+              onClick={submitChecklist}
+            >
+              {allChecked ? "✓ Confirmar checklist" : "Marque todos os itens para confirmar"}
+            </Button>
+          </div>
+        )}
+        {checklistDone && (
+          <div className="rounded-xl border border-green-500/20 bg-green-900/20 px-4 py-2.5 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-green-400" />
+            <span className="text-xs text-green-400 font-medium">Checklist de saída concluído</span>
+          </div>
+        )}
         {(trip.stops || []).map((stop, i) => {
           const action = stopActions[i] || {};
           return (

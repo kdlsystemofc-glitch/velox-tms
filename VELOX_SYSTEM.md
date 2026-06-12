@@ -210,6 +210,8 @@
 | `other_costs` | jsonb[] | `[{description, amount}]` |
 | `total_cost` | numeric | Custo total (calculado no encerramento) |
 | `net_profit` | numeric | Receita - Custo |
+| `advance_amount` | numeric | Adiantamento (vale-frete) pago ao motorista antes da saída |
+| `advance_date` | date | Data do adiantamento |
 | `notes` | text | — |
 | `created_date` | timestamptz | — |
 
@@ -584,8 +586,16 @@ Prioridade:
 - Receita automática anti-duplicação + estorno no cancelamento (com motivo obrigatório)
 - KPIs do dashboard clicáveis (navegam para listas filtradas)
 - Datas timezone-safe em todo o fluxo (utils/dateUtils.js)
+- Tabela de frete negociada por cliente (`clients.custom_pricing`) com editor e prioridade máxima no cálculo
+- Chave de acesso NF-e (44 dígitos) com validação de dígito verificador e auto-preenchimento do nº da NF
+- Adiantamento de viagem (vale-frete) com despesa automática e acerto no encerramento
+- Checklist de saída do veículo no app do motorista (gravado em trip.events)
+- Busca global Ctrl+K no painel admin (pedidos, clientes, placas, motoristas)
+- Linha do tempo "Coletas de hoje" no dashboard
+- Duplicar pedido (clientes recorrentes)
+- DRE com resultado por caminhão (centro de custo)
 
-> Roadmap completo com análise de mercado: ver `VELOX_ROADMAP.md`.
+> Roadmap completo com análise de mercado e status item a item: ver `VELOX_ROADMAP.md`.
 
 ### 🔴 Pendente / Não implementado
 - Integração GPS real-time (MapPage tem placeholder)

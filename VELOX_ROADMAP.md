@@ -154,58 +154,64 @@ Padrão de mercado ("torre de controle"):
 - **O quê:** a tabela de itens do OrderDetailPage não mostrava nº da NF, NCM nem dimensões (dados que o formulário coleta).
 - **Como:** colunas adicionadas à tabela de itens.
 
-### B3. Tabela de frete por cliente (UI) — Prioridade 3 · Complexidade média
-- Editor da `client.pricing` no ClientDetailPage (mesmos campos da aba Preços). O motor de cálculo já respeita a prioridade.
+### B3. Tabela de frete por cliente (UI) — ✅ IMPLEMENTADO
+- Card "Tabela de Frete" no ClientDetailPage edita `client.custom_pricing` (9 campos; em branco herda o padrão).
+- NewOrder e OrderDetailPage agora passam a tabela do cliente ao `calculateFreightFull()` (prioridade máxima).
 
-### B4. Chave da NF-e (44 dígitos) + validação — Prioridade 3 · Complexidade baixa
-- Campo `nf_key` no item; validação de dígito verificador; link para consulta pública.
+### B4. Chave da NF-e (44 dígitos) + validação — ✅ IMPLEMENTADO
+- `src/utils/nfeUtils.js`: `validateNFeKey()` (comprimento + dígito verificador módulo 11), `nfNumberFromKey()`, `formatNFeKey()`.
+- Campo opcional `nf_key` nos itens do NewOrder e BookingForm com validação visual; nº da NF auto-preenchido a partir da chave; ícone 🔑 na tabela do pedido.
 
-### B5. Adiantamento e acerto de viagem — Prioridade 3 · Complexidade média
-- Campos `advance_amount`/`advance_date` na Trip; acerto no encerramento (desconta adiantamento do custo).
+### B5. Adiantamento e acerto de viagem — ✅ IMPLEMENTADO
+- Colunas `advance_amount`/`advance_date` (migration `20260612_trip_advance.sql` — **aplicar no Supabase**).
+- Campo no NewTrip; gera Expense pendente automática; exibido no financeiro da viagem e no resumo do encerramento. Código tolera banco sem a migration (cria a viagem sem os campos).
 
-### B6. Emissão de CT-e/MDF-e — Prioridade 3 (estratégica) · Complexidade ALTA
-- Via API de terceiros (TecnoSpeed, FocusNFe, MigrateWeb). Requer certificado digital A1 e Edge Function. Tratar como projeto próprio.
+### B6. Emissão de CT-e/MDF-e — Prioridade 3 (estratégica) · Complexidade ALTA · 🔌 DEPENDE DE SERVIÇO EXTERNO
+- Via API de terceiros (TecnoSpeed, FocusNFe, MigrateWeb). Requer **certificado digital A1** e conta no provedor + Edge Function. Não implementável sem essas contratações.
 
-### B7. Checklist de saída do motorista — Prioridade 2 · Complexidade baixa
-- Lista configurável (pneus, luzes, docs) antes de iniciar viagem no app do motorista.
+### B7. Checklist de saída do motorista — ✅ IMPLEMENTADO
+- Card no DriverTrip (viagem planejada/em andamento): 5 itens (pneus, luzes, CRLV, carga amarrada, óleo/água). Gravado como evento `checklist` em `trip.events` (sem migration). Badge "concluído" após confirmação.
 
 ## SEÇÃO C — Melhorias de UX inspiradas no mercado
 
 ### C1. KPIs do dashboard clicáveis — Prioridade 5 · Complexidade baixa ✅ IMPLEMENTADO
 - Cada KPI navega para a lista já filtrada (`/admin/coletas?status=new`, `/admin/financeiro?aba=receitas`...). `Orders.jsx` agora lê `?status=` da URL.
 
-### C2. Busca global Ctrl+K — Prioridade 3 · Complexidade média
-- Command palette (cmdk) buscando protocolo/cliente/placa/motorista de qualquer tela do admin.
+### C2. Busca global Ctrl+K — ✅ JÁ EXISTIA
+- Constatado na auditoria desta rodada: o `AdminTopbar` já tem busca global com atalho Ctrl+K, debounce e resultados agrupados (pedidos/clientes/caminhões/motoristas).
 
-### C3. Linha do tempo do dia no dashboard — Prioridade 3 · Complexidade baixa
-- Lista cronológica das coletas/entregas de hoje com hora prevista e status.
+### C3. Linha do tempo do dia no dashboard — ✅ IMPLEMENTADO
+- Card "Coletas de hoje" no Dashboard: pedidos do dia ordenados por período (manhã/tarde/a combinar), com status e link.
 
-### C4. Pedido modelo / duplicar pedido — Prioridade 3 · Complexidade baixa
-- Botão "Duplicar" no OrderDetailPage que abre NewOrder pré-preenchido (clientes recorrentes).
+### C4. Pedido modelo / duplicar pedido — ✅ IMPLEMENTADO
+- Botão "Duplicar" no OrderDetailPage abre NewOrder pré-preenchido via `location.state.duplicate` (zera datas, NFs assinadas e status de entrega).
 
-### C5. Substituir `window.prompt`/`window.confirm` por dialogs — Prioridade 2 · Complexidade baixa
-- OrderDetailPage (resolver incidente) e NewOrder (criar cliente).
+### C5. Substituir `window.prompt`/`window.confirm` por dialogs — ✅ IMPLEMENTADO
+- Resolver incidente: Dialog com textarea obrigatória. Criar cliente após pedido: Dialog "Criar cadastro?" não-bloqueante.
 
-### C6. Skeleton loaders consistentes — Prioridade 2 · Complexidade baixa
+### C6. Skeleton loaders — ✅ IMPLEMENTADO (base)
+- `src/components/shared/TableSkeleton.jsx` (TableSkeleton + CardsSkeleton); aplicado na lista de coletas. Expandir para outras listas conforme necessidade.
 
 ## SEÇÃO D — Funcionalidades avançadas (versão futura)
 
-| Item | Descrição | Complexidade | Prioridade |
-|---|---|---|---|
-| D1. Rastreamento GPS | Integração Softruck/Onixsat ou app do motorista enviando posição; mapa real no MapPage (react-leaflet já instalado) | Alta | 3 |
-| D2. CT-e/MDF-e completo | Ver B6 | Alta | 3 |
-| D3. Portal do cliente | Login para embarcadores verem seus pedidos, faturas e PODs | Alta | 3 |
-| D4. App motorista offline (PWA) | Service worker + fila de sincronização | Alta | 3 |
-| D5. EDI Proceda (NOTFIS/OCOREN) | Intercâmbio com grandes embarcadores | Alta | 2 |
-| D6. DRE por veículo | Centro de custo por caminhão; margem por viagem consolidada | Média | 3 |
-| D7. Manutenção preventiva com agenda | Plano de manutenção por km/tempo com ordem de serviço | Média | 2 |
-| D8. Averbação automática de seguro | Integração AT&M | Média | 2 |
-| D9. Otimização de rota multi-parada | Ordenação de paradas por distância (OSRM/Google) | Média | 2 |
-| D10. WhatsApp transacional | Notificação automática de status ao cliente (API oficial) | Média | 3 |
+| Item | Descrição | Status / Bloqueio |
+|---|---|---|
+| D1. Rastreamento GPS | Mapa real no MapPage (react-leaflet já instalado) | 🔌 Exige rastreador/telemetria contratada (Softruck/Onixsat) |
+| D2. CT-e/MDF-e completo | Ver B6 | 🔌 Exige certificado A1 + API paga |
+| D3. Portal do cliente | Login para embarcadores verem pedidos, faturas e PODs | 📦 Projeto próprio (exige redesenho de RLS por cliente) |
+| D4. App motorista offline (PWA) | Service worker + fila de sincronização | 📦 Projeto próprio |
+| D5. EDI Proceda (NOTFIS/OCOREN) | Intercâmbio com grandes embarcadores | 🔌 Exige acordo com embarcador parceiro |
+| D6. DRE por veículo | Centro de custo por caminhão | ✅ **IMPLEMENTADO** — card "Resultado por Caminhão" no DRE (receita atribuída vs despesas diretas com `truck_id`) |
+| D7. Manutenção preventiva com agenda | Plano por km/tempo com ordem de serviço | Pendente (já existem alertas de km e histórico de manutenção) |
+| D8. Averbação automática de seguro | Integração AT&M | 🔌 Exige conta na averbadora |
+| D9. Otimização de rota multi-parada | Ordenação de paradas por distância (OSRM/Google) | 🔌 Exige API de roteamento (Google Maps key já tem campo no settings) |
+| D10. WhatsApp transacional | Notificação automática de status ao cliente | 🔌 Exige conta WhatsApp Business API |
 
 ---
 
-# PARTE 4 — REGISTRO DO QUE FOI IMPLEMENTADO NESTA RODADA
+# PARTE 4 — REGISTRO DO QUE FOI IMPLEMENTADO
+
+## Rodada 1 (commit `05aea43`)
 
 1. **A1** — Protocolo sequencial único com contrato `{ data: { protocol } }` (`supabaseClient.js`)
 2. **A2** — `src/utils/dateUtils.js` + correção de timezone em 9 arquivos
@@ -216,3 +222,22 @@ Padrão de mercado ("torre de controle"):
 7. **B1** — Romaneio de carga em PDF (`generateTripManifest.js` + botão no TripDetailPage)
 8. **B2** — Colunas NF, NCM e dimensões na tabela de itens do OrderDetailPage
 9. **C1** — KPIs clicáveis no Dashboard + filtro por URL na lista de coletas
+
+## Rodada 2 (restante do roadmap)
+
+1. **Fix Vercel 404** — `vercel.json` com rewrites SPA (rotas client-side como `/login` davam 404)
+2. **B3** — Tabela de frete por cliente (`custom_pricing`) com editor no ClientDetailPage; usada no cálculo do NewOrder e OrderDetailPage
+3. **B4** — Chave NF-e 44 dígitos com validação DV (`nfeUtils.js`) nos formulários interno e público; auto-preenche nº da NF
+4. **B5** — Adiantamento de viagem (migration `20260612_trip_advance.sql`; campo no NewTrip; despesa automática; acerto exibido no encerramento)
+5. **B7** — Checklist de saída do motorista (5 itens; gravado em `trip.events`)
+6. **C2** — Constatado já implementado (busca global Ctrl+K no AdminTopbar)
+7. **C3** — Card "Coletas de hoje" no Dashboard ordenado por período
+8. **C4** — Botão "Duplicar" pedido (NewOrder pré-preenchido)
+9. **C5** — `window.prompt`/`window.confirm` substituídos por Dialogs (resolver incidente; criar cliente)
+10. **C6** — `TableSkeleton`/`CardsSkeleton` compartilhados; aplicado na lista de coletas
+11. **D6** — Card "Resultado por Caminhão" no DRE (centro de custo por veículo)
+12. **Bug extra corrigido** — NewOrder não salvava o campo NCM no payload (era descartado no submit)
+
+### Migrations pendentes de aplicação no Supabase
+1. `supabase/migrations/20260612_revenue_status_cancelled.sql` (rodada 1 — já aplicada pelo usuário)
+2. `supabase/migrations/20260612_trip_advance.sql` (rodada 2 — **aplicar**: adiciona `advance_amount`/`advance_date` em `trips`)

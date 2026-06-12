@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Package, Truck, Users, MapPin, DollarSign, AlertCircle } from "lucide-react";
 import StatusBadge from "@/components/admin/StatusBadge";
+import { todayLocalISO } from "@/utils/dateUtils";
 
 export default function NewTrip() {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ export default function NewTrip() {
   const [departureDate, setDepartureDate] = useState("");
   const [notes, setNotes] = useState("");
   const [startNow, setStartNow] = useState(false);
+  const [advanceAmount, setAdvanceAmount] = useState("");
 
   const { data: orders = [] } = useQuery({
     queryKey: ["orders"],
@@ -44,18 +46,46 @@ export default function NewTrip() {
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const trip = await base44.entities.Trip.create(data);
+      let trip;
+      try {
+        trip = await base44.entities.Trip.create(data);
+      } catch (e) {
+        // Banco ainda sem as colunas de adiantamento (migration pendente) — recria sem elas
+        if (String(e?.message || "").includes("advance")) {
+          const { advance_amount, advance_date, ...rest } = data;
+          trip = await base44.entities.Trip.create(rest);
+        } else {
+          throw e;
+        }
+      }
       // Update orders with trip_id
       await Promise.all(selectedOrders.map(oid =>
         base44.entities.Order.update(oid, { trip_id: trip.id, driver_id: driverId, truck_id: truckId })
       ));
+      // Adiantamento ao motorista vira despesa pendente automaticamente
+      const adv = Number(advanceAmount) || 0;
+      if (adv > 0) {
+        await base44.entities.Expense.create({
+          category: "other",
+          description: `Adiantamento de viagem — ${selectedDriver?.name || "motorista"} (${selectedTruck?.plate || ""})`,
+          amount: adv,
+          date: todayLocalISO(),
+          status: "pending",
+          truck_id: truckId || undefined,
+          notes: `Vale-frete da viagem criada em ${todayLocalISO()}. Vincular ao acerto no encerramento.`,
+        });
+      }
       return trip;
     },
     onSuccess: (trip) => {
       queryClient.invalidateQueries({ queryKey: ["trips"] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
       toast({ title: "Viagem criada!" });
       navigate(`/admin/viagens/${trip.id}`);
+    },
+    onError: (e) => {
+      toast({ title: "Erro ao criar viagem", description: e?.message || "Tente novamente.", variant: "destructive" });
     },
   });
 
@@ -92,6 +122,7 @@ export default function NewTrip() {
       departure_date: departureDate || new Date().toISOString(),
       stops: buildStops(),
       total_revenue: totalRevenue,
+      ...(Number(advanceAmount) > 0 ? { advance_amount: Number(advanceAmount), advance_date: todayLocalISO() } : {}),
       notes,
     });
   };
@@ -215,6 +246,11 @@ export default function NewTrip() {
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Data e hora de saída</label>
             <Input type="datetime-local" value={departureDate} onChange={e => setDepartureDate(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Adiantamento ao motorista (R$) — opcional</label>
+            <Input type="number" step="0.01" min="0" placeholder="ex: 500,00" value={advanceAmount} onChange={e => setAdvanceAmount(e.target.value)} />
+            <p className="text-xs text-muted-foreground">Vale-frete pago antes da saída. Gera despesa pendente automaticamente e entra no acerto da viagem.</p>
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Observações da viagem</label>

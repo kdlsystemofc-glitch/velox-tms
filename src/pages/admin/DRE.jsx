@@ -28,6 +28,7 @@ export default function DRE() {
   const { settings } = useCompanySettings();
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
   const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => base44.entities.Expense.list("-date", 500) });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
 
   const month = parseInt(selectedMonth);
   const year = parseInt(selectedYear);
@@ -60,6 +61,17 @@ export default function DRE() {
     name: label,
     value: periodExpenses.filter(e => e.category === k).reduce((s, e) => s + (e.amount || 0), 0),
   })).filter(c => c.value > 0);
+
+  // Resultado por caminhão (centro de custo): receita dos pedidos atribuídos vs despesas diretas
+  const truckResults = trucks.map(t => {
+    const revenue = periodOrders
+      .filter(o => (o.truck_id === t.id || o.scheduled_truck_id === t.id) && o.status !== "cancelled")
+      .reduce((s, o) => s + (o.freight_value || 0), 0);
+    const directCosts = periodExpenses
+      .filter(e => e.truck_id === t.id)
+      .reduce((s, e) => s + (e.amount || 0), 0);
+    return { truck: t, revenue, directCosts, result: revenue - directCosts };
+  }).filter(r => r.revenue > 0 || r.directCosts > 0);
 
   const generateDREPdf = () => {
     const doc = new jsPDF();
@@ -325,6 +337,42 @@ export default function DRE() {
                 <Legend formatter={(v) => <span className="text-xs">{v}</span>} />
               </PieChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Resultado por caminhão (centro de custo) */}
+      {truckResults.length > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="font-semibold text-sm mb-1">Resultado por Caminhão</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              Receita dos fretes atribuídos ao veículo vs despesas lançadas com o veículo (combustível, manutenção, pedágio...). Custos fixos gerais não são rateados.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 font-medium text-muted-foreground">Placa</th>
+                    <th className="text-right py-2 font-medium text-muted-foreground">Receita</th>
+                    <th className="text-right py-2 font-medium text-muted-foreground">Custos diretos</th>
+                    <th className="text-right py-2 font-medium text-muted-foreground">Resultado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {truckResults.map(({ truck, revenue, directCosts, result }) => (
+                    <tr key={truck.id} className="border-b border-border/40">
+                      <td className="py-2 font-mono font-semibold">{truck.plate}</td>
+                      <td className="py-2 text-right font-mono text-green-600">R$ {revenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+                      <td className="py-2 text-right font-mono text-red-600">R$ {directCosts.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+                      <td className={`py-2 text-right font-mono font-semibold ${result >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        R$ {result.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -12,7 +12,7 @@ import StatusBadge, { orderStatusConfig } from "@/components/admin/StatusBadge";
 import {
   ArrowLeft, Package, User, MapPin, Truck, DollarSign,
   ChevronDown, ChevronUp, CheckCircle2, Circle, AlertCircle, FileText, Paperclip,
-  FileDown, AlertTriangle, Navigation
+  FileDown, AlertTriangle, Navigation, Copy
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { generateDeliveryReceipt } from "@/utils/generateDeliveryReceipt";
@@ -49,6 +49,8 @@ export default function OrderDetailPage() {
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [resolvingIncident, setResolvingIncident] = useState(null);
+  const [resolutionNotes, setResolutionNotes] = useState("");
   const [cte, setCte] = useState("");
   const [showDistanceModal, setShowDistanceModal] = useState(false);
   const [distanceInfo, setDistanceInfo] = useState(null);
@@ -79,6 +81,20 @@ export default function OrderDetailPage() {
     select: d => d[0],
     enabled: !!order?.trip_id,
   });
+  const { data: orderClient } = useQuery({
+    queryKey: ["client", order?.client_id],
+    queryFn: () => base44.entities.Client.filter({ id: order.client_id }),
+    select: d => d[0],
+    enabled: !!order?.client_id,
+  });
+  // Tabela negociada do cliente (prioridade máxima no cálculo, se preenchida)
+  const clientPricing = (() => {
+    const cp = orderClient?.custom_pricing;
+    if (cp && Object.keys(cp).some(k => cp[k] != null && cp[k] !== "")) {
+      return { ...(settings?.pricing || {}), ...cp };
+    }
+    return null;
+  })();
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Order.update(id, data),
@@ -208,6 +224,14 @@ export default function OrderDetailPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => navigate("/admin/coletas/nova", { state: { duplicate: order } })}
+          >
+            <Copy className="w-4 h-4" /> Duplicar
+          </Button>
           {order.status === "delivered" && (
             <Button
               variant="outline"
@@ -389,7 +413,10 @@ export default function OrderDetailPage() {
                             <tbody>
                               {r.items.map((item, ii) => (
                                 <tr key={ii} className="border-b border-border/40">
-                                  <td className="py-2 font-mono">{item.nf_number || "—"}</td>
+                                  <td className="py-2 font-mono" title={item.nf_key ? `Chave: ${item.nf_key}` : undefined}>
+                                    {item.nf_number || "—"}
+                                    {item.nf_key && <span className="ml-1 text-[10px] text-green-600" title={item.nf_key}>🔑</span>}
+                                  </td>
                                   <td className="py-2 font-mono">{item.ncm || "—"}</td>
                                   <td className="py-2">
                                     {item.description || "—"}
@@ -484,16 +511,7 @@ export default function OrderDetailPage() {
                       </div>
                       {inc.status !== "resolved" && (
                         <Button size="sm" variant="outline" className="text-xs flex-shrink-0"
-                          onClick={() => {
-                            const notes = prompt("Descrição da resolução:");
-                            if (notes) {
-                              base44.entities.Incident.update(inc.id, {
-                                status: "resolved",
-                                resolution_notes: notes,
-                                resolved_at: new Date().toISOString(),
-                              }).then(() => queryClient.invalidateQueries({ queryKey: ["incidents", id] }));
-                            }
-                          }}>
+                          onClick={() => { setResolvingIncident(inc); setResolutionNotes(""); }}>
                           Resolver
                         </Button>
                       )}
@@ -597,6 +615,7 @@ export default function OrderDetailPage() {
                   const breakdown = calculateFreightFull({
                     items: allItems, distanceKm: null, nfCount,
                     pricing: settings?.pricing,
+                    clientPricing,
                     settings,
                     originState: order.origin?.state || null,
                     destState: firstDestState,
@@ -743,6 +762,55 @@ export default function OrderDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Resolver incidente */}
+      <Dialog open={!!resolvingIncident} onOpenChange={(open) => !open && setResolvingIncident(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-500" /> Resolver Ocorrência
+            </DialogTitle>
+          </DialogHeader>
+          {resolvingIncident && (
+            <div className="space-y-3">
+              <div className="p-3 bg-muted/30 rounded-lg text-sm">
+                <p className="text-xs font-bold uppercase text-amber-700 mb-1">{resolvingIncident.type?.replace(/_/g, " ")}</p>
+                <p>{resolvingIncident.description}</p>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Descrição da resolução <span className="text-red-500">*</span></label>
+                <Textarea
+                  placeholder="O que foi feito para resolver..."
+                  rows={3}
+                  value={resolutionNotes}
+                  onChange={e => setResolutionNotes(e.target.value)}
+                  className="resize-none"
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" size="sm" onClick={() => setResolvingIncident(null)}>Cancelar</Button>
+                <Button
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 text-white font-bold"
+                  disabled={!resolutionNotes.trim()}
+                  onClick={async () => {
+                    await base44.entities.Incident.update(resolvingIncident.id, {
+                      status: "resolved",
+                      resolution_notes: resolutionNotes.trim(),
+                      resolved_at: new Date().toISOString(),
+                    });
+                    queryClient.invalidateQueries({ queryKey: ["incidents", id] });
+                    setResolvingIncident(null);
+                    toast({ title: "Ocorrência resolvida!" });
+                  }}
+                >
+                  Marcar como Resolvida
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Distance Modal */}
       <Dialog open={showDistanceModal} onOpenChange={setShowDistanceModal}>

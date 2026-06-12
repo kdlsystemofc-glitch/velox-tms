@@ -157,6 +157,7 @@ C:/vl/velox-tms/
 │   │   ├── coverageChecker.js    # Verificação de área de cobertura
 │   │   ├── dateUtils.js          # Datas timezone-safe (todayLocalISO, toLocalISO, parseLocalDate, formatDateBR) — USAR SEMPRE para datas YYYY-MM-DD
 │   │   ├── revenueHelper.js      # ensureRevenueForOrder (anti-duplicação) e cancelRevenuesForOrder (estorno)
+│   │   ├── nfeUtils.js           # validateNFeKey (DV mod-11), nfNumberFromKey, formatNFeKey
 │   │   ├── generateDeliveryReceipt.js # Geração de PDF de comprovante
 │   │   ├── generateTripManifest.js # Romaneio de carga (manifesto de viagem) em PDF
 │   │   ├── routePlanner.js       # Planejamento de rotas
@@ -360,9 +361,14 @@ git push
 
 4. **Páginas públicas não devem carregar dados de outras entidades** (pedidos, frota) — privacidade e performance.
 
-### Migration pendente de aplicação no Supabase
+### Migrations do Supabase (aplicar no SQL Editor)
 
-`supabase/migrations/20260612_revenue_status_cancelled.sql` — adiciona `'cancelled'` ao CHECK de `revenues.status`. Enquanto não aplicada, o estorno faz fallback para DELETE da receita.
+1. `supabase/migrations/20260612_revenue_status_cancelled.sql` — adiciona `'cancelled'` ao CHECK de `revenues.status` (✅ aplicada). Fallback no código: DELETE da receita.
+2. `supabase/migrations/20260612_trip_advance.sql` — adiciona `advance_amount`/`advance_date` em `trips` (adiantamento de viagem). Fallback no código: cria a viagem sem os campos.
+
+### Deploy no Vercel — `vercel.json` obrigatório
+
+O arquivo `vercel.json` na raiz contém o rewrite SPA (`/(.*) → /index.html`). **Sem ele, qualquer rota client-side (ex.: `/login`, `/admin`) retorna 404** ao ser acessada diretamente. Não remover.
 
 ---
 

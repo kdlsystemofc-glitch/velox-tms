@@ -20,9 +20,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
 import { FreightBreakdown } from "@/components/shared/FreightBreakdown";
+import { validateNFeKey, nfNumberFromKey } from "@/utils/nfeUtils";
 
 const INITIAL_ITEM = {
-  nf_number: "", description: "", package_type: "caixa", volumes: 1,
+  nf_number: "", nf_key: "", description: "", package_type: "caixa", volumes: 1,
   weight_kg: "", height_cm: "", width_cm: "", length_cm: "",
   declared_value: "", ncm: "", fragile: false, dangerous: false,
 };
@@ -897,6 +898,33 @@ function Step3({ form, updateRecipient, addRecipient, removeRecipient, updateIte
                     />
                     {errors[`recipient_${rIndex}_item_${iIndex}_vol`] && <p className="text-red-500 text-xs mt-1">{errors[`recipient_${rIndex}_item_${iIndex}_vol`]}</p>}
                   </div>
+                </div>
+                {/* Chave NF-e (opcional, com validação) */}
+                <div>
+                  <label className="block text-sm font-semibold text-velox-dark mb-1">Chave de acesso da NF-e <span className="text-gray-400 font-normal text-xs">44 dígitos, opcional</span></label>
+                  <input
+                    className={`w-full rounded-lg border px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-velox-amber/50 ${
+                      item.nf_key ? (validateNFeKey(item.nf_key).valid ? "border-green-400" : "border-red-400") : "border-gray-300"
+                    }`}
+                    placeholder="Código de barras da DANFE (44 números)"
+                    inputMode="numeric"
+                    value={item.nf_key || ""}
+                    onChange={e => {
+                      const digits = e.target.value.replace(/\D/g, "").slice(0, 44);
+                      const updates = { nf_key: digits };
+                      if (digits.length === 44 && !item.nf_number) {
+                        const num = nfNumberFromKey(digits);
+                        if (num) updates.nf_number = num;
+                      }
+                      updateItem(rIndex, iIndex, updates);
+                    }}
+                  />
+                  {item.nf_key && !validateNFeKey(item.nf_key).valid && (
+                    <p className="text-red-500 text-xs mt-1">Chave inválida — {validateNFeKey(item.nf_key).reason}</p>
+                  )}
+                  {item.nf_key && validateNFeKey(item.nf_key).valid && (
+                    <p className="text-green-600 text-xs mt-1">✓ Chave válida — nº da NF preenchido automaticamente</p>
+                  )}
                 </div>
                 {/* Linha 2: Descrição */}
                 <div>

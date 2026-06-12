@@ -230,6 +230,8 @@ CREATE TABLE IF NOT EXISTS trips (
   total_revenue NUMERIC,
   total_cost NUMERIC,
   net_profit NUMERIC,
+  advance_amount NUMERIC DEFAULT 0,
+  advance_date DATE,
   notes TEXT,
   events JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW(),

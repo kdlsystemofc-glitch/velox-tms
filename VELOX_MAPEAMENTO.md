@@ -223,6 +223,8 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 - Alertas Ativos (alerts não resolvidos) → `/admin/config`
 - **Somente admin:** A Receber → `/admin/financeiro?aba=receitas`, A Pagar → `/admin/financeiro?aba=despesas`
 
+**Card "Coletas de hoje":** pedidos com `collection_date = hoje` (não cancelados/entregues), ordenados por período (Manhã → Tarde → A combinar), com cliente, protocolo, rota, status e link
+
 **Calendário semanal:** 7 dias a partir de hoje, com `getAvailabilityForDate()` para cada dia, cor por status (verde/âmbar/vermelho/cinza)
 
 **Tabela de pedidos recentes:** últimos 10 pedidos, com protocolo, cliente, data, status
@@ -280,7 +282,11 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Seção Destinatários:**
 - Múltiplos destinatários
 - Por destinatário: nome, CNPJ, endereço (CEP auto-fill)
-- Por item: descrição, NF, volumes, peso, dimensões, valor declarado
+- Por item: descrição, nº NF, **chave NF-e 44 dígitos** (validação DV mod-11, borda verde/vermelha, auto-preenche nº NF), NCM, volumes, peso, dimensões, valor declarado
+
+**Duplicação:** se aberto via botão "Duplicar" do detalhe do pedido (`location.state.duplicate`), o formulário vem pré-preenchido com os dados do pedido original (datas, NFs assinadas e status zerados)
+
+**Pós-criação:** se o cliente não existir na base, Dialog "Criar cadastro de cliente?" (substitui o antigo `window.confirm`)
 
 **Seção Serviço:**
 - Tipo de frete (CIF/FOB), modal, data de coleta
@@ -313,7 +319,9 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 **Seção Incidentes:**
 - Lista de `incidents` vinculados ao pedido
-- Botão "Registrar Incidente" (modal)
+- Botão "Resolver" abre Dialog com textarea obrigatória (substitui o antigo `window.prompt`)
+
+**Cabeçalho:** botão "Duplicar" → abre `/admin/coletas/nova` com `location.state.duplicate` (formulário pré-preenchido)
 
 **Seção Histórico:** log completo de `status_history`
 
@@ -480,10 +488,11 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 3. **Agendamento**
    - Data/hora de saída (datetime-local)
+   - **Adiantamento ao motorista (R$)** — opcional; salvo em `trip.advance_amount` e gera Expense pendente automática ("Adiantamento de viagem — {motorista}")
    - Observações
    - Checkbox "Iniciar imediatamente"
 
-**Submit:** cria Trip + atualiza orders com `trip_id` + navega para `/admin/viagens/:id`
+**Submit:** cria Trip + atualiza orders com `trip_id` + navega para `/admin/viagens/:id` (tolera banco sem colunas de adiantamento — migration pendente)
 
 ---
 
@@ -566,7 +575,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **KPIs:** Fretes realizados, Total faturado, Ticket médio  
 **Dados cadastrais:** modo visualização + modo edição (toggle)  
 **Contatos:** lista com editar/remover, botão "+ Adicionar contato"  
-**Sidebar:** últimos 5 pedidos com status  
+**Sidebar:** card **Tabela de Frete** (edita `custom_pricing`: R$/kg, R$/km, taxa fixa, mínimo, GRIS, Ad Valorem, TDE, TDA, pedágio — em branco herda padrão; botão "Limpar" volta à tabela padrão; tabela negociada tem prioridade máxima no cálculo) + últimos 5 pedidos com status  
 **Fatura mensal:** se `billing_type = "monthly"` → card informativo + botão "Fechar fatura":
 - Modal mostra pedidos do mês, total, data de fechamento, data de vencimento
 - "Gerar fatura" → `Revenue.create()` com vencimento calculado
@@ -650,6 +659,8 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 - (=) EBITDA
 - (-) Depreciação mensal estimada (`monthly_depreciation`)
 - (=) Lucro / Prejuízo Líquido + margem %
+
+**Resultado por Caminhão** (card adicional): por veículo com movimento no período — receita dos pedidos atribuídos (`truck_id`/`scheduled_truck_id`) vs despesas diretas (`expense.truck_id`) e resultado; custos fixos gerais não são rateados
 
 **Gráfico pizza:** composição dos custos por categoria (Recharts)  
 **Botões:**
@@ -812,6 +823,11 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Arquivo:** `src/pages/driver/DriverTrip.jsx`  
 **Rota:** `/motorista/viagem/:id`  
 **Acesso:** somente motorista
+
+**Checklist de saída** (topo, se ainda não concluído e viagem planejada/em andamento):
+- 5 itens: pneus, luzes/setas, CRLV a bordo, carga amarrada, óleo/água
+- Botão "Confirmar checklist" habilitado só com todos marcados → grava evento `type: "checklist"` em `trip.events`
+- Após concluído: badge verde "Checklist de saída concluído"
 
 **Lista de paradas** (em ordem):
 - Por parada: número, tipo (Partida/Coleta/Entrega), destinatário, endereço

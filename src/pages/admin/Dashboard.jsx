@@ -84,6 +84,13 @@ export default function Dashboard() {
   // Últimos 6 pedidos
   const recentOrders = orders.slice(0, 6);
 
+  // Linha do tempo do dia: coletas previstas para hoje, ordenadas por período
+  const timePeriodOrder = { morning: 0, afternoon: 1, to_arrange: 2 };
+  const todayOrders = orders
+    .filter(o => o.collection_date === todayStr && o.status !== "cancelled" && o.status !== "delivered")
+    .sort((a, b) => (timePeriodOrder[a.collection_time] ?? 2) - (timePeriodOrder[b.collection_time] ?? 2));
+  const periodLabel = { morning: "Manhã", afternoon: "Tarde", to_arrange: "A combinar" };
+
   // KPIs financeiros (admin only)
   const pendingExpenses = isAdmin ? expenses.filter(e => e.status === "pending").reduce((s, e) => s + (e.amount || 0), 0) : 0;
   const pendingRevenues = isAdmin ? revenues.filter(r => r.status === "receivable").reduce((s, r) => s + (r.amount || 0), 0) : 0;
@@ -213,6 +220,36 @@ export default function Dashboard() {
             to="/admin/financeiro?aba=despesas"
           />
         </div>
+      )}
+
+      {/* Linha do tempo do dia */}
+      {todayOrders.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-heading font-semibold">Coletas de hoje ({todayOrders.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {todayOrders.map(o => (
+                <Link key={o.id} to={`/admin/coletas/${o.id}`}
+                  className="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border hover:border-velox-amber/40 hover:bg-muted/20 transition-colors">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xs font-semibold bg-velox-amber/10 text-velox-amber px-2 py-1 rounded-md flex-shrink-0 w-20 text-center">
+                      {periodLabel[o.collection_time] || "—"}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{o.client_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        <span className="font-mono">{o.protocol}</span> · {o.origin?.city || "—"} → {(o.recipients || []).map(r => r.city).filter(Boolean).join(", ") || "—"}
+                      </p>
+                    </div>
+                  </div>
+                  <StatusBadge status={o.status} />
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Linha 2 — Programação da semana */}
