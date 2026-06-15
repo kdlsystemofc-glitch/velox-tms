@@ -972,13 +972,21 @@ Caixa de entrada de contatos do site público (leads). Lista com não lidas em d
 
 ## PARTE 7 — SEGURANÇA (RLS Supabase)
 
-| Tabela | Leitura pública | Escrita pública | Acesso autenticado |
+| Tabela | Leitura pública (anon) | Escrita pública | Acesso autenticado |
 |--------|----------------|-----------------|-------------------|
-| `orders` | ✅ (todos) | ✅ (insert) | ✅ full |
+| `orders` | ❌ (só via função `track_order`) | ✅ (insert) | ✅ full |
+| `clients` | ❌ (só via função `client_by_cnpj`) | ❌ | ✅ full |
 | `company_settings` | ✅ | ❌ | ✅ full |
 | `testimonials` | ✅ (active=true) | ❌ | ✅ full |
-| `clients` | ✅ (active=true) | ❌ | ✅ full |
 | `contact_messages` | ❌ | ✅ (insert) | ✅ full |
 | Demais tabelas | ❌ | ❌ | ✅ full |
 
-Políticas: `authenticated users full access` em todas as tabelas + políticas específicas de leitura pública acima.
+Políticas: `authenticated users full access` em todas as tabelas + leituras públicas específicas acima.
+
+**Endurecimento de 2026 (migration `20260615_rls_public_functions.sql` — aplicar no SQL Editor):**
+Antes, anon lia **todos** os pedidos e clientes (policies `public_read_order_by_protocol` e `public_read_clients_limited`). Foram removidas. O acesso público agora é só por funções `SECURITY DEFINER` que retornam campos seguros:
+- `track_order(p_query)` — rastreamento por protocolo/CT-e/NF (usado em `Tracking.jsx` via `supabase.rpc`)
+- `client_by_cnpj(p_cnpj)` — consulta de cliente no site (usado em `getClientByCnpj`)
+- `next_protocol()` — protocolo sequencial sem ler `orders` (usado em `generateProtocol`)
+
+O cliente tenta a RPC e **faz fallback** para o comportamento antigo se a função ainda não existir — então o deploy do front e a aplicação da migration podem acontecer em qualquer ordem sem quebrar. **Após aplicar a migration, o fallback deixa de ser alcançável** (anon perde o SELECT).

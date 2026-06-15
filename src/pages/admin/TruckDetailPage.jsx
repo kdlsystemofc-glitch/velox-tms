@@ -124,7 +124,7 @@ export default function TruckDetailPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin/frota")}><ArrowLeft className="w-5 h-5" /></Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="font-display text-2xl font-extrabold font-mono">{truck.plate}</h1>
+            <h1 className="font-display text-xl font-bold font-mono">{truck.plate}</h1>
             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
               truck.status === "available" ? "bg-green-100 text-green-700" :
               truck.status === "on_route" ? "bg-amber-100 text-amber-700" :
@@ -144,12 +144,12 @@ export default function TruckDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Dados do Veículo */}
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="py-3 border-b border-border bg-muted/30">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Truck className="w-4 h-4 text-velox-amber" /> Dados do Veículo
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               {editing ? (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -306,7 +306,7 @@ export default function TruckDetailPage() {
 
           {/* Manutenções */}
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="py-3 border-b border-border bg-muted/30">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <Wrench className="w-4 h-4 text-velox-amber" /> Manutenções
@@ -316,7 +316,7 @@ export default function TruckDetailPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               {!truck.maintenance_history || truck.maintenance_history.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">Nenhuma manutenção registrada.</p>
               ) : (
@@ -404,12 +404,12 @@ export default function TruckDetailPage() {
 
         {/* Documentos */}
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="py-3 border-b border-border bg-muted/30">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <FileText className="w-4 h-4 text-velox-amber" /> Documentos
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-4">
             {documents.map(({ name, expiry, st }) => (
               <div key={name} className="space-y-1">
                 <div className="flex items-center justify-between">

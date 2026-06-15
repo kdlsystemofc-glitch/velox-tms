@@ -401,6 +401,7 @@ git push
 
 1. `supabase/migrations/20260612_revenue_status_cancelled.sql` — adiciona `'cancelled'` ao CHECK de `revenues.status` (✅ aplicada). Fallback no código: DELETE da receita.
 2. `supabase/migrations/20260612_trip_advance.sql` — adiciona `advance_amount`/`advance_date` em `trips` (adiantamento de viagem). Fallback no código: cria a viagem sem os campos.
+3. **`supabase/migrations/20260615_rls_public_functions.sql`** — segurança: remove a leitura pública de `orders`/`clients` e cria as funções `SECURITY DEFINER` `track_order`, `client_by_cnpj`, `next_protocol` (anon). O front tenta a RPC e faz fallback ao comportamento antigo, então a ordem de deploy é indiferente. **Aplicar para fechar o vazamento de leitura.**
 
 ### Deploy no Vercel — `vercel.json` obrigatório
 

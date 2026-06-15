@@ -260,7 +260,7 @@ export default function TripDetailPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin/viagens")}><ArrowLeft className="w-5 h-5" /></Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="font-display text-2xl font-extrabold">Viagem</h1>
+            <h1 className="font-display text-xl font-bold">Viagem</h1>
             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
               trip.status === "in_progress" ? "bg-amber-100 text-amber-700" :
               trip.status === "completed" ? "bg-green-100 text-green-700" :
@@ -390,12 +390,12 @@ export default function TripDetailPage() {
         {/* Summary */}
         <div className="space-y-4">
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="py-3 border-b border-border bg-muted/30">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-velox-amber" /> Financeiro
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
+            <CardContent className="space-y-2 text-sm pt-4">
               <div className="flex justify-between"><span className="text-muted-foreground">Receita total</span><span className="font-mono font-semibold text-green-600">R$ {(trip.total_revenue || 0).toFixed(2)}</span></div>
               {Number(trip.advance_amount) > 0 && (
                 <div className="flex justify-between"><span className="text-muted-foreground">Adiantamento pago</span><span className="font-mono text-amber-600">R$ {Number(trip.advance_amount).toFixed(2)}</span></div>
@@ -423,8 +423,8 @@ export default function TripDetailPage() {
 
           {trip.events && trip.events.length > 0 && (
             <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">Eventos</CardTitle></CardHeader>
-              <CardContent className="space-y-2">
+              <CardHeader className="py-3 border-b border-border bg-muted/30"><CardTitle className="text-sm font-semibold">Eventos</CardTitle></CardHeader>
+              <CardContent className="space-y-2 pt-4">
                 {trip.events.slice().reverse().map((e, i) => (
                   <div key={i} className="text-xs">
                     <p className="text-foreground">{e.description}</p>

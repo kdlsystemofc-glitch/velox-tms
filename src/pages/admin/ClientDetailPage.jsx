@@ -100,7 +100,7 @@ export default function ClientDetailPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-display text-2xl font-extrabold">{client.company_name}</h1>
+                <h1 className="font-display text-xl font-bold">{client.company_name}</h1>
                 {client.code && <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded-md text-muted-foreground">{client.code}</span>}
               </div>
               <p className="text-muted-foreground text-sm font-mono">{client.cpf_cnpj}</p>
@@ -135,12 +135,12 @@ export default function ClientDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="py-3 border-b border-border bg-muted/30">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-velox-amber" /> Dados Cadastrais
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               {editing ? (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
@@ -382,7 +382,7 @@ export default function ClientDetailPage() {
         <div className="space-y-4">
           {/* Tabela de frete personalizada (B3) */}
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="py-3 border-b border-border bg-muted/30">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <DollarSign className="w-4 h-4 text-velox-amber" /> Tabela de Frete
@@ -395,7 +395,7 @@ export default function ClientDetailPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               {editingPricing ? (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground mb-2">Campos em branco usam a tabela padrão da empresa. Esta tabela tem prioridade sobre rotas e padrão.</p>
@@ -466,12 +466,12 @@ export default function ClientDetailPage() {
             </Card>
           )}
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="py-3 border-b border-border bg-muted/30">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-velox-amber" /> Últimos Pedidos
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               {orders.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-3">Nenhum pedido ainda.</p>
               ) : (
