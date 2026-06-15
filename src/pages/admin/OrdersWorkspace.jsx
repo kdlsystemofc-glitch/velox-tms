@@ -15,8 +15,21 @@ import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { calculateFreight } from "@/utils/freightCalculator";
 import { todayLocalISO, formatDateBR } from "@/utils/dateUtils";
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
-import { Search, Plus, Package, CheckCircle, XCircle, CalendarDays, Eye } from "lucide-react";
+import { Search, Plus, Package, CheckCircle, XCircle, CalendarDays, Eye, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
+
+function SortTh({ label, k, sort, onSort, align = "left", className = "" }) {
+  const active = sort?.key === k;
+  return (
+    <th className={`py-2 px-4 cursor-pointer select-none hover:text-foreground ${align === "right" ? "text-right" : "text-left"} ${className}`}
+      onClick={() => onSort(k)}>
+      <span className={`inline-flex items-center gap-1 ${align === "right" ? "flex-row-reverse" : ""}`}>
+        {label}
+        {active ? (sort.dir === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <ChevronsUpDown className="w-3 h-3 opacity-30" />}
+      </span>
+    </th>
+  );
+}
 
 const PIPELINE_TABS = [
   { key: "all",        label: "Todos" },
@@ -58,6 +71,7 @@ export default function OrdersWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState(searchParams.get("status") || "all");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState(null);
   const [confirmingOrder, setConfirmingOrder] = useState(null);
   const [confirmForm, setConfirmForm] = useState({ truck_id: "", date: "", freight_value: "", payment_method: "pix" });
   const [rejectingOrder, setRejectingOrder] = useState(null);
@@ -85,7 +99,7 @@ export default function OrdersWorkspace() {
     return acc;
   }, {});
 
-  const filtered = orders.filter(o => {
+  const filteredBase = orders.filter(o => {
     const matchTab = tab === "all" || o.status === tab;
     const q = search.toLowerCase();
     const matchSearch = !search ||
@@ -95,6 +109,30 @@ export default function OrdersWorkspace() {
       (o.recipients || []).some(r => r.city?.toLowerCase().includes(q));
     return matchTab && matchSearch;
   });
+
+  // Ordenação por coluna
+  const sortValue = (o, key) => {
+    switch (key) {
+      case "protocol": return o.protocol || "";
+      case "client_name": return (o.client_name || "").toLowerCase();
+      case "date": return o.scheduled_date || o.collection_date || "";
+      case "weight": return Number(o.total_weight_kg) || 0;
+      case "freight": return Number(o.freight_value) || 0;
+      case "status": return o.status || "";
+      default: return "";
+    }
+  };
+  const filtered = [...filteredBase].sort((a, b) => {
+    if (!sort) return 0;
+    const va = sortValue(a, sort.key), vb = sortValue(b, sort.key);
+    let cmp;
+    if (typeof va === "number" && typeof vb === "number") cmp = va - vb;
+    else cmp = String(va).localeCompare(String(vb), "pt-BR", { numeric: true });
+    return sort.dir === "asc" ? cmp : -cmp;
+  });
+  const toggleSort = (key) => setSort(prev =>
+    !prev || prev.key !== key ? { key, dir: "asc" } : prev.dir === "asc" ? { key, dir: "desc" } : null
+  );
 
   // ── Confirmar (mesma lógica da antiga Agenda) ─────────────────
   const openConfirm = (order) => {
@@ -193,15 +231,15 @@ export default function OrdersWorkspace() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground">Protocolo</th>
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground">Cliente</th>
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground hidden lg:table-cell">Rota</th>
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground hidden md:table-cell">Coleta</th>
-                  <th className="text-right py-2.5 px-4 font-medium text-muted-foreground hidden md:table-cell">Carga</th>
-                  <th className="text-right py-2.5 px-4 font-medium text-muted-foreground hidden sm:table-cell">Valor</th>
-                  <th className="text-left py-2.5 px-4 font-medium text-muted-foreground">Status</th>
-                  <th className="text-right py-2.5 px-4 font-medium text-muted-foreground w-44">Ações</th>
+                <tr className="border-b border-border bg-muted/40 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <SortTh label="Protocolo" k="protocol" sort={sort} onSort={toggleSort} />
+                  <SortTh label="Cliente" k="client_name" sort={sort} onSort={toggleSort} />
+                  <th className="text-left py-2 px-4 hidden lg:table-cell">Rota</th>
+                  <SortTh label="Coleta" k="date" sort={sort} onSort={toggleSort} className="hidden md:table-cell" />
+                  <SortTh label="Carga" k="weight" sort={sort} onSort={toggleSort} align="right" className="hidden md:table-cell" />
+                  <SortTh label="Valor" k="freight" sort={sort} onSort={toggleSort} align="right" className="hidden sm:table-cell" />
+                  <SortTh label="Status" k="status" sort={sort} onSort={toggleSort} />
+                  <th className="text-right py-2 px-4 w-44">Ações</th>
                 </tr>
               </thead>
               <tbody>

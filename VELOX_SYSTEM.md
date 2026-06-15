@@ -597,6 +597,10 @@ Prioridade:
 - Linha do tempo "Coletas de hoje" no dashboard
 - Duplicar pedido (clientes recorrentes)
 - DRE com resultado por caminhão (centro de custo)
+- Importação de XML da NF-e no Novo Pedido (preenche destinatário + item automaticamente)
+- POD com assinatura digital do recebedor (canvas no app do motorista) + nome do recebedor
+- Ordenação por coluna na lista de Pedidos; "Criar pedido" a partir de mensagem do site
+- Segurança RLS endurecida (funções SECURITY DEFINER; sem leitura pública direta de orders/clients)
 
 > Roadmap completo com análise de mercado e status item a item: ver `VELOX_ROADMAP.md`.
 

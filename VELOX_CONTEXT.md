@@ -203,6 +203,7 @@ C:/vl/velox-tms/
 │   │   ├── dateUtils.js          # Datas timezone-safe (todayLocalISO, toLocalISO, parseLocalDate, formatDateBR) — USAR SEMPRE para datas YYYY-MM-DD
 │   │   ├── revenueHelper.js      # ensureRevenueForOrder (anti-duplicação) e cancelRevenuesForOrder (estorno)
 │   │   ├── nfeUtils.js           # validateNFeKey (DV mod-11), nfNumberFromKey, formatNFeKey
+│   │   ├── nfeXml.js             # parseNFeXML — lê XML da NF-e e extrai destinatário/itens (import no Novo Pedido)
 │   │   ├── generateDeliveryReceipt.js # Geração de PDF de comprovante
 │   │   ├── generateTripManifest.js # Romaneio de carga (manifesto de viagem) em PDF
 │   │   ├── routePlanner.js       # Planejamento de rotas
@@ -279,6 +280,8 @@ C:/vl/velox-tms/
 │   │   │   ├── DataTable.jsx          # Tabela densa ordenável + busca inline (listas de cadastro)
 │   │   │   ├── FormSection.jsx        # FormSection + Field (formulários seccionados)
 │   │   │   ├── CollapsibleSection.jsx # Seção colapsável (telas de detalhe)
+│   │   │   ├── PageHeader.jsx         # Cabeçalho de página padrão + estilo de abas dos containers
+│   │   │   ├── SignaturePad.jsx       # Captura de assinatura em canvas (POD do motorista)
 │   │   │   ├── TableSkeleton.jsx      # Skeletons de tabela/cards
 │   │   │   ├── EmptyState.jsx         # Estado vazio reutilizável
 │   │   │   ├── FileUploadButton.jsx   # Botão de upload com Supabase Storage

@@ -73,6 +73,8 @@ export default function NewOrder() {
 
   // Duplicação de pedido: vem de OrderDetailPage via location.state
   const dup = location.state?.duplicate;
+  // Pré-preenchimento a partir de uma mensagem do site
+  const fromMessage = location.state?.fromMessage;
 
   const [form, setForm] = useState(() => {
     const base = {
@@ -85,6 +87,7 @@ export default function NewOrder() {
       freight_value: "", freight_payer: "cif", payment_method: "pix", payment_status: "pending",
       driver_id: "", truck_id: "", general_notes: "",
     };
+    if (fromMessage) return { ...base, ...fromMessage };
     if (!dup) return base;
     // Copia dados do pedido original, zerando o que é específico (datas, NFs assinadas, status de entrega)
     return {

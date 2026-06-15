@@ -240,7 +240,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 **Busca:** protocolo, cliente ou cidade
 
-**Tabela colunas:** Protocolo (+ tag Urgente), Cliente, Rota, Coleta, Carga, Valor, Status, **Ações inline**:
+**Tabela colunas (ordenáveis por clique no cabeçalho — Protocolo, Cliente, Coleta, Carga, Valor, Status):** Protocolo (+ tag Urgente), Cliente, Rota, Coleta, Carga, Valor, Status, **Ações inline**:
 - Status `new` → botão **Confirmar** (abre Sheet) + **Recusar** (Sheet de confirmação → cancela + estorna receitas)
 - Status `confirmed` sem viagem → botão **Despachar** (vai ao quadro)
 - Demais → botão Ver
@@ -273,7 +273,9 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 - Por destinatário: nome, CNPJ, endereço (CEP auto-fill)
 - Por item: descrição, nº NF, **chave NF-e 44 dígitos** (validação DV mod-11, borda verde/vermelha, auto-preenche nº NF), NCM, volumes, peso, dimensões, valor declarado
 
-**Duplicação:** se aberto via botão "Duplicar" do detalhe do pedido (`location.state.duplicate`), o formulário vem pré-preenchido com os dados do pedido original (datas, NFs assinadas e status zerados)
+**Importar XML da NF-e:** botão por destinatário (input `.xml`) → `parseNFeXML()` extrai chave, nº NF, nome/CNPJ/endereço do destinatário, volumes, peso bruto, valor e descrição, preenchendo o destinatário + 1 item automaticamente.
+
+**Duplicação / a partir de mensagem:** abre via `location.state.duplicate` (Duplicar pedido) ou `location.state.fromMessage` (botão "Criar pedido" na tela de Mensagens), pré-preenchendo os dados
 
 **Pós-criação:** se o cliente não existir na base, Dialog "Criar cadastro de cliente?" (substitui o antigo `window.confirm`)
 
@@ -705,7 +707,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Rota:** `/admin/mensagens` (item próprio na sidebar, badge de não lidas)  
 **Acesso:** operador + admin
 
-Caixa de entrada de contatos do site público (leads). Lista com não lidas em destaque, expandir para ler, "Marcar todas como lidas", e ações **Responder por e-mail** / **WhatsApp**. (Saiu de Configurações.)
+Caixa de entrada de contatos do site público (leads). Lista com não lidas em destaque, expandir para ler, "Marcar todas como lidas", e ações **Criar pedido** (abre Novo Pedido pré-preenchido com nome/telefone/e-mail/mensagem), **Responder por e-mail** / **WhatsApp**. (Saiu de Configurações.)
 
 ---
 
@@ -797,11 +799,10 @@ Caixa de entrada de contatos do site público (leads). Lista com não lidas em d
 - Status visual: pendente / chegou (âmbar) / concluído (verde/opaco)
 - Botão "Confirmar Chegada" (se pending + viagem in_progress) → stop.status = "arrived"
 - Se status = "arrived":
-  - **Entrega:** upload obrigatório de NF assinada (foto/PDF, câmera capturada)
+  - **Entrega (POD):** upload obrigatório de NF assinada + **nome do recebedor** + **assinatura digital** (`SignaturePad` em canvas → upload para storage → `signature_url`). Botão "Confirmar Entrega" exige NF **e** assinatura.
   - **Coleta:** foto opcional
   - Textarea de observações (opcional)
-  - Botão "Confirmar Entrega/Coleta" (desabilitado se entrega sem NF)
-  - Aviso "Faça o upload da NF para continuar"
+  - Ao concluir: `signature_url`, `receiver_name` e `delivered_at` gravados no destinatário do pedido
 - Ao concluir parada:
   - Synca status do pedido (`in_transit` na coleta, `delivered` quando todos entregues)
   - Se entrega: salva `nf_signed_url` no recipient do pedido

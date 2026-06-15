@@ -1,17 +1,29 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageSquare, Mail, Phone } from "lucide-react";
+import { MessageSquare, Mail, Phone, FilePlus } from "lucide-react";
 
 /**
  * Mensagens — caixa de entrada de contatos vindos do site público (leads).
  * Saiu de Configurações por ser operacional, não um parâmetro.
  */
 export default function Messages() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [expandedMsg, setExpandedMsg] = useState(null);
+
+  const createOrderFromMessage = (msg) => {
+    markRead(msg);
+    navigate("/admin/coletas/nova", { state: { fromMessage: {
+      client_name: msg.name || "",
+      client_phone: msg.phone || "",
+      client_email: msg.email || "",
+      general_notes: msg.message ? `Origem: contato do site.\n"${msg.message}"` : "",
+    } } });
+  };
 
   const { data: messages = [] } = useQuery({
     queryKey: ["contact-messages"],
@@ -74,7 +86,10 @@ export default function Messages() {
                   {expandedMsg === msg.id && (
                     <div className="border-t border-border px-3.5 pb-3.5 pt-3 space-y-3">
                       <p className="text-sm leading-relaxed">{msg.message}</p>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
+                        <Button size="sm" className="text-xs gap-1 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={() => createOrderFromMessage(msg)}>
+                          <FilePlus className="w-3 h-3" /> Criar pedido
+                        </Button>
                         {msg.email && (
                           <a href={`mailto:${msg.email}`}>
                             <Button size="sm" variant="outline" className="text-xs gap-1"><Mail className="w-3 h-3" /> Responder por e-mail</Button>
