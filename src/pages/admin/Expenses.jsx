@@ -12,7 +12,25 @@ import { useToast } from "@/components/ui/use-toast";
 import { Plus, TrendingDown, Search, CheckCircle2 } from "lucide-react";
 import { NumericInput } from "@/components/shared/NumericInput";
 import FileUploadButton from "@/components/shared/FileUploadButton";
-import { format, parseISO } from "date-fns";
+import { parseLocalDate, formatDateBR } from "@/utils/dateUtils";
+
+const AGING = [
+  { key: "overdue", label: "Vencidas",      cls: "text-red-700 bg-red-50 border-red-200 hover:bg-red-100" },
+  { key: "d7",      label: "Vence ≤ 7 dias", cls: "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100" },
+  { key: "d30",     label: "8–30 dias",      cls: "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100" },
+  { key: "d60",     label: "31–60 dias",     cls: "text-indigo-700 bg-indigo-50 border-indigo-200 hover:bg-indigo-100" },
+  { key: "future",  label: "> 60 dias",      cls: "text-slate-700 bg-slate-50 border-slate-200 hover:bg-slate-100" },
+];
+function agingOf(dateStr) {
+  const d = parseLocalDate(dateStr);
+  if (!d) return "future";
+  const days = Math.round((d - new Date(new Date().setHours(0,0,0,0))) / 86400000);
+  if (days < 0) return "overdue";
+  if (days <= 7) return "d7";
+  if (days <= 30) return "d30";
+  if (days <= 60) return "d60";
+  return "future";
+}
 
 const categoryLabels = {
   fuel: "Combustível", maintenance: "Manutenção", tires: "Pneus", tolls: "Pedágios",
@@ -33,6 +51,7 @@ export default function Expenses() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [agingFilter, setAgingFilter] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
 
@@ -56,14 +75,22 @@ export default function Expenses() {
     },
   };
 
+  const open = expenses.filter(e => e.status === "pending" || e.status === "installment");
+  const agingTotals = AGING.reduce((acc, b) => {
+    const items = open.filter(e => agingOf(e.due_date || e.date) === b.key);
+    acc[b.key] = { count: items.length, total: items.reduce((s, e) => s + (e.amount || 0), 0) };
+    return acc;
+  }, {});
+
   const filtered = expenses.filter(e => {
     const matchCat = categoryFilter === "all" || e.category === categoryFilter;
     const matchSearch = !search || e.description?.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
+    const matchAging = !agingFilter || ((e.status === "pending" || e.status === "installment") && agingOf(e.due_date || e.date) === agingFilter);
+    return matchCat && matchSearch && matchAging;
   });
 
   const totalPaid = expenses.filter(e => e.status === "paid").reduce((s, e) => s + (e.amount || 0), 0);
-  const totalPending = expenses.filter(e => e.status === "pending").reduce((s, e) => s + (e.amount || 0), 0);
+  const totalPending = open.reduce((s, e) => s + (e.amount || 0), 0);
 
   const openPayModal = (e) => {
     setPayingExpense(e);
@@ -94,15 +121,30 @@ export default function Expenses() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4">
-          <p className="text-xs text-muted-foreground">A Pagar</p>
-          <p className="text-xl font-bold font-mono text-amber-600">R$ {totalPending.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+      {/* Resumo + Aging de contas a pagar */}
+      <div className="grid grid-cols-2 lg:grid-cols-7 gap-2.5">
+        <Card className="p-3">
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Total a pagar</p>
+          <p className="text-lg font-bold font-mono text-amber-600">R$ {totalPending.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
         </Card>
-        <Card className="p-4">
-          <p className="text-xs text-muted-foreground">Total Pago</p>
-          <p className="text-xl font-bold font-mono text-red-600">R$ {totalPaid.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+        <Card className="p-3">
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Total pago</p>
+          <p className="text-lg font-bold font-mono text-red-600">R$ {totalPaid.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
         </Card>
+        {AGING.map(b => {
+          const t = agingTotals[b.key] || { count: 0, total: 0 };
+          const active = agingFilter === b.key;
+          return (
+            <button key={b.key}
+              onClick={() => setAgingFilter(active ? null : b.key)}
+              className={`text-left rounded-md border p-3 transition-colors ${b.cls} ${active ? "ring-2 ring-offset-1 ring-current" : ""}`}>
+              <p className="text-[11px] font-semibold uppercase tracking-wide flex items-center justify-between">
+                {b.label}{t.count > 0 && <span className="font-mono">{t.count}</span>}
+              </p>
+              <p className="text-base font-bold font-mono">R$ {t.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex gap-3">
@@ -141,7 +183,7 @@ export default function Expenses() {
                 )}
                 {filtered.map(e => (
                   <tr key={e.id} className="border-b border-border/50 hover:bg-muted/20">
-                    <td className="py-3 px-4 text-muted-foreground">{e.date ? format(parseISO(e.date), "dd/MM/yy") : "—"}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{formatDateBR(e.date)}</td>
                     <td className="py-3 px-4"><span className="text-xs bg-muted px-2 py-0.5 rounded">{categoryLabels[e.category] || e.category}</span></td>
                     <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">
                       {e.description || "—"}

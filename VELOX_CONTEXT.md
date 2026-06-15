@@ -21,6 +21,25 @@ URL de produção: **https://velox-tms.vercel.app**
 
 ---
 
+## 1.05 Design System "Steel & Slate" (reformulação visual de 2026)
+
+Identidade visual corporativa no padrão de TMS profissionais (McLeod, Benner, Senior). **Tudo cascateia por tokens** — `src/index.css` (variáveis CSS HSL) + `tailwind.config.js` (paleta `velox`).
+
+- **Paleta:** canvas ardósia `#F1F3F5`; texto grafite `#19212E`; **acento azul-aço `#2B5FA8`** (primary/CTA); sidebar grafite `#1B2430`. Status semânticos: verde `#1E8E4E`, âmbar `#C27510` (atenção), vermelho `#C0392B`.
+- **Migração do âmbar:** o token legado `velox.amber` foi **remapeado para o azul-aço** — todo `bg-velox-amber`/`text-velox-amber` no código antigo agora renderiza azul. CTAs com `text-velox-dark` foram migrados para `text-white`.
+- **Densidade:** `--radius: 0.375rem` (6px, cantos retos); `Card` com `p-4`/`shadow-sm`; `Input` h-9 com foco azul; cabeçalhos de tabela uppercase 11px com fill (`TableHead`). Números tabulares (`tnum`) no body.
+- **Tipografia:** Inter (display/heading/body) + JetBrains Mono (protocolos, valores, placas). Removido o Barlow Condensed.
+- **Componentes-base novos:**
+  - `StatusBadge` — tag retangular com ponto indicador (pedidos + viagens).
+  - `components/shared/FormSection.jsx` — `FormSection` (cabeçalho + grade) e `Field` (label acima, obrigatório/opcional, erro inline).
+  - `components/shared/CollapsibleSection.jsx` — seção colapsável para telas de detalhe.
+- **Configurações:** `ConfigPage` agora é **navegação lateral por categorias** (não abas).
+- **Pedido (`OrderWorkspace`):** página única com **seções colapsáveis** (Resumo, Cargas, Financeiro, Ocorrências, Histórico) — sem abas.
+- **Financeiro (`Revenues`/`Expenses`):** painel de **aging** clicável (Vencidas, ≤7d, 8–30d, 31–60d, >60d) que filtra a lista; coluna de vencimento mostra dias vencidos/a vencer.
+- **App do motorista:** botões grandes (h-14) e barra de progresso de paradas.
+
+---
+
 ## 1.1 Fluxo do painel admin (arquitetura nova — refatoração de 2026)
 
 O painel foi reconstruído seguindo o padrão dos grandes TMS (McLeod, TMW, Benner): **fluxo de despacho centrado em "gestão por exceção"**, não telas isoladas. A lógica de negócio, integrações e dados foram 100% preservados — só a experiência mudou.

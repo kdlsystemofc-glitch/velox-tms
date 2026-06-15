@@ -10,19 +10,43 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, TrendingUp, Search, CheckCircle2 } from "lucide-react";
 import { NumericInput } from "@/components/shared/NumericInput";
-import { format, parseISO } from "date-fns";
+import { parseLocalDate, todayLocalISO as _today, formatDateBR } from "@/utils/dateUtils";
 
 const statusConfig = {
   receivable: { label: "A Receber", color: "bg-amber-100 text-amber-700" },
   received: { label: "Recebido", color: "bg-green-100 text-green-700" },
   overdue: { label: "Atrasado", color: "bg-red-100 text-red-700" },
+  cancelled: { label: "Cancelado", color: "bg-gray-100 text-gray-500" },
 };
+
+/** Faixas de aging (contas a receber em aberto). */
+const AGING = [
+  { key: "overdue", label: "Vencidas",      cls: "text-red-700 bg-red-50 border-red-200 hover:bg-red-100" },
+  { key: "d7",      label: "Vence ≤ 7 dias", cls: "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100" },
+  { key: "d30",     label: "8–30 dias",      cls: "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100" },
+  { key: "d60",     label: "31–60 dias",     cls: "text-indigo-700 bg-indigo-50 border-indigo-200 hover:bg-indigo-100" },
+  { key: "future",  label: "> 60 dias",      cls: "text-slate-700 bg-slate-50 border-slate-200 hover:bg-slate-100" },
+];
+
+/** Classifica uma conta em aberto pela data de vencimento. */
+function agingOf(dueDate) {
+  const d = parseLocalDate(dueDate);
+  if (!d) return "future";
+  const today = parseLocalDate(_today());
+  const days = Math.round((d - today) / 86400000);
+  if (days < 0) return "overdue";
+  if (days <= 7) return "d7";
+  if (days <= 30) return "d30";
+  if (days <= 60) return "d60";
+  return "future";
+}
 
 export default function Revenues() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [agingFilter, setAgingFilter] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ description: "", amount: "", due_date: "", payment_method: "pix", order_id: "" });
 
@@ -46,13 +70,22 @@ export default function Revenues() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["revenues"] }),
   });
 
+  // Contas em aberto (a receber/atrasadas) para o aging
+  const open = revenues.filter(r => r.status === "receivable" || r.status === "overdue");
+  const agingTotals = AGING.reduce((acc, b) => {
+    const items = open.filter(r => agingOf(r.due_date) === b.key);
+    acc[b.key] = { count: items.length, total: items.reduce((s, r) => s + (r.amount || 0), 0) };
+    return acc;
+  }, {});
+
   const filtered = revenues.filter(r => {
     const matchStatus = statusFilter === "all" || r.status === statusFilter;
     const matchSearch = !search || r.description?.toLowerCase().includes(search.toLowerCase());
-    return matchStatus && matchSearch;
+    const matchAging = !agingFilter || ((r.status === "receivable" || r.status === "overdue") && agingOf(r.due_date) === agingFilter);
+    return matchStatus && matchSearch && matchAging;
   });
 
-  const totalReceivable = revenues.filter(r => r.status === "receivable").reduce((s, r) => s + (r.amount || 0), 0);
+  const totalReceivable = open.reduce((s, r) => s + (r.amount || 0), 0);
   const totalReceived = revenues.filter(r => r.status === "received").reduce((s, r) => s + (r.amount || 0), 0);
 
   return (
@@ -67,16 +100,38 @@ export default function Revenues() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4">
-          <p className="text-xs text-muted-foreground">A Receber</p>
-          <p className="text-xl font-bold font-mono text-amber-600">R$ {totalReceivable.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+      {/* Resumo + Aging de contas a receber */}
+      <div className="grid grid-cols-2 lg:grid-cols-7 gap-2.5">
+        <Card className="p-3 lg:col-span-1">
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Total a receber</p>
+          <p className="text-lg font-bold font-mono text-amber-600">R$ {totalReceivable.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
         </Card>
-        <Card className="p-4">
-          <p className="text-xs text-muted-foreground">Recebido</p>
-          <p className="text-xl font-bold font-mono text-green-600">R$ {totalReceived.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+        <Card className="p-3 lg:col-span-1">
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Recebido</p>
+          <p className="text-lg font-bold font-mono text-green-600">R$ {totalReceived.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
         </Card>
+        {AGING.map(b => {
+          const t = agingTotals[b.key] || { count: 0, total: 0 };
+          const active = agingFilter === b.key;
+          return (
+            <button key={b.key}
+              onClick={() => setAgingFilter(active ? null : b.key)}
+              className={`text-left rounded-md border p-3 transition-colors ${b.cls} ${active ? "ring-2 ring-offset-1 ring-current" : ""}`}>
+              <p className="text-[11px] font-semibold uppercase tracking-wide flex items-center justify-between">
+                {b.label}
+                {t.count > 0 && <span className="font-mono">{t.count}</span>}
+              </p>
+              <p className="text-base font-bold font-mono">R$ {t.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+            </button>
+          );
+        })}
       </div>
+      {agingFilter && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          Filtrando por faixa: <strong className="text-foreground">{AGING.find(a => a.key === agingFilter)?.label}</strong>
+          <button onClick={() => setAgingFilter(null)} className="text-primary hover:underline">limpar</button>
+        </div>
+      )}
 
       <div className="flex gap-3">
         <div className="relative flex-1">
@@ -115,7 +170,19 @@ export default function Revenues() {
                   <tr key={r.id} className="border-b border-border/50 hover:bg-muted/20">
                     <td className="py-3 px-4">{r.description || "—"}</td>
                     <td className="py-3 px-4 text-right font-mono font-semibold text-green-600">R$ {(r.amount || 0).toFixed(2)}</td>
-                    <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{r.due_date ? format(parseISO(r.due_date), "dd/MM/yyyy") : "—"}</td>
+                    <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">
+                      {formatDateBR(r.due_date)}
+                      {(r.status === "receivable" || r.status === "overdue") && (() => {
+                        const d = parseLocalDate(r.due_date);
+                        if (!d) return null;
+                        const days = Math.round((d - parseLocalDate(_today())) / 86400000);
+                        return (
+                          <span className={`ml-2 text-[10px] font-semibold ${days < 0 ? "text-red-600" : days <= 7 ? "text-amber-600" : "text-muted-foreground"}`}>
+                            {days < 0 ? `${Math.abs(days)}d vencida` : days === 0 ? "vence hoje" : `em ${days}d`}
+                          </span>
+                        );
+                      })()}
+                    </td>
                     <td className="py-3 px-4">
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${(statusConfig[r.status] || statusConfig.receivable).color}`}>
                         {(statusConfig[r.status] || statusConfig.receivable).label}

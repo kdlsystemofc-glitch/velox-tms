@@ -237,7 +237,7 @@ export default function DriverTrip() {
                   {trip.status === "in_progress" && stop.status !== "completed" && (
                     <div className="mt-3 space-y-2">
                       {stop.status === "pending" && (
-                        <Button size="sm" variant="outline" className="w-full border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-xs" onClick={() => handleArrived(i)}>
+                        <Button className="w-full h-12 text-sm border border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 font-semibold" onClick={() => handleArrived(i)}>
                           ▶ Confirmar Chegada
                         </Button>
                       )}
@@ -256,7 +256,7 @@ export default function DriverTrip() {
                             </div>
                           )}
                           <Textarea placeholder="Observações (opcional)" rows={2} value={action.notes || ""} onChange={e => setStopField(i, "notes", e.target.value)} className="text-xs resize-none bg-white/5 border-white/10 text-white placeholder:text-white/30" />
-                          <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-xs"
+                          <Button className="w-full h-14 text-base bg-green-600 hover:bg-green-700 text-white font-bold"
                             disabled={stop.type === "delivery" && !action.nf_url}
                             onClick={() => handleComplete(i)}>
                             ✓ {stop.type === "delivery" ? "Confirmar Entrega" : "Confirmar Coleta"}

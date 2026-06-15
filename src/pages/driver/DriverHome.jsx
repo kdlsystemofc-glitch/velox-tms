@@ -92,17 +92,26 @@ export default function DriverHome() {
                 <p className="font-semibold text-white">{nextStop.recipient_name || "Partida"}</p>
                 <p className="text-xs text-white/50 mt-1">{nextStop.address}</p>
                 <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
-                  <Button className="w-full mt-3 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
-                    <MapPin className="w-4 h-4" /> Abrir no Google Maps
+                  <Button className="w-full mt-3 h-14 text-base bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
+                    <MapPin className="w-5 h-5" /> Abrir no Google Maps
                   </Button>
                 </a>
               </div>
             )}
 
-            <p className="text-xs text-white/40 text-center mt-4">{completedCount} de {totalStops} paradas concluídas</p>
+            {/* Progresso de paradas */}
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-xs text-white/50 mb-1.5">
+                <span>Progresso</span>
+                <span className="font-mono">{completedCount}/{totalStops} paradas</span>
+              </div>
+              <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-green-500 transition-all" style={{ width: `${totalStops > 0 ? (completedCount / totalStops) * 100 : 0}%` }} />
+              </div>
+            </div>
 
             <Link to={`/motorista/viagem/${trip.id}`}>
-              <Button variant="outline" className="w-full mt-3 border-white/20 text-white hover:bg-white/10">
+              <Button className="w-full mt-4 h-14 text-base bg-white text-velox-dark hover:bg-white/90 font-bold">
                 Ver todas as paradas
               </Button>
             </Link>
