@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Building2, Search, Eye, X, MessageCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
+import DataTable from "@/components/shared/DataTable";
 
 const EMPTY_CLIENT = {
   company_name: "", cpf_cnpj: "", type: "pj", email: "", phone: "",
@@ -256,53 +257,45 @@ export default function Clients({ hideTitle = false }) {
         </Dialog>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Buscar cliente..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.length === 0 && (
-          <div className="col-span-full text-center py-12 text-muted-foreground">
-            <Building2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            Nenhum cliente cadastrado.
-          </div>
-        )}
-        {filtered.map((client) => (
-          <Card key={client.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="w-10 h-10 bg-velox-blue/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Building2 className="w-5 h-5 text-velox-blue" />
-                </div>
-                <div className="flex-1 min-w-0">
-                   <div className="flex items-center gap-2 flex-wrap">
-                     <p className="font-semibold truncate">{client.company_name}</p>
-                     {client.code && <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground flex-shrink-0">{client.code}</span>}
-                   </div>
-                   <p className="text-xs text-muted-foreground font-mono">{client.cpf_cnpj}</p>
-                 </div>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                  client.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-                }`}>
-                  {client.status === "active" ? "Ativo" : "Inativo"}
-                </span>
-              </div>
-              <div className="text-xs text-muted-foreground space-y-0.5 mb-3">
-                {client.email && <p>{client.email}</p>}
-                {client.phone && <p>{client.phone}</p>}
-                <p className="text-xs">
-                  {client.type === "pj" ? "PJ" : "PF"} ·{" "}
-                  {client.client_type === "recorrente" ? "Recorrente" : "Eventual"}
-                </p>
-              </div>
-              <Button variant="outline" size="sm" className="w-full gap-1 text-xs" onClick={() => setViewingClient(client)}>
-                <Eye className="w-3 h-3" /> Ver detalhes
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <DataTable
+        data={clients}
+        searchKeys={["company_name", "cpf_cnpj", "code", "email"]}
+        searchPlaceholder="Buscar por nome, CNPJ, código ou e-mail..."
+        initialSort={{ key: "company_name", dir: "asc" }}
+        onRowClick={(c) => setViewingClient(c)}
+        emptyMessage="Nenhum cliente cadastrado."
+        columns={[
+          { key: "code", label: "Código", sortable: true, width: 90, className: "font-mono text-xs text-muted-foreground", render: c => c.code || "—" },
+          { key: "company_name", label: "Razão Social / Nome", sortable: true, className: "font-medium", render: c => (
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-7 h-7 rounded bg-primary/10 flex items-center justify-center flex-shrink-0"><Building2 className="w-3.5 h-3.5 text-primary" /></span>
+              <span className="truncate">{c.company_name}</span>
+            </div>
+          )},
+          { key: "cpf_cnpj", label: "CPF / CNPJ", sortable: true, className: "font-mono text-xs", render: c => c.cpf_cnpj || "—" },
+          { key: "type", label: "Tipo", sortable: true, render: c => c.type === "pj" ? "PJ" : "PF" },
+          { key: "client_type", label: "Perfil", sortable: true, render: c => c.client_type === "recorrente" ? "Recorrente" : "Eventual" },
+          { key: "contact", label: "Contato", value: c => c.phone || c.email || "", className: "text-xs text-muted-foreground", render: c => (
+            <div className="leading-tight">
+              {c.phone && <p>{c.phone}</p>}
+              {c.email && <p className="truncate max-w-[180px]">{c.email}</p>}
+              {!c.phone && !c.email && "—"}
+            </div>
+          )},
+          { key: "billing_type", label: "Cobrança", sortable: true, render: c => c.billing_type === "monthly" ? "Mensal" : "Por viagem" },
+          { key: "status", label: "Status", sortable: true, value: c => c.status, render: c => (
+            <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded border ${
+              c.status === "active" ? "text-green-700 bg-green-50 border-green-200" : "text-gray-600 bg-gray-50 border-gray-200"
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${c.status === "active" ? "bg-green-600" : "bg-gray-400"}`} />
+              {c.status === "active" ? "Ativo" : "Inativo"}
+            </span>
+          )},
+          { key: "actions", label: "", align: "right", stopPropagation: true, width: 50, render: c => (
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setViewingClient(c)} title="Ver detalhes"><Eye className="w-3.5 h-3.5" /></Button>
+          )},
+        ]}
+      />
 
       {/* Sheet de visualização */}
       <Sheet open={!!viewingClient} onOpenChange={() => setViewingClient(null)}>

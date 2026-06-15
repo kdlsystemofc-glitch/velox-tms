@@ -10,6 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Users, Search, AlertTriangle, Eye } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { differenceInDays, parseISO } from "date-fns";
+import DataTable from "@/components/shared/DataTable";
+import StatusBadge from "@/components/admin/StatusBadge";
+
+const driverStatusConfig = {
+  active:     { label: "Ativo",     dot: "bg-green-600", cls: "text-green-700 bg-green-50 border-green-200" },
+  away:       { label: "Afastado",  dot: "bg-amber-500", cls: "text-amber-700 bg-amber-50 border-amber-200" },
+  terminated: { label: "Desligado", dot: "bg-red-500",   cls: "text-red-700 bg-red-50 border-red-200" },
+};
 
 const statusLabels = {
   active: { label: "Ativo", color: "bg-green-100 text-green-700" },
@@ -156,62 +164,35 @@ export default function Drivers() {
         </Dialog>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Buscar por nome ou CPF..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th className="text-left py-3 px-4 font-medium text-muted-foreground">Motorista</th>
-              <th className="text-left py-3 px-4 font-medium text-muted-foreground hidden md:table-cell">CPF</th>
-              <th className="text-left py-3 px-4 font-medium text-muted-foreground hidden lg:table-cell">CNH</th>
-              <th className="text-left py-3 px-4 font-medium text-muted-foreground hidden md:table-cell">Telefone</th>
-              <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-              <th className="text-right py-3 px-4 font-medium text-muted-foreground">Ação</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr><td colSpan={6} className="py-12 text-center text-muted-foreground">
-                <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />Nenhum motorista cadastrado.
-              </td></tr>
-            )}
-            {filtered.map(driver => {
-              const sc = statusLabels[driver.status] || statusLabels.active;
-              const hasAlert = cnhAlert(driver);
-              return (
-                <tr key={driver.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-velox-dark rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-xs font-bold">{driver.name?.charAt(0)}</span>
-                      </div>
-                      <div>
-                        <p className="font-medium">{driver.name}</p>
-                        {hasAlert && <span className="text-xs text-red-500 flex items-center gap-0.5"><AlertTriangle className="w-3 h-3" /> CNH vencendo</span>}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 font-mono text-xs text-muted-foreground hidden md:table-cell">{driver.cpf}</td>
-                  <td className="py-3 px-4 text-xs text-muted-foreground hidden lg:table-cell">Cat. {driver.cnh_category} · {driver.cnh_expiry || "—"}</td>
-                  <td className="py-3 px-4 text-muted-foreground hidden md:table-cell">{driver.phone || "—"}</td>
-                  <td className="py-3 px-4">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${sc.color}`}>{sc.label}</span>
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    <Link to={`/admin/motoristas/${driver.id}`}>
-                      <Button variant="ghost" size="sm" className="h-7"><Eye className="w-4 h-4" /></Button>
-                    </Link>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        data={drivers}
+        searchKeys={["name", "cpf", "cnh_number", "phone"]}
+        searchPlaceholder="Buscar por nome, CPF ou CNH..."
+        initialSort={{ key: "name", dir: "asc" }}
+        onRowClick={(d) => navigate(`/admin/motoristas/${d.id}`)}
+        emptyMessage="Nenhum motorista cadastrado."
+        columns={[
+          { key: "name", label: "Motorista", sortable: true, className: "font-medium", render: d => (
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-7 h-7 bg-velox-dark rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-[11px] font-bold">{d.name?.charAt(0)}</span>
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate">{d.name}</span>
+                {cnhAlert(d) && <span className="text-[11px] text-red-600 flex items-center gap-0.5"><AlertTriangle className="w-3 h-3" /> CNH vencendo</span>}
+              </span>
+            </div>
+          )},
+          { key: "cpf", label: "CPF", sortable: true, className: "font-mono text-xs text-muted-foreground", render: d => d.cpf || "—" },
+          { key: "cnh", label: "CNH", value: d => d.cnh_category || "", className: "text-xs text-muted-foreground", render: d => `Cat. ${d.cnh_category || "—"} · ${d.cnh_expiry || "—"}` },
+          { key: "role", label: "Função", sortable: true, className: "text-xs", render: d => ({ motorista: "Motorista", ajudante: "Ajudante", administrativo: "Administrativo" }[d.role] || d.role || "—") },
+          { key: "phone", label: "Telefone", className: "text-xs text-muted-foreground", render: d => d.phone || "—" },
+          { key: "status", label: "Status", sortable: true, value: d => d.status, render: d => <StatusBadge status={d.status} config={driverStatusConfig} /> },
+          { key: "actions", label: "", align: "right", stopPropagation: true, width: 50, render: d => (
+            <Link to={`/admin/motoristas/${d.id}`}><Button variant="ghost" size="sm" className="h-7 w-7 p-0"><Eye className="w-3.5 h-3.5" /></Button></Link>
+          )},
+        ]}
+      />
     </div>
   );
 }

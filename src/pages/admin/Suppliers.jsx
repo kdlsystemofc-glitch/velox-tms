@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Building2, Search, Pencil, Phone, Mail, Trash2, MessageCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import DataTable from "@/components/shared/DataTable";
 
 const CATEGORIES = [
   { value: "fuel",        label: "Combustível" },
@@ -252,45 +253,39 @@ export default function Suppliers({ hideTitle = false }) {
         </Dialog>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Buscar fornecedor..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.length === 0 && (
-          <div className="col-span-full text-center py-12 text-muted-foreground">
-            <Building2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            Nenhum fornecedor cadastrado.
-          </div>
-        )}
-        {filtered.map(s => (
-          <Card key={s.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="w-10 h-10 bg-velox-blue/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Building2 className="w-5 h-5 text-velox-blue" />
-                </div>
-                <div className="flex-1 min-w-0">
-                   <div className="flex items-center gap-2 flex-wrap">
-                     <p className="font-semibold truncate">{s.name}</p>
-                     {s.code && <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded text-muted-foreground flex-shrink-0">{s.code}</span>}
-                   </div>
-                   <span className="text-[10px] bg-muted text-muted-foreground font-medium px-1.5 py-0.5 rounded-full">{catLabel(s.category)}</span>
-                 </div>
-                <Button variant="ghost" size="icon" className="w-7 h-7 flex-shrink-0" onClick={() => { setEditingId(s.id); setEditForm({ ...EMPTY, ...s, contacts: s.contacts || [] }); }}>
-                  <Pencil className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-              <div className="text-xs text-muted-foreground space-y-0.5">
-                {s.contact_name && <p className="font-medium text-foreground">{s.contact_name}</p>}
-                {s.phone && <p className="flex items-center gap-1"><Phone className="w-3 h-3" />{s.phone}</p>}
-                {s.email && <p className="flex items-center gap-1"><Mail className="w-3 h-3" />{s.email}</p>}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <DataTable
+        data={suppliers}
+        searchKeys={["name", "cnpj_cpf", "code", "contact_name"]}
+        searchPlaceholder="Buscar por nome, CNPJ ou código..."
+        initialSort={{ key: "name", dir: "asc" }}
+        onRowClick={(s) => { setEditingId(s.id); setEditForm({ ...EMPTY, ...s, contacts: s.contacts || [] }); }}
+        emptyMessage="Nenhum fornecedor cadastrado."
+        columns={[
+          { key: "code", label: "Código", sortable: true, width: 90, className: "font-mono text-xs text-muted-foreground", render: s => s.code || "—" },
+          { key: "name", label: "Fornecedor", sortable: true, className: "font-medium", render: s => (
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-7 h-7 rounded bg-primary/10 flex items-center justify-center flex-shrink-0"><Building2 className="w-3.5 h-3.5 text-primary" /></span>
+              <span className="truncate">{s.name}</span>
+            </div>
+          )},
+          { key: "category", label: "Categoria", sortable: true, value: s => catLabel(s.category), render: s => (
+            <span className="text-[11px] bg-muted text-muted-foreground font-medium px-2 py-0.5 rounded">{catLabel(s.category)}</span>
+          )},
+          { key: "cnpj_cpf", label: "CNPJ / CPF", sortable: true, className: "font-mono text-xs text-muted-foreground", render: s => s.cnpj_cpf || "—" },
+          { key: "contact_name", label: "Contato", className: "text-xs", render: s => s.contact_name || "—" },
+          { key: "phone", label: "Telefone / E-mail", className: "text-xs text-muted-foreground", render: s => (
+            <div className="leading-tight">
+              {s.phone && <p className="flex items-center gap-1"><Phone className="w-3 h-3" />{s.phone}</p>}
+              {s.email && <p className="flex items-center gap-1 truncate max-w-[180px]"><Mail className="w-3 h-3" />{s.email}</p>}
+              {!s.phone && !s.email && "—"}
+            </div>
+          )},
+          { key: "actions", label: "", align: "right", stopPropagation: true, width: 50, render: s => (
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Editar"
+              onClick={() => { setEditingId(s.id); setEditForm({ ...EMPTY, ...s, contacts: s.contacts || [] }); }}><Pencil className="w-3.5 h-3.5" /></Button>
+          )},
+        ]}
+      />
 
       {/* Edit modal */}
       <Dialog open={!!editingId} onOpenChange={(v) => { if (!v) setEditingId(null); }}>

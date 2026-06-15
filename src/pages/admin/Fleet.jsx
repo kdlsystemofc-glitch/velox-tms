@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Truck, Search, AlertTriangle, Eye } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { differenceInDays, parseISO } from "date-fns";
+import DataTable from "@/components/shared/DataTable";
+import StatusBadge from "@/components/admin/StatusBadge";
 
 const statusConfig = {
   available: { label: "Disponível", color: "bg-green-100 text-green-700" },
@@ -17,6 +19,15 @@ const statusConfig = {
   maintenance: { label: "Manutenção", color: "bg-red-100 text-red-700" },
   inactive: { label: "Inativo", color: "bg-gray-100 text-gray-600" },
 };
+
+const truckStatusConfig = {
+  available:   { label: "Disponível", dot: "bg-green-600", cls: "text-green-700 bg-green-50 border-green-200" },
+  on_route:    { label: "Em rota",    dot: "bg-amber-500", cls: "text-amber-700 bg-amber-50 border-amber-200" },
+  maintenance: { label: "Manutenção", dot: "bg-red-500",   cls: "text-red-700 bg-red-50 border-red-200" },
+  inactive:    { label: "Inativo",    dot: "bg-gray-400",  cls: "text-gray-600 bg-gray-50 border-gray-200" },
+};
+
+const truckTypeLabel = { carreta: "Carreta", truck: "Truck", vuc: "VUC", toco: "Toco", bitruck: "Bitruck", outro: "Outro" };
 
 function hasDocAlert(truck) {
   const dates = [truck.crlv_expiry, truck.insurance_expiry, truck.tachograph_next].filter(Boolean);
@@ -183,44 +194,35 @@ export default function Fleet() {
         </Dialog>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Buscar por placa ou modelo..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.length === 0 && (
-          <div className="col-span-full text-center py-12 text-muted-foreground">
-            <Truck className="w-10 h-10 mx-auto mb-3 opacity-30" />Nenhum caminhão cadastrado.
-          </div>
-        )}
-        {filtered.map(truck => {
-          const sc = statusConfig[truck.status] || statusConfig.available;
-          const hasAlert = hasDocAlert(truck);
-          return (
-            <Card key={truck.id} className="hover:shadow-md transition-shadow overflow-hidden">
-              <div className="h-32 bg-gradient-to-br from-velox-dark to-velox-blue flex items-center justify-center relative">
-                <Truck className="w-16 h-16 text-white/20" />
-                <span className="absolute top-3 left-3 font-mono font-bold text-white text-lg">{truck.plate}</span>
-                <span className={`absolute top-3 right-3 text-xs font-semibold px-2 py-0.5 rounded-full ${sc.color}`}>{sc.label}</span>
-                {hasAlert && (
-                  <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-red-500/90 text-white text-xs px-2 py-0.5 rounded-full">
-                    <AlertTriangle className="w-3 h-3" /> Doc. vencendo
-                  </div>
-                )}
-              </div>
-              <CardContent className="p-4">
-                <p className="font-semibold">{truck.manufacturer} {truck.model}</p>
-                <p className="text-xs text-muted-foreground">{truck.year} · {truck.truck_type}</p>
-                {truck.capacity_kg && <p className="text-xs text-muted-foreground mt-0.5">{truck.capacity_kg.toLocaleString()} kg capacidade</p>}
-                <Link to={`/admin/frota/${truck.id}`} className="mt-3 block">
-                  <Button variant="outline" size="sm" className="w-full gap-1 text-xs"><Eye className="w-3 h-3" /> Ver detalhes</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <DataTable
+        data={trucks}
+        searchKeys={["plate", "model", "manufacturer", "renavam"]}
+        searchPlaceholder="Buscar por placa, modelo ou fabricante..."
+        initialSort={{ key: "plate", dir: "asc" }}
+        onRowClick={(t) => navigate(`/admin/frota/${t.id}`)}
+        emptyMessage="Nenhum caminhão cadastrado."
+        columns={[
+          { key: "plate", label: "Placa", sortable: true, className: "font-mono font-bold", render: t => (
+            <div className="flex items-center gap-2.5">
+              <span className="w-7 h-7 rounded bg-velox-dark flex items-center justify-center flex-shrink-0"><Truck className="w-3.5 h-3.5 text-white" /></span>
+              {t.plate}
+            </div>
+          )},
+          { key: "vehicle", label: "Veículo", sortable: true, value: t => `${t.manufacturer || ""} ${t.model || ""}`, render: t => (
+            <span><span className="font-medium">{t.manufacturer} {t.model}</span><span className="block text-xs text-muted-foreground">{t.year || "—"}</span></span>
+          )},
+          { key: "truck_type", label: "Tipo", sortable: true, className: "text-xs", render: t => truckTypeLabel[t.truck_type] || t.truck_type || "—" },
+          { key: "capacity_kg", label: "Capacidade", sortable: true, align: "right", className: "font-mono text-xs", render: t => t.capacity_kg ? `${t.capacity_kg.toLocaleString("pt-BR")} kg` : "—" },
+          { key: "docs", label: "Documentos", render: t => hasDocAlert(t)
+            ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded"><AlertTriangle className="w-3 h-3" /> Vencendo</span>
+            : <span className="text-[11px] text-green-700">Em dia</span>
+          },
+          { key: "status", label: "Status", sortable: true, value: t => t.status, render: t => <StatusBadge status={t.status} config={truckStatusConfig} /> },
+          { key: "actions", label: "", align: "right", stopPropagation: true, width: 50, render: t => (
+            <Link to={`/admin/frota/${t.id}`}><Button variant="ghost" size="sm" className="h-7 w-7 p-0"><Eye className="w-3.5 h-3.5" /></Button></Link>
+          )},
+        ]}
+      />
     </div>
   );
 }
