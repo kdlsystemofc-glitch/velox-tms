@@ -20,7 +20,7 @@ const variableCosts = ["fuel", "maintenance", "tires", "tolls"];
 const fixedCosts = ["salaries", "taxes", "insurance", "rent", "administrative", "marketing"];
 const COLORS = ["#F59E0B", "#1E3A5F", "#10B981", "#EF4444", "#64748B", "#8B5CF6", "#EC4899"];
 
-export default function DRE() {
+export default function DRE({ hideTitle = false }) {
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(String(now.getMonth()));
   const [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
@@ -256,10 +256,12 @@ export default function DRE() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold text-foreground">DRE</h1>
-          <p className="text-muted-foreground text-sm mt-1">Demonstrativo de Resultado</p>
-        </div>
+        {!hideTitle ? (
+          <div>
+            <h1 className="font-display text-xl font-bold text-foreground">DRE</h1>
+            <p className="text-muted-foreground text-xs mt-0.5">Demonstrativo de Resultado</p>
+          </div>
+        ) : <div />}
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="gap-2" onClick={exportCSV}><Download className="w-4 h-4" /> Exportar Excel</Button>
           <Button variant="outline" size="sm" className="gap-2" onClick={generateDREPdf}><FileText className="w-4 h-4" /> Gerar PDF</Button>

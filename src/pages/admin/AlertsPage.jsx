@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertCircle, AlertTriangle, Info, CheckCircle2, Bell } from "lucide-react";
+import PageHeader from "@/components/shared/PageHeader";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -52,13 +53,8 @@ export default function AlertsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold text-foreground">Alertas</h1>
-          <p className="text-muted-foreground text-sm mt-1">{active.length} alerta{active.length !== 1 ? "s" : ""} ativo{active.length !== 1 ? "s" : ""}</p>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <PageHeader icon={Bell} title="Alertas" subtitle={`${active.length} alerta${active.length !== 1 ? "s" : ""} ativo${active.length !== 1 ? "s" : ""}`} />
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">

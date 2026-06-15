@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Truck, User, MapPin, CheckCircle2, Clock, Route } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import PageHeader from "@/components/shared/PageHeader";
 
 const tripStatusConfig = {
   planned: { label: "Planejada", color: "bg-blue-100 text-blue-700" },
@@ -88,19 +89,15 @@ export default function Trips() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold text-foreground">Viagens</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gestão de rotas e viagens</p>
-        </div>
+    <div className="space-y-4">
+      <PageHeader icon={Truck} title="Viagens" subtitle="Gestão de rotas e viagens">
         <Button
           className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
           onClick={() => navigate("/admin/viagens/nova")}
         >
           <Plus className="w-4 h-4" /> Nova Viagem
         </Button>
-      </div>
+      </PageHeader>
 
       <Tabs defaultValue="in_progress">
         <TabsList>

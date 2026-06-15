@@ -16,6 +16,7 @@ import { calculateFreight } from "@/utils/freightCalculator";
 import { todayLocalISO, formatDateBR } from "@/utils/dateUtils";
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
 import { Search, Plus, Package, CheckCircle, XCircle, CalendarDays, Eye } from "lucide-react";
+import PageHeader from "@/components/shared/PageHeader";
 
 const PIPELINE_TABS = [
   { key: "all",        label: "Todos" },
@@ -154,17 +155,12 @@ export default function OrdersWorkspace() {
   const selectedSuggestion = suggestions.find(s => s.truck.id === confirmForm.truck_id);
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-extrabold text-foreground">Pedidos</h1>
-          <p className="text-muted-foreground text-sm">Fila única — confirme, recuse e despache sem sair da tela</p>
-        </div>
+    <div className="space-y-4">
+      <PageHeader icon={Package} title="Pedidos" subtitle="Fila única — confirme, recuse e despache sem sair da tela">
         <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => navigate("/admin/coletas/nova")}>
           <Plus className="w-4 h-4" /> Novo Pedido
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Pipeline tabs */}
       <div className="flex gap-1.5 overflow-x-auto pb-1">

@@ -34,7 +34,7 @@ function hasDocAlert(truck) {
   return dates.some(d => differenceInDays(parseISO(d), new Date()) <= 60);
 }
 
-export default function Fleet() {
+export default function Fleet({ hideTitle = false }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -59,12 +59,14 @@ export default function Fleet() {
   const filtered = trucks.filter(t => !search || t.plate?.toLowerCase().includes(search.toLowerCase()) || t.model?.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold text-foreground">Frota</h1>
-          <p className="text-muted-foreground text-sm mt-1">{trucks.length} veículo(s) cadastrado(s)</p>
-        </div>
+        {!hideTitle ? (
+          <div>
+            <h1 className="font-display text-xl font-bold text-foreground">Frota</h1>
+            <p className="text-muted-foreground text-xs mt-0.5">{trucks.length} veículo(s) cadastrado(s)</p>
+          </div>
+        ) : <p className="text-xs text-muted-foreground">{trucks.length} veículo(s) cadastrado(s)</p>}
         <Dialog open={showAdd} onOpenChange={(v) => { setShowAdd(v); if (!v) setForm(EMPTY_FORM); }}>
           <DialogTrigger asChild>
             <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">

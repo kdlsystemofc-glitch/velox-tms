@@ -140,8 +140,8 @@ export default function NewTrip() {
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin/viagens")}><ArrowLeft className="w-5 h-5" /></Button>
         <div>
-          <h1 className="font-display text-3xl font-extrabold text-foreground">Nova Viagem</h1>
-          <p className="text-muted-foreground text-sm">Agrupar pedidos e definir rota</p>
+          <h1 className="font-display text-xl font-bold text-foreground">Nova Viagem</h1>
+          <p className="text-muted-foreground text-xs">Agrupar pedidos e definir rota</p>
         </div>
       </div>
 

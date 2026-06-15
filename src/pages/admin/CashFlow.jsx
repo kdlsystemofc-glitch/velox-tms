@@ -8,7 +8,7 @@ import { AlertTriangle, TrendingUp } from "lucide-react";
 import { addDays, format, isBefore, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export default function CashFlow() {
+export default function CashFlow({ hideTitle = false }) {
   const [days, setDays] = useState("30");
 
   const { data: revenues = [] } = useQuery({
@@ -77,10 +77,12 @@ export default function CashFlow() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold text-foreground">Fluxo de Caixa</h1>
-          <p className="text-muted-foreground text-sm mt-1">Projeção baseada em contas a receber e a pagar</p>
-        </div>
+        {!hideTitle ? (
+          <div>
+            <h1 className="font-display text-xl font-bold text-foreground">Fluxo de Caixa</h1>
+            <p className="text-muted-foreground text-xs mt-0.5">Projeção baseada em contas a receber e a pagar</p>
+          </div>
+        ) : <div />}
         <Select value={days} onValueChange={setDays}>
           <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
           <SelectContent>

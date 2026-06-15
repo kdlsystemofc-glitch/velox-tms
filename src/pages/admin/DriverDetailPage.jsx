@@ -67,8 +67,8 @@ export default function DriverDetailPage() {
               <span className="text-white font-bold">{driver.name?.charAt(0)}</span>
             </div>
             <div>
-              <h1 className="font-display text-2xl font-extrabold">{driver.name}</h1>
-              <p className="text-muted-foreground text-sm">{driver.role} · {driver.contract_type?.toUpperCase()}</p>
+              <h1 className="font-display text-xl font-bold">{driver.name}</h1>
+              <p className="text-muted-foreground text-xs">{driver.role} · {driver.contract_type?.toUpperCase()}</p>
             </div>
           </div>
         </div>

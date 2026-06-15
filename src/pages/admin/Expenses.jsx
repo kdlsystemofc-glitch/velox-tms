@@ -46,7 +46,7 @@ const statusConfig = {
 
 const EMPTY_FORM = { category: "fuel", description: "", amount: "", date: "", due_date: "", payment_method: "pix", status: "paid", notes: "" };
 
-export default function Expenses() {
+export default function Expenses({ hideTitle = false }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -110,12 +110,14 @@ export default function Expenses() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold text-foreground">Despesas</h1>
-          <p className="text-muted-foreground text-sm mt-1">Controle de custos e pagamentos</p>
-        </div>
+        {!hideTitle ? (
+          <div>
+            <h1 className="font-display text-xl font-bold text-foreground">Despesas</h1>
+            <p className="text-muted-foreground text-xs mt-0.5">Controle de custos e pagamentos</p>
+          </div>
+        ) : <div />}
         <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => setShowModal(true)}>
           <Plus className="w-4 h-4" /> Nova Despesa
         </Button>

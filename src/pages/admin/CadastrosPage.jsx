@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Package } from "lucide-react";
+import { Building2, Package, BookUser } from "lucide-react";
 import Clients from "@/pages/admin/Clients";
 import Suppliers from "@/pages/admin/Suppliers";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import PageHeader, { segmentedTabsClass, segmentedTriggerClass } from "@/components/shared/PageHeader";
 
 export default function CadastrosPage() {
   const params = new URLSearchParams(window.location.search);
@@ -21,29 +22,18 @@ export default function CadastrosPage() {
   });
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold text-foreground">Cadastros</h1>
-        <p className="text-muted-foreground text-sm mt-1">Clientes e fornecedores da empresa</p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader icon={BookUser} title="Cadastros" subtitle="Clientes e fornecedores da empresa" />
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="bg-muted/50 p-1 rounded-xl gap-1">
-          <TabsTrigger value="clientes" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm gap-2">
+        <TabsList className={segmentedTabsClass}>
+          <TabsTrigger value="clientes" className={segmentedTriggerClass}>
             <Building2 className="w-3.5 h-3.5" /> Clientes
-            {clients.length > 0 && (
-              <span className="bg-muted text-muted-foreground text-[10px] font-bold rounded-full px-1.5 py-0.5 ml-1">
-                {clients.length}
-              </span>
-            )}
+            {clients.length > 0 && <span className="bg-background text-muted-foreground text-[10px] font-bold rounded px-1.5 py-0.5 ml-1">{clients.length}</span>}
           </TabsTrigger>
-          <TabsTrigger value="fornecedores" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm gap-2">
+          <TabsTrigger value="fornecedores" className={segmentedTriggerClass}>
             <Package className="w-3.5 h-3.5" /> Fornecedores
-            {suppliers.length > 0 && (
-              <span className="bg-muted text-muted-foreground text-[10px] font-bold rounded-full px-1.5 py-0.5 ml-1">
-                {suppliers.length}
-              </span>
-            )}
+            {suppliers.length > 0 && <span className="bg-background text-muted-foreground text-[10px] font-bold rounded px-1.5 py-0.5 ml-1">{suppliers.length}</span>}
           </TabsTrigger>
         </TabsList>
 

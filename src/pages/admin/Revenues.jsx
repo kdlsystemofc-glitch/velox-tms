@@ -41,7 +41,7 @@ function agingOf(dueDate) {
   return "future";
 }
 
-export default function Revenues() {
+export default function Revenues({ hideTitle = false }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -89,12 +89,14 @@ export default function Revenues() {
   const totalReceived = revenues.filter(r => r.status === "received").reduce((s, r) => s + (r.amount || 0), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold text-foreground">Receitas</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gestão de contas a receber</p>
-        </div>
+        {!hideTitle ? (
+          <div>
+            <h1 className="font-display text-xl font-bold text-foreground">Receitas</h1>
+            <p className="text-muted-foreground text-xs mt-0.5">Gestão de contas a receber</p>
+          </div>
+        ) : <div />}
         <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => setShowModal(true)}>
           <Plus className="w-4 h-4" /> Nova Receita
         </Button>

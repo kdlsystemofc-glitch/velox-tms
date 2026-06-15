@@ -34,6 +34,7 @@ Identidade visual corporativa no padrão de TMS profissionais (McLeod, Benner, S
   - `components/shared/DataTable.jsx` — tabela densa com **ordenação clicável por coluna**, busca inline, toolbar e rodapé. Aplicada em Clientes, Fornecedores, Motoristas e Frota (substituíram os grids de cards).
   - `components/shared/FormSection.jsx` — `FormSection` (cabeçalho com barra + grade) e `Field` (label acima, obrigatório/opcional, erro inline). Padrão aplicado nas seções de NewOrder e NewTrip (cabeçalho com divisória + fundo).
   - `components/shared/CollapsibleSection.jsx` — seção colapsável para telas de detalhe.
+  - `components/shared/PageHeader.jsx` — **cabeçalho de página padrão** (chip de ícone + título compacto `text-xl` + subtítulo + slot de ações). Aplicado em todos os módulos para consistência. Exporta também `segmentedTabsClass`/`segmentedTriggerClass` (estilo único das abas dos containers Frota/Cadastros/Financeiro). Containers passam `hideTitle` aos filhos (Fleet, Drivers, Revenues, Expenses, DRE, CashFlow, Financial, Clients, Suppliers) para evitar título duplicado.
 - **Configurações:** `ConfigPage` agora é **navegação lateral por categorias** (não abas).
 - **Pedido (`OrderWorkspace`):** página única com **seções colapsáveis** (Resumo, Cargas, Financeiro, Ocorrências, Histórico) — sem abas.
 - **Financeiro (`Revenues`/`Expenses`):** painel de **aging** clicável (Vencidas, ≤7d, 8–30d, 31–60d, >60d) que filtra a lista; coluna de vencimento mostra dias vencidos/a vencer.

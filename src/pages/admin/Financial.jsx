@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, TrendingDown, ArrowUpRight } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
-export default function Financial() {
+export default function Financial({ hideTitle = false }) {
   const { data: revenues = [] } = useQuery({
     queryKey: ["revenues"],
     queryFn: () => base44.entities.Revenue.list("-due_date", 500),
@@ -51,11 +51,13 @@ export default function Financial() {
   });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold text-foreground">Financeiro</h1>
-        <p className="text-muted-foreground text-sm mt-1">Visão financeira do mês</p>
-      </div>
+    <div className="space-y-4">
+      {!hideTitle && (
+        <div>
+          <h1 className="font-display text-xl font-bold text-foreground">Financeiro</h1>
+          <p className="text-muted-foreground text-xs mt-0.5">Visão financeira do mês</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-5">

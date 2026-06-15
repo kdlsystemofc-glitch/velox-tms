@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FileText, ExternalLink, Truck, Users, Search } from "lucide-react";
+import PageHeader from "@/components/shared/PageHeader";
 import { differenceInDays, parseISO, format } from "date-fns";
 
 function docBadge(expiry) {
@@ -77,12 +78,8 @@ export default function Documents() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold text-foreground">Documentos</h1>
-          <p className="text-muted-foreground text-sm mt-1">Arquivos e documentos operacionais</p>
-        </div>
+    <div className="space-y-4">
+      <PageHeader icon={FileText} title="Documentos" subtitle="NFs assinadas, CRLV, CNH e seguros">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -92,7 +89,7 @@ export default function Documents() {
             className="pl-9 w-56"
           />
         </div>
-      </div>
+      </PageHeader>
 
       <Tabs defaultValue="orders">
         <TabsList>

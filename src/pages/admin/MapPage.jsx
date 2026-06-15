@@ -26,8 +26,8 @@ export default function MapPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-extrabold text-foreground">Mapa Operacional</h1>
-        <p className="text-muted-foreground text-sm mt-1">Visão em tempo real das operações</p>
+        <h1 className="font-display text-xl font-bold text-foreground">Mapa Operacional</h1>
+        <p className="text-muted-foreground text-xs mt-0.5">Visão em tempo real das operações</p>
       </div>
 
       {/* Summary KPIs */}

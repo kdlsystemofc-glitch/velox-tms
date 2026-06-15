@@ -11,6 +11,7 @@ import {
   Package, Truck, ChevronLeft, ChevronRight, MapPin,
   CalendarDays, Send, X, ArrowRight
 } from "lucide-react";
+import PageHeader from "@/components/shared/PageHeader";
 import { format, addDays, startOfWeek, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -111,21 +112,14 @@ export default function DispatchBoard() {
   };
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-extrabold text-foreground">Despacho</h1>
-          <p className="text-muted-foreground text-sm">Selecione pedidos na fila e clique no dia/caminhão para programar</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {activeTrips.length > 0 && (
-            <Link to="/admin/viagens" className="text-xs text-velox-amber hover:underline flex items-center gap-1">
-              <Truck className="w-3.5 h-3.5" /> {activeTrips.length} viagem(ns) ativa(s) →
-            </Link>
-          )}
-        </div>
-      </div>
+    <div className="space-y-4">
+      <PageHeader icon={CalendarDays} title="Despacho" subtitle="Selecione pedidos na fila e clique no dia/caminhão para programar">
+        {activeTrips.length > 0 && (
+          <Link to="/admin/viagens" className="text-xs text-primary hover:underline flex items-center gap-1">
+            <Truck className="w-3.5 h-3.5" /> {activeTrips.length} viagem(ns) ativa(s) →
+          </Link>
+        )}
+      </PageHeader>
 
       <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-5">
         {/* ── FILA (esquerda) ── */}

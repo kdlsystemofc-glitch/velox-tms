@@ -25,7 +25,7 @@ const statusLabels = {
   terminated: { label: "Desligado", color: "bg-red-100 text-red-700" },
 };
 
-export default function Drivers() {
+export default function Drivers({ hideTitle = false }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -55,12 +55,14 @@ export default function Drivers() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-extrabold text-foreground">Motoristas</h1>
-          <p className="text-muted-foreground text-sm mt-1">{drivers.length} motorista(s) cadastrado(s)</p>
-        </div>
+        {!hideTitle ? (
+          <div>
+            <h1 className="font-display text-xl font-bold text-foreground">Motoristas</h1>
+            <p className="text-muted-foreground text-xs mt-0.5">{drivers.length} motorista(s) cadastrado(s)</p>
+          </div>
+        ) : <p className="text-xs text-muted-foreground">{drivers.length} motorista(s) cadastrado(s)</p>}
         <Dialog open={showAdd} onOpenChange={(v) => { setShowAdd(v); if (!v) setForm(EMPTY_DRIVER); }}>
           <DialogTrigger asChild>
             <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">

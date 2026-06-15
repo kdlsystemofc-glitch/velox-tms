@@ -359,8 +359,8 @@ export default function NewOrder() {
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin/coletas")}><ArrowLeft className="w-5 h-5" /></Button>
         <div>
-          <h1 className="font-display text-3xl font-extrabold text-foreground">Nova Coleta</h1>
-          <p className="text-muted-foreground text-sm">
+          <h1 className="font-display text-xl font-bold text-foreground">Nova Coleta</h1>
+          <p className="text-muted-foreground text-xs">
             {dup ? <>Duplicado de <span className="font-mono font-semibold">{dup.protocol}</span> — confira os dados e defina a data de coleta</> : "Cadastro interno de frete"}
           </p>
         </div>
