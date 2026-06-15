@@ -20,11 +20,11 @@
 
 | Módulo | Rota admin | Descrição |
 |--------|-----------|-----------|
-| Dashboard | `/admin` | KPIs do dia, agenda semanal, alertas, pedidos recentes |
-| Pedidos (Coletas) | `/admin/coletas` | Lista, busca, filtros de status, totais |
-| Novo Pedido | `/admin/coletas/novo` | Formulário interno com calc. de frete |
-| Detalhe de Pedido | `/admin/coletas/:id` | Status, destinatários, incidentes, PDF |
-| Agenda | `/admin/agenda` | Fila de aprovação, calendário semanal, em rota |
+| **Operações** | `/admin` | Torre de controle: fila de ação, pipeline clicável, operação de hoje, frota agora |
+| **Pedidos** | `/admin/coletas` | Fila do pipeline em abas (Novos→Entregues) com ações inline (confirmar/recusar/despachar) |
+| Novo Pedido | `/admin/coletas/novo` | Formulário interno com calc. de frete + chave NF-e + duplicação |
+| **Pedido (workspace)** | `/admin/coletas/:id` | Stepper de ciclo de vida + ação primária + abas (Resumo/Cargas/Financeiro/Ocorrências/Histórico) |
+| **Despacho** | `/admin/despacho` | Quadro caminhões × dias: fila → célula → cria viagem |
 | Frota | `/admin/frota` | Caminhões, motoristas, simulador |
 | Detalhe de Caminhão | `/admin/frota/:id` | Documentos, manutenções, km, dimensões |
 | Viagens | `/admin/viagens` | Lista por status (ativas/planejadas/concluídas) |
@@ -520,26 +520,29 @@ Prioridade:
 
 ## 6. Fluxos principais
 
+> **Fluxo do painel reconstruído (refatoração 2026)** seguindo padrão de grandes TMS — ver `VELOX_CONTEXT.md §1.1`. Sequência: **Operações** (vê pendências) → **Pedidos** (confirma) → **Despacho** (programa no quadro) → **Viagem** (executa) → **Pedido/workspace** (acompanha). Lógica de negócio inalterada.
+
 ### Fluxo de pedido público
 1. Cliente acessa `/agendar`
 2. Preenche 5 passos: Solicitante → Origem → Destinatários → Serviço → Resumo
 3. Sistema verifica cobertura, exibe cálculo de frete em tempo real
 4. Submissão → protocolo gerado → pedido criado com `status: "new"`
-5. Dashboard admin exibe banner de urgência
+5. Painel de **Operações** exibe na fila de ação; sidebar mostra badge em "Pedidos"
 
 ### Fluxo de aprovação de pedido
-1. Admin acessa Agenda → aba "Aguardando"
-2. Vê pedido pendente + sugestão de caminhão (bin-packing)
-3. Define data, caminhão, valor final do frete
-4. Confirma → pedido `confirmed` + Revenue criado automaticamente
+1. Admin abre **Pedidos** (`/admin/coletas`), aba "Novos"
+2. Clica em "Confirmar" na própria linha → Sheet abre com sugestão de caminhão (bin-packing)
+3. Define data, caminhão, valor final do frete, forma de pagamento
+4. Confirma → pedido `confirmed` + Revenue criado via `ensureRevenueForOrder` (sem duplicar)
 
-### Fluxo de viagem
-1. Admin cria viagem em `/admin/viagens/nova` selecionando pedidos + motorista + caminhão
-2. Paradas geradas automaticamente (coleta + entrega por destinatário)
-3. Admin ou motorista inicia viagem → pedidos vão para `collecting`
-4. Motorista confirma chegada → confirma entrega (NF obrigatória para entregas)
-5. Pedidos atualizados para `in_transit` / `delivered` automaticamente
-6. Admin encerra viagem com km final + combustível + pedágios → despesas geradas
+### Fluxo de despacho e viagem
+1. Admin abre **Despacho** (`/admin/despacho`): fila de confirmados sem viagem à esquerda
+2. Seleciona um ou mais pedidos → clica na célula do quadro (caminhão + dia) → programado (valida capacidade)
+3. Botão "Viagem" na célula → `/admin/viagens/nova` já com pedidos + caminhão pré-selecionados
+4. Paradas geradas automaticamente (coleta + entrega por destinatário)
+5. Admin/motorista inicia viagem → pedidos vão para `collecting`; motorista faz checklist de saída
+6. Motorista confirma chegada → confirma entrega (NF obrigatória); status sobe para `in_transit`/`delivered`
+7. Admin encerra viagem com km + combustível + pedágios → despesas geradas; adiantamento entra no acerto
 
 ### Fluxo financeiro
 - Confirmação de pedido → Revenue `receivable` criado

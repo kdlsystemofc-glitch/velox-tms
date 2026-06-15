@@ -198,68 +198,56 @@
 **Arquivo:** `src/components/admin/AdminLayout.jsx`  
 Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
-**Sidebar links:**
-- Dashboard (`/admin`)
-- Coletas (`/admin/coletas`)
-- Agenda (`/admin/agenda`)
-- Frota (`/admin/frota`)
-- Viagens (`/admin/viagens`)
-- Cadastros (`/admin/cadastros`)
-- Financeiro (`/admin/financeiro`) — somente admin
-- Configurações (`/admin/configuracoes`)
+**Sidebar links (fluxo reconstruído 2026):**
+- Operações (`/admin`)
+- **Fluxo:** Pedidos (`/admin/coletas`, badge = novos), Despacho (`/admin/despacho`, badge = confirmados sem viagem), Frota (`/admin/frota`)
+- **Cadastros & Gestão:** Cadastros (`/admin/cadastros`), Financeiro (`/admin/financeiro`, admin), Configurações (`/admin/config`, admin)
 
 ---
 
-### 3.1 Dashboard
+### 3.1 Operações (Painel / torre de controle)
 
-**Arquivo:** `src/pages/admin/Dashboard.jsx`  
+**Arquivo:** `src/pages/admin/OperationsHub.jsx`  
 **Rota:** `/admin`  
 **Acesso:** operador + admin
 
-**KPIs (cards) — todos CLICÁVEIS (navegam para a lista filtrada):**
-- Pedidos Novos (status=new) → `/admin/agenda`
-- Em Coleta Hoje (status=collecting, collection_date=hoje) → `/admin/coletas?status=collecting`
-- Entregues Hoje → `/admin/coletas?status=delivered`
-- Alertas Ativos (alerts não resolvidos) → `/admin/config`
-- **Somente admin:** A Receber → `/admin/financeiro?aba=receitas`, A Pagar → `/admin/financeiro?aba=despesas`
+**1. Fila de ação** (gestão por exceção — só o que exige decisão agora; some quando vazia):
+- Pedidos novos aguardando confirmação → `/admin/coletas?status=new`
+- Confirmados sem viagem → `/admin/despacho`
+- Alertas críticos → `/admin/config`
+- (admin) Recebimentos em atraso → `/admin/financeiro?aba=receitas`
 
-**Card "Coletas de hoje":** pedidos com `collection_date = hoje` (não cancelados/entregues), ordenados por período (Manhã → Tarde → A combinar), com cliente, protocolo, rota, status e link
+**2. Pipeline clicável:** Novos → Confirmados → Em coleta → Em trânsito → Entregues (cada etapa leva à lista filtrada)
 
-**Calendário semanal:** 7 dias a partir de hoje, com `getAvailabilityForDate()` para cada dia, cor por status (verde/âmbar/vermelho/cinza)
+**3. Operação de hoje:** coletas/entregas do dia ordenadas por período (Manhã/Tarde/A combinar)
 
-**Tabela de pedidos recentes:** últimos 10 pedidos, com protocolo, cliente, data, status
+**4. Frota agora:** cada caminhão com status (em rota com progresso de paradas / disponível / manutenção); clique vai à viagem ou ao caminhão
 
-**Alertas panel:** `AlertsPanel` com alertas críticos e de atenção
+**5. Financeiro resumido (admin):** A Receber / A Pagar (cards clicáveis)
 
-**Banners urgentes:**
-- Novos pedidos sem confirmar → "X pedidos aguardando confirmação"
-- Receitas em atraso → "X receitas em atraso"
-- Alertas críticos → "X alertas críticos"
-
-**onMount:** `base44.functions.invoke("syncAlerts", { trucks, drivers, settings })`
-
-**Queries:** orders, trucks, drivers, schedule_blocks, company_settings, alerts, revenues, expenses
+**onMount:** `syncAlerts`. **Queries:** orders, trips, trucks, alerts, revenues, expenses
 
 ---
 
-### 3.2 Lista de Pedidos
+### 3.2 Pedidos (workspace / pipeline)
 
-**Arquivo:** `src/pages/admin/Orders.jsx`  
+**Arquivo:** `src/pages/admin/OrdersWorkspace.jsx`  
 **Rota:** `/admin/coletas`  
 **Acesso:** operador + admin
 
-**Componentes no topo:** `WeekAvailabilityBanner` — banner com disponibilidade dos próximos 7 dias
+**Abas do pipeline** (com contadores): Todos · Novos · Confirmados · Em coleta · Em trânsito · Entregues · Cancelados — sincronizadas com URL `?status=`
 
-**Filtros:**
-- Busca por texto (protocolo, cliente, origem, destino)
-- Filtro status (todos/new/confirmed/collecting/in_transit/delivered/cancelled) — sincronizado com a URL via `?status=` (permite links diretos, ex.: KPIs do dashboard)
-- Filtro tipo (CIF/FOB)
+**Busca:** protocolo, cliente ou cidade
 
-**Tabela colunas:** Protocolo, Cliente, Origem→Destinos, Data coleta, Peso/Volumes, Status, Frete  
-**Rodapé:** totais de peso, volumes, valor de frete dos pedidos filtrados  
-**Click na linha:** navega para `/admin/coletas/:id`
+**Tabela colunas:** Protocolo (+ tag Urgente), Cliente, Rota, Coleta, Carga, Valor, Status, **Ações inline**:
+- Status `new` → botão **Confirmar** (abre Sheet) + **Recusar** (Sheet de confirmação → cancela + estorna receitas)
+- Status `confirmed` sem viagem → botão **Despachar** (vai ao quadro)
+- Demais → botão Ver
+- Clique na linha → workspace do pedido
 
-**Queries:** orders (list, -created_date, 200)
+**Sheet de confirmação:** data de coleta, caminhão sugerido (`suggestTruckForOrder` bin-packing, mostra % cheio e kg livres), valor do frete, forma de pagamento → `Order.update(confirmed)` + `ensureRevenueForOrder()`
+
+**Rodapé:** total de pedidos, kg e valor da aba filtrada
 
 ---
 
@@ -302,82 +290,47 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 ---
 
-### 3.4 Detalhe de Pedido
+### 3.4 Pedido (workspace)
 
-**Arquivo:** `src/pages/admin/OrderDetailPage.jsx`  
-**Rota:** `/admin/coletas/:id` ou `/admin/pedidos/:id`  
+**Arquivo:** `src/pages/admin/OrderWorkspace.jsx`  
+**Rota:** `/admin/coletas/:id`  
 **Acesso:** operador + admin
 
-**Layout:** timeline de status horizontal no topo + corpo principal + sidebar direita
+**Cabeçalho:** protocolo + status + tag Urgente · **ação primária por etapa** (Confirmar Pedido → Marcar Em Coleta → Marcar Em Trânsito → Confirmar Entrega) · menu "⋯" com ações secundárias (Duplicar, Comprovante PDF se entregue, Ver viagem, Cancelar)
 
-**Timeline de status:** mostra todas as transições de `status_history` com timestamps
+**Stepper de ciclo de vida:** Novo → Confirmado → Em Coleta → Em Trânsito → Entregue, com timestamp de cada etapa (do `status_history`)
 
-**Seção Destinatários:**
-- Collapsible por destinatário
-- Tabela de itens: colunas **Nº NF, NCM, Descrição (badges Frágil/Perigoso), Volumes, Peso, Dimensões A×L×C cm, Valor declarado, NF Assinada** (link ou upload)
-- Badge de delivery_status por destinatário
+**Corpo em 5 abas:**
+- **Resumo:** rota visual (coleta → entregas) com datas/observações; cartões Solicitante e Carga (volumes/kg/NFs + prazo por UF); marca cliente com tabela negociada
+- **Cargas:** por destinatário, tabela de itens (Nº NF + 🔑 chave, NCM, descrição + badges, volumes, peso, dimensões, valor, NF assinada com link/upload)
+- **Financeiro:** valor do frete + forma + condições; breakdown `calculateFreightFull` (usa `clientPricing` se houver) com "Usar este valor"; estado da receita vinculada; observações internas
+- **Ocorrências:** lista de incidentes; "Resolver" via Dialog com textarea
+- **Histórico:** `status_history` em ordem reversa
 
-**Seção Incidentes:**
-- Lista de `incidents` vinculados ao pedido
-- Botão "Resolver" abre Dialog com textarea obrigatória (substitui o antigo `window.prompt`)
+**Rail direito:** atribuição operacional (motorista, caminhão, CT-e inline), info de programação, atalho "Programar no Despacho" (se confirmado sem viagem), card de pagamento (status + "Marcar como Pago")
 
-**Cabeçalho:** botão "Duplicar" → abre `/admin/coletas/nova` com `location.state.duplicate` (formulário pré-preenchido)
-
-**Seção Histórico:** log completo de `status_history`
-
-**Sidebar direita:**
-- Motorista e Caminhão (select editáveis)
-- Valor do frete + calculadora inline (abre/fecha)
-- Botão "Usar este valor"
-- Campo CT-e (editável inline)
-- Status de pagamento + método
-- Observações
-- Botão "Cancelar Pedido": exige **motivo** em textarea (botão desabilitado sem motivo); ao confirmar, estorna receitas pendentes via `cancelRevenuesForOrder()` e grava `"Cancelado — motivo: ..."` no `status_history`
-- Botão "Comprovante PDF" (somente quando `status = "delivered"`)
-  - Chama `generateDeliveryReceipt(order, trip, company)` → download do blob
-
-**Confirmação de pedido:**
-- Botão "Confirmar Pedido" (status: new → confirmed)
-- Ao confirmar: opcionalmente chama `calculateDistance` via Google Maps
-- Cria Revenue `receivable` via `ensureRevenueForOrder()` — não duplica se já houver receita ativa do pedido
-
-**Datas:** exibição com `formatDateBR()` (timezone-safe — nunca `new Date("YYYY-MM-DD")`)
-
-**Queries:** orders filter by id, trips filter by order_id, company_settings
+**Regras preservadas:** ao confirmar → `ensureRevenueForOrder` (anti-duplicação); ao cancelar (modal com motivo obrigatório) → `cancelRevenuesForOrder` (estorno) + motivo no histórico; datas via `formatDateBR` (timezone-safe)
 
 ---
 
-### 3.5 Agenda
+### 3.5 Despacho (quadro de programação)
 
-**Arquivo:** `src/pages/admin/AgendaPage.jsx`  
-**Rota:** `/admin/agenda`  
+**Arquivo:** `src/pages/admin/DispatchBoard.jsx`  
+**Rota:** `/admin/despacho`  
 **Acesso:** operador + admin
 
-**3 abas:**
+**Layout em 2 colunas:**
 
-#### Aba "Aguardando" (fila de aprovação)
-- Lista de pedidos com `status = "new"` ou `schedule_status = "pending"`
-- Por pedido: protocolo, cliente, data solicitada, peso, frete estimado
-- Sugestão automática de caminhão: `suggestTruckForOrder()` (bin-packing)
-- Botão "Confirmar": abre Sheet de agendamento manual
-  - Campos no Sheet: data de coleta (date picker), caminhão (select com capacidade), valor do frete, forma de pagamento
-  - Ao salvar: `order.update({ status: "confirmed", scheduled_date, scheduled_truck_id, freight_value })` + Revenue via `ensureRevenueForOrder()` (anti-duplicação)
-- Botão "Recusar": cancela o pedido + estorna receitas pendentes (`cancelRevenuesForOrder`)
-- Botão ⚡ (raio): abre `SmartScheduleModal` para auto-agendamento
+**Esquerda — Fila de despacho:** pedidos `confirmed` sem viagem e sem programação. Cada card tem checkbox (seleção múltipla), protocolo, cliente, rota, kg e data solicitada. Barra fixa mostra seleção atual (qtd + kg).
 
-#### Aba "Programado" (calendário semanal)
-- Grid de 7 dias × caminhões ativos
-- Por célula: pedidos programados para aquela data/caminhão
-- Indicador de % de capacidade usada
-- Click em pedido → `OrderDetailPanel`
+**Direita — Quadro caminhões × dias (seg–sáb, navegável por semana):**
+- Linhas = caminhões ativos (placa, modelo, capacidade, status)
+- Células = dia × caminhão
+- **Fluxo:** seleciona pedidos na fila → clica numa célula → pedidos recebem `scheduled_truck_id` + `scheduled_date` (valida capacidade, bloqueia excesso de peso)
+- Célula com pedidos: lista cada um, barra de % de capacidade (verde/âmbar/vermelho), kg usado, "✕" devolve à fila, botão **Viagem** → `/admin/viagens/nova` com `state.preselectedOrderIds` + `preselectedTruckId`
+- Rodapé: viagens em rota/planejadas resumidas
 
-#### Aba "Em Rota" (viagens ativas)
-- Lista de trips com `status = "in_progress"`
-- Progresso: paradas concluídas / total
-- Próxima parada
-- Link para detalhe da viagem
-
-**Queries:** orders, trucks, drivers, schedule_blocks, company_settings
+**Queries:** orders, trucks (ativos), trips
 
 ---
 
@@ -474,11 +427,13 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Rota:** `/admin/viagens/nova`  
 **Acesso:** operador + admin
 
+**Pré-seleção:** quando aberta pelo botão "Viagem" do **Despacho**, recebe `location.state.preselectedOrderIds` + `preselectedTruckId` e já vem com pedidos e caminhão marcados.
+
 **3 seções:**
 
 1. **Pedidos para a viagem**
    - Lista pedidos com `status = "confirmed"` e sem `trip_id`
-   - Checkboxes de seleção
+   - Checkboxes de seleção (pré-marcados se veio do Despacho)
    - Totais: pedidos, kg, receita
 
 2. **Equipe e Veículo**
@@ -966,11 +921,11 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 ### Rotas admin
 | Rota | Componente | Acesso |
 |------|-----------|--------|
-| `/admin` | Dashboard | operador+ |
-| `/admin/coletas` | Orders | operador+ |
-| `/admin/coletas/novo` | NewOrder | operador+ |
-| `/admin/coletas/:id` | OrderDetailPage | operador+ |
-| `/admin/agenda` | AgendaPage | operador+ |
+| `/admin` | **OperationsHub** | operador+ |
+| `/admin/coletas` | **OrdersWorkspace** | operador+ |
+| `/admin/coletas/nova` | NewOrder | operador+ |
+| `/admin/coletas/:id` | **OrderWorkspace** | operador+ |
+| `/admin/despacho` | **DispatchBoard** | operador+ |
 | `/admin/frota` | FrotaPage | operador+ |
 | `/admin/frota/:id` | TruckDetailPage | operador+ |
 | `/admin/motoristas/:id` | DriverDetailPage | operador+ |
@@ -980,14 +935,16 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 | `/admin/cadastros` | CadastrosPage | operador+ |
 | `/admin/clientes/:id` | ClientDetailPage | operador+ |
 | `/admin/financeiro` | FinanceiroPage | admin only |
-| `/admin/configuracoes` | ConfigPage | admin only |
+| `/admin/config` | ConfigPage | admin only |
 
-### Redirecionamentos legados (URLs antigas do Base44)
+### Redirecionamentos legados
 | URL antiga | Redireciona para |
 |-----------|-----------------|
-| `/admin/pedidos` | `/admin/coletas` |
-| `/admin/pedidos/:id` | `/admin/coletas/:id` |
-| `/admin/frota/motoristas` | `/admin/frota?tab=motoristas` |
+| `/admin/agenda`, `/admin/programacao`, `/admin/operacoes` | `/admin/despacho` |
+| `/admin/pedidos`, `/admin/pedidos/:id` | `/admin/coletas` |
+| `/admin/configuracoes` | `/admin/config` |
+| `/admin/motoristas`, `/admin/carregamento` | `/admin/frota` |
+| `/admin/alertas`, `/admin/documentos`, `/admin/mapa` | `/admin/config` |
 
 ### Rotas motorista
 | Rota | Componente |
