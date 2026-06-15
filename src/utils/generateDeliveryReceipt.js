@@ -1,13 +1,40 @@
 import jsPDF from "jspdf";
 
+/** Carrega uma imagem (URL) como dataURL + dimensões, para embutir no PDF. */
+function loadImageData(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        c.getContext("2d").drawImage(img, 0, 0);
+        resolve({ dataUrl: c.toDataURL("image/png"), width: img.naturalWidth, height: img.naturalHeight });
+      } catch (e) { reject(e); }
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
 /**
- * Gera PDF de comprovante de entrega e retorna como Blob.
+ * Gera PDF de comprovante de entrega (POD) e retorna como Blob.
+ * Embute a assinatura digital do recebedor quando disponível.
  * @param {object} order   - objeto completo do pedido
  * @param {object} trip    - objeto da viagem (opcional)
  * @param {object} company - dados da empresa (CompanySettings)
- * @returns {Blob}
+ * @returns {Promise<Blob>}
  */
-export function generateDeliveryReceipt(order, trip, company) {
+export async function generateDeliveryReceipt(order, trip, company) {
+  // Pré-carrega assinaturas dos destinatários (falha silenciosa se CORS/erro)
+  const sigByRecipient = {};
+  for (const r of (order.recipients || [])) {
+    if (r.signature_url) {
+      try { sigByRecipient[r.name] = await loadImageData(r.signature_url); } catch { /* ignora */ }
+    }
+  }
+
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const W = 210;
   const margin = 15;
@@ -146,6 +173,30 @@ export function generateDeliveryReceipt(order, trip, company) {
       doc.text("✓ NF assinada registrada no sistema", margin + 2, y + 3);
       doc.setTextColor(60, 60, 60);
       y += 7;
+    }
+
+    // Comprovante de entrega: recebedor + assinatura digital embutida
+    if (recipient.receiver_name || recipient.signature_url || recipient.delivered_at) {
+      if (y > 250) { doc.addPage(); y = 20; }
+      doc.setFontSize(8);
+      doc.setTextColor(60, 60, 60);
+      const recebedor = recipient.receiver_name ? `Recebido por: ${recipient.receiver_name}` : "Recebido";
+      const quando = recipient.delivered_at ? `  ·  ${new Date(recipient.delivered_at).toLocaleString("pt-BR")}` : "";
+      doc.text(recebedor + quando, margin + 2, y + 3);
+      y += 5;
+      const sig = sigByRecipient[recipient.name];
+      if (sig) {
+        const w = 45;
+        const h = Math.min(w * (sig.height / sig.width || 0.4), 18);
+        doc.addImage(sig.dataUrl, "PNG", margin + 2, y, w, h);
+        doc.setDrawColor(180, 180, 180);
+        doc.line(margin + 2, y + h + 1, margin + 2 + w, y + h + 1);
+        doc.setFontSize(6.5);
+        doc.setTextColor(120, 120, 120);
+        doc.text("Assinatura do recebedor", margin + 2, y + h + 4);
+        doc.setTextColor(60, 60, 60);
+        y += h + 7;
+      }
     }
     y += 4;
   });

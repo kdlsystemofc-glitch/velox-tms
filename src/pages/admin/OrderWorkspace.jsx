@@ -185,14 +185,18 @@ export default function OrderWorkspace() {
     toast({ title: "Dados salvos!" });
   };
 
-  const downloadReceipt = () => {
-    const blob = generateDeliveryReceipt(order, trip, settings);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Comprovante-${order.protocol}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const downloadReceipt = async () => {
+    try {
+      const blob = await generateDeliveryReceipt(order, trip, settings);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Comprovante-${order.protocol}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast({ title: "Erro ao gerar comprovante", variant: "destructive" });
+    }
   };
 
   const activeRevenue = orderRevenues.find(r => r.status !== "cancelled");

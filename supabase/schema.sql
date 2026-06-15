@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS company_settings (
   google_maps_api_key TEXT,
   pricing JSONB DEFAULT '{"price_per_kg":0.5,"price_per_km":2.0,"fixed_fee":50,"minimum_freight":150,"gris_percent":0,"ad_valorem_percent":0,"tde_per_nf":0,"tda_per_nf":0,"toll_per_kg":0}'::jsonb,
   route_pricing JSONB DEFAULT '[]'::jsonb,
+  documents JSONB DEFAULT '[]'::jsonb,
   maintenance_km_alerts JSONB DEFAULT '{"oil_change_km":20000,"general_review_km":40000,"tire_change_km":60000}'::jsonb,
   km_per_day INTEGER DEFAULT 600,
   delivery_days_table JSONB DEFAULT '[]'::jsonb,

@@ -129,16 +129,26 @@ export default function DispatchBoard() {
               <Package className="w-4 h-4 text-velox-amber" /> Fila de despacho
               <span className="text-muted-foreground font-normal">({unscheduled.length})</span>
             </h2>
-            {selectedIds.length > 0 && (
-              <button onClick={() => setSelectedIds([])} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
-                <X className="w-3 h-3" /> Limpar ({selectedIds.length})
-              </button>
+            {unscheduled.length > 0 && (
+              selectedIds.length === unscheduled.length
+                ? <button onClick={() => setSelectedIds([])} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"><X className="w-3 h-3" /> Limpar</button>
+                : <button onClick={() => setSelectedIds(unscheduled.map(o => o.id))} className="text-xs text-primary hover:underline">Selecionar todos</button>
             )}
           </div>
 
           {selectedIds.length > 0 && (
-            <div className="rounded-lg bg-velox-amber/10 border border-velox-amber/30 px-3 py-2 text-xs font-medium text-white">
-              {selectedIds.length} selecionado(s) · {selectedKg.toLocaleString("pt-BR")} kg — clique numa célula do quadro →
+            <div className="rounded-lg bg-velox-amber/10 border border-velox-amber/30 px-3 py-2.5 space-y-2">
+              <p className="text-xs font-medium text-velox-dark">
+                {selectedIds.length} selecionado(s) · {selectedKg.toLocaleString("pt-BR")} kg
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="h-7 text-xs flex-1" onClick={() => setSelectedIds([])}>Limpar</Button>
+                <Button size="sm" className="h-7 text-xs flex-1 bg-velox-amber text-white font-bold gap-1"
+                  onClick={() => navigate("/admin/viagens/nova", { state: { preselectedOrderIds: selectedIds } })}>
+                  <Send className="w-3 h-3" /> Criar viagem
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">ou clique numa célula do quadro para programar →</p>
             </div>
           )}
 
