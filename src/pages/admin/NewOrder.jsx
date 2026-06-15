@@ -339,16 +339,17 @@ export default function NewOrder() {
     });
   }, [form.recipients, form.origin?.state, form.client_id, clients, settings?.pricing]);
 
-  const section = (icon, title, children) => (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          {React.createElement(icon, { className: "w-4 h-4 text-velox-amber" })}
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">{children}</CardContent>
-    </Card>
+  const section = (icon, title, children, desc) => (
+    <section className="bg-card border border-border rounded-md">
+      <header className="flex items-start gap-2.5 px-4 py-3 border-b border-border bg-muted/30">
+        {React.createElement(icon, { className: "w-4 h-4 text-primary mt-0.5 flex-shrink-0" })}
+        <div>
+          <h3 className="text-sm font-semibold text-foreground leading-tight">{title}</h3>
+          {desc && <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>}
+        </div>
+      </header>
+      <div className="space-y-4 p-4">{children}</div>
+    </section>
   );
 
   const inputRow = (cols) => <div className={`grid grid-cols-1 md:grid-cols-${cols} gap-3`} />;
@@ -519,18 +520,16 @@ export default function NewOrder() {
         </>
       )}
 
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Package className="w-4 h-4 text-velox-amber" /> Destinatários e Cargas
-            </CardTitle>
-            <Button variant="outline" size="sm" onClick={addRecipient} className="gap-1">
-              <Plus className="w-3 h-3" /> Destinatário
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <section className="bg-card border border-border rounded-md">
+        <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Package className="w-4 h-4 text-primary" /> Destinatários e Cargas
+          </h3>
+          <Button variant="outline" size="sm" onClick={addRecipient} className="gap-1 h-7">
+            <Plus className="w-3 h-3" /> Destinatário
+          </Button>
+        </header>
+        <div className="space-y-6 p-4">
           {form.recipients.map((r, ri) => (
             <div key={ri} className="border border-border rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
@@ -769,8 +768,8 @@ export default function NewOrder() {
               </div>
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {section(DollarSign, "Valor e Atribuição",
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

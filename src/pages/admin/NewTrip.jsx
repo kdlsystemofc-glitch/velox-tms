@@ -147,12 +147,12 @@ export default function NewTrip() {
 
       {/* Step 1: Orders */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
+        <CardHeader className="py-3 border-b border-border bg-muted/30">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Package className="w-4 h-4 text-velox-amber" /> Pedidos para esta viagem
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           {orders.length === 0 ? (
             <div className="text-center py-6 text-muted-foreground text-sm">
               <Package className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -196,12 +196,12 @@ export default function NewTrip() {
 
       {/* Step 2: Team */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
+        <CardHeader className="py-3 border-b border-border bg-muted/30">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Users className="w-4 h-4 text-velox-amber" /> Equipe e Veículo
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Motorista <span className="text-red-500">*</span></label>
             <Select value={driverId} onValueChange={setDriverId}>
@@ -241,12 +241,12 @@ export default function NewTrip() {
 
       {/* Step 3: Schedule */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
+        <CardHeader className="py-3 border-b border-border bg-muted/30">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <MapPin className="w-4 h-4 text-velox-amber" /> Agendamento
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-4">
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Data e hora de saída</label>
             <Input type="datetime-local" value={departureDate} onChange={e => setDepartureDate(e.target.value)} />

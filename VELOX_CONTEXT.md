@@ -30,13 +30,16 @@ Identidade visual corporativa no padrão de TMS profissionais (McLeod, Benner, S
 - **Densidade:** `--radius: 0.375rem` (6px, cantos retos); `Card` com `p-4`/`shadow-sm`; `Input` h-9 com foco azul; cabeçalhos de tabela uppercase 11px com fill (`TableHead`). Números tabulares (`tnum`) no body.
 - **Tipografia:** Inter (display/heading/body) + JetBrains Mono (protocolos, valores, placas). Removido o Barlow Condensed.
 - **Componentes-base novos:**
-  - `StatusBadge` — tag retangular com ponto indicador (pedidos + viagens).
-  - `components/shared/FormSection.jsx` — `FormSection` (cabeçalho + grade) e `Field` (label acima, obrigatório/opcional, erro inline).
+  - `StatusBadge` — tag retangular com ponto indicador (pedidos + viagens + configs de motorista/caminhão).
+  - `components/shared/DataTable.jsx` — tabela densa com **ordenação clicável por coluna**, busca inline, toolbar e rodapé. Aplicada em Clientes, Fornecedores, Motoristas e Frota (substituíram os grids de cards).
+  - `components/shared/FormSection.jsx` — `FormSection` (cabeçalho com barra + grade) e `Field` (label acima, obrigatório/opcional, erro inline). Padrão aplicado nas seções de NewOrder e NewTrip (cabeçalho com divisória + fundo).
   - `components/shared/CollapsibleSection.jsx` — seção colapsável para telas de detalhe.
 - **Configurações:** `ConfigPage` agora é **navegação lateral por categorias** (não abas).
 - **Pedido (`OrderWorkspace`):** página única com **seções colapsáveis** (Resumo, Cargas, Financeiro, Ocorrências, Histórico) — sem abas.
 - **Financeiro (`Revenues`/`Expenses`):** painel de **aging** clicável (Vencidas, ≤7d, 8–30d, 31–60d, >60d) que filtra a lista; coluna de vencimento mostra dias vencidos/a vencer.
 - **App do motorista:** botões grandes (h-14) e barra de progresso de paradas.
+- **Listas de cadastro:** tabelas densas ordenáveis (DataTable) em vez de grids de cards — clique no cabeçalho ordena, busca inline filtra.
+- **Dashboard (OperationsHub):** faixa de métricas de comando no topo (frota disponível, em rota, coletas/entregas hoje) + fila de ação + pipeline + operação de hoje + frota agora.
 
 ---
 

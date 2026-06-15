@@ -110,14 +110,26 @@ export default function OperationsHub() {
   const toReceive = isAdmin ? revenues.filter(r => r.status === "receivable").reduce((s, r) => s + (r.amount || 0), 0) : 0;
   const toPay = isAdmin ? expenses.filter(e => e.status === "pending").reduce((s, e) => s + (e.amount || 0), 0) : 0;
 
+  // ── Métricas de comando (faixa superior) ────────────────────
+  const trucksAvailable = trucks.filter(t => t.status === "available").length;
+  const trucksOnRoute = activeTrips.length;
+  const collectingToday = active.filter(o => o.status === "collecting" && (o.collection_date === todayStr || o.scheduled_date === todayStr)).length;
+  const deliveredToday = orders.filter(o => o.status === "delivered" && (o.status_history || []).some(h => h.status === "delivered" && (h.timestamp || "").slice(0, 10) === todayStr)).length;
+  const metrics = [
+    { label: "Frota disponível", value: `${trucksAvailable}/${trucks.filter(t => t.status !== "inactive").length}`, icon: Truck, color: "text-blue-600" },
+    { label: "Em rota agora", value: trucksOnRoute, icon: MapPin, color: "text-green-600" },
+    { label: "Coletas hoje", value: collectingToday, icon: Clock, color: "text-amber-600" },
+    { label: "Entregas hoje", value: deliveredToday, icon: CheckCircle2, color: "text-violet-600" },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-2xl font-extrabold text-foreground">Painel de Operações</h1>
-          <p className="text-muted-foreground text-sm capitalize">
-            {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+          <h1 className="font-display text-xl font-bold text-foreground">Painel de Operações</h1>
+          <p className="text-muted-foreground text-xs capitalize">
+            {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
         </div>
         <div className="flex gap-2">
@@ -128,6 +140,21 @@ export default function OperationsHub() {
             <Plus className="w-4 h-4" /> Novo Pedido
           </Button>
         </div>
+      </div>
+
+      {/* Faixa de métricas de comando */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {metrics.map((m, i) => (
+          <div key={i} className="bg-card border border-border rounded-md px-4 py-3 flex items-center gap-3">
+            <span className="w-9 h-9 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+              <m.icon className={`w-4.5 h-4.5 ${m.color}`} />
+            </span>
+            <div>
+              <p className="text-xl font-bold font-mono leading-none">{m.value}</p>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide mt-1">{m.label}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Fila de ação */}
