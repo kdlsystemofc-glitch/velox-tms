@@ -61,12 +61,15 @@ module.exports = {
   				ring: 'hsl(var(--sidebar-ring))'
   			},
         velox: {
-          dark: '#0A1628',
-          blue: '#1E3A5F',
-          amber: '#F59E0B',
-          light: '#F8FAFC',
-          success: '#10B981',
-          danger: '#EF4444',
+          dark: '#1B2430',     /* grafite — sidebar, cabeçalhos */
+          blue: '#2B5FA8',     /* azul-aço — acento/CTA primário */
+          'blue-dark': '#1F4A85',
+          amber: '#2B5FA8',    /* REMAP: usos legados de "amber" agora são azul-aço */
+          light: '#F1F3F5',    /* canvas */
+          success: '#1E8E4E',  /* verde semântico */
+          warning: '#C27510',  /* âmbar semântico (atenção) */
+          danger: '#C0392B',   /* vermelho semântico */
+          slate: '#5A6573',    /* texto secundário */
         }
   		},
   		fontFamily: {

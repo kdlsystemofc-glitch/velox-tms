@@ -59,7 +59,7 @@ export default function HeroSection() {
             <p className="text-lg sm:text-xl text-white/60 font-light max-w-lg mb-10 leading-relaxed">{heroSubtitle}</p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/agendar">
-                <Button size="lg" className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold text-base px-8 py-6 rounded-full shadow-lg shadow-velox-amber/20 group">
+                <Button size="lg" className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold text-base px-8 py-6 rounded-full shadow-lg shadow-velox-amber/20 group">
                   Cotar Frete <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>

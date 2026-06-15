@@ -11,11 +11,11 @@ export default function AdminLayout() {
       <AdminSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       <div
         className={`transition-all duration-300 ${
-          collapsed ? "ml-[72px]" : "ml-64"
+          collapsed ? "ml-[64px]" : "ml-56"
         }`}
       >
         <AdminTopbar />
-        <main className="p-6">
+        <main className="px-5 py-5 max-w-[1600px]">
           <Outlet />
         </main>
       </div>

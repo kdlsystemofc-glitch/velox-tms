@@ -254,7 +254,7 @@ export default function ClientDetailPage() {
                       </div>
                     </div>
                   </div>
-                  <Button className="col-span-2 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" onClick={() => updateMutation.mutate(form)} disabled={updateMutation.isPending}>
+                  <Button className="col-span-2 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={() => updateMutation.mutate(form)} disabled={updateMutation.isPending}>
                     {updateMutation.isPending ? "Salvando..." : "Salvar"}
                   </Button>
                 </div>
@@ -304,7 +304,7 @@ export default function ClientDetailPage() {
                        <div>
                          <div className="flex items-center gap-2">
                            <p className="font-medium text-sm">{c.name}</p>
-                           {c.is_primary && <span className="text-[10px] bg-velox-amber/20 text-velox-dark font-bold px-1.5 py-0.5 rounded-full">Principal</span>}
+                           {c.is_primary && <span className="text-[10px] bg-velox-amber/20 text-white font-bold px-1.5 py-0.5 rounded-full">Principal</span>}
                          </div>
                          <p className="text-xs text-muted-foreground">{c.role}</p>
                          <div className="flex gap-3 mt-1">
@@ -371,7 +371,7 @@ export default function ClientDetailPage() {
                           </div>
                           <div className="flex gap-2 justify-end pt-2">
                             <Button variant="outline" size="sm" onClick={() => { setShowContactModal(false); setEditingContactIndex(null); setEditContact(null); }}>Cancelar</Button>
-                            <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" onClick={handleSaveContact} disabled={!contactForm?.name?.trim()}>Salvar</Button>
+                            <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={handleSaveContact} disabled={!contactForm?.name?.trim()}>Salvar</Button>
                           </div>
                         </div>
                       </div>
@@ -418,7 +418,7 @@ export default function ClientDetailPage() {
                       setEditingPricing(false);
                       toast({ title: "Tabela personalizada removida", description: "Cliente voltou a usar a tabela padrão." });
                     }}>Limpar</Button>
-                    <Button size="sm" className="flex-1 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold text-xs" onClick={async () => {
+                    <Button size="sm" className="flex-1 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold text-xs" onClick={async () => {
                       const cleaned = {};
                       PRICING_FIELDS.forEach(f => {
                         const v = pricingForm[f.key];
@@ -538,7 +538,7 @@ export default function ClientDetailPage() {
                     </div>
                   </div>
                   <Button
-                    className="w-full bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold"
+                    className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
                     onClick={async () => {
                       await base44.entities.Revenue.create({
                         description: `Fatura mensal — ${client.company_name} (${now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })})`,

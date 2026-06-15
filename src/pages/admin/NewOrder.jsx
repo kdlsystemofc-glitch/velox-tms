@@ -884,7 +884,7 @@ export default function NewOrder() {
       <div className="flex gap-3 justify-end pb-8">
         <Button variant="outline" onClick={() => navigate("/admin/coletas")}>Cancelar</Button>
         <Button
-          className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold px-8"
+          className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold px-8"
           onClick={handleSubmit}
           disabled={createMutation.isPending}
         >
@@ -909,7 +909,7 @@ export default function NewOrder() {
               setCreateClientPrompt(null);
               finishAndNavigate(proto);
             }}>Não, só o pedido</Button>
-            <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" onClick={async () => {
+            <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={async () => {
               const proto = createClientPrompt?.protocol;
               try {
                 await base44.entities.Client.create({

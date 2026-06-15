@@ -69,7 +69,7 @@ export default function AddOrderModal({ orders, truck, date, onConfirm, onCancel
         <div className="flex gap-2 justify-end pt-3 border-t border-border">
           <Button variant="outline" onClick={onCancel}>Cancelar</Button>
           <Button
-            className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold"
+            className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
             disabled={selected.length === 0}
             onClick={() => onConfirm(selected)}
           >

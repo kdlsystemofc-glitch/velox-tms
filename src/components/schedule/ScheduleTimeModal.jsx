@@ -88,7 +88,7 @@ export default function ScheduleTimeModal({ order, truck, date, onConfirm, onCan
           <div className="flex gap-2 justify-end pt-2">
             <Button variant="outline" onClick={onCancel}>Cancelar</Button>
             <Button
-              className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold"
+              className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
               onClick={() => onConfirm(times)}
             >
               Confirmar

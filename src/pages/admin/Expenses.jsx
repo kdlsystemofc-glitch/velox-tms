@@ -89,7 +89,7 @@ export default function Expenses() {
           <h1 className="font-display text-3xl font-extrabold text-foreground">Despesas</h1>
           <p className="text-muted-foreground text-sm mt-1">Controle de custos e pagamentos</p>
         </div>
-        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2" onClick={() => setShowModal(true)}>
+        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => setShowModal(true)}>
           <Plus className="w-4 h-4" /> Nova Despesa
         </Button>
       </div>
@@ -228,7 +228,7 @@ export default function Expenses() {
               <label className="text-sm font-medium text-slate-700 block mb-1">Observações</label>
               <Textarea placeholder="ex: Nota fiscal nº 1234" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="resize-none" />
             </div>
-            <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold"
+            <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
               onClick={() => createMutation.mutate({ ...form, amount: Number(form.amount) })}
               disabled={!form.description || !form.amount}>
               Registrar Despesa

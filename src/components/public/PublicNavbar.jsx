@@ -60,7 +60,7 @@ export default function PublicNavbar() {
             Cotar Frete
           </Link>
           <Link to="/agendar">
-            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold px-6 rounded-full">
+            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold px-6 rounded-full">
               Agendar Coleta
             </Button>
           </Link>
@@ -99,7 +99,7 @@ export default function PublicNavbar() {
                 Cotar Frete
               </Link>
               <Link to="/agendar" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold rounded-full mt-2">
+                <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold rounded-full mt-2">
                   Agendar Coleta
                 </Button>
               </Link>

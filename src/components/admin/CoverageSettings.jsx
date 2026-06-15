@@ -206,7 +206,7 @@ export default function CoverageSettings({ form, setF, onSave, saving }) {
         </div>
 
         <div className="flex justify-end">
-          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2" onClick={onSave} disabled={saving}>
+          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={onSave} disabled={saving}>
             <Save className="w-4 h-4" /> {saving ? "Salvando..." : "Salvar configurações de área"}
           </Button>
         </div>

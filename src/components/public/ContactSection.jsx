@@ -117,7 +117,7 @@ export default function ContactSection() {
                   <Textarea placeholder="Como podemos ajudar?" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} rows={5} className={`bg-white ${errors.message ? "border-red-500" : ""}`} />
                   <FieldError message={errors.message} />
                 </div>
-                <Button type="submit" disabled={sending} className="w-full bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold py-6 rounded-xl text-base">
+                <Button type="submit" disabled={sending} className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold py-6 rounded-xl text-base">
                   {sending ? "Enviando..." : "Enviar Mensagem"}
                   {!sending && <Send className="w-4 h-4 ml-2" />}
                 </Button>

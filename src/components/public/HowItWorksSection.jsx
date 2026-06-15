@@ -54,7 +54,7 @@ export default function HowItWorksSection() {
                   <div className="w-20 h-20 bg-velox-dark rounded-2xl flex items-center justify-center relative z-10">
                     <step.icon className="w-9 h-9 text-velox-amber" />
                   </div>
-                  <span className="absolute -top-3 -right-3 w-8 h-8 bg-velox-amber rounded-full flex items-center justify-center text-xs font-bold text-velox-dark z-20">
+                  <span className="absolute -top-3 -right-3 w-8 h-8 bg-velox-amber rounded-full flex items-center justify-center text-xs font-bold text-white z-20">
                     {step.step}
                   </span>
                 </div>

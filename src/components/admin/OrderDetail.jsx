@@ -128,7 +128,7 @@ export default function OrderDetail({ order, onUpdate, onClose }) {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="w-full bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold"
+          className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
         >
           {saving ? "Salvando..." : "Salvar Alterações"}
         </Button>

@@ -143,7 +143,7 @@ export default function DispatchBoard() {
           </div>
 
           {selectedIds.length > 0 && (
-            <div className="rounded-lg bg-velox-amber/10 border border-velox-amber/30 px-3 py-2 text-xs font-medium text-velox-dark">
+            <div className="rounded-lg bg-velox-amber/10 border border-velox-amber/30 px-3 py-2 text-xs font-medium text-white">
               {selectedIds.length} selecionado(s) · {selectedKg.toLocaleString("pt-BR")} kg — clique numa célula do quadro →
             </div>
           )}

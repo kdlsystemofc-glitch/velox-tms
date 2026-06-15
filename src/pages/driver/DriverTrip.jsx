@@ -201,7 +201,7 @@ export default function DriverTrip() {
             </div>
             <Button
               size="sm"
-              className="w-full mt-3 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold text-xs"
+              className="w-full mt-3 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold text-xs"
               disabled={!allChecked || updateMutation.isPending}
               onClick={submitChecklist}
             >

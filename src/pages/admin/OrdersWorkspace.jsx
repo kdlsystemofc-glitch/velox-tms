@@ -161,7 +161,7 @@ export default function OrdersWorkspace() {
           <h1 className="font-display text-2xl font-extrabold text-foreground">Pedidos</h1>
           <p className="text-muted-foreground text-sm">Fila única — confirme, recuse e despache sem sair da tela</p>
         </div>
-        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2" onClick={() => navigate("/admin/coletas/nova")}>
+        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => navigate("/admin/coletas/nova")}>
           <Plus className="w-4 h-4" /> Novo Pedido
         </Button>
       </div>
@@ -244,7 +244,7 @@ export default function OrdersWorkspace() {
                       <div className="flex items-center justify-end gap-1.5">
                         {order.status === "new" && (
                           <>
-                            <Button size="sm" className="h-7 text-xs bg-velox-amber text-velox-dark font-bold hover:bg-velox-amber/90"
+                            <Button size="sm" className="h-7 text-xs bg-velox-amber text-white font-bold hover:bg-velox-amber/90"
                               onClick={() => openConfirm(order)}>
                               <CheckCircle className="w-3 h-3 mr-1" /> Confirmar
                             </Button>
@@ -350,7 +350,7 @@ export default function OrdersWorkspace() {
                 </div>
                 <div className="pt-2 flex gap-3">
                   <Button variant="outline" className="flex-1" onClick={() => setConfirmingOrder(null)}>Cancelar</Button>
-                  <Button className="flex-1 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold"
+                  <Button className="flex-1 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
                     disabled={confirmMutation.isPending}
                     onClick={() => confirmMutation.mutate({ order: confirmingOrder, form: confirmForm })}>
                     {confirmMutation.isPending ? "Confirmando..." : "Confirmar Pedido"}

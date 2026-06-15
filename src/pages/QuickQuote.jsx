@@ -195,7 +195,7 @@ export default function QuickQuote() {
               <Button
                 onClick={handleCalculate}
                 disabled={!isValid}
-                className="flex-1 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2"
+                className="flex-1 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
               >
                 <Calculator className="w-4 h-4" />
                 Calcular frete estimado
@@ -247,7 +247,7 @@ export default function QuickQuote() {
                 <div className="text-center pt-2">
                   <p className="text-sm text-gray-600 mb-3">Gostou? Solicite a coleta agora mesmo.</p>
                   <a href="/agendar">
-                    <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2 rounded-full px-8">
+                    <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2 rounded-full px-8">
                       Solicitar coleta <ArrowRight className="w-4 h-4" />
                     </Button>
                   </a>

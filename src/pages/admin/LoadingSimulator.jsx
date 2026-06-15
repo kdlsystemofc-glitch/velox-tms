@@ -164,7 +164,7 @@ export default function LoadingSimulator() {
                 <CardTitle className="text-sm">Visualização do Baú</CardTitle>
                 <div className="flex gap-1">
                   {["side", "top", "front"].map(v => (
-                    <button key={v} onClick={() => setView(v)} className={`px-2 py-1 text-xs rounded ${view === v ? "bg-velox-amber text-velox-dark font-semibold" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
+                    <button key={v} onClick={() => setView(v)} className={`px-2 py-1 text-xs rounded ${view === v ? "bg-velox-amber text-white font-semibold" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
                       {v === "side" ? "Lateral" : v === "top" ? "Topo" : "Frontal"}
                     </button>
                   ))}
@@ -220,7 +220,7 @@ export default function LoadingSimulator() {
                         <p className="text-xs text-muted-foreground">{kg.toLocaleString("pt-BR")} kg · {order.total_volumes || "?"} vol</p>
                         {wouldExceed && <p className="text-xs text-red-500 mt-0.5">⚠ Excede em {((totalKg + kg) - truckCapKg).toLocaleString("pt-BR")} kg</p>}
                       </div>
-                      <Button size="sm" variant={wouldExceed ? "outline" : "default"} className={wouldExceed ? "border-red-300 text-red-500 hover:bg-red-50" : "bg-velox-amber text-velox-dark hover:bg-velox-amber/90"} onClick={() => addOrder(order)}>
+                      <Button size="sm" variant={wouldExceed ? "outline" : "default"} className={wouldExceed ? "border-red-300 text-red-500 hover:bg-red-50" : "bg-velox-amber text-white hover:bg-velox-amber/90"} onClick={() => addOrder(order)}>
                         <Plus className="w-3 h-3" />
                       </Button>
                     </div>

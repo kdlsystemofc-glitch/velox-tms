@@ -247,7 +247,7 @@ export default function TruckDetailPage() {
                     <p className="text-xs text-muted-foreground mt-2">Deixe em branco para usar os padrões globais (Configurações → Alertas)</p>
                   </div>
 
-                  <Button className="col-span-2 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" onClick={() => {
+                  <Button className="col-span-2 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={() => {
                       const payload = {
                         plate: form.plate, manufacturer: form.manufacturer, model: form.model,
                         year: Number(form.year) || undefined, truck_type: form.truck_type,
@@ -510,7 +510,7 @@ export default function TruckDetailPage() {
           </div>
           <div className="flex gap-2 pt-2">
             <Button variant="outline" onClick={() => { setShowMaintModal(false); setMaintForm(EMPTY_MAINT); }} className="flex-1">Cancelar</Button>
-            <Button className="flex-1 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" onClick={addMaintenance} disabled={!maintForm.date || !maintForm.description || updateMutation.isPending}>
+            <Button className="flex-1 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={addMaintenance} disabled={!maintForm.date || !maintForm.description || updateMutation.isPending}>
               {maintForm._editIndex !== undefined ? "Salvar edição" : "Registrar manutenção"}
             </Button>
           </div>

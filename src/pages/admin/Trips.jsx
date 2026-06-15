@@ -95,7 +95,7 @@ export default function Trips() {
           <p className="text-muted-foreground text-sm mt-1">Gestão de rotas e viagens</p>
         </div>
         <Button
-          className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2"
+          className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
           onClick={() => navigate("/admin/viagens/nova")}
         >
           <Plus className="w-4 h-4" /> Nova Viagem
@@ -121,7 +121,7 @@ export default function Trips() {
                 <Route className="w-10 h-10 mx-auto mb-3 opacity-30" />
                 <p className="text-sm">Nenhuma viagem {key === "in_progress" ? "em andamento" : key === "planned" ? "planejada" : key === "completed" ? "concluída" : "cancelada"}.</p>
                 {key === "in_progress" && (
-                  <Button className="mt-4 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2" onClick={() => navigate("/admin/viagens/nova")}>
+                  <Button className="mt-4 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => navigate("/admin/viagens/nova")}>
                     <Plus className="w-4 h-4" /> Criar Nova Viagem
                   </Button>
                 )}

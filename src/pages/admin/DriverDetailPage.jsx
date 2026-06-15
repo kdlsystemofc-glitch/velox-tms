@@ -173,7 +173,7 @@ export default function DriverDetailPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button className="col-span-2 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" onClick={() => updateMutation.mutate(form)} disabled={updateMutation.isPending}>
+                  <Button className="col-span-2 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={() => updateMutation.mutate(form)} disabled={updateMutation.isPending}>
                     {updateMutation.isPending ? "Salvando..." : "Salvar alterações"}
                   </Button>
                 </div>

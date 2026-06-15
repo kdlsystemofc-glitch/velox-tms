@@ -119,7 +119,7 @@ function SupplierContactsSection({ contacts, onChange }) {
               <div>
                 <div className="flex items-center gap-1.5">
                   <p className="font-medium">{c.name}</p>
-                  {c.is_primary && <span className="text-[9px] bg-velox-amber/20 text-velox-dark font-bold px-1.5 py-0.5 rounded-full">Principal</span>}
+                  {c.is_primary && <span className="text-[9px] bg-velox-amber/20 text-white font-bold px-1.5 py-0.5 rounded-full">Principal</span>}
                 </div>
                 {c.role && <p className="text-muted-foreground">{c.role}</p>}
                 <div className="flex gap-2 mt-0.5">
@@ -170,7 +170,7 @@ function SupplierContactsSection({ contacts, onChange }) {
             </div>
             <div className="flex gap-2 justify-end pt-1">
               <Button variant="outline" size="sm" onClick={() => { setShowModal(false); setEditIdx(null); }}>Cancelar</Button>
-              <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" onClick={handleSave} disabled={!contactForm.name.trim()}>Salvar</Button>
+              <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={handleSave} disabled={!contactForm.name.trim()}>Salvar</Button>
             </div>
           </div>
         </div>
@@ -233,7 +233,7 @@ export default function Suppliers({ hideTitle = false }) {
         )}
         <Dialog open={showAdd} onOpenChange={(v) => { setShowAdd(v); if (!v) setForm(EMPTY); }}>
           <DialogTrigger asChild>
-            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2">
+            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
               <Plus className="w-4 h-4" /> Novo Fornecedor
             </Button>
           </DialogTrigger>
@@ -244,7 +244,7 @@ export default function Suppliers({ hideTitle = false }) {
             <Button
               onClick={() => createMutation.mutate(form)}
               disabled={!form.name || createMutation.isPending}
-              className="w-full bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold mt-2"
+              className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold mt-2"
             >
               {createMutation.isPending ? "Salvando..." : "Cadastrar"}
             </Button>
@@ -301,7 +301,7 @@ export default function Suppliers({ hideTitle = false }) {
         <Button
           onClick={() => updateMutation.mutate({ id: editingId, data: editForm })}
             disabled={!editForm.name || updateMutation.isPending}
-            className="w-full bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold mt-2"
+            className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold mt-2"
           >
             {updateMutation.isPending ? "Salvando..." : "Salvar"}
           </Button>

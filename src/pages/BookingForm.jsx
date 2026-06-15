@@ -381,7 +381,7 @@ export default function BookingForm() {
             </p>
             <Button
               onClick={() => window.location.href = "/rastrear"}
-              className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold rounded-full px-8"
+              className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold rounded-full px-8"
             >
               Rastrear Carga
             </Button>
@@ -421,7 +421,7 @@ export default function BookingForm() {
                   <div
                     className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
                       step >= s.num
-                        ? "bg-velox-amber text-velox-dark"
+                        ? "bg-velox-amber text-white"
                         : "bg-gray-200 text-gray-500"
                     }`}
                   >
@@ -484,7 +484,7 @@ export default function BookingForm() {
                 <Button
                   onClick={handleNext}
                   disabled={step === 2 && originCoverageError?.type === "out_of_coverage"}
-                  className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2 disabled:opacity-50"
+                  className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2 disabled:opacity-50"
                 >
                   Próximo <ArrowRight className="w-4 h-4" />
                 </Button>
@@ -492,7 +492,7 @@ export default function BookingForm() {
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2"
+                  className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
                 >
                   {submitting ? "Enviando..." : "Solicitar Cotação"}
                 </Button>
@@ -1061,7 +1061,7 @@ function Step4({ form, updateField, serviceType }) {
               }`}>
               <div className="flex items-center justify-between mb-1">
                 <p className="font-semibold text-velox-dark text-sm">{opt.label}</p>
-                {opt.badge && <span className="text-[10px] bg-velox-amber/20 text-velox-dark font-semibold px-2 py-0.5 rounded-full">{opt.badge}</span>}
+                {opt.badge && <span className="text-[10px] bg-velox-amber/20 text-white font-semibold px-2 py-0.5 rounded-full">{opt.badge}</span>}
               </div>
               <p className="text-xs text-gray-500">{opt.desc}</p>
             </button>

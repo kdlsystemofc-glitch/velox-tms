@@ -124,7 +124,7 @@ export default function OperationsHub() {
           <Button variant="outline" className="gap-2" onClick={() => navigate("/admin/despacho")}>
             <CalendarDays className="w-4 h-4" /> Despacho
           </Button>
-          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2" onClick={() => navigate("/admin/coletas/nova")}>
+          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => navigate("/admin/coletas/nova")}>
             <Plus className="w-4 h-4" /> Novo Pedido
           </Button>
         </div>

@@ -62,7 +62,7 @@ export default function Revenues() {
           <h1 className="font-display text-3xl font-extrabold text-foreground">Receitas</h1>
           <p className="text-muted-foreground text-sm mt-1">Gestão de contas a receber</p>
         </div>
-        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2" onClick={() => setShowModal(true)}>
+        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => setShowModal(true)}>
           <Plus className="w-4 h-4" /> Nova Receita
         </Button>
       </div>
@@ -166,7 +166,7 @@ export default function Revenues() {
                 </SelectContent>
               </Select>
             </div>
-            <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" onClick={() => createMutation.mutate({ ...form, amount: Number(form.amount), status: "receivable" })} disabled={!form.description || !form.amount || createMutation.isPending}>
+            <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={() => createMutation.mutate({ ...form, amount: Number(form.amount), status: "receivable" })} disabled={!form.description || !form.amount || createMutation.isPending}>
               {createMutation.isPending ? "Salvando..." : "Cadastrar"}
             </Button>
           </div>

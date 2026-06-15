@@ -270,7 +270,7 @@ export default function NewTrip() {
       <div className="flex gap-3 justify-end pb-8">
         <Button variant="outline" onClick={() => navigate("/admin/viagens")}>Cancelar</Button>
         <Button
-          className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold px-8"
+          className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold px-8"
           onClick={handleCreate}
           disabled={selectedOrders.length === 0 || !driverId || !truckId || isOverCapacity || createMutation.isPending}
         >

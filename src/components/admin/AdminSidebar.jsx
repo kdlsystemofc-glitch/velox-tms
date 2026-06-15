@@ -84,7 +84,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
               title={collapsed ? item.label : undefined}
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all mx-0.5 ${
                 active
-                  ? "bg-velox-amber text-velox-dark font-bold shadow-sm"
+                  ? "bg-velox-amber text-white font-bold shadow-sm"
                   : "text-sidebar-foreground/55 hover:text-sidebar-foreground hover:bg-white/5"
               }`}
             >

@@ -81,7 +81,7 @@ export default function AdminSettings() {
   const setNested = (parent, field, value) => setForm(f => ({ ...f, [parent]: { ...(f[parent] || {}), [field]: value } }));
 
   const SaveBtn = ({ children = "Salvar" }) => (
-    <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2" onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending}>
+    <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending}>
       <Save className="w-4 h-4" /> {saveMutation.isPending ? "Salvando..." : children}
     </Button>
   );

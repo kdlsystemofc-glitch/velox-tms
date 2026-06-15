@@ -187,7 +187,7 @@ export default function AvailabilityPanel({ trucks, orders, settings }) {
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setShowAddModal(false)}>Cancelar</Button>
                 <Button
-                  className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold"
+                  className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
                   disabled={!newBlock.date || !newBlock.block_type || addBlock.isPending}
                   onClick={() => addBlock.mutate(newBlock)}
                 >

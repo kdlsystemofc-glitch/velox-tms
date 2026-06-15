@@ -131,7 +131,7 @@ export default function AutoScheduleModal({ pendingOrders, trucks, weekDays, exi
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={onCancel}>Cancelar</Button>
               <Button
-                className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2"
+                className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
                 onClick={handlePreview}
               >
                 <Wand2 className="w-4 h-4" /> Calcular programação
@@ -182,7 +182,7 @@ export default function AutoScheduleModal({ pendingOrders, trucks, weekDays, exi
               <Button variant="outline" onClick={() => setPreview(null)}>Voltar</Button>
               <Button variant="outline" onClick={onCancel}>Cancelar</Button>
               <Button
-                className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold"
+                className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
                 onClick={() => onConfirm(preview.scheduled)}
               >
                 Confirmar programação

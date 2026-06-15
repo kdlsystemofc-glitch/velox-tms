@@ -86,7 +86,7 @@ export default function Tracking() {
             <Button
               type="submit"
               disabled={loading}
-              className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold px-8 py-6"
+              className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold px-8 py-6"
             >
               {loading ? <Clock className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
             </Button>
@@ -144,7 +144,7 @@ export default function Tracking() {
                           <p className={`font-semibold text-sm ${isCurrent ? "text-velox-amber" : isReached ? "text-foreground" : "text-muted-foreground"}`}>
                             {event.label}
                             {isCurrent && (
-                              <span className="ml-2 text-[10px] bg-velox-amber text-velox-dark px-2 py-0.5 rounded-full font-bold uppercase">Atual</span>
+                              <span className="ml-2 text-[10px] bg-velox-amber text-white px-2 py-0.5 rounded-full font-bold uppercase">Atual</span>
                             )}
                           </p>
                           {histEntry?.timestamp && (

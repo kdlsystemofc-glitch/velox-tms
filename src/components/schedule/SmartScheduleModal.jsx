@@ -84,7 +84,7 @@ export function SmartScheduleModal({ orders, trucks, existingOrders, targetDate,
         <Button
           onClick={() => onConfirm(plan, unscheduled)}
           disabled={plan.length === 0}
-          className="flex-1 bg-velox-amber text-velox-dark font-bold hover:bg-velox-amber/90"
+          className="flex-1 bg-velox-amber text-white font-bold hover:bg-velox-amber/90"
         >
           Confirmar programação
         </Button>

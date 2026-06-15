@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 import StatusBadge from "@/components/admin/StatusBadge";
 import FileUploadButton from "@/components/shared/FileUploadButton";
 import { FreightBreakdown } from "@/components/shared/FreightBreakdown";
+import CollapsibleSection from "@/components/shared/CollapsibleSection";
 import { generateDeliveryReceipt } from "@/utils/generateDeliveryReceipt";
 import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -36,16 +37,9 @@ const NEXT_ACTION = {
   in_transit: { label: "Confirmar Entrega", next: "delivered" },
 };
 
-const TABS = [
-  { key: "resumo", label: "Resumo" },
-  { key: "cargas", label: "Cargas" },
-  { key: "financeiro", label: "Financeiro" },
-  { key: "ocorrencias", label: "Ocorrências" },
-  { key: "historico", label: "Histórico" },
-];
-
 /**
- * WORKSPACE DO PEDIDO — uma ação primária por etapa, contexto em abas.
+ * WORKSPACE DO PEDIDO — página única com seções colapsáveis (padrão TMS).
+ * Ação primária por etapa no topo; contexto em seções empilhadas.
  * Mantém 100% da lógica do detalhe antigo (receita, estorno, motivo, NF, incidentes).
  */
 export default function OrderWorkspace() {
@@ -55,7 +49,6 @@ export default function OrderWorkspace() {
   const queryClient = useQueryClient();
   const { settings } = useCompanySettings();
 
-  const [tab, setTab] = useState("resumo");
   const [menuOpen, setMenuOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -227,7 +220,7 @@ export default function OrderWorkspace() {
         {/* Ação primária + menu */}
         <div className="flex items-center gap-2 relative">
           {nextAction && !isCancelled && (
-            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2"
+            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
               onClick={() => handleStatusChange(nextAction.next)}
               disabled={updateMutation.isPending}>
               {nextAction.label} <ArrowRight className="w-4 h-4" />
@@ -280,7 +273,7 @@ export default function OrderWorkspace() {
                 <React.Fragment key={s}>
                   <div className="flex flex-col items-center gap-1 min-w-[80px]">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${
-                      done ? "bg-velox-amber border-velox-amber text-velox-dark" : "bg-background border-border text-muted-foreground"
+                      done ? "bg-velox-amber border-velox-amber text-white" : "bg-background border-border text-muted-foreground"
                     } ${active ? "ring-4 ring-velox-amber/20" : ""}`}>
                       {done ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
                     </div>
@@ -309,26 +302,10 @@ export default function OrderWorkspace() {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
-        {/* ── CORPO EM ABAS ── */}
-        <div className="space-y-4">
-          <div className="flex gap-1 border-b border-border">
-            {TABS.map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-1.5 ${
-                  tab === t.key
-                    ? "border-velox-amber text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}>
-                {t.label}
-                {t.key === "ocorrencias" && incidents.length > 0 && (
-                  <span className="bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full px-1.5">{incidents.length}</span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* ABA RESUMO */}
-          {tab === "resumo" && (
+        {/* ── CORPO EM SEÇÕES COLAPSÁVEIS (uma página só) ── */}
+        <div className="space-y-3">
+          {/* SEÇÃO RESUMO */}
+          <CollapsibleSection title="Resumo do pedido" icon={Package} defaultOpen>
             <div className="space-y-4">
               {/* Rota visual */}
               <Card>
@@ -421,10 +398,10 @@ export default function OrderWorkspace() {
                 </Card>
               </div>
             </div>
-          )}
+          </CollapsibleSection>
 
-          {/* ABA CARGAS */}
-          {tab === "cargas" && (
+          {/* SEÇÃO CARGAS */}
+          <CollapsibleSection title="Cargas e destinatários" icon={Package} count={(order.recipients || []).length} defaultOpen>
             <div className="space-y-3">
               {(order.recipients || []).map((r, ri) => (
                 <Card key={ri}>
@@ -494,10 +471,10 @@ export default function OrderWorkspace() {
                 </Card>
               ))}
             </div>
-          )}
+          </CollapsibleSection>
 
-          {/* ABA FINANCEIRO */}
-          {tab === "financeiro" && (
+          {/* SEÇÃO FINANCEIRO */}
+          <CollapsibleSection title="Financeiro" icon={DollarSign} defaultOpen>
             <div className="space-y-4">
               <Card>
                 <CardContent className="pt-4 space-y-4">
@@ -563,7 +540,7 @@ export default function OrderWorkspace() {
                       )}
                     </div>
                     <Button size="sm" onClick={saveFinancial} disabled={updateMutation.isPending}
-                      className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold text-xs">
+                      className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold text-xs">
                       Salvar
                     </Button>
                   </div>
@@ -576,11 +553,11 @@ export default function OrderWorkspace() {
                 </CardContent>
               </Card>
             </div>
-          )}
+          </CollapsibleSection>
 
-          {/* ABA OCORRÊNCIAS */}
-          {tab === "ocorrencias" && (
-            <div className="space-y-3">
+          {/* SEÇÃO OCORRÊNCIAS */}
+          <CollapsibleSection title="Ocorrências" icon={AlertTriangle} count={incidents.length} defaultOpen={incidents.length > 0}>
+            <div className="space-y-3 pt-1">
               {incidents.length === 0 ? (
                 <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">
                   <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-400" /> Nenhuma ocorrência neste pedido.
@@ -622,19 +599,18 @@ export default function OrderWorkspace() {
                 </div>
               ))}
             </div>
-          )}
+          </CollapsibleSection>
 
-          {/* ABA HISTÓRICO */}
-          {tab === "historico" && (
-            <Card>
-              <CardContent className="pt-4">
+          {/* SEÇÃO HISTÓRICO */}
+          <CollapsibleSection title="Histórico de eventos" icon={FileText} count={(order.status_history || []).length} defaultOpen={false}>
+            <div className="pt-2">
                 {(order.status_history || []).length === 0 ? (
                   <p className="text-sm text-muted-foreground py-6 text-center">Sem eventos.</p>
                 ) : (
                   <div className="space-y-3">
                     {[...(order.status_history || [])].reverse().map((h, i) => (
                       <div key={i} className="flex items-start gap-3 text-sm">
-                        <div className="w-2 h-2 rounded-full bg-velox-amber mt-1.5 flex-shrink-0" />
+                        <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
                         <div>
                           <p>{h.note}</p>
                           <p className="text-xs text-muted-foreground">{h.user} • {h.timestamp ? format(new Date(h.timestamp), "dd/MM/yyyy 'às' HH:mm") : ""}</p>
@@ -643,9 +619,8 @@ export default function OrderWorkspace() {
                     ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          )}
+            </div>
+          </CollapsibleSection>
         </div>
 
         {/* ── RAIL DIREITO: atribuição operacional ── */}

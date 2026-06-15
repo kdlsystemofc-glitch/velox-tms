@@ -92,7 +92,7 @@ export default function DriverHome() {
                 <p className="font-semibold text-white">{nextStop.recipient_name || "Partida"}</p>
                 <p className="text-xs text-white/50 mt-1">{nextStop.address}</p>
                 <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
-                  <Button className="w-full mt-3 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2">
+                  <Button className="w-full mt-3 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
                     <MapPin className="w-4 h-4" /> Abrir no Google Maps
                   </Button>
                 </a>

@@ -88,7 +88,7 @@ export default function QuoteForm() {
               <React.Fragment key={s.n}>
                 <div className="flex items-center gap-2">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                    step >= s.n ? "bg-velox-amber text-velox-dark" : "bg-gray-200 text-gray-400"
+                    step >= s.n ? "bg-velox-amber text-white" : "bg-gray-200 text-gray-400"
                   }`}>{s.n}</div>
                   <span className={`text-sm ${step >= s.n ? "text-velox-dark font-medium" : "text-gray-400"}`}>
                     {s.label}
@@ -134,7 +134,7 @@ export default function QuoteForm() {
                 <button
                   disabled={!canProceedStep1}
                   onClick={() => setStep(2)}
-                  className="w-full bg-velox-amber text-velox-dark font-bold py-3 rounded-xl disabled:opacity-40 hover:bg-velox-amber/90 transition-colors">
+                  className="w-full bg-velox-amber text-white font-bold py-3 rounded-xl disabled:opacity-40 hover:bg-velox-amber/90 transition-colors">
                   Próximo →
                 </button>
               </div>
@@ -230,7 +230,7 @@ export default function QuoteForm() {
                   <button
                     disabled={!canCalculate}
                     onClick={handleCalculate}
-                    className="flex-1 bg-velox-amber text-velox-dark font-bold py-3 rounded-xl disabled:opacity-40 hover:bg-velox-amber/90 transition-colors">
+                    className="flex-1 bg-velox-amber text-white font-bold py-3 rounded-xl disabled:opacity-40 hover:bg-velox-amber/90 transition-colors">
                     Calcular frete
                   </button>
                 </div>
@@ -264,7 +264,7 @@ export default function QuoteForm() {
                     onClick={() => navigate("/agendar", {
                       state: { prefill: { origin_state: form.origin_state, dest_state: form.dest_state, items: form.items, quoteResult: result.breakdown } }
                     })}
-                    className="w-full bg-velox-amber text-velox-dark font-bold py-3 rounded-xl hover:bg-velox-amber/90 transition-colors">
+                    className="w-full bg-velox-amber text-white font-bold py-3 rounded-xl hover:bg-velox-amber/90 transition-colors">
                     Agendar coleta com este frete →
                   </button>
                   <button

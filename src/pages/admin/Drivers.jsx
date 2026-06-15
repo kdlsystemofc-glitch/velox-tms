@@ -55,7 +55,7 @@ export default function Drivers() {
         </div>
         <Dialog open={showAdd} onOpenChange={(v) => { setShowAdd(v); if (!v) setForm(EMPTY_DRIVER); }}>
           <DialogTrigger asChild>
-            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold gap-2">
+            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
               <Plus className="w-4 h-4" /> Novo Motorista
             </Button>
           </DialogTrigger>
@@ -148,7 +148,7 @@ export default function Drivers() {
             <Button
               onClick={() => createMutation.mutate({ ...form, base_salary: parseFloat(String(form.base_salary).replace(/\./g, "").replace(",", ".")) || undefined })}
               disabled={!form.name || !form.cpf || createMutation.isPending}
-              className="w-full bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold mt-2"
+              className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold mt-2"
             >
               {createMutation.isPending ? "Salvando..." : "Cadastrar"}
             </Button>
