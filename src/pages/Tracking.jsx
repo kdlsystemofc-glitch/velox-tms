@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Clock } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { motion } from "framer-motion";
 
 const TRACKING_EVENTS = [
@@ -33,30 +34,38 @@ export default function Tracking() {
 
     const q = query.trim().toUpperCase();
 
-    // 1. Buscar por protocolo
-    let results = await base44.entities.Order.filter({ protocol: q });
-
-    // 2. Buscar por CT-e
-    if (results.length === 0) {
-      results = await base44.entities.Order.filter({ cte_number: q });
+    try {
+      // Preferencial: função segura no banco (não expõe a base de pedidos).
+      const { data: tracked, error } = await supabase.rpc("track_order", { p_query: q });
+      if (!error && tracked) {
+        setOrder(tracked);
+        setLoading(false);
+        return;
+      }
+      if (!error && tracked === null) {
+        // RPC respondeu, mas não encontrou
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      // error → RPC ainda não criada; cai no fallback abaixo
+      throw error || new Error("rpc indisponível");
+    } catch {
+      // Fallback (pré-migration): busca client-side
+      let results = await base44.entities.Order.filter({ protocol: q });
+      if (results.length === 0) results = await base44.entities.Order.filter({ cte_number: q });
+      if (results.length === 0) {
+        const allOrders = await base44.entities.Order.list("-created_date", 500);
+        results = allOrders.filter(o =>
+          (o.recipients || []).some(r =>
+            (r.items || []).some(i => i.nf_number && i.nf_number.toUpperCase() === q)
+          )
+        );
+      }
+      if (results.length > 0) setOrder(results[0]);
+      else setNotFound(true);
+      setLoading(false);
     }
-
-    // 3. Buscar por número de NF (nos itens)
-    if (results.length === 0) {
-      const allOrders = await base44.entities.Order.list("-created_date", 500);
-      results = allOrders.filter(o =>
-        (o.recipients || []).some(r =>
-          (r.items || []).some(i => i.nf_number && i.nf_number.toUpperCase() === q)
-        )
-      );
-    }
-
-    if (results.length > 0) {
-      setOrder(results[0]);
-    } else {
-      setNotFound(true);
-    }
-    setLoading(false);
   };
 
   const currentIndex = order ? statusOrder.indexOf(order.status) : -1;

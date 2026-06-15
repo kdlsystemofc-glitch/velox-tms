@@ -471,20 +471,17 @@ DROP POLICY IF EXISTS "public_read_settings" ON company_settings;
 CREATE POLICY "public_read_settings" ON company_settings
   FOR SELECT TO anon USING (true);
 
--- Orders: leitura pública por protocolo (rastreamento)
-DROP POLICY IF EXISTS "public_read_order_by_protocol" ON orders;
-CREATE POLICY "public_read_order_by_protocol" ON orders
-  FOR SELECT TO anon USING (true);
+-- Orders: SEM leitura pública direta. O rastreamento usa a função
+-- SECURITY DEFINER public.track_order() (ver migration 20260615_rls_public_functions.sql),
+-- que retorna apenas campos seguros. Geração de protocolo via public.next_protocol().
 
 -- Orders: inserção pública (site de agendamento)
 DROP POLICY IF EXISTS "public_insert_order" ON orders;
 CREATE POLICY "public_insert_order" ON orders
   FOR INSERT TO anon WITH CHECK (true);
 
--- Clients: leitura anon limitada (getClientByCnpj)
-DROP POLICY IF EXISTS "public_read_clients_limited" ON clients;
-CREATE POLICY "public_read_clients_limited" ON clients
-  FOR SELECT TO anon USING (status = 'active');
+-- Clients: SEM leitura pública direta. A consulta por CNPJ no site usa a função
+-- SECURITY DEFINER public.client_by_cnpj() (retorna só campos necessários).
 
 -- ============================================================
 -- ÍNDICES para performance

@@ -260,6 +260,11 @@ export const functions = {
     if (functionName === 'generateProtocol') {
       const year = new Date().getFullYear();
       const prefix = `VLX-${year}-`;
+      // Preferencial: função SECURITY DEFINER no banco (não exige ler orders).
+      try {
+        const { data: proto, error } = await supabase.rpc('next_protocol');
+        if (!error && proto) return { data: { protocol: proto } };
+      } catch { /* RPC ainda não criada — usa fallback abaixo */ }
       try {
         // Sequencial: busca o maior protocolo do ano e incrementa
         const { data: rows } = await supabase
@@ -288,6 +293,12 @@ export const functions = {
       const { cnpj } = params;
       const clean = cnpj?.replace(/\D/g, '');
       if (!clean) return { data: { found: false } };
+
+      // Preferencial: função SECURITY DEFINER (não expõe a base de clientes ao anon).
+      try {
+        const { data: rpcData, error } = await supabase.rpc('client_by_cnpj', { p_cnpj: cnpj });
+        if (!error && rpcData) return { data: rpcData };
+      } catch { /* RPC ainda não criada — usa fallback abaixo */ }
 
       const { data: clients } = await supabase
         .from('clients')
