@@ -1,6 +1,7 @@
 # VELOX_MAPEAMENTO.md — Mapeamento Completo de Telas e Componentes
 
 > Mapeamento granular de cada tela: rota, acesso, campos, botões, estados, queries e comportamentos especiais.
+> **Design System "Steel & Slate" (2026):** paleta corporativa azul-aço sobre canvas ardósia, densa, cantos retos (6px) — ver `VELOX_CONTEXT.md §1.05`. As listas de cadastro usam o `DataTable` (ordenação por coluna + busca inline); formulários usam seções com cabeçalho; detalhes usam seções colapsáveis.
 
 ---
 
@@ -300,12 +301,12 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 **Stepper de ciclo de vida:** Novo → Confirmado → Em Coleta → Em Trânsito → Entregue, com timestamp de cada etapa (do `status_history`)
 
-**Corpo em 5 abas:**
-- **Resumo:** rota visual (coleta → entregas) com datas/observações; cartões Solicitante e Carga (volumes/kg/NFs + prazo por UF); marca cliente com tabela negociada
-- **Cargas:** por destinatário, tabela de itens (Nº NF + 🔑 chave, NCM, descrição + badges, volumes, peso, dimensões, valor, NF assinada com link/upload)
+**Corpo em seções colapsáveis numa página só** (`CollapsibleSection` — sem abas; padrão TMS):
+- **Resumo do pedido:** rota visual (coleta → entregas) com datas/observações; cartões Solicitante e Carga (volumes/kg/NFs + prazo por UF); marca cliente com tabela negociada
+- **Cargas e destinatários:** por destinatário, tabela de itens (Nº NF + 🔑 chave, NCM, descrição + badges, volumes, peso, dimensões, valor, NF assinada com link/upload)
 - **Financeiro:** valor do frete + forma + condições; breakdown `calculateFreightFull` (usa `clientPricing` se houver) com "Usar este valor"; estado da receita vinculada; observações internas
-- **Ocorrências:** lista de incidentes; "Resolver" via Dialog com textarea
-- **Histórico:** `status_history` em ordem reversa
+- **Ocorrências:** lista de incidentes; "Resolver" via Dialog com textarea (recolhida por padrão se vazia)
+- **Histórico de eventos:** `status_history` em ordem reversa (recolhida por padrão)
 
 **Rail direito:** atribuição operacional (motorista, caminhão, CT-e inline), info de programação, atalho "Programar no Despacho" (se confirmado sem viagem), card de pagamento (status + "Marcar como Pago")
 
@@ -353,11 +354,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Rota:** dentro de `/admin/frota` (aba Frota)  
 **Acesso:** operador + admin
 
-**Filtro:** busca por placa ou modelo  
-**Cards de caminhão:**
-- Placa (destaque), status badge, alerta visual "Doc. vencendo" (≤60 dias)
-- Fabricante, modelo, ano, tipo, capacidade
-- Botão "Ver detalhes" → `/admin/frota/:id`
+**`DataTable` denso** (ordenação por coluna + busca inline por placa/modelo/fabricante/RENAVAM). Colunas: Placa, Veículo (fab.+modelo+ano), Tipo, Capacidade, Documentos (badge "Vencendo"/"Em dia"), Status (`StatusBadge`), Ação. Clique na linha → `/admin/frota/:id`.
 
 **Dialog "Novo Caminhão":**
 - Campos: Placa*, Fabricante, Modelo, Ano, Tipo, Cor, Capacidade (kg), RENAVAM
@@ -399,8 +396,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Rota:** dentro de `/admin/frota` (aba Motoristas)  
 **Acesso:** operador + admin
 
-**Filtro:** busca por nome ou CPF  
-**Tabela:** Nome (com alerta CNH vencendo ≤60d), CPF, CNH (categoria/vencimento), Telefone, Status  
+**`DataTable` denso** (ordenação por coluna + busca por nome/CPF/CNH). Colunas: Motorista (com alerta CNH vencendo ≤60d), CPF, CNH (categoria/vencimento), Função, Telefone, Status (`StatusBadge`), Ação. Clique na linha → detalhe.  
 **Dialog "Novo Motorista":**
 - Campos: Nome*, CPF*, Telefone, E-mail, Nascimento, Admissão
 - CNH: número, categoria, vencimento
@@ -505,9 +501,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Rota:** dentro de `/admin/cadastros`  
 **Acesso:** operador + admin
 
-**Busca:** nome ou CNPJ  
-**Cards de cliente:** nome, código CLI, CNPJ, e-mail, telefone, status, tipo (PJ/PF/Recorrente/Eventual)  
-**Botão "Ver detalhes":** abre Sheet lateral com dados completos, endereço, contatos  
+**`DataTable` denso** (ordenação por coluna + busca por nome/CNPJ/código/e-mail). Colunas: Código CLI, Razão Social/Nome, CPF/CNPJ, Tipo (PJ/PF), Perfil, Contato, Cobrança, Status, Ação. Clique na linha → Sheet lateral com dados completos, endereço e contatos.  
 - Link no Sheet: "Ver cadastro completo" → `/admin/clientes/:id`
 
 **Dialog "Novo Cliente":**
@@ -543,8 +537,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Rota:** dentro de `/admin/cadastros?aba=fornecedores`  
 **Acesso:** operador + admin
 
-**Cards:** nome, código FOR, categoria, contato principal, telefone, e-mail  
-**Botão editar:** abre Dialog de edição inline
+**`DataTable` denso** (ordenação por coluna + busca por nome/CNPJ/código/contato). Colunas: Código FOR, Fornecedor, Categoria, CNPJ/CPF, Contato, Telefone/E-mail, Ação. Clique na linha → Dialog de edição inline.
 
 **Dialog "Novo Fornecedor":**
 - Nome*, CNPJ, categoria (combustível/manutenção/pneus/seguros/outros)
@@ -578,10 +571,10 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Arquivo:** `src/pages/admin/Revenues.jsx`  
 **Acesso:** somente admin
 
-**KPIs:** Total a receber, Total recebido  
-**Filtros:** busca por descrição, filtro de status (a receber/recebido/atrasado)  
-**Tabela:** Descrição, Valor, Vencimento, Status, Ação  
-**Botão "Recebido"** (se receivable): `Revenue.update(id, { status: "received", received_date })` 
+**Painel de aging (contas a receber):** cards Total a receber / Recebido + 5 faixas **clicáveis que filtram a lista** — Vencidas, ≤7 dias, 8–30, 31–60, >60 (cada uma com qtd e valor). `agingOf(due_date)` classifica pela data.  
+**Filtros:** busca por descrição, filtro de status, filtro de aging  
+**Tabela:** Descrição, Valor, Vencimento (com "Xd vencida"/"em Xd"), Status, Ação  
+**Botão "Recebido"** (se receivable): `Revenue.update(id, { status: "received", received_date })`  
 **Dialog "Nova Receita":** Descrição*, Valor*, Vencimento*, Forma de pagamento
 
 ---
@@ -591,8 +584,8 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Arquivo:** `src/pages/admin/Expenses.jsx`  
 **Acesso:** somente admin
 
-**KPIs:** Total a pagar, Total pago  
-**Filtros:** busca, filtro de categoria  
+**Painel de aging (contas a pagar):** cards Total a pagar / Total pago + 5 faixas **clicáveis que filtram a lista** — Vencidas, ≤7 dias, 8–30, 31–60, >60 (qtd + valor); aging por `due_date || date` dos lançamentos `pending`/`installment`.  
+**Filtros:** busca, filtro de categoria, filtro de aging  
 **Tabela:** Data, Categoria, Descrição, Valor, Status, Ação  
 **Botão "Dar Baixa"** (se pending): modal de confirmação com data, forma de pagamento, upload de comprovante  
 **Dialog "Nova Despesa":** Categoria*, Descrição*, Valor*, Data*, Status, Forma de pagamento, Observações
@@ -640,9 +633,9 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 ### 3.23 Configurações (Container)
 
 **Arquivo:** `src/pages/admin/ConfigPage.jsx`  
-**Rota:** `/admin/configuracoes`  
+**Rota:** `/admin/config`  
 **Acesso:** somente admin  
-**Abas:** Empresa | Alertas (badge de contagem) | Documentos | Mapa
+**Navegação lateral por categorias** (não abas — padrão TMS): Empresa & Operação | Alertas (badge de contagem) | Documentos | Mapa Operacional. Lista sticky à esquerda com título + descrição de cada categoria; conteúdo à direita.
 
 ---
 
@@ -765,9 +758,11 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 - Status badge (Em Andamento / Planejada)
 - Informações: data/hora de saída, placa do caminhão
 - Próxima parada: tipo badge, nome destinatário, endereço
-- Botão "Abrir no Google Maps" → URL `https://www.google.com/maps/dir/?api=1&destination={endereço}`
-- Contador de paradas concluídas/total
-- Botão "Ver todas as paradas" → `/motorista/viagem/:id`
+- Botão grande (h-14) "Abrir no Google Maps" → URL `https://www.google.com/maps/dir/?api=1&destination={endereço}`
+- Barra de progresso de paradas (concluídas/total)
+- Botão grande (h-14) "Ver todas as paradas" → `/motorista/viagem/:id`
+
+> Interface mobile com botões grandes (h-14), uso com uma mão — padrão de app de motorista TMS.
 
 **Queries:** Driver filter by user_id, Trip filter by driver_id (ativa)
 
@@ -827,7 +822,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 ### 5.1 FreightBreakdown
 
 **Arquivo:** `src/components/shared/FreightBreakdown.jsx`  
-**Uso:** QuoteForm, QuickQuote, BookingForm, NewOrder, OrderDetailPage
+**Uso:** QuoteForm, QuickQuote, BookingForm, NewOrder, OrderWorkspace
 
 **Recebe:** objeto com resultado de `calculateFreightFull()`  
 **Exibe:** tabela detalhada de todos os componentes do frete:
@@ -874,17 +869,39 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 ### 5.5 StatusBadge
 
 **Arquivo:** `src/components/admin/StatusBadge.jsx`  
-**Uso:** Orders, NewTrip, ClientDetailPage, AgendaPage
+**Uso:** OrdersWorkspace, OrderWorkspace, DispatchBoard, NewTrip, ClientDetailPage, Drivers, Fleet
 
-**Props:** `status`  
-**Exibe:** badge colorido com label em português para cada status de pedido
+**Props:** `status`, `config` (opcional — `orderStatusConfig` padrão; também há configs de motorista/caminhão)  
+**Exibe:** tag retangular corporativa com **ponto indicador** + label em português (pedidos e viagens)
+
+---
+
+### 5.5b DataTable
+
+**Arquivo:** `src/components/shared/DataTable.jsx`  
+**Uso:** Clients, Suppliers, Drivers, Fleet (e disponível para novas listas)
+
+**Props:** `columns` (com `sortable`, `align`, `render`, `value`, `stopPropagation`), `data`, `searchKeys`, `onRowClick`, `initialSort`, `toolbar`, `footer`, `loading`, `emptyMessage`  
+**Funcionalidade:** ordenação clicável por coluna (asc/desc/none), busca inline (`searchKeys`), cabeçalho corporativo, linha clicável, contagem de registros, skeleton no loading
+
+---
+
+### 5.5c FormSection / Field
+
+**Arquivo:** `src/components/shared/FormSection.jsx`  
+**Uso:** padrão de formulário (seções com cabeçalho + grade; `Field` com label acima, obrigatório/opcional, erro inline)
+
+### 5.5d CollapsibleSection
+
+**Arquivo:** `src/components/shared/CollapsibleSection.jsx`  
+**Uso:** OrderWorkspace (seções da página de detalhe) — cabeçalho clicável com ícone, contador e ação à direita
 
 ---
 
 ### 5.6 WeekAvailabilityBanner
 
 **Arquivo:** `src/components/admin/WeekAvailabilityBanner.jsx`  
-**Uso:** Orders.jsx (topo)
+**Uso:** componente legado — não montado nas telas atuais (a lista de pedidos virou `OrdersWorkspace`). Mantido para reuso.
 
 **Exibe:** faixa horizontal com 7 dias, por dia mostra `availableKg` e cor por status  
 **Queries:** orders (scheduled), trucks, schedule_blocks, company_settings
@@ -894,7 +911,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 ### 5.7 SmartScheduleModal
 
 **Arquivo:** `src/components/schedule/SmartScheduleModal.jsx`  
-**Uso:** AgendaPage
+**Uso:** componente legado da antiga Agenda — não montado no fluxo atual (substituído pelo quadro de `DispatchBoard`). Mantido para reuso.
 
 **Funcionalidade:** sugere automaticamente a melhor data + caminhão para um pedido
 - Calcula disponibilidade nos próximos 14 dias úteis
