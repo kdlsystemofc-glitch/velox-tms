@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Package, Calendar, Truck,
+  LayoutDashboard, Package, CalendarDays, Truck,
   DollarSign, Settings, ChevronLeft, ChevronRight, LogOut, BookUser
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -10,15 +10,15 @@ import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Início",        path: "/admin" },
+  { icon: LayoutDashboard, label: "Operações",      path: "/admin",            exact: true },
 
-  { group: "Operacional" },
-  { icon: Package,         label: "Coletas",        path: "/admin/coletas",    badge: "pendingOrders" },
-  { icon: Calendar,        label: "Programação",    path: "/admin/agenda" },
+  { group: "Fluxo" },
+  { icon: Package,         label: "Pedidos",        path: "/admin/coletas",    badge: "pendingOrders" },
+  { icon: CalendarDays,    label: "Despacho",       path: "/admin/despacho",   badge: "toDispatch" },
   { icon: Truck,           label: "Frota",          path: "/admin/frota" },
-  { icon: BookUser,        label: "Cadastros",      path: "/admin/cadastros" },
 
-  { group: "Gestão", adminOnly: true },
+  { group: "Cadastros & Gestão" },
+  { icon: BookUser,        label: "Cadastros",      path: "/admin/cadastros" },
   { icon: DollarSign,      label: "Financeiro",     path: "/admin/financeiro", adminOnly: true },
   { icon: Settings,        label: "Configurações",  path: "/admin/config",     adminOnly: true },
 ];
@@ -27,25 +27,18 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
   const location = useLocation();
   const { user } = useAuth();
 
-  const { data: orders = [] } = useQuery({
+  const { data: allOrders = [] } = useQuery({
     queryKey: ["orders"],
-    queryFn: () => base44.entities.Order.list("-created_date", 100),
-    select: (d) => d.filter(o => o.status === "new"),
-  });
-
-  const { data: fleetAlerts = [] } = useQuery({
-    queryKey: ["alerts"],
-    queryFn: () => base44.entities.Alert.list("-created_date", 100),
-    select: (d) => d.filter(a => !a.resolved && a.reference_type === "truck"),
+    queryFn: () => base44.entities.Order.list("-created_date", 300),
   });
 
   const badges = {
-    pendingOrders: orders.length,
-    fleetAlerts: fleetAlerts.length,
+    pendingOrders: allOrders.filter(o => o.status === "new").length,
+    toDispatch: allOrders.filter(o => o.status === "confirmed" && !o.trip_id).length,
   };
 
-  const isActive = (path) => {
-    if (path === "/admin") return location.pathname === "/admin";
+  const isActive = (path, exact) => {
+    if (exact || path === "/admin") return location.pathname === path;
     return location.pathname.startsWith(path);
   };
 
@@ -83,7 +76,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
           }
           if (item.adminOnly && user?.role !== "admin") return null;
           const count = item.badge ? badges[item.badge] || 0 : 0;
-          const active = isActive(item.path);
+          const active = isActive(item.path, item.exact);
           return (
             <Link
               key={item.path}

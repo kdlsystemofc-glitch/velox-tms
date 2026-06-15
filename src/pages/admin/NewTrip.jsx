@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,16 @@ import { todayLocalISO } from "@/utils/dateUtils";
 
 export default function NewTrip() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [selectedOrders, setSelectedOrders] = useState([]);
+  // Pré-seleção vinda do quadro de Despacho ("Criar viagem" numa célula)
+  const preset = location.state || {};
+
+  const [selectedOrders, setSelectedOrders] = useState(preset.preselectedOrderIds || []);
   const [driverId, setDriverId] = useState("");
-  const [truckId, setTruckId] = useState("");
+  const [truckId, setTruckId] = useState(preset.preselectedTruckId || "");
   const [departureDate, setDepartureDate] = useState("");
   const [notes, setNotes] = useState("");
   const [startNow, setStartNow] = useState(false);

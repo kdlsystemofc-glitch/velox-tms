@@ -32,7 +32,7 @@ function NotificationsDropdown({ onClose }) {
   const refLink = (a) => {
     if (a.reference_type === "driver") return `/admin/motoristas/${a.reference_id}`;
     if (a.reference_type === "truck") return `/admin/frota/${a.reference_id}`;
-    if (a.reference_type === "order") return `/admin/pedidos/${a.reference_id}`;
+    if (a.reference_type === "order") return `/admin/coletas/${a.reference_id}`;
     return "#";
   };
 
@@ -139,7 +139,7 @@ function SearchDropdown({ query, onClose }) {
       ) : (
         <div>
           <Group icon={Package} label="Pedidos" items={results.orders} renderItem={o => (
-            <button key={o.id} onClick={() => go(`/admin/pedidos/${o.id}`)} className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-muted/30 text-left">
+            <button key={o.id} onClick={() => go(`/admin/coletas/${o.id}`)} className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-muted/30 text-left">
               <span className="font-mono text-xs font-semibold">{o.protocol}</span>
               <span className="text-xs text-muted-foreground">{o.client_name} · {statusLabel[o.status]}</span>
             </button>

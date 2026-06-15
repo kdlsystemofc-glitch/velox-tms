@@ -21,6 +21,26 @@ URL de produção: **https://velox-tms.vercel.app**
 
 ---
 
+## 1.1 Fluxo do painel admin (arquitetura nova — refatoração de 2026)
+
+O painel foi reconstruído seguindo o padrão dos grandes TMS (McLeod, TMW, Benner): **fluxo de despacho centrado em "gestão por exceção"**, não telas isoladas. A lógica de negócio, integrações e dados foram 100% preservados — só a experiência mudou.
+
+**As 4 telas do fluxo operacional:**
+
+1. **Operações** (`/admin` → `OperationsHub.jsx`) — torre de controle. Topo: *fila de ação* (só o que exige decisão agora: pedidos novos, confirmados sem viagem, alertas críticos, recebimentos atrasados). Depois: *pipeline* clicável (Novos → Confirmados → Em coleta → Em trânsito → Entregues), *operação de hoje* e *frota agora*.
+
+2. **Pedidos** (`/admin/coletas` → `OrdersWorkspace.jsx`) — fila única com abas por etapa do pipeline e **ações inline**: confirmar (Sheet com sugestão de caminhão), recusar e despachar sem trocar de tela. Substitui a antiga lista `Orders` + aba "Aguardando" da Agenda.
+
+3. **Despacho** (`/admin/despacho` → `DispatchBoard.jsx`) — o coração do TMS. Esquerda: fila de confirmados sem viagem. Direita: quadro **caminhões × dias** com capacidade. Fluxo: seleciona pedidos → clica na célula (caminhão+dia) → programado; botão "Viagem" na célula cria a viagem já com pedidos+caminhão pré-selecionados. Substitui a antiga `AgendaPage`.
+
+4. **Pedido** (`/admin/coletas/:id` → `OrderWorkspace.jsx`) — stepper de ciclo de vida no topo + **uma ação primária por etapa** (Confirmar → Em coleta → Em trânsito → Entregar) + menu de ações secundárias (duplicar, comprovante, cancelar) + corpo em abas (Resumo / Cargas / Financeiro / Ocorrências / Histórico) + rail direito de atribuição operacional. Substitui `OrderDetailPage`.
+
+**Navegação (sidebar):** *Operações* · grupo **Fluxo** (Pedidos, Despacho, Frota) · grupo **Cadastros & Gestão** (Cadastros, Financeiro, Configurações). Badges: nº de pedidos novos em "Pedidos", nº de confirmados sem viagem em "Despacho".
+
+**Telas removidas** (substituídas): `Dashboard.jsx`, `Orders.jsx`, `OrderDetailPage.jsx`, `AgendaPage.jsx`, `Operations.jsx`, `Schedule.jsx`, `SchedulePage.jsx`. Rotas legadas (`/admin/agenda`, `/admin/pedidos/*`, `/admin/programacao`) redirecionam para as novas.
+
+---
+
 ## 2. Histórico e migração
 
 | Fase | Descrição |
@@ -173,11 +193,11 @@ C:/vl/velox-tms/
 │   │   ├── ForgotPassword.jsx    # Recuperação de senha
 │   │   ├── ResetPassword.jsx     # Redefinição de senha
 │   │   ├── admin/
-│   │   │   ├── Dashboard.jsx     # Dashboard com KPIs e agenda
-│   │   │   ├── Orders.jsx        # Lista de pedidos
-│   │   │   ├── NewOrder.jsx      # Criar pedido interno
-│   │   │   ├── OrderDetailPage.jsx # Detalhe completo de pedido
-│   │   │   ├── AgendaPage.jsx    # Agenda + programação de coletas
+│   │   │   ├── OperationsHub.jsx # ★ Painel de Operações (torre de controle: fila de ação + pipeline + hoje + frota)
+│   │   │   ├── OrdersWorkspace.jsx # ★ Pedidos — fila do pipeline com abas e ações inline (confirmar/recusar/despachar)
+│   │   │   ├── DispatchBoard.jsx # ★ Despacho — quadro caminhões × dias; arrasta fila → célula → cria viagem
+│   │   │   ├── OrderWorkspace.jsx # ★ Workspace do pedido (stepper de ciclo de vida + ação primária + abas)
+│   │   │   ├── NewOrder.jsx      # Criar pedido interno (+ duplicação via state)
 │   │   │   ├── FrotaPage.jsx     # Container: Frota + Motoristas + Simulador
 │   │   │   ├── Fleet.jsx         # Lista de caminhões
 │   │   │   ├── TruckDetailPage.jsx # Detalhe de caminhão + manutenções

@@ -22,10 +22,11 @@ import ResetPassword from '@/pages/ResetPassword';
 import AdminLayout from '@/components/admin/AdminLayout';
 
 // Admin pages
-import Dashboard from '@/pages/admin/Dashboard';
-import Orders from '@/pages/admin/Orders';
+import OperationsHub from '@/pages/admin/OperationsHub';
+import OrdersWorkspace from '@/pages/admin/OrdersWorkspace';
+import DispatchBoard from '@/pages/admin/DispatchBoard';
+import OrderWorkspace from '@/pages/admin/OrderWorkspace';
 import NewOrder from '@/pages/admin/NewOrder';
-import OrderDetailPage from '@/pages/admin/OrderDetailPage';
 import TruckDetailPage from '@/pages/admin/TruckDetailPage';
 import DriverDetailPage from '@/pages/admin/DriverDetailPage';
 import Trips from '@/pages/admin/Trips';
@@ -34,7 +35,6 @@ import TripDetailPage from '@/pages/admin/TripDetailPage';
 import ClientDetailPage from '@/pages/admin/ClientDetailPage';
 import AdminRoute from '@/components/auth/AdminRoute';
 import OperatorRoute from '@/components/auth/OperatorRoute';
-import AgendaPage from '@/pages/admin/AgendaPage';
 import CadastrosPage from '@/pages/admin/CadastrosPage';
 import QuickQuote from '@/pages/QuickQuote';
 import QuoteForm from '@/pages/QuoteForm';
@@ -82,32 +82,33 @@ const AuthenticatedApp = () => {
       {/* Protected admin routes */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AdminLayout />}>
-          {/* Dashboard — todos */}
-          <Route path="/admin" element={<Dashboard />} />
+          {/* Painel de Operações — todos */}
+          <Route path="/admin" element={<OperationsHub />} />
           <Route path="/admin/viagens/:id" element={<TripDetailPage />} />
 
           {/* Rotas operacionais — admin e operador */}
           <Route element={<OperatorRoute />}>
-            {/* Coletas (nova rota canônica) */}
-            <Route path="/admin/coletas" element={<Orders />} />
+            {/* Pedidos (nova rota canônica) */}
+            <Route path="/admin/coletas" element={<OrdersWorkspace />} />
             <Route path="/admin/coletas/nova" element={<NewOrder />} />
-            <Route path="/admin/coletas/:id" element={<OrderDetailPage />} />
+            <Route path="/admin/coletas/:id" element={<OrderWorkspace />} />
+
+            {/* Despacho (novo quadro) */}
+            <Route path="/admin/despacho" element={<DispatchBoard />} />
 
             {/* Redirecionamentos legados */}
             <Route path="/admin/pedidos" element={<Navigate to="/admin/coletas" replace />} />
             <Route path="/admin/pedidos/novo" element={<Navigate to="/admin/coletas/nova" replace />} />
             <Route path="/admin/pedidos/:id" element={<Navigate to="/admin/coletas" replace />} />
-            <Route path="/admin/operacoes" element={<Navigate to="/admin/agenda" replace />} />
-            <Route path="/admin/programacao" element={<Navigate to="/admin/agenda" replace />} />
+            <Route path="/admin/operacoes" element={<Navigate to="/admin/despacho" replace />} />
+            <Route path="/admin/programacao" element={<Navigate to="/admin/despacho" replace />} />
+            <Route path="/admin/agenda" element={<Navigate to="/admin/despacho" replace />} />
             <Route path="/admin/motoristas" element={<Navigate to="/admin/frota" replace />} />
             <Route path="/admin/motoristas/:id" element={<DriverDetailPage />} />
             <Route path="/admin/alertas" element={<Navigate to="/admin/config" replace />} />
             <Route path="/admin/documentos" element={<Navigate to="/admin/config" replace />} />
             <Route path="/admin/mapa" element={<Navigate to="/admin/config" replace />} />
             <Route path="/admin/carregamento" element={<Navigate to="/admin/frota" replace />} />
-
-            {/* Programação (unificada) */}
-            <Route path="/admin/agenda" element={<AgendaPage />} />
 
             {/* Frota (unificada) */}
             <Route path="/admin/frota" element={<FrotaPage />} />
