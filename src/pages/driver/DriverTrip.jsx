@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, CheckCircle2, MapPin, AlertTriangle, FileText, ClipboardCheck } from "lucide-react";
 import { format } from "date-fns";
 import FileUploadButton from "@/components/shared/FileUploadButton";
+import SignaturePad from "@/components/shared/SignaturePad";
+import { storage } from "@/api/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 
 const CHECKLIST_ITEMS = [
@@ -91,8 +93,16 @@ export default function DriverTrip() {
       toast({ title: "NF obrigatória", description: "Faça o upload da NF assinada antes de confirmar.", variant: "destructive" });
       return;
     }
+    if (stop.type === "delivery" && !action.signature_url) {
+      toast({ title: "Assinatura obrigatória", description: "Capture a assinatura do recebedor antes de confirmar.", variant: "destructive" });
+      return;
+    }
     const stops = [...(trip.stops || [])];
-    stops[index] = { ...stops[index], status: "completed", completed_at: new Date().toISOString(), nf_signed_url: action.nf_url || undefined, notes: action.notes || undefined, photo_url: action.photo_url || undefined };
+    stops[index] = {
+      ...stops[index], status: "completed", completed_at: new Date().toISOString(),
+      nf_signed_url: action.nf_url || undefined, notes: action.notes || undefined, photo_url: action.photo_url || undefined,
+      signature_url: action.signature_url || undefined, receiver_name: action.receiver_name || undefined,
+    };
     updateMutation.mutate({
       stops,
       events: [...(trip.events || []), { type: "completed", description: `Parada concluída: ${stop.recipient_name || stop.address}`, timestamp: new Date().toISOString(), user: driverName }]
@@ -109,11 +119,17 @@ export default function DriverTrip() {
           } else if (stop.type === "delivery") {
             const recipients = (order.recipients || []).map(r => r.name === stop.recipient_name ? { ...r, delivery_status: "delivered" } : r);
             const allDelivered = recipients.every(r => r.delivery_status === "delivered");
-            // Save NF to item if available
-            const updatedRecipients = action.nf_url ? recipients.map(r => {
+            // Salva NF + comprovante (assinatura/recebedor) no destinatário
+            const updatedRecipients = recipients.map(r => {
               if (r.name !== stop.recipient_name) return r;
-              return { ...r, nf_signed_url: action.nf_url };
-            }) : recipients;
+              return {
+                ...r,
+                ...(action.nf_url ? { nf_signed_url: action.nf_url } : {}),
+                ...(action.signature_url ? { signature_url: action.signature_url } : {}),
+                ...(action.receiver_name ? { receiver_name: action.receiver_name } : {}),
+                delivered_at: new Date().toISOString(),
+              };
+            });
             await base44.entities.Order.update(stop.order_id, { recipients: updatedRecipients, status: allDelivered ? "delivered" : "in_transit", status_history: [...(order.status_history || []), { status: allDelivered ? "delivered" : "in_transit", timestamp: new Date().toISOString(), user: driverName, note: `Entrega para ${stop.recipient_name} concluída` }] });
           }
         }
@@ -244,10 +260,46 @@ export default function DriverTrip() {
                       {stop.status === "arrived" && (
                         <>
                           {stop.type === "delivery" && (
-                            <div>
-                              <p className="text-xs text-white/50 mb-1">NF Assinada (obrigatório)</p>
-                              <FileUploadButton label="Fotografar NF Assinada" accept="image/*,application/pdf" capture="environment" onUpload={(url) => setStopField(i, "nf_url", url)} className="w-full" />
-                            </div>
+                            <>
+                              <div>
+                                <p className="text-xs text-white/50 mb-1">NF Assinada (obrigatório)</p>
+                                {action.nf_url
+                                  ? <p className="text-xs text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> NF anexada</p>
+                                  : <FileUploadButton label="Fotografar NF Assinada" accept="image/*,application/pdf" capture="environment" onUpload={(url) => setStopField(i, "nf_url", url)} className="w-full" />}
+                              </div>
+                              <div>
+                                <p className="text-xs text-white/50 mb-1">Nome do recebedor</p>
+                                <input
+                                  value={action.receiver_name || ""}
+                                  onChange={e => setStopField(i, "receiver_name", e.target.value)}
+                                  placeholder="Quem recebeu a carga"
+                                  className="w-full h-11 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/30 px-3 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <p className="text-xs text-white/50 mb-1">Comprovante de entrega (assinatura) <span className="text-amber-400">obrigatório</span></p>
+                                {action.signature_url ? (
+                                  <p className="text-xs text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Assinatura capturada</p>
+                                ) : (
+                                  <SignaturePad
+                                    saving={!!action.sig_saving}
+                                    onSave={async (blob) => {
+                                      setStopField(i, "sig_saving", true);
+                                      try {
+                                        const file = new File([blob], `assinatura-${Date.now()}.png`, { type: "image/png" });
+                                        const { file_url } = await storage.uploadFile(file);
+                                        setStopField(i, "signature_url", file_url);
+                                        toast({ title: "Assinatura salva!" });
+                                      } catch {
+                                        toast({ title: "Erro ao salvar assinatura", variant: "destructive" });
+                                      } finally {
+                                        setStopField(i, "sig_saving", false);
+                                      }
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            </>
                           )}
                           {stop.type === "collection" && (
                             <div>
@@ -257,11 +309,15 @@ export default function DriverTrip() {
                           )}
                           <Textarea placeholder="Observações (opcional)" rows={2} value={action.notes || ""} onChange={e => setStopField(i, "notes", e.target.value)} className="text-xs resize-none bg-white/5 border-white/10 text-white placeholder:text-white/30" />
                           <Button className="w-full h-14 text-base bg-green-600 hover:bg-green-700 text-white font-bold"
-                            disabled={stop.type === "delivery" && !action.nf_url}
+                            disabled={stop.type === "delivery" && (!action.nf_url || !action.signature_url)}
                             onClick={() => handleComplete(i)}>
                             ✓ {stop.type === "delivery" ? "Confirmar Entrega" : "Confirmar Coleta"}
                           </Button>
-                          {stop.type === "delivery" && !action.nf_url && <p className="text-xs text-amber-400 text-center">Faça o upload da NF para continuar</p>}
+                          {stop.type === "delivery" && (!action.nf_url || !action.signature_url) && (
+                            <p className="text-xs text-amber-400 text-center">
+                              {!action.nf_url ? "Anexe a NF" : "Capture a assinatura"} para confirmar a entrega
+                            </p>
+                          )}
                         </>
                       )}
                     </div>
