@@ -36,6 +36,9 @@ import ClientDetailPage from '@/pages/admin/ClientDetailPage';
 import AdminRoute from '@/components/auth/AdminRoute';
 import OperatorRoute from '@/components/auth/OperatorRoute';
 import CadastrosPage from '@/pages/admin/CadastrosPage';
+import Documents from '@/pages/admin/Documents';
+import Messages from '@/pages/admin/Messages';
+import AlertsPage from '@/pages/admin/AlertsPage';
 import QuickQuote from '@/pages/QuickQuote';
 import QuoteForm from '@/pages/QuoteForm';
 import FrotaPage from '@/pages/admin/FrotaPage';
@@ -105,8 +108,9 @@ const AuthenticatedApp = () => {
             <Route path="/admin/agenda" element={<Navigate to="/admin/despacho" replace />} />
             <Route path="/admin/motoristas" element={<Navigate to="/admin/frota" replace />} />
             <Route path="/admin/motoristas/:id" element={<DriverDetailPage />} />
-            <Route path="/admin/alertas" element={<Navigate to="/admin/config" replace />} />
-            <Route path="/admin/documentos" element={<Navigate to="/admin/config" replace />} />
+            <Route path="/admin/documentos" element={<Documents />} />
+            <Route path="/admin/mensagens" element={<Messages />} />
+            <Route path="/admin/alertas" element={<AlertsPage />} />
             <Route path="/admin/mapa" element={<Navigate to="/admin/config" replace />} />
             <Route path="/admin/carregamento" element={<Navigate to="/admin/frota" replace />} />
 

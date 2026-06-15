@@ -57,7 +57,9 @@ O painel foi reconstruído seguindo o padrão dos grandes TMS (McLeod, TMW, Benn
 
 4. **Pedido** (`/admin/coletas/:id` → `OrderWorkspace.jsx`) — stepper de ciclo de vida no topo + **uma ação primária por etapa** (Confirmar → Em coleta → Em trânsito → Entregar) + menu de ações secundárias (duplicar, comprovante, cancelar) + corpo em abas (Resumo / Cargas / Financeiro / Ocorrências / Histórico) + rail direito de atribuição operacional. Substitui `OrderDetailPage`.
 
-**Navegação (sidebar):** *Operações* · grupo **Fluxo** (Pedidos, Despacho, Frota) · grupo **Cadastros & Gestão** (Cadastros, Financeiro, Configurações). Badges: nº de pedidos novos em "Pedidos", nº de confirmados sem viagem em "Despacho".
+**Navegação (sidebar):** *Operações* · grupo **Fluxo** (Pedidos, Despacho, Frota) · grupo **Cadastros & Gestão** (Cadastros, Documentos, Mensagens, Financeiro, Configurações). Badges: pedidos novos em "Pedidos", confirmados sem viagem em "Despacho", mensagens não lidas em "Mensagens".
+
+**Configurações = só parâmetros** (`ConfigPage` com nav lateral): Empresa, Comercial & Preços, Operação, Alertas — cada uma renderiza `<AdminSettings only={[...]} />`. Telas operacionais que antes ficavam em Config saíram: **Documentos** (`/admin/documentos`) e **Mensagens** (`/admin/mensagens`, `Messages.jsx`) viraram itens da sidebar; **lista de alertas** em `/admin/alertas`; **Mapa** segue placeholder.
 
 **Telas removidas** (substituídas): `Dashboard.jsx`, `Orders.jsx`, `OrderDetailPage.jsx`, `AgendaPage.jsx`, `Operations.jsx`, `Schedule.jsx`, `SchedulePage.jsx`. Rotas legadas (`/admin/agenda`, `/admin/pedidos/*`, `/admin/programacao`) redirecionam para as novas.
 
@@ -239,10 +241,11 @@ C:/vl/velox-tms/
 │   │   │   ├── DRE.jsx           # DRE mensal com export PDF/CSV
 │   │   │   ├── CashFlow.jsx      # Fluxo de caixa projetado
 │   │   │   ├── ConfigPage.jsx    # Container: Configurações
-│   │   │   ├── AdminSettings.jsx # Configurações da empresa + preços + alertas
-│   │   │   ├── AlertsPage.jsx    # Alertas ativos (CNH, CRLV, etc.)
-│   │   │   ├── Documents.jsx     # Documentos: NFs assinadas, CRLV, CNH
-│   │   │   ├── MapPage.jsx       # Mapa operacional (GPS em desenvolvimento)
+│   │   │   ├── AdminSettings.jsx # Parâmetros (prop `only` define grupo: company/site, pricing/routes, coverage/scheduling, alerts)
+│   │   │   ├── AlertsPage.jsx    # Lista de alertas ativos (/admin/alertas, via sino do topbar)
+│   │   │   ├── Documents.jsx     # Documentos: NFs assinadas, CRLV, CNH (/admin/documentos)
+│   │   │   ├── Messages.jsx      # Caixa de contatos do site (/admin/mensagens, badge não lidas)
+│   │   │   ├── MapPage.jsx       # Mapa operacional (placeholder GPS — /admin/mapa redireciona p/ config)
 │   │   │   └── LoadingSimulator.jsx # Simulador de carregamento de baú
 │   │   └── driver/
 │   │       ├── DriverHome.jsx    # Home do motorista (viagem ativa)
@@ -252,13 +255,9 @@ C:/vl/velox-tms/
 │   │   ├── admin/
 │   │   │   ├── AdminLayout.jsx   # Layout base do painel admin
 │   │   │   ├── AdminSidebar.jsx  # Sidebar de navegação
-│   │   │   ├── AdminTopbar.jsx   # Topbar do admin
-│   │   │   ├── AlertsPanel.jsx   # Painel de alertas (Dashboard)
+│   │   │   ├── AdminTopbar.jsx   # Topbar do admin (busca global Ctrl+K, sino de alertas)
 │   │   │   ├── CoverageSettings.jsx # Configuração de área de cobertura
-│   │   │   ├── KPICard.jsx       # Card de KPI reutilizável
-│   │   │   ├── OrderDetail.jsx   # Componente de detalhe de pedido
-│   │   │   ├── StatusBadge.jsx   # Badge de status de pedido
-│   │   │   └── WeekAvailabilityBanner.jsx # Banner de disponibilidade semanal
+│   │   │   └── StatusBadge.jsx   # Badge de status (pedidos/viagens/motorista/caminhão)
 │   │   ├── auth/
 │   │   │   ├── AdminRoute.jsx    # Guard: somente admin
 │   │   │   ├── DriverRoute.jsx   # Guard: somente motorista
@@ -275,19 +274,14 @@ C:/vl/velox-tms/
 │   │   │   ├── PublicFooter.jsx  # Footer do site público
 │   │   │   ├── VeloxDatePicker.jsx # Seletor de data com dias úteis
 │   │   │   └── WhatsAppButton.jsx # Botão flutuante WhatsApp
-│   │   ├── schedule/
-│   │   │   ├── SmartScheduleModal.jsx # Modal de agendamento inteligente
-│   │   │   ├── AutoScheduleModal.jsx  # Modal de auto-agendamento
-│   │   │   ├── AddOrderModal.jsx      # Modal para adicionar pedido à agenda
-│   │   │   ├── AvailabilityPanel.jsx  # Painel de disponibilidade
-│   │   │   ├── OrderDetailPanel.jsx   # Painel de detalhe de pedido
-│   │   │   ├── OrderQueueCard.jsx     # Card de pedido na fila
-│   │   │   ├── ScheduleCell.jsx       # Célula do calendário de agenda
-│   │   │   └── ScheduleTimeModal.jsx  # Modal de horário de agendamento
 │   │   ├── shared/
+│   │   │   ├── DataTable.jsx          # Tabela densa ordenável + busca inline (listas de cadastro)
+│   │   │   ├── FormSection.jsx        # FormSection + Field (formulários seccionados)
+│   │   │   ├── CollapsibleSection.jsx # Seção colapsável (telas de detalhe)
+│   │   │   ├── TableSkeleton.jsx      # Skeletons de tabela/cards
 │   │   │   ├── EmptyState.jsx         # Estado vazio reutilizável
 │   │   │   ├── FileUploadButton.jsx   # Botão de upload com Supabase Storage
-│   │   │   ├── FormField.jsx          # Campo de formulário reutilizável
+│   │   │   ├── FormField.jsx          # Campo de formulário (legado)
 │   │   │   ├── FreightBreakdown.jsx   # Detalhamento de cálculo de frete
 │   │   │   └── NumericInput.jsx       # Input numérico com máscara
 │   │   ├── AuthLayout.jsx             # Layout de telas de autenticação
@@ -295,8 +289,8 @@ C:/vl/velox-tms/
 │   │   ├── ProtectedRoute.jsx         # Guard genérico de rota
 │   │   └── ScrollToTop.jsx            # Scroll ao topo na troca de rota
 │   ├── App.jsx                        # Roteamento principal
-│   ├── CONTEXT.md                     # Contexto original do projeto (fonte primária)
-│   └── DOCS.md                        # Documentação de entidades (fonte primária)
+│   └── CONTEXT.md                     # Contexto original do projeto (Base44)
+│   (pasta components/schedule/ e exports DOCS.md/DOCS-TMS5.md removidos na limpeza 2026)
 ├── supabase/
 │   └── schema.sql                     # Schema completo do banco de dados
 ├── VELOX_CONTEXT.md                   # Este arquivo

@@ -2,7 +2,8 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, CalendarDays, Truck,
-  DollarSign, Settings, ChevronLeft, ChevronRight, LogOut, BookUser
+  DollarSign, Settings, ChevronLeft, ChevronRight, LogOut, BookUser,
+  FolderOpen, MessageSquare
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/api/supabaseClient";
@@ -19,6 +20,8 @@ const navItems = [
 
   { group: "Cadastros & Gestão" },
   { icon: BookUser,        label: "Cadastros",      path: "/admin/cadastros" },
+  { icon: FolderOpen,      label: "Documentos",     path: "/admin/documentos" },
+  { icon: MessageSquare,   label: "Mensagens",      path: "/admin/mensagens",  badge: "unreadMessages" },
   { icon: DollarSign,      label: "Financeiro",     path: "/admin/financeiro", adminOnly: true },
   { icon: Settings,        label: "Configurações",  path: "/admin/config",     adminOnly: true },
 ];
@@ -32,9 +35,15 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
     queryFn: () => base44.entities.Order.list("-created_date", 300),
   });
 
+  const { data: messages = [] } = useQuery({
+    queryKey: ["contact-messages"],
+    queryFn: () => base44.entities.ContactMessage.list("-created_date", 100),
+  });
+
   const badges = {
     pendingOrders: allOrders.filter(o => o.status === "new").length,
     toDispatch: allOrders.filter(o => o.status === "confirmed" && !o.trip_id).length,
+    unreadMessages: messages.filter(m => !m.read).length,
   };
 
   const isActive = (path, exact) => {

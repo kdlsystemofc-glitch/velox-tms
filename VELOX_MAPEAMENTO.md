@@ -202,7 +202,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Sidebar links (fluxo reconstruído 2026):**
 - Operações (`/admin`)
 - **Fluxo:** Pedidos (`/admin/coletas`, badge = novos), Despacho (`/admin/despacho`, badge = confirmados sem viagem), Frota (`/admin/frota`)
-- **Cadastros & Gestão:** Cadastros (`/admin/cadastros`), Financeiro (`/admin/financeiro`, admin), Configurações (`/admin/config`, admin)
+- **Cadastros & Gestão:** Cadastros (`/admin/cadastros`), Documentos (`/admin/documentos`), Mensagens (`/admin/mensagens`, badge = não lidas), Financeiro (`/admin/financeiro`, admin), Configurações (`/admin/config`, admin)
 
 ---
 
@@ -635,16 +635,21 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Arquivo:** `src/pages/admin/ConfigPage.jsx`  
 **Rota:** `/admin/config`  
 **Acesso:** somente admin  
-**Navegação lateral por categorias** (não abas — padrão TMS): Empresa & Operação | Alertas (badge de contagem) | Documentos | Mapa Operacional. Lista sticky à esquerda com título + descrição de cada categoria; conteúdo à direita.
+**Navegação lateral por categorias** (não abas — padrão TMS), **só parâmetros do sistema**. Lista sticky à esquerda (título + descrição); conteúdo à direita. Cada categoria renderiza `<AdminSettings only={[...]} />`:
+- **Empresa** → `company` + `site` (dados, redes, site público)
+- **Comercial & Preços** → `pricing` + `routes` (frete base, taxas, tabela de rotas, prazos)
+- **Operação** → `coverage` + `scheduling` (cobertura + agendamento)
+- **Alertas** → `alerts` (limiares de vencimento)
+
+> Telas operacionais saíram daqui: **Documentos** e **Mensagens** viraram itens do menu principal; **lista de Alertas ativos** (`AlertsPage`) atende em `/admin/alertas` (link do sino no topbar); **Mapa** (`/admin/mapa`) redireciona para config (placeholder de GPS).
 
 ---
 
 ### 3.24 Configurações da Empresa (AdminSettings)
 
 **Arquivo:** `src/pages/admin/AdminSettings.jsx`  
-**Acesso:** somente admin
-
-**8 abas:**
+**Acesso:** somente admin  
+**Prop `only={[...]}`** controla quais abas renderizar (o ConfigPage distribui em categorias). Sem `only`, mostra todas. A aba "Mensagens" foi **removida** (virou página própria). Restam 7 grupos de parâmetros:
 
 #### Empresa
 - Campos: nome, CNPJ, telefone, e-mail, WhatsApp, região, endereço
@@ -678,10 +683,6 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 - Hero: título, subtítulo
 - Texto "Sobre Nós"
 
-#### Mensagens
-- Lista de contatos recebidos pelo site
-- Badge de não lidas, expandir para ler, marcar como lido
-
 **Botão "Salvar":** `CompanySettings.update(id, form)` + `resetSettingsCache()`
 
 ---
@@ -689,6 +690,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 ### 3.25 Alertas (AlertsPage)
 
 **Arquivo:** `src/pages/admin/AlertsPage.jsx`  
+**Rota:** `/admin/alertas` (acessada pelo sino no topbar)  
 **Acesso:** somente admin
 
 **Filtros:** nível (crítico/atenção/info), tipo (motorista/caminhão/pedido)  
@@ -697,10 +699,21 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 ---
 
+### 3.25b Mensagens
+
+**Arquivo:** `src/pages/admin/Messages.jsx`  
+**Rota:** `/admin/mensagens` (item próprio na sidebar, badge de não lidas)  
+**Acesso:** operador + admin
+
+Caixa de entrada de contatos do site público (leads). Lista com não lidas em destaque, expandir para ler, "Marcar todas como lidas", e ações **Responder por e-mail** / **WhatsApp**. (Saiu de Configurações.)
+
+---
+
 ### 3.26 Documentos
 
 **Arquivo:** `src/pages/admin/Documents.jsx`  
-**Acesso:** somente admin
+**Rota:** `/admin/documentos` (item próprio na sidebar)  
+**Acesso:** operador + admin
 
 **Busca:** protocolo, NF, placa ou nome
 
@@ -898,25 +911,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 ---
 
-### 5.6 WeekAvailabilityBanner
-
-**Arquivo:** `src/components/admin/WeekAvailabilityBanner.jsx`  
-**Uso:** componente legado — não montado nas telas atuais (a lista de pedidos virou `OrdersWorkspace`). Mantido para reuso.
-
-**Exibe:** faixa horizontal com 7 dias, por dia mostra `availableKg` e cor por status  
-**Queries:** orders (scheduled), trucks, schedule_blocks, company_settings
-
----
-
-### 5.7 SmartScheduleModal
-
-**Arquivo:** `src/components/schedule/SmartScheduleModal.jsx`  
-**Uso:** componente legado da antiga Agenda — não montado no fluxo atual (substituído pelo quadro de `DispatchBoard`). Mantido para reuso.
-
-**Funcionalidade:** sugere automaticamente a melhor data + caminhão para um pedido
-- Calcula disponibilidade nos próximos 14 dias úteis
-- Usa bin-packing para sugerir o caminhão com melhor aproveitamento
-- Permite ao admin aceitar ou ajustar a sugestão
+> **Componentes removidos na limpeza de 2026** (código morto da antiga Agenda/lista): toda a pasta `src/components/schedule/` (incl. `SmartScheduleModal`, `AvailabilityPanel`, `ScheduleCell`, etc.), `WeekAvailabilityBanner`, `OrderDetail`, `AlertsPanel` e `KPICard`. A lógica de bin-packing/sugestão de caminhão vive agora em `OrdersWorkspace`/`DispatchBoard`. Também removidos os exports legados `src/DOCS.md` e `src/DOCS-TMS5.md`.
 
 ---
 
@@ -951,6 +946,9 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 | `/admin/viagens/:id` | TripDetailPage | operador+ |
 | `/admin/cadastros` | CadastrosPage | operador+ |
 | `/admin/clientes/:id` | ClientDetailPage | operador+ |
+| `/admin/documentos` | Documents | operador+ |
+| `/admin/mensagens` | Messages | operador+ |
+| `/admin/alertas` | AlertsPage | operador+ |
 | `/admin/financeiro` | FinanceiroPage | admin only |
 | `/admin/config` | ConfigPage | admin only |
 
@@ -961,7 +959,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 | `/admin/pedidos`, `/admin/pedidos/:id` | `/admin/coletas` |
 | `/admin/configuracoes` | `/admin/config` |
 | `/admin/motoristas`, `/admin/carregamento` | `/admin/frota` |
-| `/admin/alertas`, `/admin/documentos`, `/admin/mapa` | `/admin/config` |
+| `/admin/mapa` | `/admin/config` |
 
 ### Rotas motorista
 | Rota | Componente |

@@ -1,33 +1,21 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
-import { Building2, Bell, FolderOpen, MapPin, SlidersHorizontal } from "lucide-react";
+import { Building2, DollarSign, CalendarCog, Bell, SlidersHorizontal } from "lucide-react";
 import AdminSettings from "@/pages/admin/AdminSettings";
-import AlertsPage from "@/pages/admin/AlertsPage";
-import Documents from "@/pages/admin/Documents";
-import MapPage from "@/pages/admin/MapPage";
 
 /**
- * CONFIGURAÇÕES — navegação lateral por categorias (padrão TMS profissional),
- * substitui as abas horizontais. O usuário vê todas as áreas de uma vez.
+ * CONFIGURAÇÕES — navegação lateral por categorias, apenas PARÂMETROS do sistema.
+ * Telas operacionais (Documentos, Mensagens, Mapa, lista de Alertas) saíram daqui.
  */
 const CATEGORIES = [
-  { key: "empresa",     label: "Empresa & Operação", desc: "Dados, preços, cobertura, prazos, rotas", icon: Building2, render: () => <AdminSettings /> },
-  { key: "alertas",     label: "Alertas",            desc: "Vencimentos de documentos e manutenção",  icon: Bell,      render: () => <AlertsPage />, badge: "alerts" },
-  { key: "documentos",  label: "Documentos",         desc: "NFs assinadas, CRLV, CNH, seguros",        icon: FolderOpen, render: () => <Documents /> },
-  { key: "mapa",        label: "Mapa Operacional",   desc: "Posição da frota e viagens",               icon: MapPin,    render: () => <MapPage /> },
+  { key: "empresa",   label: "Empresa",            desc: "Dados, redes sociais e site público",        icon: Building2,   render: () => <AdminSettings only={["company", "site"]} /> },
+  { key: "comercial", label: "Comercial & Preços", desc: "Frete base, taxas, tabela de rotas, prazos", icon: DollarSign,  render: () => <AdminSettings only={["pricing", "routes"]} /> },
+  { key: "operacao",  label: "Operação",           desc: "Área de cobertura e regras de agendamento",   icon: CalendarCog, render: () => <AdminSettings only={["coverage", "scheduling"]} /> },
+  { key: "alertas",   label: "Alertas",            desc: "Limiares de vencimento de documentos",        icon: Bell,        render: () => <AdminSettings only={["alerts"]} /> },
 ];
 
 export default function ConfigPage() {
   const [active, setActive] = useState("empresa");
-
-  const { data: alerts = [] } = useQuery({
-    queryKey: ["alerts"],
-    queryFn: () => base44.entities.Alert.list("-created_date", 100),
-    select: (d) => d.filter(a => !a.resolved),
-  });
-  const badges = { alerts: alerts.length };
-
+  const badges = {};
   const current = CATEGORIES.find(c => c.key === active);
 
   return (
@@ -38,7 +26,7 @@ export default function ConfigPage() {
         </div>
         <div>
           <h1 className="font-display text-xl font-bold text-foreground">Configurações</h1>
-          <p className="text-muted-foreground text-xs">Parâmetros do sistema, alertas, documentos e mapa</p>
+          <p className="text-muted-foreground text-xs">Parâmetros do sistema — preços, operação, alertas e dados da empresa</p>
         </div>
       </div>
 
@@ -53,7 +41,7 @@ export default function ConfigPage() {
                 key={cat.key}
                 onClick={() => setActive(cat.key)}
                 className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-md text-left transition-colors ${
-                  isActive ? "bg-primary/10 text-primary" : "hover:bg-muted/60 text-foreground"
+                  isActive ? "bg-primary/10" : "hover:bg-muted/60"
                 }`}
               >
                 <cat.icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isActive ? "text-primary" : "text-muted-foreground"}`} />

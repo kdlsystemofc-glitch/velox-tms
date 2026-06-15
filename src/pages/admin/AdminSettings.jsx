@@ -15,30 +15,21 @@ import CoverageSettings from "@/components/admin/CoverageSettings";
 import { useAuth } from "@/lib/AuthContext";
 import { resetSettingsCache } from "@/hooks/useCompanySettings";
 
-export default function AdminSettings() {
+export default function AdminSettings({ only = null }) {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // `only` (array de chaves de aba) limita quais grupos de parâmetros renderizar.
+  // Usado pelo ConfigPage para distribuir os parâmetros em categorias laterais.
+  const allow = (key) => !only || only.includes(key);
+  const firstTab = only ? only[0] : "company";
 
   const { data: settings = [] } = useQuery({
     queryKey: ["settings"],
     queryFn: () => base44.entities.CompanySettings.list(),
     select: (d) => d[0] || {},
   });
-
-  const { data: messages = [] } = useQuery({
-    queryKey: ["contact-messages"],
-    queryFn: () => base44.entities.ContactMessage.list("-created_date"),
-  });
-  const unreadCount = messages.filter(m => !m.read).length;
-
-  const markRead = async (msg) => {
-    if (msg.read) return;
-    await base44.entities.ContactMessage.update(msg.id, { read: true });
-    queryClient.invalidateQueries({ queryKey: ["contact-messages"] });
-  };
-
-  const [expandedMsg, setExpandedMsg] = useState(null);
 
   const [form, setForm] = useState({});
   useEffect(() => {
@@ -86,24 +77,27 @@ export default function AdminSettings() {
     </Button>
   );
 
-  return (
-    <div className="space-y-6 max-w-4xl">
-      <div>
-        <h1 className="font-display text-3xl font-extrabold text-foreground">Configurações</h1>
-        <p className="text-muted-foreground text-sm mt-1">Configurações do sistema Velox</p>
-      </div>
+  // Abas visíveis conforme o grupo (`only`)
+  const tabDefs = [
+    { v: "company",    label: "Empresa",         icon: Building2 },
+    { v: "site",       label: "Site Público",    icon: Globe },
+    { v: "pricing",    label: "Preços",          icon: DollarSign },
+    { v: "routes",     label: "Tabela de Rotas", icon: Route },
+    { v: "coverage",   label: "Área de Atuação", icon: MapPin },
+    { v: "scheduling", label: "Agendamento",     icon: CalendarDays },
+    { v: "alerts",     label: "Alertas",         icon: Bell },
+  ].filter(t => allow(t.v));
 
-      <Tabs defaultValue="company">
-        <TabsList className="flex-wrap h-auto gap-1">
-          <TabsTrigger value="company" className="gap-2"><Building2 className="w-3.5 h-3.5" /> Empresa</TabsTrigger>
-          <TabsTrigger value="coverage" className="gap-2"><MapPin className="w-3.5 h-3.5" /> Área de Atuação</TabsTrigger>
-          <TabsTrigger value="pricing" className="gap-2"><DollarSign className="w-3.5 h-3.5" /> Preços</TabsTrigger>
-          <TabsTrigger value="alerts" className="gap-2"><Bell className="w-3.5 h-3.5" /> Alertas</TabsTrigger>
-          <TabsTrigger value="site" className="gap-2"><Globe className="w-3.5 h-3.5" /> Site Público</TabsTrigger>
-          <TabsTrigger value="scheduling" className="gap-2"><CalendarDays className="w-3.5 h-3.5" /> Agendamento</TabsTrigger>
-          <TabsTrigger value="routes" className="gap-2"><Route className="w-3.5 h-3.5" /> Tabela de Rotas</TabsTrigger>
-          <TabsTrigger value="messages" className="gap-2"><MessageSquare className="w-3.5 h-3.5" /> Mensagens{unreadCount > 0 && <span className="ml-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{unreadCount}</span>}</TabsTrigger>
-        </TabsList>
+  return (
+    <div className="space-y-5 max-w-4xl">
+      <Tabs defaultValue={firstTab}>
+        {tabDefs.length > 1 && (
+          <TabsList className="flex-wrap h-auto gap-1">
+            {tabDefs.map(t => (
+              <TabsTrigger key={t.v} value={t.v} className="gap-2"><t.icon className="w-3.5 h-3.5" /> {t.label}</TabsTrigger>
+            ))}
+          </TabsList>
+        )}
 
         {/* Company */}
         <TabsContent value="company" className="mt-6">
@@ -434,46 +428,6 @@ export default function AdminSettings() {
         </TabsContent>
 
         {/* Messages */}
-        <TabsContent value="messages" className="mt-6">
-          <Card>
-            <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><MessageSquare className="w-4 h-4 text-velox-amber" /> Mensagens do Site ({unreadCount} não lidas)</CardTitle></CardHeader>
-            <CardContent>
-              {messages.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-8">Nenhuma mensagem recebida.</p>
-              ) : (
-                <div className="space-y-2">
-                  {messages.map((msg) => (
-                    <div key={msg.id} className={`rounded-lg border overflow-hidden ${msg.read ? "bg-background border-border" : "bg-velox-amber/5 border-velox-amber/30"}`}>
-                      <button className="w-full p-4 flex items-start justify-between text-left gap-4" onClick={() => { setExpandedMsg(expandedMsg === msg.id ? null : msg.id); markRead(msg); }}>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {!msg.read && <span className="w-2 h-2 rounded-full bg-velox-amber flex-shrink-0" />}
-                            <span className="font-semibold text-sm">{msg.name}</span>
-                            <span className="text-xs text-muted-foreground">{msg.email}</span>
-                            {msg.phone && <span className="text-xs text-muted-foreground">{msg.phone}</span>}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1 truncate">{msg.message}</p>
-                        </div>
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                          <span className="text-xs text-muted-foreground">{msg.created_date ? new Date(msg.created_date).toLocaleDateString("pt-BR") : "—"}</span>
-                        </div>
-                      </button>
-                      {expandedMsg === msg.id && (
-                        <div className="border-t border-border px-4 pb-4 pt-3 space-y-3">
-                          <p className="text-sm leading-relaxed">{msg.message}</p>
-                          {!msg.read && (
-                            <Button size="sm" variant="outline" className="text-xs" onClick={() => markRead(msg)}>Marcar como lida</Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         {/* Route Pricing */}
         <TabsContent value="routes" className="mt-6">
           <Card>
