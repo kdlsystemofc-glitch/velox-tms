@@ -9,13 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Plus, Trash2, MapPin, User, Package, DollarSign, AlertCircle, Search } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, MapPin, User, Package, DollarSign, AlertCircle, Search, FileUp } from "lucide-react";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { calculateFreightFull } from "@/utils/freightCalculator";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { validateNFeKey, nfNumberFromKey } from "@/utils/nfeUtils";
+import { parseNFeXML } from "@/utils/nfeXml";
 
 const emptyItem = {
   nf_number: "", nf_key: "", description: "", package_type: "caixa", volumes: 1,
@@ -185,6 +186,41 @@ export default function NewOrder() {
     r[ri].items[ii] = { ...r[ri].items[ii], [field]: value };
     setForm(f => ({ ...f, recipients: r }));
   };
+  const importNFe = async (ri, file) => {
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = parseNFeXML(text);
+      if (!parsed) {
+        toast({ title: "XML inválido", description: "Não foi possível ler o XML da NF-e. Verifique o arquivo.", variant: "destructive" });
+        return;
+      }
+      setForm(prev => ({
+        ...prev,
+        recipients: prev.recipients.map((rec, i) => i !== ri ? rec : {
+          ...rec,
+          name: parsed.recipient.name || rec.name,
+          cnpj_cpf: parsed.recipient.cnpj_cpf || rec.cnpj_cpf,
+          phone: parsed.recipient.phone || rec.phone,
+          cep: parsed.recipient.cep || rec.cep,
+          street: parsed.recipient.street || rec.street,
+          number: parsed.recipient.number || rec.number,
+          complement: parsed.recipient.complement || rec.complement,
+          neighborhood: parsed.recipient.neighborhood || rec.neighborhood,
+          city: parsed.recipient.city || rec.city,
+          state: parsed.recipient.state || rec.state,
+          items: [{ ...emptyItem, ...parsed.item }],
+        }),
+      }));
+      toast({
+        title: "NF-e importada!",
+        description: `NF ${parsed.nf_number || "?"} · ${parsed.totals.volumes || 0} vol · ${parsed.totals.weight_kg || 0} kg · R$ ${(parsed.totals.declared_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
+      });
+    } catch {
+      toast({ title: "Erro ao ler XML", description: "Tente novamente.", variant: "destructive" });
+    }
+  };
+
   const addRecipient = () => setForm(f => ({ ...f, recipients: [...f.recipients, { ...emptyRecipient, items: [{ ...emptyItem }] }] }));
   const removeRecipient = (ri) => setForm(f => ({ ...f, recipients: f.recipients.filter((_, i) => i !== ri) }));
   const addItem = (ri) => {
@@ -534,11 +570,18 @@ export default function NewOrder() {
             <div key={ri} className="border border-border rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold">Destinatário {ri + 1}</span>
-                {form.recipients.length > 1 && (
-                  <Button variant="ghost" size="sm" onClick={() => removeRecipient(ri)} className="text-red-500 h-7 px-2">
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                )}
+                <div className="flex items-center gap-1.5">
+                  <label className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md border border-border text-xs font-medium cursor-pointer hover:bg-muted/50 transition-colors">
+                    <FileUp className="w-3.5 h-3.5 text-primary" /> Importar XML da NF-e
+                    <input type="file" accept=".xml,text/xml,application/xml" className="hidden"
+                      onChange={(e) => { importNFe(ri, e.target.files?.[0]); e.target.value = ""; }} />
+                  </label>
+                  {form.recipients.length > 1 && (
+                    <Button variant="ghost" size="sm" onClick={() => removeRecipient(ri)} className="text-red-500 h-7 px-2">
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
               </div>
               {/* Busca de destinatário */}
               <div className="space-y-1 relative">
