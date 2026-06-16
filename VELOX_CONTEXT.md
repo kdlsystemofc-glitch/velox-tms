@@ -76,6 +76,8 @@ O painel foi reconstruído seguindo o padrão dos grandes TMS (McLeod, TMW, Benn
 
 A migração manteve a assinatura original das chamadas `base44.entities.EntityName.method()` funcionando, apenas trocando o backend por Supabase.
 
+> **Nota de gravação (importante):** a leitura injeta os aliases Base44 `created_date`/`updated_date` (via `normalizeRecord`), que **não são colunas reais** no Supabase. Telas que carregam o registro inteiro e salvam de volta (ex.: Configurações) reenviavam esses campos, gerando **400 Bad Request** ("coluna inexistente"). Por isso `create`/`update` passam o payload por `sanitizePayload`, que remove `created_date`, `updated_date`, `created_at`, `updated_at` e `id` antes de gravar. Para reconciliar bancos criados de versões antigas do schema, rode `supabase/migrations/20260616_reconcile_schema.sql` (idempotente — adiciona toda coluna que o app usa).
+
 ---
 
 ## 3. Stack completa com versões

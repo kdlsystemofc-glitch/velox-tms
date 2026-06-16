@@ -51,6 +51,22 @@ function normalizeRecords(records) {
   return records.map(normalizeRecord);
 }
 
+// Remove campos que NÃO são colunas reais antes de gravar.
+// normalizeRecord() injeta created_date/updated_date (aliases base44) na leitura;
+// telas que carregam o registro inteiro e salvam de volta acabam reenviando esses
+// campos fantasma, o que faz o PostgREST responder 400 (coluna inexistente).
+// Também removemos id/created_at/updated_at, gerenciados pelo banco.
+const READ_ONLY_FIELDS = ['created_date', 'updated_date', 'created_at', 'updated_at', 'id'];
+
+function sanitizePayload(payload) {
+  if (!payload || typeof payload !== 'object') return payload;
+  const clean = { ...payload };
+  for (const field of READ_ONLY_FIELDS) {
+    delete clean[field];
+  }
+  return clean;
+}
+
 // Construtor da camada de entidade
 function createEntityLayer(tableName) {
   return {
@@ -120,7 +136,7 @@ function createEntityLayer(tableName) {
     async create(payload) {
       const { data, error } = await supabase
         .from(tableName)
-        .insert([payload])
+        .insert([sanitizePayload(payload)])
         .select()
         .single();
 
@@ -132,7 +148,7 @@ function createEntityLayer(tableName) {
     async update(id, payload) {
       const { data, error } = await supabase
         .from(tableName)
-        .update(payload)
+        .update(sanitizePayload(payload))
         .eq('id', id)
         .select()
         .single();

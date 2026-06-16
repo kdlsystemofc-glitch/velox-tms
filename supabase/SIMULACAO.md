@@ -4,8 +4,9 @@ Popula o sistema com uma operação fictícia dos últimos 30 dias para demonstr
 
 ## Como rodar
 1. Abra o **SQL Editor** do Supabase (projeto da Velox).
-2. **Pré-requisito:** aplique antes as migrations pendentes (a coluna `documents` e o status `cancelled` de receitas), senão alguns campos podem não existir:
+2. **Pré-requisito (recomendado):** rode `migrations/20260616_reconcile_schema.sql` — script único e idempotente que garante TODAS as colunas/constraints/políticas que o app usa (substitui ter que aplicar as migrations antigas uma a uma). Migrations individuais, se preferir:
    - `migrations/20260612_revenue_status_cancelled.sql`
+   - `migrations/20260612_trip_advance.sql`
    - `migrations/20260615_company_documents.sql`
    - `migrations/20260615_rls_public_functions.sql` (opcional, mas recomendado)
 3. Cole o conteúdo de **`seed_simulation.sql`** e clique em **Run**.
