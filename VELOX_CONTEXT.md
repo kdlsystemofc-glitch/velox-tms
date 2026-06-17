@@ -225,7 +225,7 @@ C:/vl/velox-tms/
 │   │   │   ├── OrdersWorkspace.jsx # ★ Pedidos — fila do pipeline com abas e ações inline (confirmar/recusar/despachar)
 │   │   │   ├── DispatchBoard.jsx # ★ Despacho — quadro caminhões × dias; arrasta fila → célula → cria viagem
 │   │   │   ├── OrderWorkspace.jsx # ★ Workspace do pedido (stepper de ciclo de vida + ação primária + abas)
-│   │   │   ├── NewOrder.jsx      # Criar pedido interno (+ duplicação via state)
+│   │   │   ├── NewOrder.jsx      # Nova Coleta — assistente TMS de 4 passos (NF-e multi-import, defaults do cliente, repetir último, cotação ao vivo)
 │   │   │   ├── FrotaPage.jsx     # Container: Frota + Motoristas + Simulador
 │   │   │   ├── Fleet.jsx         # Lista de caminhões
 │   │   │   ├── TruckDetailPage.jsx # Detalhe de caminhão + manutenções

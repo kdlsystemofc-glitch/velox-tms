@@ -22,7 +22,7 @@
 |--------|-----------|-----------|
 | **Operações** | `/admin` | Torre de controle: fila de ação, pipeline clicável, operação de hoje, frota agora |
 | **Pedidos** | `/admin/coletas` | Fila do pipeline em abas (Novos→Entregues) com ações inline (confirmar/recusar/despachar) |
-| Novo Pedido | `/admin/coletas/novo` | Formulário interno com calc. de frete + chave NF-e + duplicação |
+| Nova Coleta | `/admin/coletas/novo` | **Assistente (wizard) de 4 passos** padrão TMS: Remetente/coleta → Cargas/NF-e (importar XMLs + agrupar por CNPJ, colar chaves) → Cotação/pagamento → Atribuição/revisão. Defaults do cliente, "repetir último pedido", painel de cotação ao vivo (peso taxável, composição do frete, prazo, ocupação do veículo) |
 | **Pedido (workspace)** | `/admin/coletas/:id` | Stepper de ciclo de vida + ação primária + abas (Resumo/Cargas/Financeiro/Ocorrências/Histórico) |
 | **Despacho** | `/admin/despacho` | Quadro caminhões × dias: fila → célula → cria viagem |
 | Frota | `/admin/frota` | Caminhões, motoristas, simulador |
