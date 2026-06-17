@@ -90,7 +90,9 @@ export default function AdminSettings({ only = null }) {
 
   return (
     <div className="space-y-5 max-w-4xl">
-      <Tabs defaultValue={firstTab}>
+      {/* key força remount ao trocar o grupo (`only`): sem isso o Radix Tabs
+          mantém o estado interno e mostra a aba errada (ex.: Alertas exibindo Rotas). */}
+      <Tabs key={only ? only.join(",") : "all"} defaultValue={firstTab}>
         {tabDefs.length > 1 && (
           <TabsList className="flex-wrap h-auto gap-1">
             {tabDefs.map(t => (

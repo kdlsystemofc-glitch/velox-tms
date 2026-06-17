@@ -59,7 +59,13 @@ export default function TruckDetailPage() {
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Truck.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["truck", id] }); setEditing(false); toast({ title: "Caminhão atualizado!" }); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["truck", id] });
+      queryClient.invalidateQueries({ queryKey: ["trucks"] }); // reflete status/dados na lista da Frota
+      setEditing(false);
+      toast({ title: "Caminhão atualizado!" });
+    },
+    onError: (e) => toast({ title: "Erro ao salvar", description: e?.message || "Tente novamente.", variant: "destructive" }),
   });
 
   const addMaintenance = async () => {

@@ -56,7 +56,8 @@ export default function ClientDetailPage() {
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Client.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["client", id] }); setEditing(false); toast({ title: "Cliente atualizado!" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["client", id] }); queryClient.invalidateQueries({ queryKey: ["clients"] }); setEditing(false); toast({ title: "Cliente atualizado!" }); },
+    onError: (e) => toast({ title: "Erro ao salvar", description: e?.message || "Tente novamente.", variant: "destructive" }),
   });
 
   const handleSaveContact = async () => {

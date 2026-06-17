@@ -42,7 +42,8 @@ export default function DriverDetailPage() {
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Driver.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["driver", id] }); setEditing(false); toast({ title: "Motorista atualizado!" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["driver", id] }); queryClient.invalidateQueries({ queryKey: ["drivers"] }); setEditing(false); toast({ title: "Motorista atualizado!" }); },
+    onError: (e) => toast({ title: "Erro ao salvar", description: e?.message || "Tente novamente.", variant: "destructive" }),
   });
 
   if (!driver) return <div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-4 border-velox-amber/20 border-t-velox-amber rounded-full" /></div>;

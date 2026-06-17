@@ -1,0 +1,10 @@
+{
+  "name": "Velox TMS — Gestão de Transporte",
+  "short_name": "Velox TMS",
+  "description": "Sistema de gestão de transporte da Velox Transportadora",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1B2430",
+  "theme_color": "#1B2430",
+  "icons": []
+}
