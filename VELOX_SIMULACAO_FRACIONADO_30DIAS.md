@@ -214,37 +214,197 @@ Observações: `Rota interior (Toco) — leva ajudante`
 
 ---
 
-## DIA 5 (D+4) — Fornecedores
+## DIA 5 (D+4) — Fornecedores (campo a campo)
 
-Cadastros → Fornecedores → **Novo Fornecedor** (4 vezes):
+Cadastros → Fornecedores → **Novo Fornecedor**. O formulário tem 3 seções (**Identificação**, **Contato principal**, **Financeiro**) + a seção **Contatos** (botão "Adicionar"). Preencha exatamente assim:
 
-| # | Nome | CNPJ | Categoria | Endereço | Cond. pagamento | PIX |
-|---|---|---|---|---|---|---|
-| 1 | Posto Marginal Tietê | 11.111.111/0001-11 | Combustível | Marginal Tietê, 1000, São Paulo/SP | À vista | 11.111.111/0001-11 |
-| 2 | DieselFix Mecânica | 22.222.222/0001-22 | Manutenção | Av. das Oficinas, 50, Guarulhos/SP | 28 dias | 22.222.222/0001-22 |
-| 3 | PneuJá Distribuidora | 33.333.333/0001-33 | Pneus | Rua dos Pneus, 80, Osasco/SP | Boleto 15/30 | 33.333.333/0001-33 |
-| 4 | Protege Seguros | 44.444.444/0001-44 | Seguros | Av. Paulista, 2000, São Paulo/SP | Mensal | 44.444.444/0001-44 |
+### Fornecedor 1 — Combustível
+**Identificação**
+- Razão social / Nome: `Auto Posto Marginal Tietê Ltda`
+- CNPJ / CPF: `11.111.111/0001-11`
+- Categoria: **Combustível**
+- Endereço: `Av. Marginal Tietê, 1000 — Vila Maria, São Paulo/SP`
 
-Em cada um: preencha **Contato principal** (responsável, telefone, WhatsApp, e-mail) com dados fictícios e **Cadastrar**.
+**Contato principal**
+- Responsável: `Roberto Alves`
+- Telefone: `(11) 3550-1000`
+- WhatsApp: `(11) 95500-1000`
+- E-mail: `gerente@postomarginal.com.br`
+
+**Financeiro**
+- Condições de pagamento: `À vista (PIX na bomba)`
+- Chave PIX: `11.111.111/0001-11`
+- Observações: `Abastecimento da frota; 3% de desconto na ata mensal.`
+
+**Contatos → Adicionar** (1 contato)
+- Nome: `Fernanda Dias` · Função: **Financeiro** · Telefone: `(11) 3550-1001` · WhatsApp: `(11) 95500-1001` · E-mail: `financeiro@postomarginal.com.br` · **Contato principal: marcado**
+
+→ **Cadastrar**.
+
+### Fornecedor 2 — Manutenção
+**Identificação**
+- Razão social / Nome: `DieselFix Centro Automotivo Ltda`
+- CNPJ / CPF: `22.222.222/0001-22`
+- Categoria: **Manutenção**
+- Endereço: `Av. das Oficinas, 50 — Cumbica, Guarulhos/SP`
+
+**Contato principal**
+- Responsável: `Sandro Oliveira`
+- Telefone: `(11) 2400-2000`
+- WhatsApp: `(11) 96400-2000`
+- E-mail: `os@dieselfix.com.br`
+
+**Financeiro**
+- Condições de pagamento: `28 dias (boleto)`
+- Chave PIX: `22.222.222/0001-22`
+- Observações: `Revisões e corretivas; orça antes de executar.`
+
+**Contatos → Adicionar** (1 contato)
+- Nome: `Patrícia Gomes` · Função: **Comercial** · Telefone: `(11) 2400-2001` · WhatsApp: `(11) 96400-2001` · E-mail: `comercial@dieselfix.com.br` · **Contato principal: marcado**
+
+→ **Cadastrar**.
+
+### Fornecedor 3 — Pneus
+**Identificação**
+- Razão social / Nome: `PneuJá Comércio de Pneus Ltda`
+- CNPJ / CPF: `33.333.333/0001-33`
+- Categoria: **Pneus**
+- Endereço: `Rua dos Pneus, 80 — Centro, Osasco/SP`
+
+**Contato principal**
+- Responsável: `Paulo Ramos`
+- Telefone: `(11) 3700-3000`
+- WhatsApp: `(11) 97700-3000`
+- E-mail: `vendas@pneuja.com.br`
+
+**Financeiro**
+- Condições de pagamento: `Boleto 15/30`
+- Chave PIX: `33.333.333/0001-33`
+- Observações: `Pneus novos e recapagem; entrega em 24h.`
+
+**Contatos → Adicionar** (1 contato)
+- Nome: `Marcos Lima` · Função: **Gerente** · Telefone: `(11) 3700-3001` · WhatsApp: `(11) 97700-3001` · E-mail: `gerencia@pneuja.com.br` · **Contato principal: marcado**
+
+→ **Cadastrar**.
+
+### Fornecedor 4 — Seguros
+**Identificação**
+- Razão social / Nome: `Protege Corretora de Seguros Ltda`
+- CNPJ / CPF: `44.444.444/0001-44`
+- Categoria: **Seguros**
+- Endereço: `Av. Paulista, 2000 — Bela Vista, São Paulo/SP`
+
+**Contato principal**
+- Responsável: `Marta Andrade`
+- Telefone: `(11) 3000-4000`
+- WhatsApp: `(11) 98000-4000`
+- E-mail: `apolices@protege.com.br`
+
+**Financeiro**
+- Condições de pagamento: `Mensal (débito automático)`
+- Chave PIX: `44.444.444/0001-44`
+- Observações: `Apólice da frota + RCTR-C; renovação em D+200.`
+
+**Contatos → Adicionar** (1 contato)
+- Nome: `Júlio Castro` · Função: **Financeiro** · Telefone: `(11) 3000-4001` · WhatsApp: `(11) 98000-4001` · E-mail: `cobranca@protege.com.br` · **Contato principal: marcado**
+
+→ **Cadastrar**.
+
+> ℹ️ Na seção **Contatos**, as funções disponíveis para fornecedor são: Financeiro, Comercial, Técnico, Gerente, Diretor, Outro.
 
 ---
 
-## DIA 6 (D+5) — Clientes (embarcadores)
+## DIA 6 (D+5) — Clientes / embarcadores (campo a campo)
 
-Cadastros → Clientes → **Novo Cliente** (6 vezes). Todos **PJ**, **Ativo**.
+Cadastros → Clientes → **Novo Cliente**. Campos do formulário: Razão Social, CPF/CNPJ, Tipo de pessoa, Inscrição Estadual (só PJ), E-mail, Telefone, Perfil, Status, Tipo de cobrança, Observações, **Contatos** e **Endereço principal** (digite o CEP e o sistema preenche rua/bairro/cidade/UF; você completa Número e Complemento).
 
-| Cód. | Razão Social | CNPJ | IE | Perfil | Cobrança | CEP (sede) |
-|---|---|---|---|---|---|---|
-| C1 | Loja Online Tech ME | 50.111.111/0001-11 | 110.111.111 | Recorrente | **Mensal** (fecha dia 25, prazo 30d) | 04500-000 |
-| C2 | Distribuidora Norte SP | 50.222.222/0001-22 | 110.222.222 | Recorrente | Por viagem | 02400-000 |
-| C3 | Magazine Casa & Cia | 50.333.333/0001-33 | 110.333.333 | Recorrente | Por viagem | 09000-000 |
-| C4 | AutoPeças Expressa | 50.444.444/0001-44 | 110.444.444 | Eventual | Por viagem | 13010-000 |
-| C5 | Moda Vale Confecções | 50.555.555/0001-55 | 110.555.555 | Eventual | Por viagem | 12200-000 |
-| C6 | EletroBaixada Atacado | 50.666.666/0001-66 | 110.666.666 | Eventual | Por viagem | 11000-000 |
+> ℹ️ Funções disponíveis no contato de **cliente**: Financeiro, Logística, Compras, Diretor, Gerente, Outro.
 
-- Para **C1** marque **Faturamento mensal** → dia de fechamento **25**, prazo **30** dias.
-- Preencha em cada um o **e-mail**, **telefone**, **um contato** (Logística) e o **endereço** (use o CEP da tabela — o sistema autofill rua/cidade/UF).
-- **Cadastrar** cada cliente.
+### Cliente C1 — Loja Online Tech (recorrente · faturamento MENSAL)
+- Razão Social / Nome: `Loja Online Tech Comércio Eletrônico ME`
+- CPF / CNPJ: `50.111.111/0001-11`
+- Tipo de pessoa: **Pessoa Jurídica**
+- Inscrição Estadual: `110.111.111`
+- E-mail: `logistica@lojatech.com.br` · Telefone: `(11) 4100-1100`
+- Perfil de cliente: **Recorrente** · Status: **Ativo**
+- Tipo de cobrança: **Faturamento mensal** → Dia de fechamento: `25` · Prazo de pagamento: `30` dias
+- Observações: `E-commerce; coletas diárias no CD; NF-e enviada por e-mail.`
+- **Contato:** Nome `Ana Souza` · Função **Logística** · Telefone `(11) 4100-1101` · E-mail `ana.logistica@lojatech.com.br` · **Principal: marcado**
+- **Endereço principal:** CEP `04500-000` → (autofill: Av. Eng. Luís Carlos Berrini — Cidade Monções — São Paulo/SP) · Número `1200` · Complemento `CD — Bloco B`
+
+→ **Cadastrar**.
+
+### Cliente C2 — Distribuidora Norte SP (recorrente · por viagem)
+- Razão Social / Nome: `Distribuidora Norte SP Ltda`
+- CPF / CNPJ: `50.222.222/0001-22`
+- Tipo de pessoa: **Pessoa Jurídica**
+- Inscrição Estadual: `110.222.222`
+- E-mail: `compras@distnorte.com.br` · Telefone: `(11) 4200-2200`
+- Perfil: **Recorrente** · Status: **Ativo**
+- Tipo de cobrança: **Por viagem (padrão)**
+- Observações: `Atacado de bebidas; coletas seg/qua/sex.`
+- **Contato:** Nome `Carlos Nunes` · Função **Compras** · Telefone `(11) 4200-2201` · E-mail `carlos@distnorte.com.br` · **Principal: marcado**
+- **Endereço principal:** CEP `02400-000` → (autofill: Santana — São Paulo/SP) · Número `750` · Complemento `Depósito 2`
+
+→ **Cadastrar**.
+
+### Cliente C3 — Magazine Casa & Cia (recorrente · por viagem)
+- Razão Social / Nome: `Magazine Casa & Cia Comércio Varejista Ltda`
+- CPF / CNPJ: `50.333.333/0001-33`
+- Tipo de pessoa: **Pessoa Jurídica**
+- Inscrição Estadual: `110.333.333`
+- E-mail: `expedicao@casaecia.com.br` · Telefone: `(11) 4300-3300`
+- Perfil: **Recorrente** · Status: **Ativo**
+- Tipo de cobrança: **Por viagem (padrão)**
+- Observações: `Móveis e eletro; atenção a volumes frágeis.`
+- **Contato:** Nome `Júlia Prado` · Função **Logística** · Telefone `(11) 4300-3301` · E-mail `julia@casaecia.com.br` · **Principal: marcado**
+- **Endereço principal:** CEP `09000-000` → (autofill: Centro — Santo André/SP) · Número `300` · Complemento `Loja central`
+
+→ **Cadastrar**.
+
+### Cliente C4 — AutoPeças Expressa (eventual · por viagem)
+- Razão Social / Nome: `AutoPeças Expressa Comércio de Peças Ltda`
+- CPF / CNPJ: `50.444.444/0001-44`
+- Tipo de pessoa: **Pessoa Jurídica**
+- Inscrição Estadual: `110.444.444`
+- E-mail: `vendas@autopecasexpressa.com.br` · Telefone: `(19) 4400-4400`
+- Perfil: **Eventual** · Status: **Ativo**
+- Tipo de cobrança: **Por viagem (padrão)**
+- Observações: `Peças automotivas; entregas em Campinas/RMC.`
+- **Contato:** Nome `Rafael Tonin` · Função **Compras** · Telefone `(19) 4400-4401` · E-mail `rafael@autopecasexpressa.com.br` · **Principal: marcado**
+- **Endereço principal:** CEP `13010-000` → (autofill: Centro — Campinas/SP) · Número `95` · Complemento `Galpão A`
+
+→ **Cadastrar**.
+
+### Cliente C5 — Moda Vale Confecções (eventual · por viagem)
+- Razão Social / Nome: `Moda Vale Confecções Ltda`
+- CPF / CNPJ: `50.555.555/0001-55`
+- Tipo de pessoa: **Pessoa Jurídica**
+- Inscrição Estadual: `110.555.555`
+- E-mail: `expedicao@modavale.com.br` · Telefone: `(12) 4500-5500`
+- Perfil: **Eventual** · Status: **Ativo**
+- Tipo de cobrança: **Por viagem (padrão)**
+- Observações: `Vestuário; entregas no Vale do Paraíba.`
+- **Contato:** Nome `Sônia Reis` · Função **Logística** · Telefone `(12) 4500-5501` · E-mail `sonia@modavale.com.br` · **Principal: marcado**
+- **Endereço principal:** CEP `12200-000` → (autofill: Jardim São Dimas — São José dos Campos/SP) · Número `410` · Complemento `Galpão 1`
+
+→ **Cadastrar**.
+
+### Cliente C6 — EletroBaixada Atacado (eventual · por viagem)
+- Razão Social / Nome: `EletroBaixada Atacado de Eletrônicos Ltda`
+- CPF / CNPJ: `50.666.666/0001-66`
+- Tipo de pessoa: **Pessoa Jurídica**
+- Inscrição Estadual: `110.666.666`
+- E-mail: `compras@eletrobaixada.com.br` · Telefone: `(13) 4600-6600`
+- Perfil: **Eventual** · Status: **Ativo**
+- Tipo de cobrança: **Por viagem (padrão)**
+- Observações: `Eletrônicos; entregas na Baixada Santista.`
+- **Contato:** Nome `Diego Matos` · Função **Compras** · Telefone `(13) 4600-6601` · E-mail `diego@eletrobaixada.com.br` · **Principal: marcado**
+- **Endereço principal:** CEP `11000-000` → (autofill: Centro — Santos/SP) · Número `88` · Complemento `Loja Centro`
+
+→ **Cadastrar**.
+
+> 💡 O CEP faz **autofill** de rua/bairro/cidade/UF. Se o ViaCEP devolver um logradouro diferente do indicado, **mantenha o que ele trouxer** (o que importa é a cidade/UF bater) e só preencha **Número** e **Complemento**.
 
 ---
 
@@ -274,13 +434,54 @@ Abra o **site público** (`/`) → fluxo de **cotação/agendamento**.
 
 ## DIA 9 (D+8) — Primeiros pedidos internos (com cubagem)
 
-Pedidos → **Novo Pedido**. Vamos cadastrar os 4 primeiros do catálogo (P01–P04). Para **cada** pedido:
-- **Solicitante/Cliente:** selecione o cliente indicado.
-- **Origem:** endereço do cliente (coleta).
-- **Destinatário(s):** 1 destinatário por pedido (fracionado simples), com o **CEP de destino** indicado.
-- **Itens:** preencha **NF, volumes, peso (kg), dimensões (cm) e valor declarado** conforme o catálogo — as dimensões fazem o sistema calcular o **peso cubado**.
+Pedidos → **Novo Pedido**. Cadastre hoje **P01–P04**. O formulário tem: **Solicitante**, **Origem (coleta)**, **Frete & pagamento**, **Destinatário(s)** e **Itens**. Use os campos-padrão abaixo + os dados variáveis do catálogo.
 
-> Ao preencher os itens, ✅ VERIFICAR no resumo de frete: o **peso taxável** e o **valor do frete** devem bater com a coluna "Frete" do catálogo (a fórmula do Dia 2).
+### 🧩 Padrão de preenchimento — vale para TODOS os 16 pedidos
+**Solicitante**
+- Cliente: selecione o cliente da coluna "Cliente" do catálogo.
+- Nome do solicitante: use o **contato principal do cliente** (ex.: C2 → `Carlos Nunes`).
+- Cargo/Função do solicitante: `Logística`
+- Contato preferido: **WhatsApp**
+
+**Origem (coleta)** — é o endereço do cliente embarcador (a Velox coleta lá):
+- Preenche automaticamente ao selecionar o cliente; se não, digite o **CEP da sede** do cliente (Dia 6) e complete Número.
+
+**Frete & pagamento**
+- Tipo de frete: **Fracionado / Compartilhado** (`shared`)
+- Pagador do frete: **CIF** (remetente paga) — padrão deste cenário
+- Modal: **Rodoviário**
+- Forma de pagamento e Prazo: ver tabela "Destinatário e pagamento" abaixo
+- Data de coleta: **1 dia útil após o cadastro** · Período: **Manhã** (use "Tarde" nos pedidos do interior P12–P16)
+
+**Destinatário** (1 por pedido — fracionado simples)
+- Nome, CNPJ e CEP de destino: tabela "Destinatário e pagamento" abaixo
+- Endereço: digite o **CEP de destino** (autofill) + um Número qualquer (ex.: `100`)
+
+**Itens** — preencha conforme o catálogo: **NF (nº), volumes, peso (kg), dimensões A×L×C (cm) e valor declarado**. Embalagem = **caixa**. As dimensões fazem o sistema calcular o **peso cubado**.
+
+> Ao terminar os itens, ✅ VERIFICAR no resumo de frete: o **peso taxável** e o **valor do frete** devem bater com a coluna "Frete" do catálogo (fórmula do Dia 2).
+
+### Destinatário e pagamento por pedido
+| Ped. | Destinatário (nome) | CNPJ destinatário | Forma de pagamento | Prazo |
+|---|---|---|---|---|
+| P01 | Varejo Pinheiros Ltda | 60.001.001/0001-01 | PIX | Após entrega |
+| P02 | Casa & Cia Santo André | 60.002.002/0001-02 | Boleto | 15 dias |
+| P03 | Depósito Guarulhos ME | 60.003.003/0001-03 | PIX | Após entrega |
+| P04 | Loja Osasco Center | 60.004.004/0001-04 | Boleto | 15 dias |
+| P05 | AutoPeças Itaquera | 60.005.005/0001-05 | PIX | Após entrega |
+| P06 | Eletro SBC Atacado | 60.006.006/0001-06 | Boleto | 15 dias |
+| P07 | Mercado Brás Ltda | 60.007.007/0001-07 | PIX | Após entrega |
+| P08 | Tech Berrini Store | 60.008.008/0001-08 | Boleto | **Faturamento mensal** |
+| P09 | Distribuidora Santana | 60.009.009/0001-09 | Boleto | **Faturamento mensal** |
+| P10 | AutoPeças Campinas | 60.010.010/0001-10 | PIX | Após entrega |
+| P11 | Boutique Pinheiros | 60.011.011/0001-11 | Boleto | **Faturamento mensal** |
+| P12 | Moda Vale SJC | 60.012.012/0001-12 | Transferência | 15 dias |
+| P13 | Oficina Campinas Sul | 60.013.013/0001-13 | PIX | Após entrega |
+| P14 | EletroBaixada Santos | 60.014.014/0001-14 | PIX | Após entrega |
+| P15 | Loja São Vicente | 60.015.015/0001-15 | PIX | Após entrega |
+| P16 | Confecções Vale Norte | 60.016.016/0001-16 | Transferência | 15 dias |
+
+> Os 3 pedidos do **C1** (P08, P09, P11) usam **Faturamento mensal** — entram na fatura do Dia 24.
 
 ### Catálogo de pedidos (P01–P16)
 
