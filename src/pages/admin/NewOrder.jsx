@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Plus, Trash2, MapPin, User, Package, DollarSign, AlertCircle, Search, FileUp } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, MapPin, User, Package, DollarSign, AlertCircle, Search, FileUp, Calculator } from "lucide-react";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { calculateFreightFull } from "@/utils/freightCalculator";
@@ -378,6 +378,27 @@ export default function NewOrder() {
     });
   }, [form.recipients, form.origin?.state, form.client_id, clients, settings?.pricing]);
 
+  // Totais da carga para o painel de cotação ao vivo
+  const totals = useMemo(() => {
+    const parseNum = (v) => {
+      if (v === "" || v == null) return 0;
+      if (typeof v === "number") return v;
+      const s = String(v).trim();
+      if (s.includes(",") && s.includes(".")) return parseFloat(s.replace(/\./g, "").replace(",", ".")) || 0;
+      if (s.includes(",")) return parseFloat(s.replace(",", ".")) || 0;
+      return parseFloat(s) || 0;
+    };
+    const items = form.recipients.flatMap(r => r.items || []);
+    return {
+      recipients: form.recipients.length,
+      volumes: items.reduce((s, i) => s + (parseInt(i.volumes) || 0), 0),
+      weight: items.reduce((s, i) => s + parseNum(i.weight_kg), 0),
+      declared: items.reduce((s, i) => s + parseNum(i.declared_value), 0),
+      nfCount: items.filter(i => i.nf_number || i.nf_key).length,
+      freightValue: parseNum(form.freight_value),
+    };
+  }, [form.recipients, form.freight_value]);
+
   const section = (icon, title, children, desc) => (
     <section className="bg-card border border-border rounded-md">
       <header className="flex items-start gap-2.5 px-4 py-3 border-b border-border bg-muted/30">
@@ -394,16 +415,30 @@ export default function NewOrder() {
   const inputRow = (cols) => <div className={`grid grid-cols-1 md:grid-cols-${cols} gap-3`} />;
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/admin/coletas")}><ArrowLeft className="w-5 h-5" /></Button>
-        <div>
-          <h1 className="font-display text-xl font-bold text-foreground">Nova Coleta</h1>
-          <p className="text-muted-foreground text-xs">
-            {dup ? <>Duplicado de <span className="font-mono font-semibold">{dup.protocol}</span> — confira os dados e defina a data de coleta</> : "Cadastro interno de frete"}
-          </p>
+    <div className="pb-10">
+      {/* Barra de ação fixa — padrão TMS */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border">
+        <div className="flex items-center justify-between gap-3 py-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/admin/coletas")}><ArrowLeft className="w-5 h-5" /></Button>
+            <div className="min-w-0">
+              <h1 className="font-display text-xl font-bold text-foreground leading-tight">Nova Coleta</h1>
+              <p className="text-muted-foreground text-xs truncate">
+                {dup ? <>Duplicado de <span className="font-mono font-semibold">{dup.protocol}</span></> : "Cadastro interno de frete fracionado"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="outline" onClick={() => navigate("/admin/coletas")}>Cancelar</Button>
+            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={handleSubmit} disabled={createMutation.isPending}>
+              <Package className="w-4 h-4" /> {createMutation.isPending ? "Criando..." : "Criar Coleta"}
+            </Button>
+          </div>
         </div>
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-5 mt-5 items-start">
+        <div className="space-y-5 min-w-0">
 
       {section(User, "Solicitante",
         <>
@@ -820,40 +855,12 @@ export default function NewOrder() {
         </div>
       </section>
 
-      {section(DollarSign, "Valor e Atribuição",
+      {section(DollarSign, "Pagamento e atribuição",
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Valor do Frete (R$)</label>
-            {(() => {
-              const breakdown = freightBreakdown;
-              if (!breakdown) return null;
-              return (
-                <div className="mb-2 p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-amber-700">
-                      Estimativa completa:
-                      <span className="font-mono font-semibold ml-1">R$ {breakdown.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                    </span>
-                    <button type="button" className="text-velox-amber hover:underline text-xs font-medium flex-shrink-0"
-                      onClick={() => setForm(f => ({ ...f, freight_value: freightBreakdown?.total || 0 }))}>
-                      Usar este valor
-                    </button>
-                  </div>
-                  <div className="text-[10px] text-amber-600 space-y-0.5">
-                    <div className="flex justify-between"><span>Peso taxável: {breakdown.taxableKg.toFixed(1)} kg {breakdown.usedCubic ? "(cubado)" : "(real)"}</span></div>
-                    {breakdown.freightByWeight > 0 && <div className="flex justify-between"><span>Frete por peso</span><span className="font-mono">R$ {breakdown.freightByWeight.toFixed(2)}</span></div>}
-                    {breakdown.grisValue > 0 && <div className="flex justify-between"><span>GRIS</span><span className="font-mono">R$ {breakdown.grisValue.toFixed(2)}</span></div>}
-                    {breakdown.adValoremValue > 0 && <div className="flex justify-between"><span>Ad Valorem</span><span className="font-mono">R$ {breakdown.adValoremValue.toFixed(2)}</span></div>}
-                    {breakdown.tdeValue > 0 && <div className="flex justify-between"><span>TDE</span><span className="font-mono">R$ {breakdown.tdeValue.toFixed(2)}</span></div>}
-                    {breakdown.tdaValue > 0 && <div className="flex justify-between"><span>TDA</span><span className="font-mono">R$ {breakdown.tdaValue.toFixed(2)}</span></div>}
-                    {breakdown.tollValue > 0 && <div className="flex justify-between"><span>Pedágio</span><span className="font-mono">R$ {breakdown.tollValue.toFixed(2)}</span></div>}
-                    {breakdown.fixedFee > 0 && <div className="flex justify-between"><span>Taxa fixa</span><span className="font-mono">R$ {breakdown.fixedFee.toFixed(2)}</span></div>}
-                  </div>
-                </div>
-              );
-            })()}
-            <NumericInput currency placeholder="ex: 2.150,00" value={form.freight_value} onChange={v => setForm(f => ({ ...f, freight_value: v }))} />
-            <p className="text-xs text-muted-foreground">Sem distância — baseado no peso e taxas configuradas.</p>
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Valor do frete cobrado (R$)</label>
+            <NumericInput currency placeholder="ex: 150,00" value={form.freight_value} onChange={v => setForm(f => ({ ...f, freight_value: v }))} />
+            <p className="text-xs text-muted-foreground">Use "Usar estimativa" no resumo ao lado, ou informe manualmente.</p>
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Responsabilidade pelo Frete (CIF/FOB) <span className="text-red-500">*</span></label>
@@ -929,16 +936,65 @@ export default function NewOrder() {
         </div>
       )}
 
-      <div className="flex gap-3 justify-end pb-8">
-        <Button variant="outline" onClick={() => navigate("/admin/coletas")}>Cancelar</Button>
-        <Button
-          className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold px-8"
-          onClick={handleSubmit}
-          disabled={createMutation.isPending}
-        >
-          {createMutation.isPending ? "Criando..." : "Criar Coleta"}
-        </Button>
-      </div>
+        </div>{/* fim coluna esquerda */}
+
+        {/* Painel de cotação ao vivo (sticky) — padrão TMS */}
+        <aside className="lg:sticky lg:top-24 space-y-4">
+          <section className="bg-card border border-border rounded-md overflow-hidden">
+            <header className="flex items-center gap-2.5 px-4 py-3 border-b border-border bg-muted/30">
+              <Calculator className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground">Resumo da cotação</h3>
+            </header>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-y-2.5 gap-x-3">
+                <div><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Destinatários</p><p className="font-semibold text-sm">{totals.recipients}</p></div>
+                <div><p className="text-[11px] text-muted-foreground uppercase tracking-wide">NFs</p><p className="font-semibold text-sm">{totals.nfCount}</p></div>
+                <div><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Volumes</p><p className="font-semibold text-sm">{totals.volumes}</p></div>
+                <div><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Peso real</p><p className="font-semibold text-sm font-mono">{totals.weight.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg</p></div>
+                {freightBreakdown && (
+                  <div><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Peso taxável</p>
+                    <p className="font-semibold text-sm font-mono">{freightBreakdown.taxableKg.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg {freightBreakdown.usedCubic && <span className="text-[10px] text-amber-600 font-sans">cubado</span>}</p></div>
+                )}
+                <div><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Valor declarado</p><p className="font-semibold text-sm font-mono">R$ {totals.declared.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></div>
+              </div>
+
+              {freightBreakdown ? (
+                <>
+                  <div className="border-t border-border pt-3 space-y-1 text-xs">
+                    {freightBreakdown.freightByWeight > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Frete por peso</span><span className="font-mono">R$ {freightBreakdown.freightByWeight.toFixed(2)}</span></div>}
+                    {freightBreakdown.grisValue > 0 && <div className="flex justify-between"><span className="text-muted-foreground">GRIS</span><span className="font-mono">R$ {freightBreakdown.grisValue.toFixed(2)}</span></div>}
+                    {freightBreakdown.adValoremValue > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Ad valorem</span><span className="font-mono">R$ {freightBreakdown.adValoremValue.toFixed(2)}</span></div>}
+                    {freightBreakdown.tdeValue > 0 && <div className="flex justify-between"><span className="text-muted-foreground">TDE</span><span className="font-mono">R$ {freightBreakdown.tdeValue.toFixed(2)}</span></div>}
+                    {freightBreakdown.tdaValue > 0 && <div className="flex justify-between"><span className="text-muted-foreground">TDA</span><span className="font-mono">R$ {freightBreakdown.tdaValue.toFixed(2)}</span></div>}
+                    {freightBreakdown.tollValue > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Pedágio</span><span className="font-mono">R$ {freightBreakdown.tollValue.toFixed(2)}</span></div>}
+                    {freightBreakdown.fixedFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Taxa fixa</span><span className="font-mono">R$ {freightBreakdown.fixedFee.toFixed(2)}</span></div>}
+                  </div>
+                  <div className="border-t border-border pt-3 flex items-end justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Frete estimado</p>
+                      <p className="text-2xl font-bold font-mono text-foreground leading-tight">R$ {freightBreakdown.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                    </div>
+                    <Button size="sm" variant="outline" className="flex-shrink-0" onClick={() => setForm(f => ({ ...f, freight_value: freightBreakdown.total }))}>Usar estimativa</Button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground border-t border-border pt-3">Informe peso e dimensões dos itens para calcular a cotação.</p>
+              )}
+
+              <div className="border-t border-border pt-3 flex items-center justify-between">
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Valor a cobrar</p>
+                <p className="text-lg font-bold font-mono text-primary">R$ {totals.freightValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              </div>
+            </div>
+            <div className="p-4 border-t border-border bg-muted/20">
+              <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={handleSubmit} disabled={createMutation.isPending}>
+                <Package className="w-4 h-4" /> {createMutation.isPending ? "Criando..." : "Criar Coleta"}
+              </Button>
+            </div>
+          </section>
+          <p className="text-[11px] text-muted-foreground px-1">A cotação atualiza conforme você adiciona cargas. O valor cobrado pode ser ajustado manualmente.</p>
+        </aside>
+      </div>{/* fim grid */}
 
       {/* Dialog: criar cadastro do cliente novo */}
       <Dialog open={!!createClientPrompt} onOpenChange={(open) => {

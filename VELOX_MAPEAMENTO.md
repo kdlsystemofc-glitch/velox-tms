@@ -252,11 +252,13 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 ---
 
-### 3.3 Novo Pedido (Interno)
+### 3.3 Novo Pedido / Nova Coleta (Interno)
 
 **Arquivo:** `src/pages/admin/NewOrder.jsx`  
 **Rota:** `/admin/coletas/novo`  
 **Acesso:** operador + admin
+
+**Layout (padrão TMS):** **barra de ação fixa** no topo (voltar + título + Cancelar/Criar Coleta) e **2 colunas**: formulário à esquerda; **painel de cotação ao vivo sticky** à direita. O painel resume a carga (destinatários, NFs, volumes, peso real, **peso taxável** com marca "cubado", valor declarado) e a **composição do frete** (frete por peso, GRIS, ad valorem, TDE, TDA, pedágio, taxa fixa) → **frete estimado** com botão **"Usar estimativa"**, o **valor a cobrar** e o CTA "Criar Coleta". Atualiza em tempo real conforme os itens mudam (`freightBreakdown` + memo `totals`).
 
 **Seção Remetente:**
 - Busca de cliente por nome (autocomplete dropdown, debounce)
@@ -279,17 +281,13 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 **Pós-criação:** se o cliente não existir na base, Dialog "Criar cadastro de cliente?" (substitui o antigo `window.confirm`)
 
-**Seção Serviço:**
-- Tipo de frete (CIF/FOB), modal, data de coleta
-- Calculadora de frete inline: `calculateFreightFull()` → exibe breakdown
-- Botão "Usar este valor" → preenche `freight_value`
-- Pagamento: método, condição, status
-
-**Seção Operacional:**
-- Motorista (select), Caminhão (select), Observações
+**Seção Pagamento e atribuição:**
+- Valor do frete cobrado (`freight_value`), responsabilidade **CIF/FOB**, forma e condições de pagamento
+- Motorista (select), Caminhão (select), Observações internas
+- A **cotação/breakdown** vive no painel lateral (`calculateFreightFull()`), não mais embutida nesta seção
 
 **Ações:**
-- "Salvar Pedido" → `Order.create({ status: "new", ... })`
+- "Criar Coleta" (na barra fixa e no painel) → `Order.create({ status: "new", ... })`
 
 ---
 

@@ -439,7 +439,7 @@ Abra o **site público** (`/`) → fluxo de **cotação/agendamento**.
 
 Cada pedido abaixo é um **bloco completo** (Solicitante, Origem, Frete & pagamento, Destinatário e Itens) — preencha exatamente o que está em cada um, sem precisar consultar outras tabelas. Os campos de **CEP (origem e destinatário) preenchem o endereço automaticamente**; você só completa o Número.
 
-**Regras que valem para todos:** Tipo de frete **Fracionado/Compartilhado**, Pagador **CIF**, Modal **Rodoviário**, Itens com **Embalagem = caixa** e **Frágil/Perigoso desmarcados**; o **Número** do endereço pode ser qualquer (use `100` no destino). Ao terminar os itens, **confira o resumo de frete** contra o "Frete esperado" do bloco.
+**Regras que valem para todos:** Tipo de frete **Fracionado/Compartilhado**, Pagador **CIF**, Modal **Rodoviário**, Itens com **Embalagem = caixa** e **Frágil/Perigoso desmarcados**; o **Número** do endereço pode ser qualquer (use `100` no destino). Ao adicionar os itens, acompanhe o **painel de cotação à direita** (peso real/cubado/taxável + composição do frete) e confira o **frete estimado** contra o "Frete esperado" do bloco — clique em **"Usar estimativa"** para preencher o valor a cobrar.
 
 ### Quadro-resumo dos 16 pedidos (referência rápida)
 
