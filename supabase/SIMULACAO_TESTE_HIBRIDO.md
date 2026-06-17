@@ -1,16 +1,18 @@
 # Teste híbrido — operar pelo app e validar com SQL
 
-Roteiro para caçar bugs de **fluxo e lógica** do app. A ideia: o seed cria um estado consistente; você executa ações reais nas telas; e o **bloco de VERIFICAÇÕES** do `seed_simulation.sql` confirma se o app manteve a consistência.
+Roteiro para caçar bugs de **fluxo e lógica** do app. A ideia: o seed cria um estado consistente; você executa ações reais nas telas; e o arquivo **`verificacoes.sql`** confirma se o app manteve a consistência.
+
+> São **dois arquivos**: `seed_simulation.sql` (cria os dados — roda **uma vez**) e `verificacoes.sql` (só confere — roda **toda vez** que quiser). Nunca rode o seed de novo no meio do teste: ele apaga e recria tudo.
 
 ## Preparação
 1. Rode `migrations/20260616_reconcile_schema.sql`.
-2. Rode `seed_simulation.sql` (cria os dados).
-3. **Baseline:** rode os 3 blocos de VERIFICAÇÃO e **anote**:
+2. Rode `seed_simulation.sql` (cria os dados — **só uma vez**).
+3. **Baseline:** rode `verificacoes.sql` e **anote**:
    - Bloco 1 — todas as 13 linhas devem ter `problemas = 0`.
    - Bloco 2 — anote `receita_recebida`, `receita_a_receber`, `receita_vencida`, `despesa_paga`, `despesa_a_pagar`, `resultado_competencia`.
    - Bloco 3 — `soma_fretes_ativos` deve ser **igual** a `soma_receitas_ativas`.
 
-> Regra de ouro: depois de **cada** ação abaixo, rode o **Bloco 1** de novo. Qualquer linha que saia de `0` aponta o bug exato. O Bloco 2/3 valida os números.
+> Regra de ouro: depois de **cada** ação abaixo, rode o **`verificacoes.sql`** de novo e olhe o **Bloco 1**. Qualquer linha que saia de `0` aponta o bug exato. O Bloco 2/3 valida os números.
 
 ---
 
