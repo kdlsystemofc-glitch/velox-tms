@@ -258,36 +258,25 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Rota:** `/admin/coletas/novo`  
 **Acesso:** operador + admin
 
-**Layout (padrão TMS):** **barra de ação fixa** no topo (voltar + título + Cancelar/Criar Coleta) e **2 colunas**: formulário à esquerda; **painel de cotação ao vivo sticky** à direita. O painel resume a carga (destinatários, NFs, volumes, peso real, **peso taxável** com marca "cubado", valor declarado) e a **composição do frete** (frete por peso, GRIS, ad valorem, TDE, TDA, pedágio, taxa fixa) → **frete estimado** com botão **"Usar estimativa"**, o **valor a cobrar** e o CTA "Criar Coleta". Atualiza em tempo real conforme os itens mudam (`freightBreakdown` + memo `totals`).
+**Padrão TMS — assistente (wizard) de 4 passos** com barra fixa + stepper no topo e **painel de cotação ao vivo sticky** à direita (visível em todos os passos). O painel resume a carga (destinatários, NFs, volumes, peso real, **peso taxável** com marca "cubado", valor declarado), a **composição do frete** (frete por peso, GRIS, ad valorem, TDE, TDA, pedágio, taxa fixa) → **frete estimado** + "Usar estimativa" + **valor a cobrar**, e indicadores de **prazo estimado** (por UF de destino via `getDeliveryDaysByState`) e **ocupação do veículo** (peso taxável × capacidade, barra verde/âmbar/vermelha). `freightBreakdown` + memo `totals`.
 
-**Seção Remetente:**
-- Busca de cliente por nome (autocomplete dropdown, debounce)
-- CNPJ onBlur → `getClientByCnpj` → auto-fill
-- Campos: nome, CNPJ/CPF, telefone, e-mail
-- Se cliente não encontrado: opção "Criar novo cliente" (cria no DB + vincula)
+**Passo 1 — Remetente e coleta:**
+- Busca de cliente (autocomplete). **`selectClient`** aplica **defaults do cliente**: endereço de coleta (`address`), condição de pagamento (de `billing_type`/`payment_term_days`) e tabela negociada (`custom_pricing`, usada no rating).
+- Botão **"Repetir último pedido"** (`repeatLastOrder` → `Order.filter({client_id}, "-created_at", 1)`) clona destinatários/itens/condições do último pedido do cliente.
+- Campos do solicitante; **Coleta (origem)** via `AddressFields` (autofill CEP) + data/período/observações de coleta.
 
-**Seção Origem:**
-- CEP → auto-fill via ViaCEP
-- Campos: endereço completo
+**Passo 2 — Cargas e notas (NF-e em primeiro):**
+- **Importar XML(s) de NF-e** (`multiple`) → `importMultipleNFe` parseia cada XML e **agrupa por CNPJ** do destinatário (1 coleta = N notas), removendo o destinatário-rascunho vazio.
+- **Colar chave(s)** de 44 dígitos (`addChaves`) → cria itens com `nf_key` + nº NF (`nfNumberFromKey`), para completar peso/dimensões.
+- Destinatários (busca na base + `AddressFields`) e itens: nº NF, NCM, embalagem, volumes, **chave NF-e** (validação DV mod-11), descrição, peso, dimensões (cubagem), valor declarado, frágil/perigoso.
 
-**Seção Destinatários:**
-- Múltiplos destinatários
-- Por destinatário: nome, CNPJ, endereço (CEP auto-fill)
-- Por item: descrição, nº NF, **chave NF-e 44 dígitos** (validação DV mod-11, borda verde/vermelha, auto-preenche nº NF), NCM, volumes, peso, dimensões, valor declarado
+**Passo 3 — Cotação e pagamento:** valor do frete cobrado, tipo de frete, **CIF/FOB**, forma e condições de pagamento. A composição detalhada fica no painel lateral (`calculateFreightFull`).
 
-**Importar XML da NF-e:** botão por destinatário (input `.xml`) → `parseNFeXML()` extrai chave, nº NF, nome/CNPJ/endereço do destinatário, volumes, peso bruto, valor e descrição, preenchendo o destinatário + 1 item automaticamente.
+**Passo 4 — Atribuição e revisão:** Motorista/Caminhão (opcional), observações internas + **recap** (remetente, coleta, totais, valor, prazo) e CTA "Criar Coleta".
 
-**Duplicação / a partir de mensagem:** abre via `location.state.duplicate` (Duplicar pedido) ou `location.state.fromMessage` (botão "Criar pedido" na tela de Mensagens), pré-preenchendo os dados
+**Validação por etapa** (`validateStep`): bloqueia avançar com campos obrigatórios faltando. **Duplicação/mensagem:** `location.state.duplicate` / `fromMessage`. **Pós-criação:** Dialog "Criar cadastro de cliente?" se o cliente não existir.
 
-**Pós-criação:** se o cliente não existir na base, Dialog "Criar cadastro de cliente?" (substitui o antigo `window.confirm`)
-
-**Seção Pagamento e atribuição:**
-- Valor do frete cobrado (`freight_value`), responsabilidade **CIF/FOB**, forma e condições de pagamento
-- Motorista (select), Caminhão (select), Observações internas
-- A **cotação/breakdown** vive no painel lateral (`calculateFreightFull()`), não mais embutida nesta seção
-
-**Ações:**
-- "Criar Coleta" (na barra fixa e no painel) → `Order.create({ status: "new", ... })`
+**Ações:** "Próximo/Voltar" entre passos; "Criar Coleta" (passo 4, no rodapé e no painel) → `Order.create({ status: "new", ... })`
 
 ---
 

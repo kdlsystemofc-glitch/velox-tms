@@ -437,7 +437,13 @@ Abra o **site público** (`/`) → fluxo de **cotação/agendamento**.
 
 > 📍 **Onde cadastrar:** estes 16 pedidos são lançados **no PORTAL ADMIN** → menu **Pedidos → botão "Nova Coleta"**. O **site público** (Dia 8) é só para o **cliente** cotar/agendar; o agendamento que chega pelo site vira um pedido "Novo" que você confirma aqui. Nesta simulação cadastramos todos manualmente pelo admin.
 
-Cada pedido abaixo é um **bloco completo** (Solicitante, Origem, Frete & pagamento, Destinatário e Itens) — preencha exatamente o que está em cada um, sem precisar consultar outras tabelas. Os campos de **CEP (origem e destinatário) preenchem o endereço automaticamente**; você só completa o Número.
+A Nova Coleta é um **assistente em 4 passos** (Remetente e coleta → Cargas e notas → Cotação e pagamento → Atribuição e revisão), com **painel de cotação ao vivo** à direita. Cada pedido abaixo é um **bloco completo** — distribua os campos pelos passos:
+- **Passo 1:** selecione o **cliente** (traz endereço de coleta, condição de pagamento e tabela negociada automaticamente) + data/período de coleta. Os campos de **CEP preenchem o endereço sozinhos**; complete só o Número.
+- **Passo 2:** **destinatário + itens**. Dica TMS: dá para **importar o XML da NF-e** (preenche tudo e agrupa por CNPJ) ou **colar a chave de 44 dígitos**; nesta simulação preenchemos manualmente. Acompanhe **peso taxável** e a cotação no painel.
+- **Passo 3:** confira o **frete estimado** no painel e clique **"Usar estimativa"** (ou informe o valor do bloco); defina CIF/FOB e forma de pagamento.
+- **Passo 4:** atribuição (opcional) + revisão → **Criar Coleta**.
+
+> 🔁 Para pedidos repetidos do mesmo cliente (ex.: vários do C1/C2), use **"Repetir último pedido"** no Passo 1 e só ajuste as NFs.
 
 **Regras que valem para todos:** Tipo de frete **Fracionado/Compartilhado**, Pagador **CIF**, Modal **Rodoviário**, Itens com **Embalagem = caixa** e **Frágil/Perigoso desmarcados**; o **Número** do endereço pode ser qualquer (use `100` no destino). Ao adicionar os itens, acompanhe o **painel de cotação à direita** (peso real/cubado/taxável + composição do frete) e confira o **frete estimado** contra o "Frete esperado" do bloco — clique em **"Usar estimativa"** para preencher o valor a cobrar.
 
