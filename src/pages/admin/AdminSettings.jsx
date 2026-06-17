@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Building2, DollarSign, Bell, Globe, MessageSquare, Save, MapPin, CalendarDays, Shield, Clock, Plus, BarChart3, Package, Route } from "lucide-react";
+import { Building2, DollarSign, Bell, Globe, MessageSquare, Save, MapPin, CalendarDays, Shield, Clock, Plus, BarChart3, Package, Route, Check } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -64,16 +64,26 @@ export default function AdminSettings({ only = null }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
       resetSettingsCache(); // invalida o cache do módulo para que o site público leia os novos valores
-      toast({ title: "Configurações salvas!" });
+      toast({ title: "Configurações salvas!", description: "As alterações já estão valendo." });
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 2200);
     },
+    onError: (e) => toast({ title: "Erro ao salvar", description: e?.message || "Tente novamente.", variant: "destructive" }),
   });
+  const [justSaved, setJustSaved] = useState(false);
 
   const setF = (field, value) => setForm(f => ({ ...f, [field]: value }));
   const setNested = (parent, field, value) => setForm(f => ({ ...f, [parent]: { ...(f[parent] || {}), [field]: value } }));
 
   const SaveBtn = ({ children = "Salvar" }) => (
-    <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => saveMutation.mutate(form)} disabled={saveMutation.isPending}>
-      <Save className="w-4 h-4" /> {saveMutation.isPending ? "Salvando..." : children}
+    <Button
+      className={`font-bold gap-2 text-white transition-colors ${justSaved ? "bg-emerald-600 hover:bg-emerald-600" : "bg-velox-amber hover:bg-velox-amber/90"}`}
+      onClick={() => saveMutation.mutate(form)}
+      disabled={saveMutation.isPending}
+    >
+      {justSaved
+        ? <><Check className="w-4 h-4" /> Salvo!</>
+        : <><Save className="w-4 h-4" /> {saveMutation.isPending ? "Salvando..." : children}</>}
     </Button>
   );
 

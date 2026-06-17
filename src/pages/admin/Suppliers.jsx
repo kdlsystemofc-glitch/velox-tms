@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Building2, Search, Pencil, Phone, Mail, Trash2, MessageCircle } from "lucide-react";
+import { Plus, Building2, Search, Pencil, Phone, Mail, Trash2, MessageCircle, MapPin, DollarSign } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import DataTable from "@/components/shared/DataTable";
+import { FormSection, Field } from "@/components/shared/FormSection";
 
 const CATEGORIES = [
   { value: "fuel",        label: "Combustível" },
@@ -22,7 +23,7 @@ const CATEGORIES = [
 const EMPTY = {
   name: "", cnpj_cpf: "", category: "maintenance",
   contact_name: "", phone: "", whatsapp: "", email: "", notes: "", active: true,
-  contacts: [],
+  contacts: [], address: "", payment_terms: "", pix_key: "",
 };
 
 async function generateSupplierCode(suppliers) {
@@ -44,40 +45,53 @@ function FormField({ label, children }) {
 
 function SupplierForm({ form, setForm }) {
   return (
-    <div className="space-y-3">
-      <FormField label="Razão Social / Nome *">
-        <Input placeholder="ex: Posto Rodoviário Silva" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-      </FormField>
-      <div className="grid grid-cols-2 gap-3">
-        <FormField label="CNPJ / CPF">
+    <div className="space-y-4">
+      <FormSection title="Identificação" icon={Building2} cols={2}>
+        <Field label="Razão social / Nome" required colSpan={2}>
+          <Input placeholder="ex: Posto Rodoviário Silva" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+        </Field>
+        <Field label="CNPJ / CPF">
           <Input placeholder="00.000.000/0001-00" value={form.cnpj_cpf} onChange={e => setForm(f => ({ ...f, cnpj_cpf: e.target.value }))} />
-        </FormField>
-        <FormField label="Categoria">
+        </Field>
+        <Field label="Categoria">
           <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
             </SelectContent>
           </Select>
-        </FormField>
-      </div>
-      <FormField label="Contato principal">
-        <Input placeholder="Nome do responsável" value={form.contact_name} onChange={e => setForm(f => ({ ...f, contact_name: e.target.value }))} />
-      </FormField>
-      <div className="grid grid-cols-2 gap-3">
-        <FormField label="Telefone">
+        </Field>
+        <Field label="Endereço" colSpan={2}>
+          <Input placeholder="Rua, número, cidade — UF" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
+        </Field>
+      </FormSection>
+
+      <FormSection title="Contato principal" icon={Phone} cols={2}>
+        <Field label="Responsável" colSpan={2}>
+          <Input placeholder="Nome do responsável" value={form.contact_name} onChange={e => setForm(f => ({ ...f, contact_name: e.target.value }))} />
+        </Field>
+        <Field label="Telefone">
           <Input placeholder="(00) 00000-0000" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
-        </FormField>
-        <FormField label="WhatsApp">
+        </Field>
+        <Field label="WhatsApp">
           <Input placeholder="(00) 00000-0000" value={form.whatsapp} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} />
-        </FormField>
-      </div>
-      <FormField label="E-mail">
-        <Input type="email" placeholder="contato@fornecedor.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-      </FormField>
-      <FormField label="Observações">
-        <Textarea placeholder="Condições comerciais, observações..." rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="resize-none" />
-      </FormField>
+        </Field>
+        <Field label="E-mail" colSpan={2}>
+          <Input type="email" placeholder="contato@fornecedor.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+        </Field>
+      </FormSection>
+
+      <FormSection title="Financeiro" description="Como esse fornecedor é pago" icon={DollarSign} cols={2}>
+        <Field label="Condições de pagamento" hint="Ex: 30 dias, à vista, boleto 15/30">
+          <Input placeholder="Ex: 30 dias" value={form.payment_terms} onChange={e => setForm(f => ({ ...f, payment_terms: e.target.value }))} />
+        </Field>
+        <Field label="Chave PIX">
+          <Input placeholder="CNPJ, telefone, e-mail..." value={form.pix_key} onChange={e => setForm(f => ({ ...f, pix_key: e.target.value }))} />
+        </Field>
+        <Field label="Observações" colSpan={2}>
+          <Textarea placeholder="Condições comerciais, observações..." rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="resize-none" />
+        </Field>
+      </FormSection>
     </div>
   );
 }

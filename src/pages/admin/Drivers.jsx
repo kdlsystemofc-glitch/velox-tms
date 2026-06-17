@@ -7,11 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Users, Search, AlertTriangle, Eye } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Users, Search, AlertTriangle, Eye, User, IdCard, Briefcase, MapPin, Landmark } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { differenceInDays, parseISO } from "date-fns";
 import DataTable from "@/components/shared/DataTable";
 import StatusBadge from "@/components/admin/StatusBadge";
+import { FormSection, Field } from "@/components/shared/FormSection";
+import { NumericInput } from "@/components/shared/NumericInput";
+
+const ESTADOS_BR = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 const driverStatusConfig = {
   active:     { label: "Ativo",     dot: "bg-green-600", cls: "text-green-700 bg-green-50 border-green-200" },
@@ -31,7 +36,7 @@ export default function Drivers({ hideTitle = false }) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const EMPTY_DRIVER = { name: "", cpf: "", phone: "", email: "", birth_date: "", hire_date: "", cnh_number: "", cnh_category: "C", cnh_expiry: "", role: "motorista", contract_type: "clt", base_salary: "", status: "active" };
+  const EMPTY_DRIVER = { name: "", cpf: "", phone: "", email: "", birth_date: "", hire_date: "", cnh_number: "", cnh_category: "C", cnh_expiry: "", role: "motorista", contract_type: "clt", base_salary: "", status: "active", address: { street: "", number: "", neighborhood: "", city: "", state: "", cep: "" }, bank_info: { bank: "", agency: "", account: "", pix_key: "" }, notes: "" };
   const [form, setForm] = useState(EMPTY_DRIVER);
 
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
@@ -69,99 +74,140 @@ export default function Drivers({ hideTitle = false }) {
               <Plus className="w-4 h-4" /> Novo Motorista
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Cadastrar Motorista</DialogTitle></DialogHeader>
-            <div className="grid grid-cols-2 gap-3">
-              {/* Coluna 1 */}
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nome completo *</label>
-                  <Input placeholder="Ex: João da Silva" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">CPF *</label>
-                  <Input placeholder="000.000.000-00" value={form.cpf} onChange={e => setForm(f => ({ ...f, cpf: e.target.value }))} className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Telefone</label>
-                  <Input placeholder="(00) 00000-0000" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">E-mail</label>
-                  <Input type="email" placeholder="motorista@email.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Data de nascimento</label>
-                  <Input type="date" value={form.birth_date} onChange={e => setForm(f => ({ ...f, birth_date: e.target.value }))} className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Data de admissão</label>
-                  <Input type="date" value={form.hire_date} onChange={e => setForm(f => ({ ...f, hire_date: e.target.value }))} className="mt-1" />
-                </div>
-              </div>
-              {/* Coluna 2 */}
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Número da CNH</label>
-                  <Input placeholder="Ex: 01234567890" value={form.cnh_number} onChange={e => setForm(f => ({ ...f, cnh_number: e.target.value }))} className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Categoria CNH</label>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+            <DialogHeader className="px-5 py-4 border-b border-border sticky top-0 bg-background z-10">
+              <DialogTitle className="flex items-center gap-2 text-base"><Users className="w-4.5 h-4.5 text-primary" /> Cadastrar Motorista</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4 p-5">
+              <FormSection title="Dados pessoais" icon={User} cols={2}>
+                <Field label="Nome completo" required colSpan={2}>
+                  <Input placeholder="Ex: João da Silva" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+                </Field>
+                <Field label="CPF" required>
+                  <Input placeholder="000.000.000-00" value={form.cpf} onChange={e => setForm(f => ({ ...f, cpf: e.target.value }))} />
+                </Field>
+                <Field label="Data de nascimento">
+                  <Input type="date" value={form.birth_date} onChange={e => setForm(f => ({ ...f, birth_date: e.target.value }))} />
+                </Field>
+                <Field label="Telefone">
+                  <Input placeholder="(00) 00000-0000" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+                </Field>
+                <Field label="E-mail">
+                  <Input type="email" placeholder="motorista@email.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                </Field>
+              </FormSection>
+
+              <FormSection title="Habilitação (CNH)" icon={IdCard} cols={3}>
+                <Field label="Número da CNH">
+                  <Input placeholder="Ex: 01234567890" value={form.cnh_number} onChange={e => setForm(f => ({ ...f, cnh_number: e.target.value }))} />
+                </Field>
+                <Field label="Categoria">
                   <Select value={form.cnh_category} onValueChange={v => setForm(f => ({ ...f, cnh_category: v }))}>
-                    <SelectTrigger className="mt-1"><SelectValue placeholder="Categoria" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Categoria" /></SelectTrigger>
                     <SelectContent>{["A","B","C","D","E","AB","AC","AD","AE"].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Vencimento da CNH</label>
-                  <Input type="date" value={form.cnh_expiry} onChange={e => setForm(f => ({ ...f, cnh_expiry: e.target.value }))} className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Função</label>
+                </Field>
+                <Field label="Vencimento" hint="Gera alerta automático">
+                  <Input type="date" value={form.cnh_expiry} onChange={e => setForm(f => ({ ...f, cnh_expiry: e.target.value }))} />
+                </Field>
+              </FormSection>
+
+              <FormSection title="Contrato" icon={Briefcase} cols={2}>
+                <Field label="Função">
                   <Select value={form.role} onValueChange={v => setForm(f => ({ ...f, role: v }))}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="motorista">Motorista</SelectItem>
                       <SelectItem value="ajudante">Ajudante</SelectItem>
                       <SelectItem value="administrativo">Administrativo</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tipo de contrato</label>
+                </Field>
+                <Field label="Tipo de contrato">
                   <Select value={form.contract_type} onValueChange={v => setForm(f => ({ ...f, contract_type: v }))}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="clt">CLT</SelectItem>
                       <SelectItem value="pj">PJ</SelectItem>
                       <SelectItem value="diarista">Diarista</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Salário base (R$)</label>
-                  <Input type="text" inputMode="decimal" placeholder="Ex: 3.500,00" value={form.base_salary} onChange={e => setForm(f => ({ ...f, base_salary: e.target.value }))} className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</label>
+                </Field>
+                <Field label="Data de admissão">
+                  <Input type="date" value={form.hire_date} onChange={e => setForm(f => ({ ...f, hire_date: e.target.value }))} />
+                </Field>
+                <Field label="Salário base (R$)">
+                  <NumericInput currency value={form.base_salary} onChange={v => setForm(f => ({ ...f, base_salary: v }))} placeholder="3.500,00" />
+                </Field>
+                <Field label="Status" colSpan={2}>
                   <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="active">Ativo</SelectItem>
                       <SelectItem value="away">Afastado</SelectItem>
                       <SelectItem value="terminated">Desligado</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-              </div>
+                </Field>
+              </FormSection>
+
+              <FormSection title="Endereço" icon={MapPin} cols={4}>
+                <Field label="Logradouro" colSpan={3}>
+                  <Input placeholder="Rua / Avenida" value={form.address?.street || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, street: e.target.value } }))} />
+                </Field>
+                <Field label="Número">
+                  <Input placeholder="Nº" value={form.address?.number || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, number: e.target.value } }))} />
+                </Field>
+                <Field label="Bairro" colSpan={2}>
+                  <Input value={form.address?.neighborhood || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, neighborhood: e.target.value } }))} />
+                </Field>
+                <Field label="Cidade">
+                  <Input value={form.address?.city || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, city: e.target.value } }))} />
+                </Field>
+                <Field label="UF">
+                  <Select value={form.address?.state || ""} onValueChange={v => setForm(f => ({ ...f, address: { ...f.address, state: v } }))}>
+                    <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
+                    <SelectContent>{ESTADOS_BR.map(uf => <SelectItem key={uf} value={uf}>{uf}</SelectItem>)}</SelectContent>
+                  </Select>
+                </Field>
+                <Field label="CEP">
+                  <Input placeholder="00000-000" value={form.address?.cep || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, cep: e.target.value } }))} />
+                </Field>
+              </FormSection>
+
+              <FormSection title="Dados bancários" description="Para pagamento de salário e adiantamentos" icon={Landmark} cols={4}>
+                <Field label="Banco" colSpan={2}>
+                  <Input placeholder="Ex: Banco do Brasil" value={form.bank_info?.bank || ""} onChange={e => setForm(f => ({ ...f, bank_info: { ...f.bank_info, bank: e.target.value } }))} />
+                </Field>
+                <Field label="Agência">
+                  <Input value={form.bank_info?.agency || ""} onChange={e => setForm(f => ({ ...f, bank_info: { ...f.bank_info, agency: e.target.value } }))} />
+                </Field>
+                <Field label="Conta">
+                  <Input value={form.bank_info?.account || ""} onChange={e => setForm(f => ({ ...f, bank_info: { ...f.bank_info, account: e.target.value } }))} />
+                </Field>
+                <Field label="Chave PIX" colSpan={4}>
+                  <Input placeholder="CPF, telefone, e-mail ou aleatória" value={form.bank_info?.pix_key || ""} onChange={e => setForm(f => ({ ...f, bank_info: { ...f.bank_info, pix_key: e.target.value } }))} />
+                </Field>
+              </FormSection>
+
+              <FormSection title="Observações" cols={1}>
+                <Field label="Anotações internas" optional>
+                  <Textarea rows={2} className="resize-none" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Restrições, histórico, observações..." />
+                </Field>
+              </FormSection>
             </div>
-            <Button
-              onClick={() => createMutation.mutate({ ...form, base_salary: parseFloat(String(form.base_salary).replace(/\./g, "").replace(",", ".")) || undefined })}
-              disabled={!form.name || !form.cpf || createMutation.isPending}
-              className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold mt-2"
-            >
-              {createMutation.isPending ? "Salvando..." : "Cadastrar"}
-            </Button>
+
+            <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border sticky bottom-0 bg-background z-10">
+              <Button variant="outline" onClick={() => { setShowAdd(false); setForm(EMPTY_DRIVER); }}>Cancelar</Button>
+              <Button
+                onClick={() => createMutation.mutate({ ...form, base_salary: Number(form.base_salary) || undefined })}
+                disabled={!form.name || !form.cpf || createMutation.isPending}
+                className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
+              >
+                <Plus className="w-4 h-4" /> {createMutation.isPending ? "Salvando..." : "Cadastrar motorista"}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

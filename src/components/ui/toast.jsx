@@ -17,13 +17,14 @@ const ToastViewport = React.forwardRef(({ className, ...props }, ref) => (
 ToastViewport.displayName = "ToastViewport";
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-4 pr-8 shadow-lg transition-all animate-in slide-in-from-top-2 fade-in-0",
+  "group pointer-events-auto relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-lg border border-l-4 p-4 pr-9 shadow-xl ring-1 ring-black/5 transition-all animate-in slide-in-from-right-5 fade-in-0 zoom-in-95 duration-300",
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
-        destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
+        default: "border-l-emerald-500 bg-white text-slate-800",
+        success: "border-l-emerald-500 bg-white text-slate-800",
+        destructive: "border-l-red-500 bg-white text-slate-800",
+        info: "border-l-sky-500 bg-white text-slate-800",
       },
     },
     defaultVariants: {
