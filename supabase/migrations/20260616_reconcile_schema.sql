@@ -123,6 +123,7 @@ ALTER TABLE trucks ADD COLUMN IF NOT EXISTS km_alert_oil NUMERIC;
 ALTER TABLE trucks ADD COLUMN IF NOT EXISTS km_alert_review NUMERIC;
 ALTER TABLE trucks ADD COLUMN IF NOT EXISTS km_alert_tires NUMERIC;
 ALTER TABLE trucks ADD COLUMN IF NOT EXISTS maintenance_history JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE trucks ADD COLUMN IF NOT EXISTS notes TEXT;
 
 -- ---------- orders ----------
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS client_id UUID;

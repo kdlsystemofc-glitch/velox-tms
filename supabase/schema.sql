@@ -158,6 +158,7 @@ CREATE TABLE IF NOT EXISTS trucks (
   km_alert_review NUMERIC,
   km_alert_tires NUMERIC,
   maintenance_history JSONB DEFAULT '[]'::jsonb,
+  notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
