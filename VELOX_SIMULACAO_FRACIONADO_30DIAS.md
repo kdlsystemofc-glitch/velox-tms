@@ -189,7 +189,7 @@ Observações: `Rota interior — Campinas/Vale, consolida volume`
 **Dados pessoais:** Nome `Antônio Ferreira` · CPF `123.456.789-01` · Nascimento `1986-03-10` · Telefone `(11) 97000-1001` · E-mail `antonio@veloxfracionado.com`
 **CNH:** Número `12345678901` · Categoria **C** · Vencimento **D+400**
 **Contrato:** Função **Motorista** · Tipo **CLT** · Admissão `D-600` · Salário base `2.600,00` · Status **Ativo**
-**Endereço:** Rua 1, 100, Centro, Guarulhos/SP, CEP 07000-000
+**Endereço:** Rua 1, 100, Centro, Guarulhos/SP, CEP 07020-000
 **Dados bancários:** Banco `Bradesco` · Agência `1111` · Conta `11111-1` · PIX `123.456.789-01`
 **Observações:** `Rota capital (VUC)`
 **Cadastrar motorista.**
@@ -198,7 +198,7 @@ Observações: `Rota interior — Campinas/Vale, consolida volume`
 Nome `Beatriz Lima` · CPF `234.567.890-12` · Nascimento `1992-07-22` · Telefone `(11) 97000-1002` · E-mail `beatriz@veloxfracionado.com`
 CNH `23456789012` · Categoria **C** · Vencimento **D+50** *(vai disparar alerta de CNH em 60 dias)*
 Função **Motorista** · CLT · Admissão `D-300` · Salário `2.600,00` · Ativo
-Endereço: Rua 2, 200, Centro, Osasco/SP, 06000-000
+Endereço: Rua 2, 200, Centro, Osasco/SP, 06010-000
 Banco `Itaú` · Ag `2222` · Conta `22222-2` · PIX `beatriz@veloxfracionado.com`
 Observações: `Rota mista (3/4)`
 **Cadastrar.** → ✅ VERIFICAR: alerta de **CNH vencendo** aparece para a Beatriz.
@@ -330,7 +330,7 @@ Cadastros → Clientes → **Novo Cliente**. Campos do formulário: Razão Socia
 - Tipo de cobrança: **Faturamento mensal** → Dia de fechamento: `25` · Prazo de pagamento: `30` dias
 - Observações: `E-commerce; coletas diárias no CD; NF-e enviada por e-mail.`
 - **Contato:** Nome `Ana Souza` · Função **Logística** · Telefone `(11) 4100-1101` · E-mail `ana.logistica@lojatech.com.br` · **Principal: marcado**
-- **Endereço principal:** CEP `04500-000` → (autofill: Av. Eng. Luís Carlos Berrini — Cidade Monções — São Paulo/SP) · Número `1200` · Complemento `CD — Bloco B`
+- **Endereço principal:** CEP `04571-010` → (autofill: Av. Eng. Luís Carlos Berrini — Cidade Monções — São Paulo/SP) · Número `1200` · Complemento `CD — Bloco B`
 
 → **Cadastrar**.
 
@@ -344,7 +344,7 @@ Cadastros → Clientes → **Novo Cliente**. Campos do formulário: Razão Socia
 - Tipo de cobrança: **Por viagem (padrão)**
 - Observações: `Atacado de bebidas; coletas seg/qua/sex.`
 - **Contato:** Nome `Carlos Nunes` · Função **Compras** · Telefone `(11) 4200-2201` · E-mail `carlos@distnorte.com.br` · **Principal: marcado**
-- **Endereço principal:** CEP `02400-000` → (autofill: Santana — São Paulo/SP) · Número `750` · Complemento `Depósito 2`
+- **Endereço principal:** CEP `02011-000` → (autofill: Santana — São Paulo/SP) · Número `750` · Complemento `Depósito 2`
 
 → **Cadastrar**.
 
@@ -358,7 +358,7 @@ Cadastros → Clientes → **Novo Cliente**. Campos do formulário: Razão Socia
 - Tipo de cobrança: **Por viagem (padrão)**
 - Observações: `Móveis e eletro; atenção a volumes frágeis.`
 - **Contato:** Nome `Júlia Prado` · Função **Logística** · Telefone `(11) 4300-3301` · E-mail `julia@casaecia.com.br` · **Principal: marcado**
-- **Endereço principal:** CEP `09000-000` → (autofill: Centro — Santo André/SP) · Número `300` · Complemento `Loja central`
+- **Endereço principal:** CEP `09010-000` → (autofill: Centro — Santo André/SP) · Número `300` · Complemento `Loja central`
 
 → **Cadastrar**.
 
@@ -372,7 +372,7 @@ Cadastros → Clientes → **Novo Cliente**. Campos do formulário: Razão Socia
 - Tipo de cobrança: **Por viagem (padrão)**
 - Observações: `Peças automotivas; entregas em Campinas/RMC.`
 - **Contato:** Nome `Rafael Tonin` · Função **Compras** · Telefone `(19) 4400-4401` · E-mail `rafael@autopecasexpressa.com.br` · **Principal: marcado**
-- **Endereço principal:** CEP `13010-000` → (autofill: Centro — Campinas/SP) · Número `95` · Complemento `Galpão A`
+- **Endereço principal:** CEP `13010-111` → (autofill: Centro — Campinas/SP) · Número `95` · Complemento `Galpão A`
 
 → **Cadastrar**.
 
@@ -386,7 +386,7 @@ Cadastros → Clientes → **Novo Cliente**. Campos do formulário: Razão Socia
 - Tipo de cobrança: **Por viagem (padrão)**
 - Observações: `Vestuário; entregas no Vale do Paraíba.`
 - **Contato:** Nome `Sônia Reis` · Função **Logística** · Telefone `(12) 4500-5501` · E-mail `sonia@modavale.com.br` · **Principal: marcado**
-- **Endereço principal:** CEP `12200-000` → (autofill: Jardim São Dimas — São José dos Campos/SP) · Número `410` · Complemento `Galpão 1`
+- **Endereço principal:** CEP `12210-130` → (autofill: Av. Dr. João Guilhermino — Centro — São José dos Campos/SP) · Número `410` · Complemento `Galpão 1`
 
 → **Cadastrar**.
 
@@ -400,7 +400,7 @@ Cadastros → Clientes → **Novo Cliente**. Campos do formulário: Razão Socia
 - Tipo de cobrança: **Por viagem (padrão)**
 - Observações: `Eletrônicos; entregas na Baixada Santista.`
 - **Contato:** Nome `Diego Matos` · Função **Compras** · Telefone `(13) 4600-6601` · E-mail `diego@eletrobaixada.com.br` · **Principal: marcado**
-- **Endereço principal:** CEP `11000-000` → (autofill: Centro — Santos/SP) · Número `88` · Complemento `Loja Centro`
+- **Endereço principal:** CEP `11013-000` → (autofill: Av. João Pessoa — Centro — Santos/SP) · Número `88` · Complemento `Loja Centro`
 
 → **Cadastrar**.
 
@@ -423,103 +423,191 @@ Cadastros → Clientes → **Novo Cliente**. Campos do formulário: Razão Socia
 
 Abra o **site público** (`/`) → fluxo de **cotação/agendamento**.
 
-1. **CEP coberto:** informe destino **05409-000** (São Paulo, dentro de "Grande SP").
-   ✅ VERIFICAR: o sistema **aceita** e segue para cotação/agendamento.
-2. **CEP coberto (interior):** **13010-000** (Campinas).
+1. **CEP coberto (capital):** informe destino **05422-000** (Rua dos Pinheiros, São Paulo — dentro de "Grande SP").
+   ✅ VERIFICAR: o sistema **aceita** e segue para a cotação/agendamento.
+2. **CEP coberto (interior):** **13010-111** (Campinas — dentro de "Campinas/RMC").
    ✅ VERIFICAR: aceito.
-3. **CEP NÃO coberto:** **10000-000** (buraco proposital) e **14010-000** (Ribeirão Preto).
+3. **CEP NÃO coberto:** **14010-000** (Ribeirão Preto — CEP real, fora de todas as faixas).
    ✅ VERIFICAR: aparece a **mensagem de fora de área** ("No momento não atendemos este CEP…") e **bloqueia** o agendamento.
+4. *(Opcional — buraco entre faixas)* tente **10000-000** (banda entre Grande SP e Baixada). Como provavelmente **não é um CEP atribuído**, o ViaCEP pode não achar o endereço; o importante é que, fora das faixas, o sistema **não** deve liberar o agendamento.
 
 > Isso valida o `coverageChecker` (comparação por faixa de CEP). Se um CEP coberto for recusado (ou um fora for aceito), anote — é bug.
 
-## DIA 9 (D+8) — Primeiros pedidos internos (com cubagem)
+## DIA 9 a 12 — Cadastro dos 16 pedidos (Novo Pedido)
 
-Pedidos → **Novo Pedido**. Cadastre hoje **P01–P04**. O formulário tem: **Solicitante**, **Origem (coleta)**, **Frete & pagamento**, **Destinatário(s)** e **Itens**. Use os campos-padrão abaixo + os dados variáveis do catálogo.
+Pedidos → **Novo Pedido**. Cada pedido abaixo é um **bloco completo** (Solicitante, Origem, Frete & pagamento, Destinatário e Itens) — preencha exatamente o que está em cada um, sem precisar consultar outras tabelas.
 
-### 🧩 Padrão de preenchimento — vale para TODOS os 16 pedidos
-**Solicitante**
-- Cliente: selecione o cliente da coluna "Cliente" do catálogo.
-- Nome do solicitante: use o **contato principal do cliente** (ex.: C2 → `Carlos Nunes`).
-- Cargo/Função do solicitante: `Logística`
-- Contato preferido: **WhatsApp**
+**Regras que valem para todos:** Tipo de frete **Fracionado/Compartilhado**, Pagador **CIF**, Modal **Rodoviário**, Itens com **Embalagem = caixa** e **Frágil/Perigoso desmarcados**; o **Número** do endereço pode ser qualquer (use `100` no destino). Ao terminar os itens, **confira o resumo de frete** contra o "Frete esperado" do bloco.
 
-**Origem (coleta)** — é o endereço do cliente embarcador (a Velox coleta lá):
-- Preenche automaticamente ao selecionar o cliente; se não, digite o **CEP da sede** do cliente (Dia 6) e complete Número.
+### Quadro-resumo dos 16 pedidos (referência rápida)
 
-**Frete & pagamento**
-- Tipo de frete: **Fracionado / Compartilhado** (`shared`)
-- Pagador do frete: **CIF** (remetente paga) — padrão deste cenário
-- Modal: **Rodoviário**
-- Forma de pagamento e Prazo: ver tabela "Destinatário e pagamento" abaixo
-- Data de coleta: **1 dia útil após o cadastro** · Período: **Manhã** (use "Tarde" nos pedidos do interior P12–P16)
+| Ped. | Cliente | Destino | NFs | Vol | Peso | Taxável | Decl. | **Frete** |
+|---|---|---|---|---|---|---|---|---|
+| P01 | C2 | 05422-000 SP | 1 | 6 | 80 | 80 | 5.000 | **125,00** |
+| P02 | C3 | 09010-000 Sto.André | 1 | 10 | 150 | 150 | 8.000 | **204,00** |
+| P03 | C2 | 07020-000 Guarulhos | 1 | 3 | 45 | **75 cub** | 3.000 | **114,00** |
+| P04 | C3 | 06010-000 Osasco | 2 | 14 | 220 | 220 | 12.000 | **296,00** |
+| P05 | C4 | 08210-000 SP | 1 | 2 | 30 | 30 | 2.000 | **100,00 mín** |
+| P06 | C3 | 09710-000 S.Bernardo | 2 | 20 | 500 | 500 | 25.000 | **615,00** |
+| P07 | C2 | 03007-000 SP | 1 | 6 | 90 | 90 | 6.000 | **138,00** |
+| P08 | C1 | 04571-010 SP | 1 | 8 | 60 | **288 cub** | 4.000 | **330,00** |
+| P09 | C1 | 02011-000 SP | 1 | 8 | 120 | 120 | 7.000 | **171,00** |
+| P10 | C4 | 13010-111 Campinas | 1 | 12 | 200 | 200 | 10.000 | **260,00** |
+| P11 | C1 | 05422-000 SP | 1 | 5 | 75 | 75 | 5.500 | **121,50** |
+| P12 | C5 | 12210-130 SJC | 2 | 16 | 300 | 300 | 15.000 | **385,00** |
+| P13 | C4 | 13010-111 Campinas | 1 | 7 | 110 | 110 | 6.500 | **159,50** |
+| P14 | C6 | 11013-000 Santos | 2 | 14 | 260 | 260 | 13.000 | **339,00** |
+| P15 | C6 | 11310-000 S.Vicente | 1 | 3 | 40 | 40 | 2.500 | **100,00 mín** |
+| P16 | C5 | 12308-010 Vale | 1 | 10 | 180 | 180 | 9.000 | **237,00** |
 
-**Destinatário** (1 por pedido — fracionado simples)
-- Nome, CNPJ e CEP de destino: tabela "Destinatário e pagamento" abaixo
-- Endereço: digite o **CEP de destino** (autofill) + um Número qualquer (ex.: `100`)
+> Abaixo, **cada pedido tem um bloco completo** com todos os campos. Cadastre na ordem. Em todos: aba **Itens → Embalagem = caixa**, **Frágil/Perigoso desmarcados**, NCM opcional.
 
-**Itens** — preencha conforme o catálogo: **NF (nº), volumes, peso (kg), dimensões A×L×C (cm) e valor declarado**. Embalagem = **caixa**. As dimensões fazem o sistema calcular o **peso cubado**.
+---
 
-> Ao terminar os itens, ✅ VERIFICAR no resumo de frete: o **peso taxável** e o **valor do frete** devem bater com a coluna "Frete" do catálogo (fórmula do Dia 2).
+#### ▸ P01 — Cliente C2 (status final: Novo)
+- **Solicitante:** Cliente **C2 — Distribuidora Norte SP** · Solicitante `Carlos Nunes` · Cargo `Logística` · Contato preferido **WhatsApp**
+- **Origem (coleta):** CEP `02011-000` (Santana, São Paulo/SP) · Número `750` · Complemento `Depósito 2`
+- **Frete & pagamento:** Tipo de frete **Fracionado/Compartilhado** · Pagador **CIF** · Modal **Rodoviário** · Forma de pagamento **PIX** · Prazo **Após entrega** · Data de coleta **D+14** · Período **Manhã**
+- **Destinatário:** `Varejo Pinheiros Ltda` · CNPJ `60.001.001/0001-01` · CEP destino `05422-000` (São Paulo/SP) · Número `100`
+- **Item (NF `1001`):** Descrição `Mercadorias diversas` · Volumes `6` · Peso `80` kg · Dimensões `40 × 40 × 40` cm · Valor declarado `5.000,00`
+- **✅ Frete esperado: R$ 125,00** (taxável 80 kg — real > cubado 64)
 
-### Destinatário e pagamento por pedido
-| Ped. | Destinatário (nome) | CNPJ destinatário | Forma de pagamento | Prazo |
-|---|---|---|---|---|
-| P01 | Varejo Pinheiros Ltda | 60.001.001/0001-01 | PIX | Após entrega |
-| P02 | Casa & Cia Santo André | 60.002.002/0001-02 | Boleto | 15 dias |
-| P03 | Depósito Guarulhos ME | 60.003.003/0001-03 | PIX | Após entrega |
-| P04 | Loja Osasco Center | 60.004.004/0001-04 | Boleto | 15 dias |
-| P05 | AutoPeças Itaquera | 60.005.005/0001-05 | PIX | Após entrega |
-| P06 | Eletro SBC Atacado | 60.006.006/0001-06 | Boleto | 15 dias |
-| P07 | Mercado Brás Ltda | 60.007.007/0001-07 | PIX | Após entrega |
-| P08 | Tech Berrini Store | 60.008.008/0001-08 | Boleto | **Faturamento mensal** |
-| P09 | Distribuidora Santana | 60.009.009/0001-09 | Boleto | **Faturamento mensal** |
-| P10 | AutoPeças Campinas | 60.010.010/0001-10 | PIX | Após entrega |
-| P11 | Boutique Pinheiros | 60.011.011/0001-11 | Boleto | **Faturamento mensal** |
-| P12 | Moda Vale SJC | 60.012.012/0001-12 | Transferência | 15 dias |
-| P13 | Oficina Campinas Sul | 60.013.013/0001-13 | PIX | Após entrega |
-| P14 | EletroBaixada Santos | 60.014.014/0001-14 | PIX | Após entrega |
-| P15 | Loja São Vicente | 60.015.015/0001-15 | PIX | Após entrega |
-| P16 | Confecções Vale Norte | 60.016.016/0001-16 | Transferência | 15 dias |
+#### ▸ P02 — Cliente C3 (status final: Novo)
+- **Solicitante:** Cliente **C3 — Magazine Casa & Cia** · Solicitante `Júlia Prado` · Cargo `Logística` · Contato **WhatsApp**
+- **Origem (coleta):** CEP `09010-000` (Centro, Santo André/SP) · Número `300` · Complemento `Loja central`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **Boleto** · Prazo **15 dias** · Coleta **D+14** · **Manhã**
+- **Destinatário:** `Casa & Cia Santo André` · CNPJ `60.002.002/0001-02` · CEP `09010-000` (Santo André/SP) · Número `100`
+- **Item (NF `1002`):** `Mercadorias diversas` · Volumes `10` · Peso `150` kg · Dimensões `50 × 40 × 40` cm · Declarado `8.000,00`
+- **✅ Frete esperado: R$ 204,00** (taxável 150 kg)
 
-> Os 3 pedidos do **C1** (P08, P09, P11) usam **Faturamento mensal** — entram na fatura do Dia 24.
+#### ▸ P03 — Cliente C2 (status final: Novo) — *cubagem governa*
+- **Solicitante:** Cliente **C2 — Distribuidora Norte SP** · Solicitante `Carlos Nunes` · Cargo `Logística` · **WhatsApp**
+- **Origem (coleta):** CEP `02011-000` (Santana, São Paulo/SP) · Número `750`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **PIX** · **Após entrega** · Coleta **D+14** · **Manhã**
+- **Destinatário:** `Depósito Guarulhos ME` · CNPJ `60.003.003/0001-03` · CEP `07020-000` (Guarulhos/SP) · Número `100`
+- **Item (NF `1003`):** `Peças volumosas` · Volumes `3` · Peso `45` kg · Dimensões `50 × 50 × 60` cm · Declarado `3.000,00`
+- **✅ Frete esperado: R$ 114,00** — taxável **75 kg cubado** [(50×50×60)/6.000 = 25 × 3 = 75 > 45 real]
 
-### Catálogo de pedidos (P01–P16)
+#### ▸ P04 — Cliente C3 (status final: Novo) — *2 NFs*
+- **Solicitante:** Cliente **C3 — Magazine Casa & Cia** · `Júlia Prado` · `Logística` · **WhatsApp**
+- **Origem (coleta):** CEP `09010-000` (Santo André/SP) · Número `300`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **Boleto** · **15 dias** · Coleta **D+14** · **Manhã**
+- **Destinatário:** `Loja Osasco Center` · CNPJ `60.004.004/0001-04` · CEP `06010-000` (Osasco/SP) · Número `100`
+- **Item 1 (NF `1004`):** Volumes `8` · Peso `120` kg · `40 × 40 × 40` cm · Declarado `7.000,00`
+- **Item 2 (NF `1005`):** Volumes `6` · Peso `100` kg · `40 × 40 × 40` cm · Declarado `5.000,00`
+- **✅ Frete esperado: R$ 296,00** (taxável 220 kg, 2 NFs → 2× TDE+TDA)
 
-> Em todos: **embalagem = caixa**. "cubado?" = sim quando o cubado supera o real (governará o frete).
+#### ▸ P05 — Cliente C4 (status final: **será cancelado** no Dia 13) — *frete mínimo*
+- **Solicitante:** Cliente **C4 — AutoPeças Expressa** · `Rafael Tonin` · `Compras` · **WhatsApp**
+- **Origem (coleta):** CEP `13010-111` (Centro, Campinas/SP) · Número `95`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **PIX** · **Após entrega** · Coleta **D+15** · **Tarde**
+- **Destinatário:** `AutoPeças Itaquera` · CNPJ `60.005.005/0001-05` · CEP `08210-000` (São Paulo/SP) · Número `100`
+- **Item (NF `1006`):** `Peças pequenas` · Volumes `2` · Peso `30` kg · `40 × 40 × 40` cm · Declarado `2.000,00`
+- **✅ Frete esperado: R$ 100,00** — cálculo dá 66,00 e o sistema **eleva ao mínimo de R$ 100,00**
 
-| Ped. | Cliente | CEP destino (cidade) | NFs | Volumes | Peso real | Dimensões (cm) | Taxável | Decl. (R$) | **Frete (R$)** |
-|---|---|---|---|---|---|---|---|---|---|
-| P01 | C2 | 05409-000 (São Paulo) | 1 | 6 | 80 | 40×40×40 | 80 | 5.000 | **125,00** |
-| P02 | C3 | 09000-000 (Santo André) | 1 | 10 | 150 | 50×40×40 | 150 | 8.000 | **204,00** |
-| P03 | C2 | 07000-000 (Guarulhos) | 1 | 3 | 45 | 50×50×60 | **75 (cubado)** | 3.000 | **114,00** |
-| P04 | C3 | 06000-000 (Osasco) | 2 | 14 | 220 | 40×40×40 | 220 | 12.000 | **296,00** |
-| P05 | C4 | 08000-000 (São Paulo L.) | 1 | 2 | 30 | 40×40×40 | 30 | 2.000 | **100,00 (mín.)** |
-| P06 | C3 | 09500-000 (S. Bernardo) | 2 | 20 | 500 | 50×40×40 | 500 | 25.000 | **615,00** |
-| P07 | C2 | 03100-000 (São Paulo) | 1 | 6 | 90 | 40×40×40 | 90 | 6.000 | **138,00** |
-| P08 | C1 | 04500-000 (São Paulo) | 1 | 8 | 60 | 60×60×60 | **288 (cubado)** | 4.000 | **330,00** |
-| P09 | C1 | 02400-000 (São Paulo) | 1 | 8 | 120 | 40×40×40 | 120 | 7.000 | **171,00** |
-| P10 | C4 | 13010-000 (Campinas) | 1 | 12 | 200 | 40×40×40 | 200 | 10.000 | **260,00** |
-| P11 | C1 | 05500-000 (São Paulo) | 1 | 5 | 75 | 40×40×45 | 75 | 5.500 | **121,50** |
-| P12 | C5 | 12200-000 (S.J. Campos) | 2 | 16 | 300 | 45×40×40 | 300 | 15.000 | **385,00** |
-| P13 | C4 | 13040-000 (Campinas) | 1 | 7 | 110 | 45×45×45 | 110 | 6.500 | **159,50** |
-| P14 | C6 | 11000-000 (Santos) | 2 | 14 | 260 | 45×45×45 | 260 | 13.000 | **339,00** |
-| P15 | C6 | 11300-000 (S. Vicente) | 1 | 3 | 40 | 40×40×40 | 40 | 2.500 | **100,00 (mín.)** |
-| P16 | C5 | 12300-000 (Vale) | 1 | 10 | 180 | 45×45×45 | 180 | 9.000 | **237,00** |
+#### ▸ P06 — Cliente C3 (status final: Novo) — *2 NFs, carga pesada*
+- **Solicitante:** Cliente **C3 — Magazine Casa & Cia** · `Júlia Prado` · `Logística` · **WhatsApp**
+- **Origem (coleta):** CEP `09010-000` (Santo André/SP) · Número `300`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **Boleto** · **15 dias** · Coleta **D+14** · **Manhã**
+- **Destinatário:** `Eletro SBC Atacado` · CNPJ `60.006.006/0001-06` · CEP `09710-000` (São Bernardo do Campo/SP) · Número `100`
+- **Item 1 (NF `1007`):** Volumes `12` · Peso `300` kg · `50 × 40 × 40` cm · Declarado `15.000,00`
+- **Item 2 (NF `1008`):** Volumes `8` · Peso `200` kg · `50 × 40 × 40` cm · Declarado `10.000,00`
+- **✅ Frete esperado: R$ 615,00** (taxável 500 kg, 2 NFs)
 
-> **Conferência de cubagem (P03 e P08):**
-> P03 → (50×50×60)/6.000 = 25 kg/vol × 3 = **75 kg cubado** > 45 real → taxa por 75.
-> P08 → (60×60×60)/6.000 = 36 kg/vol × 8 = **288 kg cubado** > 60 real → taxa por 288. *(Carga volumosa e leve — o sistema deve cobrar pelo cubado.)*
+#### ▸ P07 — Cliente C2 (status final: Novo)
+- **Solicitante:** Cliente **C2 — Distribuidora Norte SP** · `Carlos Nunes` · `Logística` · **WhatsApp**
+- **Origem (coleta):** CEP `02011-000` (Santana, São Paulo/SP) · Número `750`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **PIX** · **Após entrega** · Coleta **D+14** · **Manhã**
+- **Destinatário:** `Mercado Brás Ltda` · CNPJ `60.007.007/0001-07` · CEP `03007-000` (São Paulo/SP) · Número `100`
+- **Item (NF `1009`):** `Mercadorias diversas` · Volumes `6` · Peso `90` kg · `40 × 40 × 40` cm · Declarado `6.000,00`
+- **✅ Frete esperado: R$ 138,00** (taxável 90 kg)
 
-Cadastre **P01–P04** hoje (status ficará **Novo**).
+#### ▸ P08 — Cliente C1 (status final: Novo) — *cubagem governa + faturamento mensal*
+- **Solicitante:** Cliente **C1 — Loja Online Tech** · `Ana Souza` · `Logística` · **WhatsApp**
+- **Origem (coleta):** CEP `04571-010` (Berrini, São Paulo/SP) · Número `1200` · Complemento `CD — Bloco B`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **Boleto** · Prazo **Faturamento mensal** · Coleta **D+14** · **Manhã**
+- **Destinatário:** `Tech Berrini Store` · CNPJ `60.008.008/0001-08` · CEP `04571-010` (São Paulo/SP) · Número `100`
+- **Item (NF `1010`):** `Eletrônicos volumosos` · Volumes `8` · Peso `60` kg · Dimensões `60 × 60 × 60` cm · Declarado `4.000,00`
+- **✅ Frete esperado: R$ 330,00** — taxável **288 kg cubado** [(60×60×60)/6.000 = 36 × 8 = 288 > 60 real]
 
-## DIA 10 (D+9) — Mais pedidos
-Cadastre **P05–P09**. Em **P05**, ✅ VERIFICAR que o frete calculado (66,00) é **elevado ao mínimo de R$ 100,00**.
+#### ▸ P09 — Cliente C1 (status final: Novo) — *faturamento mensal*
+- **Solicitante:** Cliente **C1 — Loja Online Tech** · `Ana Souza` · `Logística` · **WhatsApp**
+- **Origem (coleta):** CEP `04571-010` (Berrini, São Paulo/SP) · Número `1200`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **Boleto** · **Faturamento mensal** · Coleta **D+14** · **Manhã**
+- **Destinatário:** `Distribuidora Santana` · CNPJ `60.009.009/0001-09` · CEP `02011-000` (São Paulo/SP) · Número `100`
+- **Item (NF `1011`):** `Mercadorias diversas` · Volumes `8` · Peso `120` kg · `40 × 40 × 40` cm · Declarado `7.000,00`
+- **✅ Frete esperado: R$ 171,00** (taxável 120 kg)
 
-## DIA 11 (D+10) — Cotações públicas viram pedidos
-Cadastre **P10–P13**. Para **P10 e P13** (Campinas), simule que vieram do site: status **Novo** → **Confirmar** já no cadastro/lista.
+#### ▸ P10 — Cliente C4 (status final: **será cancelado** no Dia 13)
+- **Solicitante:** Cliente **C4 — AutoPeças Expressa** · `Rafael Tonin` · `Compras` · **WhatsApp**
+- **Origem (coleta):** CEP `13010-111` (Campinas/SP) · Número `95`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **PIX** · **Após entrega** · Coleta **D+15** · **Tarde**
+- **Destinatário:** `AutoPeças Campinas` · CNPJ `60.010.010/0001-10` · CEP `13010-111` (Campinas/SP) · Número `100`
+- **Item (NF `1012`):** `Peças automotivas` · Volumes `12` · Peso `200` kg · `40 × 40 × 40` cm · Declarado `10.000,00`
+- **✅ Frete esperado: R$ 260,00** (taxável 200 kg)
 
-## DIA 12 (D+11) — Últimos pedidos do período
-Cadastre **P14–P16**.
+#### ▸ P11 — Cliente C1 (status final: Novo) — *faturamento mensal*
+- **Solicitante:** Cliente **C1 — Loja Online Tech** · `Ana Souza` · `Logística` · **WhatsApp**
+- **Origem (coleta):** CEP `04571-010` (Berrini, São Paulo/SP) · Número `1200`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **Boleto** · **Faturamento mensal** · Coleta **D+14** · **Manhã**
+- **Destinatário:** `Boutique Pinheiros` · CNPJ `60.011.011/0001-11` · CEP `05422-000` (São Paulo/SP) · Número `100`
+- **Item (NF `1013`):** `Confecções` · Volumes `5` · Peso `75` kg · Dimensões `40 × 40 × 45` cm · Declarado `5.500,00`
+- **✅ Frete esperado: R$ 121,50** (taxável 75 kg)
+
+#### ▸ P12 — Cliente C5 (status final: Novo) — *2 NFs, interior*
+- **Solicitante:** Cliente **C5 — Moda Vale Confecções** · `Sônia Reis` · `Logística` · **WhatsApp**
+- **Origem (coleta):** CEP `12210-130` (São José dos Campos/SP) · Número `410` · Complemento `Galpão 1`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **Transferência** · **15 dias** · Coleta **D+15** · **Tarde**
+- **Destinatário:** `Moda Vale SJC` · CNPJ `60.012.012/0001-12` · CEP `12210-130` (São José dos Campos/SP) · Número `100`
+- **Item 1 (NF `1014`):** Volumes `10` · Peso `180` kg · `45 × 40 × 40` cm · Declarado `9.000,00`
+- **Item 2 (NF `1015`):** Volumes `6` · Peso `120` kg · `45 × 40 × 40` cm · Declarado `6.000,00`
+- **✅ Frete esperado: R$ 385,00** (taxável 300 kg, 2 NFs)
+
+#### ▸ P13 — Cliente C4 (status final: Novo)
+- **Solicitante:** Cliente **C4 — AutoPeças Expressa** · `Rafael Tonin` · `Compras` · **WhatsApp**
+- **Origem (coleta):** CEP `13010-111` (Campinas/SP) · Número `95`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **PIX** · **Após entrega** · Coleta **D+15** · **Tarde**
+- **Destinatário:** `Oficina Campinas Sul` · CNPJ `60.013.013/0001-13` · CEP `13010-111` (Campinas/SP) · Número `100`
+- **Item (NF `1016`):** `Peças automotivas` · Volumes `7` · Peso `110` kg · `45 × 45 × 45` cm · Declarado `6.500,00`
+- **✅ Frete esperado: R$ 159,50** (taxável 110 kg)
+
+#### ▸ P14 — Cliente C6 (status final: Novo) — *2 NFs, Baixada*
+- **Solicitante:** Cliente **C6 — EletroBaixada Atacado** · `Diego Matos` · `Compras` · **WhatsApp**
+- **Origem (coleta):** CEP `11013-000` (Centro, Santos/SP) · Número `88` · Complemento `Loja Centro`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **PIX** · **Após entrega** · Coleta **D+15** · **Tarde**
+- **Destinatário:** `EletroBaixada Santos` · CNPJ `60.014.014/0001-14` · CEP `11013-000` (Santos/SP) · Número `100`
+- **Item 1 (NF `1017`):** Volumes `8` · Peso `160` kg · `45 × 45 × 45` cm · Declarado `8.000,00`
+- **Item 2 (NF `1018`):** Volumes `6` · Peso `100` kg · `45 × 45 × 45` cm · Declarado `5.000,00`
+- **✅ Frete esperado: R$ 339,00** (taxável 260 kg, 2 NFs)
+
+#### ▸ P15 — Cliente C6 (status final: Novo) — *frete mínimo*
+- **Solicitante:** Cliente **C6 — EletroBaixada Atacado** · `Diego Matos` · `Compras` · **WhatsApp**
+- **Origem (coleta):** CEP `11013-000` (Santos/SP) · Número `88`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **PIX** · **Após entrega** · Coleta **D+15** · **Tarde**
+- **Destinatário:** `Loja São Vicente` · CNPJ `60.015.015/0001-15` · CEP `11310-000` (São Vicente/SP) · Número `100`
+- **Item (NF `1019`):** `Eletrônicos` · Volumes `3` · Peso `40` kg · `40 × 40 × 40` cm · Declarado `2.500,00`
+- **✅ Frete esperado: R$ 100,00** — cálculo dá 77,50 e sobe ao **mínimo de R$ 100,00**
+
+#### ▸ P16 — Cliente C5 (status final: Novo)
+- **Solicitante:** Cliente **C5 — Moda Vale Confecções** · `Sônia Reis` · `Logística` · **WhatsApp**
+- **Origem (coleta):** CEP `12210-130` (São José dos Campos/SP) · Número `410`
+- **Frete & pagamento:** Fracionado/Compartilhado · **CIF** · Rodoviário · **Transferência** · **15 dias** · Coleta **D+15** · **Tarde**
+- **Destinatário:** `Confecções Vale Norte` · CNPJ `60.016.016/0001-16` · CEP `12308-010` (Jacareí/SP) · Número `100`
+- **Item (NF `1020`):** `Confecções` · Volumes `10` · Peso `180` kg · `45 × 45 × 45` cm · Declarado `9.000,00`
+- **✅ Frete esperado: R$ 237,00** (taxável 180 kg)
+
+> **Ordem de cadastro sugerida:** Dia 9 → P01–P04 · Dia 10 → P05–P09 · Dia 11 → P10–P13 · Dia 12 → P14–P16. (Pode cadastrar todos de uma vez; o que importa é o conteúdo.)
+
+## DIA 10 (D+9) — Conferência de cálculo
+Depois de cadastrar P05–P09, ✅ VERIFICAR especialmente:
+- **P05:** o frete final é **R$ 100,00** (mínimo aplicado sobre os 66,00 calculados).
+- **P08:** o frete é **R$ 330,00** porque o sistema usou o **peso cubado (288 kg)**, não o real (60 kg). Se ele cobrar por 60 kg (= R$ 102,00), é **bug de cubagem** — anote.
+
+## DIA 11 (D+10) — Conferência de NFs múltiplas
+Depois de P10–P13, ✅ VERIFICAR no **P04** e **P06** (2 NFs): o resumo de frete deve cobrar **TDE+TDA dobrados** (R$ 20,00 em taxas de NF, não R$ 10,00). Se cobrar só 1× as taxas, o `nfCount` não está contando as 2 notas — anote.
+
+## DIA 12 (D+11) — Conclusão do cadastro
+Após P14–P16, ✅ VERIFICAR: a lista **Pedidos → Novos** tem **16 pedidos**, e a soma dos fretes do quadro-resumo é **R$ 3.695,00**.
 
 ## DIA 13 (D+12) — Confirmações e recusas
 - **Confirme** (status → Confirmado) **todos os 14 pedidos ativos**: P01, P02, P03, P04, P06, P07, P08, P09, P11, P12, P13, P14, P15, P16.
@@ -542,38 +630,79 @@ Olhe os pedidos confirmados e agrupe por região (vamos despachar na Semana 3):
 
 # SEMANA 3 — Operação, rotas e entregas (D+14 a D+22)
 
-## DIA 15 (D+14) — Despacho e criação das viagens
-Vá em **Despacho** (quadro caminhões × dias). Para **cada rota** acima:
-1. Selecione o veículo e o dia.
-2. Adicione os pedidos da rota (consolidação fracionada).
-3. **Crie a viagem** com o motorista correspondente (R1→Antônio, R2/R3→Beatriz, R4/R5→Cláudio).
+## DIA 15 (D+14) — Liberar o Toco e criar as viagens
 
-✅ VERIFICAR: cada pedido vira `Em coleta`/`Em trânsito` e fica vinculado à viagem; o veículo aparece **Em rota**.
+**Passo 1 — Tirar o FRC-3C33 da manutenção** (ele vai rodar R4 e R5):
+- Frota → **FRC-3C33** → **Editar** → Status: **Disponível** → **Salvar**.
+- ✅ VERIFICAR: ao voltar à lista da Frota, o status aparece **Disponível** na hora.
+
+**Passo 2 — Criar as 5 viagens.** Vá em **Despacho** (quadro caminhões × dias). Para cada rota: clique na célula **[veículo × dia D+14]**, adicione os pedidos listados (consolidação fracionada), escolha o **motorista** e clique em **Criar viagem**.
+
+| Rota | Veículo | Motorista | Pedidos (paradas) | Ajudante |
+|---|---|---|---|---|
+| **R1** | VUC FRC-1A11 | Antônio Ferreira | P01, P03, P07, P11 | não |
+| **R2** | 3/4 FRC-2B22 | Beatriz Lima | P02, P04, P06 | não |
+| **R3** | 3/4 FRC-2B22 | Beatriz Lima | P08, P09 | não |
+| **R4** | Toco FRC-3C33 | Cláudio Souza | P12, P16 | sim |
+| **R5** | Toco FRC-3C33 | Cláudio Souza | P13, P14 | sim |
+
+✅ VERIFICAR: cada pedido sai de "Confirmado" para **Em coleta** e fica vinculado à sua viagem; os 3 veículos aparecem **Em rota**.
 
 ## DIA 16 (D+15) — Saída e rastreio
-Marque as viagens **R1, R2** como **Em trânsito** (partida). 
-✅ VERIFICAR no site público: rastrear um protocolo (ex.: P01) mostra status **Em trânsito** (via função de rastreamento, sem expor dados sensíveis).
+- Em **Viagens**, abra **R1** e **R2** e marque **Em trânsito** (partida).
+- ✅ VERIFICAR no **site público** → rastreamento: digite o protocolo do **P01** → mostra **Em trânsito** (sem expor dados sensíveis do cliente).
 
-## DIA 17 (D+16) — Entregas R1 (POD por destinatário)
-Encerre a viagem **R1**: para cada parada (P01, P03, P07, P11), registre a **entrega** com **assinatura (POD)** e nome do recebedor.
-✅ VERIFICAR: os 4 pedidos ficam **Entregue**; a viagem fica **Concluída**; ao encerrar, informe **km rodado, combustível e pedágio** (custos da rota).
+## DIA 17 (D+16) — Entregas da R1 (POD por parada)
+Em **Viagens → R1**, para cada parada registre a **entrega** (botão Entregar) com **assinatura no POD** + nome do recebedor:
+- **P01** → Varejo Pinheiros — recebido por `Marcos Aurélio`
+- **P03** → Depósito Guarulhos — recebido por `Pedro Henrique`
+- **P07** → Mercado Brás — recebido por `Luiza Campos`
+- **P11** → Boutique Pinheiros — recebido por `Camila Reis`
 
-**Custos da R1:** km `120` · combustível **R$ 180,00** (lance como despesa de combustível vinculada ao **Posto Marginal Tietê** e ao **VUC**) · ajudante: não.
+Depois **Encerrar viagem R1** informando: **km rodado `120`**, **combustível `R$ 180,00`**, **pedágio `R$ 0,00`**.
+Em seguida, **Financeiro → Despesas → Nova Despesa**:
+- Categoria **Combustível** · Valor `180,00` · Descrição `Combustível rota R1 — FRC-1A11` · Situação **Pago** · Competência **D+16** · Forma **PIX** · Fornecedor **Auto Posto Marginal Tietê** · Veículo **FRC-1A11** · Motorista **Antônio Ferreira**
 
-## DIA 18 (D+17) — Entregas R2 e ocorrência
-Encerre **R2** (P02, P04, P06). Em **P04**, registre uma **ocorrência**: tipo **tentativa de entrega** ("destinatário ausente"), depois reentregue e conclua.
-**Custos R2:** km `90` · combustível **R$ 150,00** (DieselFix? não — combustível é Posto) → **Posto Marginal Tietê**, veículo 3/4.
+✅ VERIFICAR: P01/P03/P07/P11 ficam **Entregue**; R1 fica **Concluída**.
 
-## DIA 19 (D+18) — Entregas R3
-Encerre **R3** (P08, P09). **Custos R3:** km `70` · combustível **R$ 120,00**.
-✅ VERIFICAR: P08 (volumoso) entregue; confira que o frete dele continua **R$ 330,00** (cobrado por cubagem).
+## DIA 18 (D+17) — Entregas da R2 + ocorrência
+Em **Viagens → R2**:
+- **P02** → Casa & Cia Santo André — recebido por `Rogério Pinto`
+- **P04** → Loja Osasco Center → **primeiro registre uma OCORRÊNCIA**: tipo **Tentativa de entrega**, descrição "destinatário ausente"; depois **reentregue** — recebido por `Tânia Melo`
+- **P06** → Eletro SBC Atacado — recebido por `Evandro Dias`
 
-## DIA 20 (D+19) — Rota interior R4 (Vale)
-Despache e encerre **R4** (P12, P16) com o Toco + Cláudio + **ajudante**.
-**Custos R4:** km `210` · combustível **R$ 320,00** · **ajudante diária R$ 120,00** (lance como despesa, categoria *administrativo* ou *outros*, vinculada ao motorista Cláudio).
+**Encerrar R2:** km `90` · combustível `R$ 150,00` · pedágio `R$ 0,00`.
+**Nova Despesa:** Combustível · `150,00` · `Combustível rota R2 — FRC-2B22` · **Pago** · D+17 · PIX · Posto Marginal Tietê · Veículo **FRC-2B22** · Motorista **Beatriz Lima**.
+✅ VERIFICAR: a ocorrência de P04 fica registrada no histórico do pedido e a entrega é concluída depois.
+
+## DIA 19 (D+18) — Entregas da R3 (carga volumosa)
+Em **Viagens → R3**:
+- **P08** → Tech Berrini Store — recebido por `Ana Souza`
+- **P09** → Distribuidora Santana — recebido por `Caio Tavares`
+
+**Encerrar R3:** km `70` · combustível `R$ 120,00` · pedágio `R$ 0,00`.
+**Nova Despesa:** Combustível · `120,00` · `Combustível rota R3 — FRC-2B22` · **Pago** · D+18 · PIX · Posto Marginal Tietê · Veículo **FRC-2B22** · Motorista **Beatriz Lima**.
+✅ VERIFICAR: P08 entregue com frete **R$ 330,00** (cobrado pelo **peso cubado 288 kg**). Se aparecer ~R$ 102,00, é bug de cubagem.
+
+## DIA 20 (D+19) — Rota interior R4 (Vale do Paraíba)
+Em **Viagens → R4** (Toco + Cláudio + ajudante):
+- **P12** → Moda Vale SJC — recebido por `Sueli Ramos`
+- **P16** → Confecções Vale Norte (Jacareí) — recebido por `Otávio Lopes`
+
+**Encerrar R4:** km `210` · combustível `R$ 320,00` · pedágio `R$ 0,00`.
+**Nova Despesa 1 (combustível):** Combustível · `320,00` · `Combustível rota R4 — FRC-3C33` · **Pago** · D+19 · PIX · Posto Marginal Tietê · Veículo **FRC-3C33** · Motorista **Cláudio Souza**.
+**Nova Despesa 2 (ajudante):** Categoria **Outros** · `120,00` · `Ajudante de rota R4` · **Pago** · D+19 · PIX · Motorista **Cláudio Souza**.
 
 ## DIA 21 (D+20) — Rota interior R5 (Campinas + Baixada)
-Encerre **R5** (P13, P14). **Custos R5:** km `190` · combustível **R$ 300,00** · **ajudante R$ 120,00**.
+Em **Viagens → R5**:
+- **P13** → Oficina Campinas Sul — recebido por `Renato Aguiar`
+- **P14** → EletroBaixada Santos — recebido por `Paula Furtado`
+
+**Encerrar R5:** km `190` · combustível `R$ 300,00` · pedágio `R$ 0,00`.
+**Nova Despesa 1 (combustível):** Combustível · `300,00` · `Combustível rota R5 — FRC-3C33` · **Pago** · D+20 · PIX · Posto Marginal Tietê · Veículo **FRC-3C33** · Motorista **Cláudio Souza**.
+**Nova Despesa 2 (ajudante):** Outros · `120,00` · `Ajudante de rota R5` · **Pago** · D+20 · PIX · Motorista **Cláudio Souza**.
+
+> Total de combustível das 5 rotas = **R$ 1.070,00**; ajudante = **R$ 240,00**. Guarde para o batimento.
 
 ## DIA 22 (D+21) — Recebimentos
 Em Financeiro → Receitas, dê **baixa (recebido)** nas receitas dos pedidos **à vista/pix**: P01, P03, P06, P07, P08 = **R$ 1.322,00** (escolha "recebido", data = hoje).
@@ -585,18 +714,20 @@ Deixe **a receber** as demais ativas: P02, P04, P09, P11, P12, P13, P14, P15, P1
 # SEMANA 4 — Financeiro, fatura mensal e fechamento (D+23 a D+29)
 
 ## DIA 23 (D+22) — Despesas fixas do mês
-Financeiro → Despesas → **Nova Despesa** (use as seções: Despesa / Pagamento / Vínculos / Anexos):
+Financeiro → Despesas → **Nova Despesa**. Cadastre **uma despesa por linha** abaixo (preencha Categoria, Valor, Descrição, Situação, datas e os vínculos indicados):
 
-| Categoria | Descrição | Valor | Situação | Vencimento | Fornecedor | Veículo |
+| Categoria | Descrição | Valor | Situação | Datas | Fornecedor | Veículo |
 |---|---|---|---|---|---|---|
-| Salários | Folha — 3 motoristas | 8.400,00 | Pago (D-2) | — | — | — |
-| Aluguel | Galpão cross-docking | 3.500,00 | Pago (D-5) | — | — | — |
-| Seguro | Parcela seguro frota | 1.200,00 | A pagar | D+6 | Protege Seguros | — |
-| Manutenção | Revisão FRC-2B22 | 680,00 | A pagar | D+10 | DieselFix Mecânica | FRC-2B22 |
-| Pneus | 2 pneus FRC-3C33 | 1.300,00 | A pagar | D+18 | PneuJá Distribuidora | FRC-3C33 |
-| Impostos | Simples/ISS do período | (ver DRE) | A pagar | D+15 | — | — |
+| Salários | Folha — 3 motoristas | 8.400,00 | **Pago** | Competência D-2 · Pagamento D-2 | — | — |
+| Aluguel | Galpão cross-docking | 3.500,00 | **Pago** | Competência D-5 · Pagamento D-5 | — | — |
+| Seguro | Parcela seguro da frota | 1.200,00 | **A pagar** | Competência D-12 · Vencimento D+6 | Protege Seguros | — |
+| Manutenção | Revisão FRC-2B22 | 680,00 | **A pagar** | Competência D-2 · Vencimento D+10 | DieselFix Mecânica | FRC-2B22 |
+| Pneus | 2 pneus FRC-3C33 | 1.300,00 | **A pagar** | Competência D-1 · Vencimento D+18 | PneuJá Distribuidora | FRC-3C33 |
+| Impostos | Simples/ISS do período | **200,10** | **A pagar** | Competência D+22 · Vencimento D+15 | — | — |
 
-> Combustível (R$ 180+150+120+320+300 = **1.070,00**) e ajudante (2 × R$ 120 = **240,00**) já foram lançados nas viagens da Semana 3.
+> **Imposto:** `6% × R$ 3.335,00 (receita ativa) = R$ 200,10`.
+> Combustível (180+150+120+320+300 = **R$ 1.070,00**) e ajudante (2 × 120 = **R$ 240,00**) já foram lançados nas rotas da Semana 3 — **não lance de novo**.
+> ✅ VERIFICAR: o painel **A pagar** soma `1.200 + 680 + 1.300 + 200,10 = R$ 3.380,10` e o **aging** distribui pelas datas de vencimento.
 
 ## DIA 24 (D+23) — Fatura mensal do cliente C1
 Cadastros → Cliente **C1 (Loja Online Tech)** → **Fechar fatura**.
