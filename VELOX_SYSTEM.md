@@ -39,12 +39,14 @@
 
 ### Padrão de formulários (cadastros)
 
-Todos os diálogos de criação/edição (Caminhão, Motorista, Fornecedor, Despesa) usam o padrão `FormSection`/`Field` (`src/components/shared/FormSection.jsx`): seções com título + ícone, label sempre acima do campo, obrigatório marcado, grid responsivo, cabeçalho e rodapé fixos (sticky) com botões Cancelar/Salvar. Campos numéricos com decimais usam `NumericInput` (aceita vírgula **e** ponto). Feedback de salvar: toast com ícone/cor de confirmação + estado verde "Salvo!" no botão.
+Todos os diálogos de criação/edição (Caminhão, Motorista, Fornecedor, **Cliente**, Despesa) usam o padrão `FormSection`/`Field` (`src/components/shared/FormSection.jsx`): seções com título + ícone, label sempre acima do campo, obrigatório marcado, grid responsivo, cabeçalho e rodapé fixos (sticky) com botões Cancelar/Salvar. Campos numéricos com decimais usam `NumericInput` (aceita vírgula **e** ponto). Feedback de salvar: toast com ícone/cor de confirmação + estado verde "Salvo!" no botão.
+
+**Endereço inteligente:** todos os campos de endereço usam o componente `AddressFields` (`src/components/shared/AddressFields.jsx`) — CEP com **autofill via ViaCEP** (preenche rua/bairro/cidade/UF) + Número/Complemento. Usado em Cliente, Motorista, Fornecedor e na origem/destinatários da Nova Coleta. O endereço do **fornecedor** passou a ser **estruturado** (`suppliers.address` é JSONB; migração `20260617_supplier_address_jsonb.sql` converte dados antigos em texto para `{street}`).
 
 **Campos por cadastro (resumo):**
 - **Caminhão:** identificação (placa, tipo, fabricante, modelo, ano, cor, RENAVAM, chassi), capacidade + dimensões, documentação (CRLV, seguro, tacógrafo último/próximo), km + alertas de manutenção, observações.
 - **Motorista:** dados pessoais, CNH, contrato (função, tipo, admissão, salário, status), endereço, dados bancários (banco/agência/conta/PIX), observações.
-- **Fornecedor:** identificação (+ endereço), contato principal, financeiro (condições de pagamento, PIX), observações. *(colunas novas: `address`, `payment_terms`, `pix_key`)*
+- **Fornecedor:** identificação, **endereço estruturado (autofill CEP)**, contato principal, financeiro (condições de pagamento, PIX), observações. *(colunas: `address` JSONB, `payment_terms`, `pix_key`)*
 - **Despesa:** despesa (categoria, valor, descrição), pagamento (situação, forma, competência, vencimento/data de pagamento), vínculos (fornecedor, veículo, motorista), comprovante + observações.
 - **Cliente:** + Inscrição Estadual (`state_registration`) para PJ.
 

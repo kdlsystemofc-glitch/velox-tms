@@ -91,10 +91,10 @@ BEGIN
 
   -- ───────── FORNECEDORES (com endereço, condições de pagamento, PIX) ─────────
   INSERT INTO suppliers (id, name, code, cnpj_cpf, category, contact_name, phone, whatsapp, email, address, payment_terms, pix_key, active, notes) VALUES
-    (sup[1],'Posto Rodoviário Silva','SIM-FOR001','11.111.111/0001-11','fuel','Roberto','(11) 3111-0001','(11) 91111-0001','posto@silva.com','Rod. Anhanguera km 50, Jundiaí - SP','À vista','11.111.111/0001-11', true,'[SIM]'),
-    (sup[2],'AutoMecânica Diesel Master','SIM-FOR002','22.222.222/0001-22','maintenance','Sandra','(11) 3222-0002','(11) 92222-0002','contato@dieselmaster.com','Av. das Oficinas, 320, São Paulo - SP','30 dias','22.222.222/0001-22', true,'[SIM]'),
-    (sup[3],'PneuCenter Distribuidora','SIM-FOR003','33.333.333/0001-33','tires','Paulo','(11) 3333-0003','(11) 93333-0003','vendas@pneucenter.com','Rua dos Pneus, 87, Osasco - SP','Boleto 15/30','33.333.333/0001-33', true,'[SIM]'),
-    (sup[4],'Seguradora Estrada Segura','SIM-FOR004','44.444.444/0001-44','insurance','Marta','(11) 3444-0004','(11) 94444-0004','apolice@estradasegura.com','Av. Paulista, 2000, São Paulo - SP','Mensal','44.444.444/0001-44', true,'[SIM]');
+    (sup[1],'Posto Rodoviário Silva','SIM-FOR001','11.111.111/0001-11','fuel','Roberto','(11) 3111-0001','(11) 91111-0001','posto@silva.com', jsonb_build_object('street','Rod. Anhanguera km 50','city','Jundiaí','state','SP'),'À vista','11.111.111/0001-11', true,'[SIM]'),
+    (sup[2],'AutoMecânica Diesel Master','SIM-FOR002','22.222.222/0001-22','maintenance','Sandra','(11) 3222-0002','(11) 92222-0002','contato@dieselmaster.com', jsonb_build_object('street','Av. das Oficinas, 320','city','São Paulo','state','SP'),'30 dias','22.222.222/0001-22', true,'[SIM]'),
+    (sup[3],'PneuCenter Distribuidora','SIM-FOR003','33.333.333/0001-33','tires','Paulo','(11) 3333-0003','(11) 93333-0003','vendas@pneucenter.com', jsonb_build_object('street','Rua dos Pneus, 87','city','Osasco','state','SP'),'Boleto 15/30','33.333.333/0001-33', true,'[SIM]'),
+    (sup[4],'Seguradora Estrada Segura','SIM-FOR004','44.444.444/0001-44','insurance','Marta','(11) 3444-0004','(11) 94444-0004','apolice@estradasegura.com', jsonb_build_object('street','Av. Paulista, 2000','city','São Paulo','state','SP'),'Mensal','44.444.444/0001-44', true,'[SIM]');
 
   -- ───────── CLIENTES (com IE, contatos, prazos) ─────────
   FOR ci IN 1..6 LOOP

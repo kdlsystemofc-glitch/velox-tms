@@ -189,7 +189,7 @@ Observações: `Rota interior — Campinas/Vale, consolida volume`
 **Dados pessoais:** Nome `Antônio Ferreira` · CPF `123.456.789-01` · Nascimento `1986-03-10` · Telefone `(11) 97000-1001` · E-mail `antonio@veloxfracionado.com`
 **CNH:** Número `12345678901` · Categoria **C** · Vencimento **D+400**
 **Contrato:** Função **Motorista** · Tipo **CLT** · Admissão `D-600` · Salário base `2.600,00` · Status **Ativo**
-**Endereço:** Rua 1, 100, Centro, Guarulhos/SP, CEP 07020-000
+**Endereço:** CEP `07020-000` (autofill: Guarulhos/SP) · Número `100` *(o endereço preenche automático pelo CEP)*
 **Dados bancários:** Banco `Bradesco` · Agência `1111` · Conta `11111-1` · PIX `123.456.789-01`
 **Observações:** `Rota capital (VUC)`
 **Cadastrar motorista.**
@@ -198,7 +198,7 @@ Observações: `Rota interior — Campinas/Vale, consolida volume`
 Nome `Beatriz Lima` · CPF `234.567.890-12` · Nascimento `1992-07-22` · Telefone `(11) 97000-1002` · E-mail `beatriz@veloxfracionado.com`
 CNH `23456789012` · Categoria **C** · Vencimento **D+50** *(vai disparar alerta de CNH em 60 dias)*
 Função **Motorista** · CLT · Admissão `D-300` · Salário `2.600,00` · Ativo
-Endereço: Rua 2, 200, Centro, Osasco/SP, 06010-000
+Endereço: CEP `06010-000` (autofill: Osasco/SP) · Número `200`
 Banco `Itaú` · Ag `2222` · Conta `22222-2` · PIX `beatriz@veloxfracionado.com`
 Observações: `Rota mista (3/4)`
 **Cadastrar.** → ✅ VERIFICAR: alerta de **CNH vencendo** aparece para a Beatriz.
@@ -207,7 +207,7 @@ Observações: `Rota mista (3/4)`
 Nome `Cláudio Souza` · CPF `345.678.901-23` · Nascimento `1980-11-05` · Telefone `(11) 97000-1003` · E-mail `claudio@veloxfracionado.com`
 CNH `34567890123` · Categoria **D** · Vencimento **D+650**
 Função **Motorista** · **PJ** · Admissão `D-150` · Salário `3.200,00` · Ativo
-Endereço: Rua 3, 300, Industrial, Jundiaí/SP, 13201-000
+Endereço: CEP `02011-000` (autofill: Santana, São Paulo/SP) · Número `300`
 Banco `Nubank` · Ag `0001` · Conta `33333-3` · PIX `(11) 97000-1003`
 Observações: `Rota interior (Toco) — leva ajudante`
 **Cadastrar.**
@@ -216,14 +216,14 @@ Observações: `Rota interior (Toco) — leva ajudante`
 
 ## DIA 5 (D+4) — Fornecedores (campo a campo)
 
-Cadastros → Fornecedores → **Novo Fornecedor**. O formulário tem 3 seções (**Identificação**, **Contato principal**, **Financeiro**) + a seção **Contatos** (botão "Adicionar"). Preencha exatamente assim:
+Cadastros → Fornecedores → **Novo Fornecedor**. O formulário tem as seções **Identificação**, **Endereço** (com **autofill por CEP**), **Contato principal**, **Financeiro** + a seção **Contatos** (botão "Adicionar"). No Endereço, digite o **CEP** e o sistema preenche rua/bairro/cidade/UF — você completa o **Número**. Preencha assim:
 
 ### Fornecedor 1 — Combustível
 **Identificação**
 - Razão social / Nome: `Auto Posto Marginal Tietê Ltda`
 - CNPJ / CPF: `11.111.111/0001-11`
 - Categoria: **Combustível**
-- Endereço: `Av. Marginal Tietê, 1000 — Vila Maria, São Paulo/SP`
+- Endereço (CEP autofill): CEP `02011-000` (Santana, São Paulo/SP) · Número `1000`
 
 **Contato principal**
 - Responsável: `Roberto Alves`
@@ -246,7 +246,7 @@ Cadastros → Fornecedores → **Novo Fornecedor**. O formulário tem 3 seções
 - Razão social / Nome: `DieselFix Centro Automotivo Ltda`
 - CNPJ / CPF: `22.222.222/0001-22`
 - Categoria: **Manutenção**
-- Endereço: `Av. das Oficinas, 50 — Cumbica, Guarulhos/SP`
+- Endereço (CEP autofill): CEP `07020-000` (Guarulhos/SP) · Número `50`
 
 **Contato principal**
 - Responsável: `Sandro Oliveira`
@@ -269,7 +269,7 @@ Cadastros → Fornecedores → **Novo Fornecedor**. O formulário tem 3 seções
 - Razão social / Nome: `PneuJá Comércio de Pneus Ltda`
 - CNPJ / CPF: `33.333.333/0001-33`
 - Categoria: **Pneus**
-- Endereço: `Rua dos Pneus, 80 — Centro, Osasco/SP`
+- Endereço (CEP autofill): CEP `06010-000` (Osasco/SP) · Número `80`
 
 **Contato principal**
 - Responsável: `Paulo Ramos`
@@ -292,7 +292,7 @@ Cadastros → Fornecedores → **Novo Fornecedor**. O formulário tem 3 seções
 - Razão social / Nome: `Protege Corretora de Seguros Ltda`
 - CNPJ / CPF: `44.444.444/0001-44`
 - Categoria: **Seguros**
-- Endereço: `Av. Paulista, 2000 — Bela Vista, São Paulo/SP`
+- Endereço (CEP autofill): CEP `04571-010` (Berrini, São Paulo/SP) · Número `2000`
 
 **Contato principal**
 - Responsável: `Marta Andrade`
@@ -435,7 +435,9 @@ Abra o **site público** (`/`) → fluxo de **cotação/agendamento**.
 
 ## DIA 9 a 12 — Cadastro dos 16 pedidos (Novo Pedido)
 
-Pedidos → **Novo Pedido**. Cada pedido abaixo é um **bloco completo** (Solicitante, Origem, Frete & pagamento, Destinatário e Itens) — preencha exatamente o que está em cada um, sem precisar consultar outras tabelas.
+> 📍 **Onde cadastrar:** estes 16 pedidos são lançados **no PORTAL ADMIN** → menu **Pedidos → botão "Nova Coleta"**. O **site público** (Dia 8) é só para o **cliente** cotar/agendar; o agendamento que chega pelo site vira um pedido "Novo" que você confirma aqui. Nesta simulação cadastramos todos manualmente pelo admin.
+
+Cada pedido abaixo é um **bloco completo** (Solicitante, Origem, Frete & pagamento, Destinatário e Itens) — preencha exatamente o que está em cada um, sem precisar consultar outras tabelas. Os campos de **CEP (origem e destinatário) preenchem o endereço automaticamente**; você só completa o Número.
 
 **Regras que valem para todos:** Tipo de frete **Fracionado/Compartilhado**, Pagador **CIF**, Modal **Rodoviário**, Itens com **Embalagem = caixa** e **Frágil/Perigoso desmarcados**; o **Número** do endereço pode ser qualquer (use `100` no destino). Ao terminar os itens, **confira o resumo de frete** contra o "Frete esperado" do bloco.
 

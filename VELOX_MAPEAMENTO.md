@@ -403,7 +403,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 - **Dados pessoais:** Nome*, CPF*, Nascimento, Telefone, E-mail
 - **Habilitação (CNH):** número, categoria, vencimento
 - **Contrato:** Função, tipo de contrato, Admissão, salário base (`NumericInput`), status
-- **Endereço:** logradouro, número, bairro, cidade, UF, CEP (`address` JSONB)
+- **Endereço:** componente `AddressFields` com **autofill por CEP** (`address` JSONB)
 - **Dados bancários:** banco, agência, conta, chave PIX (`bank_info` JSONB)
 - **Observações**
 - Submit → `Driver.create()` + navega para detalhe
@@ -509,13 +509,12 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **`DataTable` denso** (ordenação por coluna + busca por nome/CNPJ/código/e-mail). Colunas: Código CLI, Razão Social/Nome, CPF/CNPJ, Tipo (PJ/PF), Perfil, Contato, Cobrança, Status, Ação. Clique na linha → Sheet lateral com dados completos, endereço e contatos.  
 - Link no Sheet: "Ver cadastro completo" → `/admin/clientes/:id`
 
-**Dialog "Novo Cliente":**
-- Razão Social*, CNPJ*, tipo (PJ/PF), **Inscrição Estadual** (`state_registration`, só PJ), e-mail, telefone
-- Perfil (recorrente/eventual), status
-- Tipo de cobrança (por viagem / mensal): se mensal → dia de fechamento + prazo de pagamento
-- Observações
-- Seção de múltiplos contatos (nome, função, telefone, WhatsApp, e-mail, is_primary)
-- Endereço principal com CEP auto-fill
+**Dialog "Novo Cliente"** (padrão `FormSection`/`Field` + rodapé fixo — reformulado):
+- **Identificação:** Razão Social*, CNPJ*, tipo (PJ/PF), **Inscrição Estadual** (`state_registration`, só PJ), e-mail, telefone
+- **Comercial:** perfil (recorrente/eventual), status, tipo de cobrança (por viagem / mensal → dia de fechamento + prazo de pagamento)
+- **Contatos:** múltiplos (nome, função, telefone, WhatsApp, e-mail, is_primary)
+- **Endereço principal:** componente `AddressFields` com **autofill por CEP**
+- **Observações**
 - Submit → gera código `CLI{n}` → `Client.create()`
 
 ---
@@ -545,7 +544,8 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **`DataTable` denso** (ordenação por coluna + busca por nome/CNPJ/código/contato). Colunas: Código FOR, Fornecedor, Categoria, CNPJ/CPF, Contato, Telefone/E-mail, Ação. Clique na linha → Dialog de edição inline.
 
 **Dialog "Novo Fornecedor"** (padrão `FormSection`/`Field`):
-- **Identificação:** Nome*, CNPJ/CPF, categoria (combustível/manutenção/pneus/seguros/outros), **Endereço** (`address`)
+- **Identificação:** Nome*, CNPJ/CPF, categoria (combustível/manutenção/pneus/seguros/outros)
+- **Endereço:** componente `AddressFields` com **autofill por CEP** (`address` é **JSONB**: cep/street/number/complement/neighborhood/city/state)
 - **Contato principal:** responsável, telefone, WhatsApp, e-mail
 - **Financeiro:** **Condições de pagamento** (`payment_terms`), **Chave PIX** (`pix_key`), observações
 - Seção de múltiplos contatos gerenciável
@@ -912,6 +912,11 @@ Caixa de entrada de contatos do site público (leads). Lista com não lidas em d
 
 **Arquivo:** `src/components/shared/FormSection.jsx`  
 **Uso:** padrão de formulário (seções com cabeçalho + grade; `Field` com label acima, obrigatório/opcional, erro inline)
+
+### 5.5c-2 AddressFields
+
+**Arquivo:** `src/components/shared/AddressFields.jsx`  
+**Uso:** bloco de endereço reutilizável com **autofill por CEP** (ViaCEP) — CEP/Número/Complemento/Rua/Bairro/Cidade/UF. Controlado por `value` (objeto) + `onChange(obj)`. Modo seção (com `title`) ou "bare". Exporta também `fmtCep` e `lookupCep`. Usado em Cliente, Motorista, Fornecedor (e a Nova Coleta tem sua própria versão equivalente para origem/destinatários).
 
 ### 5.5d CollapsibleSection
 
