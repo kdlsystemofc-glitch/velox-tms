@@ -358,12 +358,12 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 **`DataTable` denso** (ordenação por coluna + busca inline por placa/modelo/fabricante/RENAVAM). Colunas: Placa, Veículo (fab.+modelo+ano), Tipo, Capacidade, Documentos (badge "Vencendo"/"Em dia"), Status (`StatusBadge`), Ação. Clique na linha → `/admin/frota/:id`.
 
-**Dialog "Novo Caminhão":**
-- Campos: Placa*, Fabricante, Modelo, Ano, Tipo, Cor, Capacidade (kg), RENAVAM
-- Dimensões (C×L×A em metros)
-- Vencimento CRLV, Seguro, Tacógrafo
-- Km atual (odômetro)
-- Alertas por km: troca de óleo, revisão geral, pneus
+**Dialog "Novo Caminhão"** (padrão `FormSection`/`Field` — seções, cabeçalho/rodapé fixos):
+- **Identificação:** Placa*, Tipo, Fabricante, Modelo, Ano, Cor, RENAVAM, Chassi
+- **Capacidade e dimensões:** Capacidade (kg), Dimensões C×L×A em metros (via `NumericInput` — aceita vírgula)
+- **Documentação:** Vencimento CRLV, Seguro, Tacógrafo (última e próxima aferição)
+- **Quilometragem e manutenção:** Km atual (odômetro) + alertas por km (óleo, revisão, pneus)
+- **Observações**
 - Submit → `Truck.create()` + navega para detalhe
 
 ---
@@ -399,10 +399,13 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Acesso:** operador + admin
 
 **`DataTable` denso** (ordenação por coluna + busca por nome/CPF/CNH). Colunas: Motorista (com alerta CNH vencendo ≤60d), CPF, CNH (categoria/vencimento), Função, Telefone, Status (`StatusBadge`), Ação. Clique na linha → detalhe.  
-**Dialog "Novo Motorista":**
-- Campos: Nome*, CPF*, Telefone, E-mail, Nascimento, Admissão
-- CNH: número, categoria, vencimento
-- Função, tipo de contrato, salário base, status
+**Dialog "Novo Motorista"** (padrão `FormSection`/`Field`):
+- **Dados pessoais:** Nome*, CPF*, Nascimento, Telefone, E-mail
+- **Habilitação (CNH):** número, categoria, vencimento
+- **Contrato:** Função, tipo de contrato, Admissão, salário base (`NumericInput`), status
+- **Endereço:** logradouro, número, bairro, cidade, UF, CEP (`address` JSONB)
+- **Dados bancários:** banco, agência, conta, chave PIX (`bank_info` JSONB)
+- **Observações**
 - Submit → `Driver.create()` + navega para detalhe
 
 ---
@@ -507,7 +510,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 - Link no Sheet: "Ver cadastro completo" → `/admin/clientes/:id`
 
 **Dialog "Novo Cliente":**
-- Razão Social*, CNPJ*, tipo (PJ/PF), e-mail, telefone
+- Razão Social*, CNPJ*, tipo (PJ/PF), **Inscrição Estadual** (`state_registration`, só PJ), e-mail, telefone
 - Perfil (recorrente/eventual), status
 - Tipo de cobrança (por viagem / mensal): se mensal → dia de fechamento + prazo de pagamento
 - Observações
@@ -541,9 +544,10 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 **`DataTable` denso** (ordenação por coluna + busca por nome/CNPJ/código/contato). Colunas: Código FOR, Fornecedor, Categoria, CNPJ/CPF, Contato, Telefone/E-mail, Ação. Clique na linha → Dialog de edição inline.
 
-**Dialog "Novo Fornecedor":**
-- Nome*, CNPJ, categoria (combustível/manutenção/pneus/seguros/outros)
-- Contato principal, telefone, WhatsApp, e-mail, observações
+**Dialog "Novo Fornecedor"** (padrão `FormSection`/`Field`):
+- **Identificação:** Nome*, CNPJ/CPF, categoria (combustível/manutenção/pneus/seguros/outros), **Endereço** (`address`)
+- **Contato principal:** responsável, telefone, WhatsApp, e-mail
+- **Financeiro:** **Condições de pagamento** (`payment_terms`), **Chave PIX** (`pix_key`), observações
 - Seção de múltiplos contatos gerenciável
 - Submit → gera código `FOR{n}` → `Supplier.create()`
 
@@ -590,7 +594,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 **Filtros:** busca, filtro de categoria, filtro de aging  
 **Tabela:** Data, Categoria, Descrição, Valor, Status, Ação  
 **Botão "Dar Baixa"** (se pending): modal de confirmação com data, forma de pagamento, upload de comprovante  
-**Dialog "Nova Despesa":** Categoria*, Descrição*, Valor*, Data*, Status, Forma de pagamento, Observações
+**Dialog "Nova Despesa"** (padrão `FormSection`/`Field`, seções): **Despesa** (Categoria*, Valor*, Descrição*) · **Pagamento** (Situação, Forma de pagamento, Data de competência*, e — conforme a situação — Data do pagamento *ou* Vencimento) · **Vínculos** (Fornecedor, Veículo, Motorista) · **Anexos** (comprovante via `FileUploadButton`, Observações). Grava `paid_date` quando `paid`, `due_date` quando `pending`/`installment`.
 
 ---
 
@@ -651,7 +655,11 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 **Arquivo:** `src/pages/admin/AdminSettings.jsx`  
 **Acesso:** somente admin  
-**Prop `only={[...]}`** controla quais abas renderizar (o ConfigPage distribui em categorias). Sem `only`, mostra todas. A aba "Mensagens" foi **removida** (virou página própria). Restam 7 grupos de parâmetros:
+**Prop `only={[...]}`** controla quais abas renderizar (o ConfigPage distribui em categorias). Sem `only`, mostra todas. A aba "Mensagens" foi **removida** (virou página própria). Restam 7 grupos de parâmetros.
+
+> **Nota (fix):** o `<Tabs>` recebe `key={only.join(",")}` para **forçar remount** ao trocar de categoria — sem isso o Radix mantinha o estado interno e a aba "Alertas" exibia o conteúdo de "Rotas". O botão Salvar mostra estado verde **"Salvo!"** após sucesso.
+
+Grupos:
 
 #### Empresa
 - Campos: nome, CNPJ, telefone, e-mail, WhatsApp, região, endereço
