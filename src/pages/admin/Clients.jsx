@@ -12,6 +12,9 @@ import { Plus, Building2, Search, Eye, X, MessageCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
 import DataTable from "@/components/shared/DataTable";
+import { FormSection, Field } from "@/components/shared/FormSection";
+import { AddressFields } from "@/components/shared/AddressFields";
+import { DollarSign, Users } from "lucide-react";
 
 const EMPTY_CLIENT = {
   company_name: "", cpf_cnpj: "", type: "pj", email: "", phone: "",
@@ -85,19 +88,20 @@ export default function Clients({ hideTitle = false }) {
               <Plus className="w-4 h-4" /> Novo Cliente
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Cadastrar Cliente</DialogTitle>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+            <DialogHeader className="px-5 py-4 border-b border-border sticky top-0 bg-background z-10">
+              <DialogTitle className="flex items-center gap-2 text-base"><Building2 className="w-4.5 h-4.5 text-primary" /> Cadastrar Cliente</DialogTitle>
             </DialogHeader>
-            <div className="space-y-3">
-              <FormField label="Razão Social / Nome *">
-                <Input placeholder="Empresa Ltda ou João Silva" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
-              </FormField>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField label="CPF / CNPJ *">
+
+            <div className="space-y-4 p-5">
+              <FormSection title="Identificação" icon={Building2} cols={2}>
+                <Field label="Razão Social / Nome" required colSpan={2}>
+                  <Input placeholder="Empresa Ltda ou João Silva" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
+                </Field>
+                <Field label="CPF / CNPJ" required>
                   <Input placeholder="00.000.000/0001-00" value={form.cpf_cnpj} onChange={(e) => setForm({ ...form, cpf_cnpj: e.target.value })} />
-                </FormField>
-                <FormField label="Tipo de pessoa">
+                </Field>
+                <Field label="Tipo de pessoa">
                   <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -105,23 +109,22 @@ export default function Clients({ hideTitle = false }) {
                       <SelectItem value="pf">Pessoa Física</SelectItem>
                     </SelectContent>
                   </Select>
-                </FormField>
-              </div>
-              {form.type === "pj" && (
-                <FormField label="Inscrição Estadual">
-                  <Input placeholder="Isento ou número da IE" value={form.state_registration || ""} onChange={(e) => setForm({ ...form, state_registration: e.target.value })} />
-                </FormField>
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                <FormField label="E-mail">
+                </Field>
+                {form.type === "pj" && (
+                  <Field label="Inscrição Estadual" colSpan={2}>
+                    <Input placeholder="Isento ou número da IE" value={form.state_registration || ""} onChange={(e) => setForm({ ...form, state_registration: e.target.value })} />
+                  </Field>
+                )}
+                <Field label="E-mail">
                   <Input placeholder="contato@empresa.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                </FormField>
-                <FormField label="Telefone">
+                </Field>
+                <Field label="Telefone">
                   <Input placeholder="(00) 00000-0000" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                </FormField>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField label="Perfil de cliente">
+                </Field>
+              </FormSection>
+
+              <FormSection title="Comercial" description="Perfil e forma de cobrança" icon={DollarSign} cols={2}>
+                <Field label="Perfil de cliente">
                   <Select value={form.client_type} onValueChange={(v) => setForm({ ...form, client_type: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -129,8 +132,8 @@ export default function Clients({ hideTitle = false }) {
                       <SelectItem value="eventual">Eventual</SelectItem>
                     </SelectContent>
                   </Select>
-                </FormField>
-                <FormField label="Status">
+                </Field>
+                <Field label="Status">
                   <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -138,124 +141,97 @@ export default function Clients({ hideTitle = false }) {
                       <SelectItem value="inactive">Inativo</SelectItem>
                     </SelectContent>
                   </Select>
-                </FormField>
-              </div>
-              <FormField label="Tipo de cobrança">
-                <Select value={form.billing_type || "per_trip"} onValueChange={v => setForm(f => ({ ...f, billing_type: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="per_trip">Por viagem (padrão)</SelectItem>
-                    <SelectItem value="monthly">Faturamento mensal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormField>
-              {form.billing_type === "monthly" && (
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="Dia de fechamento (1-28)">
-                    <Input type="number" min="1" max="28" placeholder="ex: 25"
-                      value={form.billing_day || ""}
-                      onChange={e => setForm(f => ({ ...f, billing_day: Number(e.target.value) }))} />
-                  </FormField>
-                  <FormField label="Prazo de pagamento (dias)">
-                    <Input type="number" min="0" placeholder="ex: 30"
-                      value={form.payment_term_days || ""}
-                      onChange={e => setForm(f => ({ ...f, payment_term_days: Number(e.target.value) }))} />
-                  </FormField>
-                </div>
-              )}
-              <FormField label="Observações">
-                <Textarea
-                  placeholder="Ex: portaria fecha às 17h, pagamento somente por PIX"
-                  rows={2}
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  className="resize-none"
-                />
-              </FormField>
-              {/* Múltiplos contatos */}
-              <div className="border-t border-border/40 pt-3 mt-1">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Contatos</p>
-                  <button type="button"
-                    onClick={() => setForm(f => ({ ...f, contacts: [...(f.contacts || []), { name: "", role: "", phone: "", whatsapp: "", email: "", is_primary: (f.contacts || []).length === 0 }] }))}
-                    className="text-xs text-velox-amber hover:underline flex items-center gap-1">
-                    <Plus className="w-3 h-3" /> Adicionar contato
-                  </button>
-                </div>
-                {(form.contacts || []).length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-2">Nenhum contato. Clique em "+ Adicionar contato".</p>
-                ) : (
-                  <div className="space-y-3">
-                    {form.contacts.map((c, i) => (
-                      <div key={i} className="border border-border/40 rounded-xl p-3 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-muted-foreground">Contato {i + 1}</span>
-                          <div className="flex items-center gap-3">
-                            <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-                              <input type="checkbox" checked={c.is_primary}
-                                onChange={() => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => ({ ...ct, is_primary: idx === i })) }))}
-                                className="w-3.5 h-3.5 accent-velox-amber" />
-                              Principal
-                            </label>
-                            <button type="button" onClick={() => setForm(f => ({ ...f, contacts: f.contacts.filter((_, idx) => idx !== i) }))} className="text-red-400 hover:text-red-600">
-                              <X className="w-3.5 h-3.5" />
-                            </button>
+                </Field>
+                <Field label="Tipo de cobrança" colSpan={form.billing_type === "monthly" ? 2 : 2}>
+                  <Select value={form.billing_type || "per_trip"} onValueChange={v => setForm(f => ({ ...f, billing_type: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="per_trip">Por viagem (padrão)</SelectItem>
+                      <SelectItem value="monthly">Faturamento mensal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                {form.billing_type === "monthly" && (
+                  <>
+                    <Field label="Dia de fechamento (1-28)">
+                      <Input type="number" min="1" max="28" placeholder="ex: 25" value={form.billing_day || ""} onChange={e => setForm(f => ({ ...f, billing_day: Number(e.target.value) }))} />
+                    </Field>
+                    <Field label="Prazo de pagamento (dias)">
+                      <Input type="number" min="0" placeholder="ex: 30" value={form.payment_term_days || ""} onChange={e => setForm(f => ({ ...f, payment_term_days: Number(e.target.value) }))} />
+                    </Field>
+                  </>
+                )}
+              </FormSection>
+
+              <FormSection title="Contatos" cols={1}>
+                <Field>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-muted-foreground">Pessoas de contato no cliente</span>
+                    <button type="button"
+                      onClick={() => setForm(f => ({ ...f, contacts: [...(f.contacts || []), { name: "", role: "", phone: "", whatsapp: "", email: "", is_primary: (f.contacts || []).length === 0 }] }))}
+                      className="text-xs text-primary hover:underline flex items-center gap-1 font-medium">
+                      <Plus className="w-3 h-3" /> Adicionar contato
+                    </button>
+                  </div>
+                  {(form.contacts || []).length === 0 ? (
+                    <p className="text-xs text-muted-foreground py-2">Nenhum contato adicionado.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {form.contacts.map((c, i) => (
+                        <div key={i} className="border border-border rounded-md p-3 space-y-2 bg-muted/20">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-muted-foreground">Contato {i + 1}</span>
+                            <div className="flex items-center gap-3">
+                              <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                                <input type="checkbox" checked={c.is_primary}
+                                  onChange={() => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => ({ ...ct, is_primary: idx === i })) }))}
+                                  className="w-3.5 h-3.5 accent-primary" />
+                                Principal
+                              </label>
+                              <button type="button" onClick={() => setForm(f => ({ ...f, contacts: f.contacts.filter((_, idx) => idx !== i) }))} className="text-red-400 hover:text-red-600">
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input placeholder="Nome *" value={c.name} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, name: e.target.value } : ct) }))} />
+                            <Select value={c.role || ""} onValueChange={v => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, role: v } : ct) }))}>
+                              <SelectTrigger><SelectValue placeholder="Função" /></SelectTrigger>
+                              <SelectContent>
+                                {["Financeiro","Logística","Compras","Diretor","Gerente","Outro"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <Input placeholder="Telefone" value={c.phone || ""} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, phone: e.target.value } : ct) }))} />
+                            <Input placeholder="E-mail" value={c.email || ""} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, email: e.target.value } : ct) }))} />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Input placeholder="Nome *" value={c.name} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, name: e.target.value } : ct) }))} />
-                          <Select value={c.role || ""} onValueChange={v => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, role: v } : ct) }))}>
-                            <SelectTrigger><SelectValue placeholder="Função" /></SelectTrigger>
-                            <SelectContent>
-                              {["Financeiro","Logística","Compras","Diretor","Gerente","Outro"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                          <Input placeholder="Telefone" value={c.phone || ""} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, phone: e.target.value } : ct) }))} />
-                          <Input placeholder="E-mail" value={c.email || ""} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, email: e.target.value } : ct) }))} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="border-t border-border/40 pt-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Endereço principal</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField label="CEP">
-                    <Input placeholder="00000-000" value={form.address?.cep || ""} onChange={e => {
-                      const digits = e.target.value.replace(/\D/g, "").slice(0, 8);
-                      const fmt = digits.length > 5 ? `${digits.slice(0,5)}-${digits.slice(5)}` : digits;
-                      setForm(f => ({ ...f, address: { ...f.address, cep: fmt } }));
-                      if (digits.length === 8) {
-                        fetch(`https://viacep.com.br/ws/${digits}/json/`).then(r => r.json()).then(d => {
-                          if (!d.erro) setForm(f => ({ ...f, address: { ...f.address, street: d.logradouro || "", neighborhood: d.bairro || "", city: d.localidade || "", state: d.uf || "" } }));
-                        }).catch(() => {});
-                      }
-                    }} />
-                  </FormField>
-                  <FormField label="Número">
-                    <Input placeholder="ex: 450" value={form.address?.number || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, number: e.target.value } }))} />
-                  </FormField>
-                  <FormField label="Rua / Logradouro" className="col-span-2">
-                    <Input placeholder="Preenchido pelo CEP" value={form.address?.street || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, street: e.target.value } }))} />
-                  </FormField>
-                  <FormField label="Bairro">
-                    <Input value={form.address?.neighborhood || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, neighborhood: e.target.value } }))} />
-                  </FormField>
-                  <FormField label="Cidade / UF">
-                    <Input value={form.address?.city ? `${form.address.city} / ${form.address.state}` : ""} readOnly className="bg-muted/30" />
-                  </FormField>
-                  <FormField label="Complemento">
-                    <Input placeholder="ex: Galpão 7" value={form.address?.complement || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, complement: e.target.value } }))} />
-                  </FormField>
-                </div>
-              </div>
+                      ))}
+                    </div>
+                  )}
+                </Field>
+              </FormSection>
+
+              <AddressFields
+                title="Endereço principal"
+                value={form.address || {}}
+                onChange={addr => setForm(f => ({ ...f, address: addr }))}
+              />
+
+              <FormSection title="Observações" cols={1}>
+                <Field label="Anotações internas" optional>
+                  <Textarea placeholder="Ex: portaria fecha às 17h, pagamento somente por PIX" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="resize-none" />
+                </Field>
+              </FormSection>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border sticky bottom-0 bg-background z-10">
+              <Button variant="outline" onClick={() => { setShowAdd(false); setForm(EMPTY_CLIENT); }}>Cancelar</Button>
               <Button
                 onClick={() => createMutation.mutate(form)}
                 disabled={!form.company_name || !form.cpf_cnpj || createMutation.isPending}
-                className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
+                className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
               >
-                {createMutation.isPending ? "Salvando..." : "Cadastrar"}
+                <Plus className="w-4 h-4" /> {createMutation.isPending ? "Salvando..." : "Cadastrar cliente"}
               </Button>
             </div>
           </DialogContent>

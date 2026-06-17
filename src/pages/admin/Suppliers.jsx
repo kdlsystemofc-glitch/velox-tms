@@ -11,6 +11,7 @@ import { Plus, Building2, Search, Pencil, Phone, Mail, Trash2, MessageCircle, Ma
 import { useToast } from "@/components/ui/use-toast";
 import DataTable from "@/components/shared/DataTable";
 import { FormSection, Field } from "@/components/shared/FormSection";
+import { AddressFields } from "@/components/shared/AddressFields";
 
 const CATEGORIES = [
   { value: "fuel",        label: "Combustível" },
@@ -23,8 +24,15 @@ const CATEGORIES = [
 const EMPTY = {
   name: "", cnpj_cpf: "", category: "maintenance",
   contact_name: "", phone: "", whatsapp: "", email: "", notes: "", active: true,
-  contacts: [], address: "", payment_terms: "", pix_key: "",
+  contacts: [], address: {}, payment_terms: "", pix_key: "",
 };
+
+// Compatibilidade: endereço antigo podia ser texto puro; o form usa objeto.
+function normalizeAddress(addr) {
+  if (addr && typeof addr === "object") return addr;
+  if (typeof addr === "string" && addr.trim()) return { street: addr };
+  return {};
+}
 
 async function generateSupplierCode(suppliers) {
   const maxNum = suppliers.reduce((max, s) => {
@@ -61,10 +69,13 @@ function SupplierForm({ form, setForm }) {
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Endereço" colSpan={2}>
-          <Input placeholder="Rua, número, cidade — UF" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} />
-        </Field>
       </FormSection>
+
+      <AddressFields
+        title="Endereço"
+        value={form.address || {}}
+        onChange={addr => setForm(f => ({ ...f, address: addr }))}
+      />
 
       <FormSection title="Contato principal" icon={Phone} cols={2}>
         <Field label="Responsável" colSpan={2}>
@@ -272,7 +283,7 @@ export default function Suppliers({ hideTitle = false }) {
         searchKeys={["name", "cnpj_cpf", "code", "contact_name"]}
         searchPlaceholder="Buscar por nome, CNPJ ou código..."
         initialSort={{ key: "name", dir: "asc" }}
-        onRowClick={(s) => { setEditingId(s.id); setEditForm({ ...EMPTY, ...s, contacts: s.contacts || [] }); }}
+        onRowClick={(s) => { setEditingId(s.id); setEditForm({ ...EMPTY, ...s, address: normalizeAddress(s.address), contacts: s.contacts || [] }); }}
         emptyMessage="Nenhum fornecedor cadastrado."
         columns={[
           { key: "code", label: "Código", sortable: true, width: 90, className: "font-mono text-xs text-muted-foreground", render: s => s.code || "—" },
@@ -296,7 +307,7 @@ export default function Suppliers({ hideTitle = false }) {
           )},
           { key: "actions", label: "", align: "right", stopPropagation: true, width: 50, render: s => (
             <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Editar"
-              onClick={() => { setEditingId(s.id); setEditForm({ ...EMPTY, ...s, contacts: s.contacts || [] }); }}><Pencil className="w-3.5 h-3.5" /></Button>
+              onClick={() => { setEditingId(s.id); setEditForm({ ...EMPTY, ...s, address: normalizeAddress(s.address), contacts: s.contacts || [] }); }}><Pencil className="w-3.5 h-3.5" /></Button>
           )},
         ]}
       />

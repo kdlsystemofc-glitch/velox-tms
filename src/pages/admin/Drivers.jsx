@@ -15,8 +15,7 @@ import DataTable from "@/components/shared/DataTable";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { FormSection, Field } from "@/components/shared/FormSection";
 import { NumericInput } from "@/components/shared/NumericInput";
-
-const ESTADOS_BR = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+import { AddressFields } from "@/components/shared/AddressFields";
 
 const driverStatusConfig = {
   active:     { label: "Ativo",     dot: "bg-green-600", cls: "text-green-700 bg-green-50 border-green-200" },
@@ -152,29 +151,11 @@ export default function Drivers({ hideTitle = false }) {
                 </Field>
               </FormSection>
 
-              <FormSection title="Endereço" icon={MapPin} cols={4}>
-                <Field label="Logradouro" colSpan={3}>
-                  <Input placeholder="Rua / Avenida" value={form.address?.street || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, street: e.target.value } }))} />
-                </Field>
-                <Field label="Número">
-                  <Input placeholder="Nº" value={form.address?.number || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, number: e.target.value } }))} />
-                </Field>
-                <Field label="Bairro" colSpan={2}>
-                  <Input value={form.address?.neighborhood || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, neighborhood: e.target.value } }))} />
-                </Field>
-                <Field label="Cidade">
-                  <Input value={form.address?.city || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, city: e.target.value } }))} />
-                </Field>
-                <Field label="UF">
-                  <Select value={form.address?.state || ""} onValueChange={v => setForm(f => ({ ...f, address: { ...f.address, state: v } }))}>
-                    <SelectTrigger><SelectValue placeholder="UF" /></SelectTrigger>
-                    <SelectContent>{ESTADOS_BR.map(uf => <SelectItem key={uf} value={uf}>{uf}</SelectItem>)}</SelectContent>
-                  </Select>
-                </Field>
-                <Field label="CEP">
-                  <Input placeholder="00000-000" value={form.address?.cep || ""} onChange={e => setForm(f => ({ ...f, address: { ...f.address, cep: e.target.value } }))} />
-                </Field>
-              </FormSection>
+              <AddressFields
+                title="Endereço"
+                value={form.address || {}}
+                onChange={addr => setForm(f => ({ ...f, address: addr }))}
+              />
 
               <FormSection title="Dados bancários" description="Para pagamento de salário e adiantamentos" icon={Landmark} cols={4}>
                 <Field label="Banco" colSpan={2}>

@@ -76,7 +76,19 @@ ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS whatsapp TEXT;
 ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS email TEXT;
 ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS contacts JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS notes TEXT;
-ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS address JSONB DEFAULT '{}'::jsonb;
+-- Se 'address' já existia como TEXT, converte para JSONB preservando o texto em {street}
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_name='suppliers' AND column_name='address' AND data_type <> 'jsonb') THEN
+    ALTER TABLE suppliers ALTER COLUMN address DROP DEFAULT;
+    ALTER TABLE suppliers ALTER COLUMN address TYPE JSONB
+      USING (CASE WHEN address IS NULL OR btrim(address)='' THEN '{}'::jsonb
+                  ELSE jsonb_build_object('street', address) END);
+    ALTER TABLE suppliers ALTER COLUMN address SET DEFAULT '{}'::jsonb;
+  END IF;
+END $$;
 ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS payment_terms TEXT;
 ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS pix_key TEXT;
 ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT true;

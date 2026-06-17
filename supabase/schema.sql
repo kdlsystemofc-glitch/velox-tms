@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS suppliers (
   email TEXT,
   contacts JSONB DEFAULT '[]'::jsonb,
   notes TEXT,
-  address TEXT,
+  address JSONB DEFAULT '{}'::jsonb,
   payment_terms TEXT,
   pix_key TEXT,
   active BOOLEAN DEFAULT true,

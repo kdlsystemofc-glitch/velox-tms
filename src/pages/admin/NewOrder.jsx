@@ -682,13 +682,16 @@ export default function NewOrder() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <FL label="Rua / Logradouro">
-                  <Input placeholder="ex: Rua das Flores" value={r.street} onChange={e => setRecipient(ri, "street", e.target.value)} />
+                  <Input placeholder="Preenchido pelo CEP (editável)" value={r.street} onChange={e => setRecipient(ri, "street", e.target.value)} />
                 </FL>
                 <FL label="Bairro">
-                  <Input placeholder="Preenchido automaticamente" value={r.neighborhood || ""} onChange={e => setRecipient(ri, "neighborhood", e.target.value)} className="bg-muted/30" />
+                  <Input placeholder="Preenchido pelo CEP" value={r.neighborhood || ""} onChange={e => setRecipient(ri, "neighborhood", e.target.value)} />
                 </FL>
-                <FL label="Cidade / UF">
-                  <Input placeholder="ex: Campinas / SP" value={r.city ? `${r.city}${r.state ? " / " + r.state : ""}` : ""} onChange={e => setRecipient(ri, "city", e.target.value)} />
+                <FL label="Cidade">
+                  <Input placeholder="ex: Campinas" value={r.city || ""} onChange={e => setRecipient(ri, "city", e.target.value)} />
+                </FL>
+                <FL label="Estado (UF)">
+                  <Input placeholder="ex: SP" maxLength={2} value={r.state || ""} onChange={e => setRecipient(ri, "state", e.target.value.toUpperCase())} />
                 </FL>
               </div>
               <FL label="Observações de entrega">
