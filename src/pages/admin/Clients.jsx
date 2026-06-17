@@ -107,6 +107,11 @@ export default function Clients({ hideTitle = false }) {
                   </Select>
                 </FormField>
               </div>
+              {form.type === "pj" && (
+                <FormField label="Inscrição Estadual">
+                  <Input placeholder="Isento ou número da IE" value={form.state_registration || ""} onChange={(e) => setForm({ ...form, state_registration: e.target.value })} />
+                </FormField>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <FormField label="E-mail">
                   <Input placeholder="contato@empresa.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />

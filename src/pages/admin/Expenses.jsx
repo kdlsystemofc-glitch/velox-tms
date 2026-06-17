@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, TrendingDown, Search, CheckCircle2 } from "lucide-react";
+import { Plus, TrendingDown, Search, CheckCircle2, Receipt, Tag, Link2 } from "lucide-react";
 import { NumericInput } from "@/components/shared/NumericInput";
 import FileUploadButton from "@/components/shared/FileUploadButton";
 import { parseLocalDate, formatDateBR } from "@/utils/dateUtils";
+import { FormSection, Field } from "@/components/shared/FormSection";
 
 const AGING = [
   { key: "overdue", label: "Vencidas",      cls: "text-red-700 bg-red-50 border-red-200 hover:bg-red-100" },
@@ -44,7 +45,7 @@ const statusConfig = {
   installment: { label: "Parcelado", color: "bg-blue-100 text-blue-700" },
 };
 
-const EMPTY_FORM = { category: "fuel", description: "", amount: "", date: "", due_date: "", payment_method: "pix", status: "paid", notes: "" };
+const EMPTY_FORM = { category: "fuel", description: "", amount: "", date: "", due_date: "", paid_date: "", payment_method: "pix", status: "paid", notes: "", supplier_id: "", supplier_name: "", truck_id: "", driver_id: "", receipt_url: "" };
 
 export default function Expenses({ hideTitle = false }) {
   const { toast } = useToast();
@@ -63,6 +64,9 @@ export default function Expenses({ hideTitle = false }) {
     queryKey: ["expenses"],
     queryFn: () => base44.entities.Expense.list("-date", 200),
   });
+  const { data: suppliers = [] } = useQuery({ queryKey: ["suppliers"], queryFn: () => base44.entities.Supplier.list() });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
 
   const createMutation = {
     isPending: false,
@@ -216,35 +220,31 @@ export default function Expenses({ hideTitle = false }) {
 
       {/* Modal nova despesa */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Nova Despesa</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <label className="text-sm font-medium text-slate-700 block mb-1">Categoria <span className="text-red-500">*</span></label>
-              <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(categoryLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700 block mb-1">Descrição <span className="text-red-500">*</span></label>
-              <Input placeholder="ex: Abastecimento rota SP-RJ" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">Valor <span className="text-red-500">*</span></label>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+          <DialogHeader className="px-5 py-4 border-b border-border sticky top-0 bg-background z-10">
+            <DialogTitle className="flex items-center gap-2 text-base"><Receipt className="w-4.5 h-4.5 text-primary" /> Nova Despesa</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 p-5">
+            <FormSection title="Despesa" icon={Tag} cols={2}>
+              <Field label="Categoria" required>
+                <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(categoryLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Valor (R$)" required>
                 <NumericInput currency value={form.amount} onChange={v => setForm(f => ({ ...f, amount: v }))} />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">Data <span className="text-red-500">*</span></label>
-                <Input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">Status</label>
+              </Field>
+              <Field label="Descrição" required colSpan={2}>
+                <Input placeholder="ex: Abastecimento rota SP-RJ" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+              </Field>
+            </FormSection>
+
+            <FormSection title="Pagamento" icon={CheckCircle2} cols={2}>
+              <Field label="Situação">
                 <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -253,9 +253,8 @@ export default function Expenses({ hideTitle = false }) {
                     <SelectItem value="installment">Parcelado</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">Forma de pagamento</label>
+              </Field>
+              <Field label="Forma de pagamento">
                 <Select value={form.payment_method} onValueChange={v => setForm(f => ({ ...f, payment_method: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -266,16 +265,84 @@ export default function Expenses({ hideTitle = false }) {
                     <SelectItem value="cash">Dinheiro</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700 block mb-1">Observações</label>
-              <Textarea placeholder="ex: Nota fiscal nº 1234" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="resize-none" />
-            </div>
-            <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
-              onClick={() => createMutation.mutate({ ...form, amount: Number(form.amount) })}
+              </Field>
+              <Field label="Data de competência" required hint="Quando a despesa foi gerada">
+                <Input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+              </Field>
+              {form.status === "paid" ? (
+                <Field label="Data do pagamento">
+                  <Input type="date" value={form.paid_date} onChange={e => setForm(f => ({ ...f, paid_date: e.target.value }))} />
+                </Field>
+              ) : (
+                <Field label="Vencimento" hint="Alimenta o aging de contas a pagar">
+                  <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
+                </Field>
+              )}
+            </FormSection>
+
+            <FormSection title="Vínculos" description="Atribua a despesa a um fornecedor/veículo para relatórios de custo" icon={Link2} cols={2}>
+              <Field label="Fornecedor" optional>
+                <Select value={form.supplier_id || "none"} onValueChange={v => {
+                  const s = suppliers.find(x => x.id === v);
+                  setForm(f => ({ ...f, supplier_id: v === "none" ? "" : v, supplier_name: s?.name || "" }));
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Veículo" optional>
+                <Select value={form.truck_id || "none"} onValueChange={v => setForm(f => ({ ...f, truck_id: v === "none" ? "" : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.plate} — {t.model || t.manufacturer || ""}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Motorista" optional colSpan={2}>
+                <Select value={form.driver_id || "none"} onValueChange={v => setForm(f => ({ ...f, driver_id: v === "none" ? "" : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Field>
+            </FormSection>
+
+            <FormSection title="Anexos e observações" cols={1}>
+              <Field label="Comprovante / Nota" optional>
+                <FileUploadButton
+                  label={form.receipt_url ? "Comprovante anexado ✓" : "Anexar comprovante (imagem/PDF)"}
+                  accept="image/*,application/pdf"
+                  onUpload={url => setForm(f => ({ ...f, receipt_url: url || "" }))}
+                />
+              </Field>
+              <Field label="Observações" optional>
+                <Textarea placeholder="ex: Nota fiscal nº 1234" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="resize-none" />
+              </Field>
+            </FormSection>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border sticky bottom-0 bg-background z-10">
+            <Button variant="outline" onClick={() => { setShowModal(false); setForm(EMPTY_FORM); }}>Cancelar</Button>
+            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
+              onClick={() => createMutation.mutate({
+                ...form,
+                amount: Number(form.amount),
+                date: form.date || todayLocalISO(),
+                due_date: form.due_date || undefined,
+                paid_date: form.status === "paid" ? (form.paid_date || form.date || todayLocalISO()) : undefined,
+                supplier_id: form.supplier_id || undefined,
+                truck_id: form.truck_id || undefined,
+                driver_id: form.driver_id || undefined,
+                receipt_url: form.receipt_url || undefined,
+              })}
               disabled={!form.description || !form.amount}>
-              Registrar Despesa
+              <Plus className="w-4 h-4" /> Registrar despesa
             </Button>
           </div>
         </DialogContent>

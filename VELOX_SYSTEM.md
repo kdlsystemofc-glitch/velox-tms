@@ -37,6 +37,17 @@
 | Site público | `/` | Landing page, cotação, agendamento, rastreamento |
 | App Motorista | `/motorista` | Home com viagem ativa, detalhe de paradas, histórico |
 
+### Padrão de formulários (cadastros)
+
+Todos os diálogos de criação/edição (Caminhão, Motorista, Fornecedor, Despesa) usam o padrão `FormSection`/`Field` (`src/components/shared/FormSection.jsx`): seções com título + ícone, label sempre acima do campo, obrigatório marcado, grid responsivo, cabeçalho e rodapé fixos (sticky) com botões Cancelar/Salvar. Campos numéricos com decimais usam `NumericInput` (aceita vírgula **e** ponto). Feedback de salvar: toast com ícone/cor de confirmação + estado verde "Salvo!" no botão.
+
+**Campos por cadastro (resumo):**
+- **Caminhão:** identificação (placa, tipo, fabricante, modelo, ano, cor, RENAVAM, chassi), capacidade + dimensões, documentação (CRLV, seguro, tacógrafo último/próximo), km + alertas de manutenção, observações.
+- **Motorista:** dados pessoais, CNH, contrato (função, tipo, admissão, salário, status), endereço, dados bancários (banco/agência/conta/PIX), observações.
+- **Fornecedor:** identificação (+ endereço), contato principal, financeiro (condições de pagamento, PIX), observações. *(colunas novas: `address`, `payment_terms`, `pix_key`)*
+- **Despesa:** despesa (categoria, valor, descrição), pagamento (situação, forma, competência, vencimento/data de pagamento), vínculos (fornecedor, veículo, motorista), comprovante + observações.
+- **Cliente:** + Inscrição Estadual (`state_registration`) para PJ.
+
 ---
 
 ## 3. Entidades do banco de dados (15 tabelas)
