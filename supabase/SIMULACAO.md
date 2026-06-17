@@ -24,7 +24,7 @@ Popula o sistema com uma operação fictícia dos últimos 30 dias para demonstr
 2. **Pré-requisito:** rode `migrations/20260616_reconcile_schema.sql` (idempotente — garante todas as colunas que o seed usa, incluindo as novas de fornecedor).
 3. Cole o conteúdo de **`seed_simulation.sql`** e clique em **Run**. *(roda uma vez)*
 4. Abra o painel (`/admin`) — os dados aparecem em Operações, Pedidos, Despacho, Frota, Cadastros e Financeiro.
-5. Cole o conteúdo de **`verificacoes.sql`** e rode: leia a coluna `problemas` (deve ser 0) e compare o RESUMO FINANCEIRO com o que o app mostra.
+5. Cole o conteúdo de **`verificacoes.sql`** e rode (é **uma consulta só** — uma tabela com tudo): procure qualquer linha com **`⚠ PROBLEMA`** na coluna `situacao`; nas linhas `FINANCEIRO`/`CONFERENCIA`, compare os valores com o que o app mostra.
 
 > O seed é **idempotente**: rodar de novo apaga a simulação anterior e recria. Tudo é marcado com `[SIM]` (campo notes) e código de cliente `SIM###` / fornecedor `SIM-FOR###`.
 
@@ -37,10 +37,11 @@ Popula o sistema com uma operação fictícia dos últimos 30 dias para demonstr
 - **Viagens** vinculadas aos pedidos em trânsito (1 em rota) e entregues (concluídas, com km/combustível/pedágio e lucro calculado).
 - **Financeiro:** receitas (recebidas, a receber e vencidas → alimenta o *aging*) e despesas (combustível por viagem vinculado ao posto, salários, aluguel, seguro, impostos, manutenção, pneus — com fornecedor/veículo e vencimentos).
 
-## `verificacoes.sql` (3 blocos)
-1. **Integridade e fluxo** (13 checagens): FKs órfãs, entregue sem viagem, viagem sem lucro, entregue sem receita, cancelado com receita ativa, datas obrigatórias, lucro da viagem = receita − custo, etc.
-2. **Resumo financeiro:** receita recebida / a receber / vencida, despesa paga / a pagar, resultado por competência.
-3. **Conferência:** soma dos fretes ativos × soma das receitas ativas (devem ser iguais).
+## `verificacoes.sql` (uma tabela, 3 seções)
+Coluna `situacao` = `OK` / `⚠ PROBLEMA` / `—` (informativo).
+1. **`FLUXO`** (13 checagens): FKs órfãs, entregue sem viagem, viagem sem lucro, entregue sem receita, cancelado com receita ativa, datas obrigatórias, lucro da viagem = receita − custo, etc.
+2. **`FINANCEIRO`:** receita recebida / a receber / vencida, despesa paga / a pagar, resultado por competência.
+3. **`CONFERENCIA`:** fretes ativos × receitas ativas + a diferença (deve ser 0).
 
 ## Como remover
 No fim do `seed_simulation.sql` há o bloco **LIMPEZA** (comentado). Descomente as linhas `DELETE` e rode — remove tudo que foi marcado com `[SIM]`/IDs da simulação, sem tocar nos seus dados reais.

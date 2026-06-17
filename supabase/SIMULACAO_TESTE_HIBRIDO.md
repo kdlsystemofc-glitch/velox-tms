@@ -7,12 +7,12 @@ Roteiro para caçar bugs de **fluxo e lógica** do app. A ideia: o seed cria um 
 ## Preparação
 1. Rode `migrations/20260616_reconcile_schema.sql`.
 2. Rode `seed_simulation.sql` (cria os dados — **só uma vez**).
-3. **Baseline:** rode `verificacoes.sql` e **anote**:
-   - Bloco 1 — todas as 13 linhas devem ter `problemas = 0`.
-   - Bloco 2 — anote `receita_recebida`, `receita_a_receber`, `receita_vencida`, `despesa_paga`, `despesa_a_pagar`, `resultado_competencia`.
-   - Bloco 3 — `soma_fretes_ativos` deve ser **igual** a `soma_receitas_ativas`.
+3. **Baseline:** rode `verificacoes.sql` (uma consulta, uma tabela) e **anote**:
+   - Seção `FLUXO` — nenhuma linha pode estar `⚠ PROBLEMA` (todas `OK`).
+   - Seção `FINANCEIRO` — anote os valores (receita recebida / a receber / vencida, despesa paga / a pagar, resultado por competência).
+   - Seção `CONFERENCIA` — a linha "Diferença (deve ser 0)" tem que estar `OK`.
 
-> Regra de ouro: depois de **cada** ação abaixo, rode o **`verificacoes.sql`** de novo e olhe o **Bloco 1**. Qualquer linha que saia de `0` aponta o bug exato. O Bloco 2/3 valida os números.
+> Regra de ouro: depois de **cada** ação abaixo, rode o **`verificacoes.sql`** de novo. Qualquer linha `⚠ PROBLEMA` aponta o bug exato; as linhas `FINANCEIRO` validam os números.
 
 ---
 
@@ -61,8 +61,8 @@ Roteiro para caçar bugs de **fluxo e lógica** do app. A ideia: o seed cria um 
 ---
 
 ## Como interpretar
-- **Bloco 1 com tudo 0** após cada ação = fluxo íntegro.
-- **Bloco 3 igual** (exceto após a ação G) = receita e frete batem.
-- **Bloco 2** = confira se os deltas seguem a tabela acima **e** se os mesmos números aparecem no Financeiro/DRE do app. Número diferente entre SQL e tela = bug de cálculo/exibição no app.
+- **`FLUXO` tudo `OK`** após cada ação = fluxo íntegro.
+- **`CONFERENCIA` → "Diferença (deve ser 0)" = `OK`** (exceto após a ação G) = receita e frete batem.
+- **`FINANCEIRO`** = confira se os deltas seguem a tabela acima **e** se os mesmos números aparecem no Financeiro/DRE do app. Número diferente entre SQL e tela = bug de cálculo/exibição no app.
 
 Achou divergência? Me diga **a ação (A–G)**, **qual verificação saiu de 0** (ou qual número não bateu) e o **valor no SQL vs. na tela** — com isso eu localizo e corrijo o ponto exato.
