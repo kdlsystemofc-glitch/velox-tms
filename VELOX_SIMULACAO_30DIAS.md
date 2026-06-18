@@ -39,7 +39,7 @@
 **Telas:** `/login` · Configurações → Empresa · Configurações → Site Público
 
 ### 1.1 — Acesso
-- [ ] Acesse `/login` e entre como **admin**. **✅ VERIFICAR:** abre o **Painel de Operações** (`/admin`); sidebar com grupos *Fluxo* (Pedidos, Despacho, Frota) e *Cadastros & Gestão* (Cadastros, Documentos, Mensagens, Financeiro, Configurações).
+- [ ] Acesse `/login` e entre como **admin**. **✅ VERIFICAR:** abre o **Painel de Operações** (`/admin`); sidebar com grupos *Fluxo* (Pedidos, Despacho, Viagens, Frota) e *Cadastros & Gestão* (Cadastros, Documentos, Mensagens, Financeiro, Configurações).
 
 ### 1.2 — Configurações → Empresa (preencher TODOS os campos)
 Vá em **Configurações** (`/admin/config`) → categoria **Empresa**:

@@ -201,7 +201,7 @@ Contém `AdminSidebar` + `AdminTopbar` + área de conteúdo com `<Outlet />`
 
 **Sidebar links (fluxo reconstruído 2026):**
 - Operações (`/admin`)
-- **Fluxo:** Pedidos (`/admin/coletas`, badge = novos), Despacho (`/admin/despacho`, badge = confirmados sem viagem), Frota (`/admin/frota`)
+- **Fluxo:** Pedidos (`/admin/coletas`, badge = novos), Despacho (`/admin/despacho`, badge = confirmados sem viagem), **Viagens** (`/admin/viagens`), Frota (`/admin/frota`)
 - **Cadastros & Gestão:** Cadastros (`/admin/cadastros`), Documentos (`/admin/documentos`), Mensagens (`/admin/mensagens`, badge = não lidas), Financeiro (`/admin/financeiro`, admin), Configurações (`/admin/config`, admin)
 
 ---

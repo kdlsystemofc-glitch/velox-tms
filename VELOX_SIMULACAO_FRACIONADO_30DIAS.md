@@ -604,7 +604,9 @@ Abaixo, cada pedido traz só o que **varia** — organizado pelos passos do assi
 - **P2:** Destinatário `Confecções Vale Norte` · CNPJ `60.016.016/0001-16` · CEP `12308-010` (Jacareí/SP) · Nº `100` — Item **NF 1020**: `10` vol · `180` kg · `45×45×45` · `9.000,00`
 - **P3:** taxável **180 kg** → **R$ 237,00** · **Transferência** · 15 dias
 
-> **Ordem de cadastro (tudo hoje):** P01–P04, depois P05–P09, P10–P13 e P14–P16. Pode cadastrar todos de uma vez — a "data de coleta" de todos é **HOJE**.
+> **Ordem de cadastro (tudo hoje):** P01–P04, depois P05–P09, P10–P13 e P14–P16. Pode cadastrar todos de uma vez — a "data de coleta" de todos é **HOJE**. Cada coleta criada entra em **Pedidos → aba Novos** com status **Novo**.
+>
+> ➡️ **Depois de cadastrar os 16, siga para o Dia 13 para CONFIRMAR os pedidos.** Sem confirmar, eles não geram receita nem podem ser despachados.
 
 ## DIA 10 — Conferência de cálculo
 Depois de cadastrar P05–P09, ✅ VERIFICAR especialmente:
@@ -615,16 +617,27 @@ Depois de cadastrar P05–P09, ✅ VERIFICAR especialmente:
 Depois de P10–P13, ✅ VERIFICAR no **P04** e **P06** (2 NFs): o resumo de frete deve cobrar **TDE+TDA dobrados** (R$ 20,00 em taxas de NF, não R$ 10,00). Se cobrar só 1× as taxas, o `nfCount` não está contando as 2 notas — anote.
 
 ## DIA 12 — Conclusão do cadastro
-Após P14–P16, ✅ VERIFICAR: a lista **Pedidos → Novos** tem **16 pedidos**, e a soma dos fretes do quadro-resumo é **R$ 3.695,00**.
+Após P14–P16, ✅ VERIFICAR: a aba **Pedidos → Novos** tem **16 pedidos** e a soma dos fretes do quadro-resumo é **R$ 3.695,00**. **Agora confirme-os (Dia 13).**
 
-## DIA 13 — Confirmações e recusas
-- **Confirme** (status → Confirmado) **todos os 14 pedidos ativos**: P01, P02, P03, P04, P06, P07, P08, P09, P11, P12, P13, P14, P15, P16.
-  ✅ VERIFICAR: ao confirmar, o sistema **cria a receita** correspondente (Financeiro → Receitas). O valor da receita = frete do pedido.
-- **Cancele** **P05** e **P10** (motivo: "cliente desistiu").
-  ✅ VERIFICAR: a receita desses pedidos **não** fica ativa (some/zera). *(Se ficar "a receber", é vazamento de receita — anote.)*
+## DIA 13 — Confirmar os pedidos (e recusar os 2 cancelados)
+
+Os 16 pedidos foram criados com status **Novo**. Confirmar é o que **gera a receita** e libera o pedido para o **Despacho**.
+
+**Onde:** menu **Pedidos** → aba **Novos**. Em cada linha há os botões **Confirmar** (✓) e **Recusar** (✕).
+
+**1) Confirmar os 14 ativos** — faça um a um (P01, P02, P03, P04, P06, P07, P08, P09, P11, P12, P13, P14, P15, P16):
+- Clique **Confirmar** → abre o painel lateral **"Confirmar — VLX-…"** → revise os dados → clique **Confirmar Pedido**.
+- O pedido sai de **Novos** e vai para a aba **Confirmados**.
+- ✅ VERIFICAR: em **Financeiro → Receitas** aparece uma receita **a receber** com o valor exato do frete do pedido.
+
+**2) Recusar os 2 cancelados** — em **P05** e **P10**:
+- Clique **Recusar** (✕) → informe o motivo `cliente desistiu` → confirme.
+- ✅ VERIFICAR: o pedido fica **Cancelado** e **não** gera receita ativa. *(Se ficar uma receita "a receber", é vazamento — anote.)*
+
+**Resultado esperado:** aba **Novos** vazia · **Confirmados** = 14 · **Cancelados** = 2 · soma das receitas a receber = **R$ 3.335,00**.
 
 ## DIA 14 — Planejamento das rotas (consolidação)
-Olhe os pedidos confirmados e agrupe por região (vamos despachar na Semana 3):
+Na aba **Pedidos → Confirmados**, cada pedido sem viagem mostra o botão **Despachar** (leva ao quadro de Despacho). Vamos agrupar por região e despachar no Dia 15:
 
 | Rota | Veículo | Pedidos (consolidados) | Região |
 |---|---|---|---|
@@ -633,6 +646,8 @@ Olhe os pedidos confirmados e agrupe por região (vamos despachar na Semana 3):
 | R3 | 3/4 (FRC-2B22) | P08, P09 | Capital (volumoso) |
 | R4 | Toco (FRC-3C33) | P12, P16 | Vale do Paraíba |
 | R5 | Toco (FRC-3C33) | P13, P14 | Campinas + Baixada |
+
+> As viagens criadas no Despacho aparecem no menu **Viagens** (Operações → **Viagens**), onde você acompanha e **encerra** cada uma (Semana 3).
 
 ---
 

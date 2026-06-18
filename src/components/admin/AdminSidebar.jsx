@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, CalendarDays, Truck,
   DollarSign, Settings, ChevronLeft, ChevronRight, LogOut, BookUser,
-  FolderOpen, MessageSquare
+  FolderOpen, MessageSquare, Route as RouteIcon
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/api/supabaseClient";
@@ -16,6 +16,7 @@ const navItems = [
   { group: "Fluxo" },
   { icon: Package,         label: "Pedidos",        path: "/admin/coletas",    badge: "pendingOrders" },
   { icon: CalendarDays,    label: "Despacho",       path: "/admin/despacho",   badge: "toDispatch" },
+  { icon: RouteIcon,       label: "Viagens",        path: "/admin/viagens" },
   { icon: Truck,           label: "Frota",          path: "/admin/frota" },
 
   { group: "Cadastros & Gestão" },

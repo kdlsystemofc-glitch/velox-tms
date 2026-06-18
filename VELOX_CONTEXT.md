@@ -58,7 +58,7 @@ O painel foi reconstruído seguindo o padrão dos grandes TMS (McLeod, TMW, Benn
 
 4. **Pedido** (`/admin/coletas/:id` → `OrderWorkspace.jsx`) — stepper de ciclo de vida no topo + **uma ação primária por etapa** (Confirmar → Em coleta → Em trânsito → Entregar) + menu de ações secundárias (duplicar, comprovante, cancelar) + corpo em abas (Resumo / Cargas / Financeiro / Ocorrências / Histórico) + rail direito de atribuição operacional. Substitui `OrderDetailPage`.
 
-**Navegação (sidebar):** *Operações* · grupo **Fluxo** (Pedidos, Despacho, Frota) · grupo **Cadastros & Gestão** (Cadastros, Documentos, Mensagens, Financeiro, Configurações). Badges: pedidos novos em "Pedidos", confirmados sem viagem em "Despacho", mensagens não lidas em "Mensagens".
+**Navegação (sidebar):** *Operações* · grupo **Fluxo** (Pedidos, Despacho, **Viagens**, Frota) · grupo **Cadastros & Gestão** (Cadastros, Documentos, Mensagens, Financeiro, Configurações). Badges: pedidos novos em "Pedidos", confirmados sem viagem em "Despacho", mensagens não lidas em "Mensagens".
 
 **Configurações = só parâmetros** (`ConfigPage` com nav lateral): Empresa, Comercial & Preços, Operação, Alertas — cada uma renderiza `<AdminSettings only={[...]} />`. Telas operacionais que antes ficavam em Config saíram: **Documentos** (`/admin/documentos`) e **Mensagens** (`/admin/mensagens`, `Messages.jsx`) viraram itens da sidebar; **lista de alertas** em `/admin/alertas`; **Mapa** segue placeholder.
 
