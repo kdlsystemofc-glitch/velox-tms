@@ -7,46 +7,59 @@
 
 ---
 
+## ⏱️ Como funcionam as datas (LEIA PRIMEIRO)
+
+Você vai executar **toda a simulação numa sessão só, hoje**. Por isso:
+
+1. **"DIA 1 … DIA 30" é só a ORDEM das tarefas** — você **não espera** os dias passarem. Faça tudo de uma vez, na sequência.
+2. **Quase nenhuma data importa.** Onde houver um campo de data que não está na tabela abaixo, pode digitar **a data de hoje** (ou a data ilustrativa que aparece no texto) — não muda o resultado do teste.
+3. **Só 3 datas precisam estar certas**, e todas contam a partir do **seu HOJE**:
+
+| Onde | O que digitar | Para hoje = **18/06/2026** | Por quê |
+|---|---|---|---|
+| **Data de coleta** (em TODOS os pedidos) | **a data de HOJE** | **18/06/2026** | o sistema só aceita coleta de hoje em diante |
+| **Frota → FRC-3C33 → Venc. do seguro** | **HOJE + 8 dias** | **26/06/2026** | faz disparar o alerta de seguro (≤ 30 dias) |
+| **Motorista Beatriz → Venc. da CNH** | **HOJE + 40 dias** | **28/07/2026** | faz disparar o alerta de CNH (≤ 60 dias) |
+
+> Testando em **outro dia**? Recalcule só essas 3 a partir do seu hoje (hoje, hoje+8, hoje+40). O resto pode ficar como está.
+>
+> 💡 **Resumindo a sua dúvida:** você cadastra o P01 **hoje** e coloca a coleta para **hoje** também. Não existe "esperar até 01/07" — aquilo era só a linha do tempo ilustrativa.
+
+---
+
 ## Regras de ouro
 
 1. Faça **na ordem**. A Semana 1 (configuração + cadastros) é pré-requisito do resto.
 2. Os valores são **fixos e calculados** — digite exatamente como está, para o batimento financeiro do fim fechar.
-3. **Datas concretas:** este roteiro assume que **hoje é 17/06/2026** (DIA 1). Cada "DIA N" tem uma data fixa — use o **Cronograma** abaixo. Onde aparecer uma data (ex.: *coleta em 01/07/2026*), digite exatamente essa data no sistema.
+3. **Datas:** você faz tudo **hoje** — veja o box "⏱️ Como funcionam as datas" acima. Só 3 datas importam; o resto é ilustrativo.
 4. Toda tela de cadastro segue o padrão de seções (cabeçalho → seções → rodapé fixo com **Cancelar / Salvar**). Campos com decimal aceitam **vírgula**.
 5. Se algum campo/rótulo não existir exatamente como descrito, **anote o dia/passo** e me avise — é candidato a bug.
 
-## Cronograma (datas concretas, em ordem)
+## Ordem das tarefas (faça tudo hoje, nesta sequência)
 
-| Dia | Data | O que fazer |
-|---|---|---|
-| DIA 1 | **17/06/2026** (qua) | Configurações da empresa + site |
-| DIA 2 | **18/06/2026** (qui) | Preços + Área de atuação (CEP) + agendamento |
-| DIA 3 | **19/06/2026** (sex) | Alertas + Frota (3 veículos) |
-| DIA 4 | **20/06/2026** (sáb) | Motoristas (3) |
-| DIA 5 | **21/06/2026** (dom) | Fornecedores (4) |
-| DIA 6 | **22/06/2026** (seg) | Clientes (6) |
-| DIA 7 | **23/06/2026** (ter) | Revisão da Semana 1 |
-| DIA 8 | **24/06/2026** (qua) | Teste de cobertura no site público |
-| DIA 9 | **25/06/2026** (qui) | Cadastrar pedidos P01–P04 |
-| DIA 10 | **26/06/2026** (sex) | Cadastrar P05–P09 + conferência de cálculo |
-| DIA 11 | **27/06/2026** (sáb) | Cadastrar P10–P13 + conferência de NFs |
-| DIA 12 | **28/06/2026** (dom) | Cadastrar P14–P16 + fechar cadastro |
-| DIA 13 | **29/06/2026** (seg) | Confirmar 14 ativos + cancelar P05 e P10 |
-| DIA 14 | **30/06/2026** (ter) | Planejar as 5 rotas |
-| DIA 15 | **01/07/2026** (qua) | Liberar Toco + criar viagens + **coletas capital/ABC** |
-| DIA 16 | **02/07/2026** (qui) | Saída/rastreio + **coletas interior/Baixada** |
-| DIA 17 | **03/07/2026** (sex) | Entregas R1 (POD) |
-| DIA 18 | **04/07/2026** (sáb) | Entregas R2 + ocorrência |
-| DIA 19 | **05/07/2026** (dom) | Entregas R3 |
-| DIA 20 | **06/07/2026** (seg) | Rota R4 (Vale) |
-| DIA 21 | **07/07/2026** (ter) | Rota R5 (Campinas + Baixada) |
-| DIA 22 | **08/07/2026** (qua) | Recebimentos |
-| DIA 23 | **09/07/2026** (qui) | Despesas fixas do mês |
-| DIA 24 | **10/07/2026** (sex) | Fatura mensal do C1 |
-| DIA 25 | **11/07/2026** (sáb) | DRE e fluxo de caixa |
-| DIAS 26–30 | **12–16/07/2026** | Conferência final e pendências |
+> Os números "DIA N" são só a **ordem** — não datas reais. Faça de cima para baixo, numa sessão.
 
-> As **coletas** acontecem nos dias úteis **01/07/2026** (Grande SP/ABC) e **02/07/2026** (interior/Baixada) — por isso os pedidos são cadastrados antes (25–28/06).
+| Etapa | Tarefa |
+|---|---|
+| DIA 1 | Configurações da empresa + site |
+| DIA 2 | Preços + Área de atuação (CEP) + agendamento |
+| DIA 3 | Alertas + Frota (3 veículos) |
+| DIA 4 | Motoristas (3) |
+| DIA 5 | Fornecedores (4) |
+| DIA 6 | Clientes (6) |
+| DIA 7 | Revisão dos cadastros |
+| DIA 8 | Teste de cobertura no site público |
+| DIAS 9–12 | Cadastrar os 16 pedidos (P01–P16) + conferências |
+| DIA 13 | Confirmar 14 ativos + cancelar P05 e P10 |
+| DIA 14 | Planejar as 5 rotas |
+| DIA 15 | Liberar Toco + criar as viagens |
+| DIA 16 | Marcar saída + rastreio |
+| DIAS 17–21 | Entregas das rotas R1–R5 (POD) + custos |
+| DIA 22 | Recebimentos |
+| DIA 23 | Despesas fixas do mês |
+| DIA 24 | Fatura mensal do C1 |
+| DIA 25 | DRE e fluxo de caixa |
+| DIAS 26–30 | Conferência final e pendências |
 
 ---
 
@@ -64,9 +77,9 @@
 
 ---
 
-# SEMANA 1 — Configuração e cadastros (17 a 23/06/2026)
+# SEMANA 1 — Configuração e cadastros
 
-## DIA 1 · 17/06/2026 (qua) — Configurações da empresa
+## DIA 1 — Configurações da empresa
 
 ### 1.1 Configurações → Empresa
 Menu **Configurações** → categoria **Empresa** → aba **Empresa**. Preencha:
@@ -102,7 +115,7 @@ Menu **Configurações** → categoria **Empresa** → aba **Empresa**. Preencha
 
 ---
 
-## DIA 2 · 18/06/2026 (qui) — Preços e área de atuação
+## DIA 2 — Preços e área de atuação
 
 ### 2.1 Configurações → Comercial & Preços → aba Preços
 
@@ -178,7 +191,7 @@ Deixe **vazia** (sem corredores) — o fracionado usará a tabela base. *(Mais t
 
 ---
 
-## DIA 3 · 19/06/2026 (sex) — Alertas e início da frota
+## DIA 3 — Alertas e início da frota
 
 ### 3.1 Configurações → Alertas
 
@@ -209,14 +222,14 @@ Observações: `Rota mista capital + ABC`
 ### 3.4 Frota → Novo Caminhão — Veículo 3 (Toco)
 Placa `FRC-3C33` · Tipo **Toco** · Fabricante `Volkswagen` · Modelo `Constellation 13.190` · Ano `2020` · Cor `Prata` · RENAVAM `33333333333` · Chassi `9BWZZZ377LV300333`
 Capacidade `9000` kg · Dimensões `7,0 · 2,5 · 2,6`
-CRLV **03/01/2027** · Seguro **25/06/2026** *(vai disparar alerta de seguro!)* · Tacógrafo última `29/11/2025`, próxima **15/09/2026**
+CRLV **03/01/2027** · Seguro **HOJE + 8 dias** *(ex.: 26/06/2026 — faz disparar o alerta de seguro!)* · Tacógrafo última `29/11/2025`, próxima **15/09/2026**
 Km atual `205000` · alertas óleo `15000`, revisão `30000`, pneus `50000`
 Observações: `Rota interior — Campinas/Vale, consolida volume`
 **Cadastrar.** → ✅ VERIFICAR: nos próximos dias, em Operações/Frota deve aparecer **alerta de Seguro vencendo** (8 dias < 30).
 
 ---
 
-## DIA 4 · 20/06/2026 (sáb) — Motoristas
+## DIA 4 — Motoristas
 
 ### 4.1 Motoristas → Novo Motorista — Motorista 1
 **Dados pessoais:** Nome `Antônio Ferreira` · CPF `123.456.789-01` · Nascimento `1986-03-10` · Telefone `(11) 97000-1001` · E-mail `antonio@veloxfracionado.com`
@@ -229,7 +242,7 @@ Observações: `Rota interior — Campinas/Vale, consolida volume`
 
 ### 4.2 Motoristas → Novo Motorista — Motorista 2
 Nome `Beatriz Lima` · CPF `234.567.890-12` · Nascimento `1992-07-22` · Telefone `(11) 97000-1002` · E-mail `beatriz@veloxfracionado.com`
-CNH `23456789012` · Categoria **C** · Vencimento **06/08/2026** *(vai disparar alerta de CNH — dentro de 60 dias)*
+CNH `23456789012` · Categoria **C** · Vencimento **HOJE + 40 dias** *(ex.: 28/07/2026 — faz disparar o alerta de CNH)*
 Função **Motorista** · CLT · Admissão `21/08/2025` · Salário `2.600,00` · Ativo
 Endereço: CEP `06010-000` (autofill: Osasco/SP) · Número `200`
 Banco `Itaú` · Ag `2222` · Conta `22222-2` · PIX `beatriz@veloxfracionado.com`
@@ -247,7 +260,7 @@ Observações: `Rota interior (Toco) — leva ajudante`
 
 ---
 
-## DIA 5 · 21/06/2026 (dom) — Fornecedores (campo a campo)
+## DIA 5 — Fornecedores (campo a campo)
 
 Cadastros → Fornecedores → **Novo Fornecedor**. O formulário tem as seções **Identificação**, **Endereço** (com **autofill por CEP**), **Contato principal**, **Financeiro** + a seção **Contatos** (botão "Adicionar"). No Endereço, digite o **CEP** e o sistema preenche rua/bairro/cidade/UF — você completa o **Número**. Preencha assim:
 
@@ -347,7 +360,7 @@ Cadastros → Fornecedores → **Novo Fornecedor**. O formulário tem as seçõe
 
 ---
 
-## DIA 6 · 22/06/2026 (seg) — Clientes / embarcadores (campo a campo)
+## DIA 6 — Clientes / embarcadores (campo a campo)
 
 Cadastros → Clientes → **Novo Cliente**. Campos do formulário: Razão Social, CPF/CNPJ, Tipo de pessoa, Inscrição Estadual (só PJ), E-mail, Telefone, Perfil, Status, Tipo de cobrança, Observações, **Contatos** e **Endereço principal** (digite o CEP e o sistema preenche rua/bairro/cidade/UF; você completa Número e Complemento).
 
@@ -441,7 +454,7 @@ Cadastros → Clientes → **Novo Cliente**. Campos do formulário: Razão Socia
 
 ---
 
-## DIA 7 · 23/06/2026 (ter) — Revisão da Semana 1
+## DIA 7 — Revisão da Semana 1
 
 ✅ VERIFICAR antes de operar:
 - Operações (`/admin`) mostra **3 caminhões** e alertas: **Seguro do FRC-3C33** (8d) e **CNH da Beatriz** (50d).
@@ -450,9 +463,9 @@ Cadastros → Clientes → **Novo Cliente**. Campos do formulário: Razão Socia
 
 ---
 
-# SEMANA 2 — Captação de pedidos e cobertura (24/06 a 01/07/2026)
+# SEMANA 2 — Captação de pedidos e cobertura
 
-## DIA 8 · 24/06/2026 (qua) — Teste de cobertura no site público ⭐
+## DIA 8 — Teste de cobertura no site público ⭐
 
 Abra o **site público** (`/`) → fluxo de **cotação/agendamento**.
 
@@ -466,7 +479,7 @@ Abra o **site público** (`/`) → fluxo de **cotação/agendamento**.
 
 > Isso valida o `coverageChecker` (comparação por faixa de CEP). Se um CEP coberto for recusado (ou um fora for aceito), anote — é bug.
 
-## DIAS 9 a 12 · 25 a 28/06/2026 — Cadastro dos 16 pedidos (Nova Coleta)
+## DIAS 9 a 12 — Cadastro dos 16 pedidos (Nova Coleta)
 
 > 📍 **Onde cadastrar:** estes 16 pedidos são lançados **no PORTAL ADMIN** → menu **Pedidos → botão "Nova Coleta"**. O **site público** (Dia 8) é só para o **cliente** cotar/agendar; o agendamento que chega pelo site vira um pedido "Novo" que você confirma aqui. Nesta simulação cadastramos todos manualmente pelo admin.
 
@@ -512,105 +525,105 @@ Abaixo, cada pedido traz só o que **varia** — organizado pelos passos do assi
 ---
 
 #### ▸ P01 — C2 → Varejo Pinheiros (São Paulo) · **R$ 125,00**
-- **P1 · Remetente e coleta:** Cliente **C2 — Distribuidora Norte SP** · Solicitante `Carlos Nunes` · **Coleta 01/07/2026 · Manhã** *(origem 02011-000 Santana/SP, nº 750)*
+- **P1 · Remetente e coleta:** Cliente **C2 — Distribuidora Norte SP** · Solicitante `Carlos Nunes` · **Coleta HOJE · Manhã** *(origem 02011-000 Santana/SP, nº 750)*
 - **P2 · Cargas:** Destinatário `Varejo Pinheiros Ltda` · CNPJ `60.001.001/0001-01` · CEP `05422-000` (SP) · Nº `100` — Item **NF 1001**: `6` vol · `80` kg · `40×40×40` cm · declarado `5.000,00`
 - **P3 · Cotação:** taxável **80 kg** → **R$ 125,00** · **PIX** · Após entrega
 
 #### ▸ P02 — C3 → Casa & Cia (Santo André) · **R$ 204,00**
-- **P1:** Cliente **C3 — Magazine Casa & Cia** · `Júlia Prado` · **Coleta 01/07/2026 · Manhã** *(origem 09010-000 Santo André/SP, nº 300)*
+- **P1:** Cliente **C3 — Magazine Casa & Cia** · `Júlia Prado` · **Coleta HOJE · Manhã** *(origem 09010-000 Santo André/SP, nº 300)*
 - **P2:** Destinatário `Casa & Cia Santo André` · CNPJ `60.002.002/0001-02` · CEP `09010-000` · Nº `100` — Item **NF 1002**: `10` vol · `150` kg · `50×40×40` cm · declarado `8.000,00`
 - **P3:** taxável **150 kg** → **R$ 204,00** · **Boleto** · 15 dias
 
 #### ▸ P03 — C2 → Depósito Guarulhos (Guarulhos) · **R$ 114,00** · *cubagem governa*
-- **P1:** Cliente **C2 — Distribuidora Norte SP** · `Carlos Nunes` · **Coleta 01/07/2026 · Manhã** *(origem 02011-000 Santana/SP, nº 750)*
+- **P1:** Cliente **C2 — Distribuidora Norte SP** · `Carlos Nunes` · **Coleta HOJE · Manhã** *(origem 02011-000 Santana/SP, nº 750)*
 - **P2:** Destinatário `Depósito Guarulhos ME` · CNPJ `60.003.003/0001-03` · CEP `07020-000` · Nº `100` — Item **NF 1003**: `3` vol · `45` kg · `50×50×60` cm · declarado `3.000,00`
 - **P3:** taxável **75 kg cubado** [(50×50×60)/6.000 = 25 × 3 = 75 > 45 real] → **R$ 114,00** · **PIX** · Após entrega
 
 #### ▸ P04 — C3 → Loja Osasco (Osasco) · **R$ 296,00** · *2 NFs*
-- **P1:** Cliente **C3 — Magazine Casa & Cia** · `Júlia Prado` · **Coleta 01/07/2026 · Manhã** *(origem 09010-000 Santo André/SP, nº 300)*
+- **P1:** Cliente **C3 — Magazine Casa & Cia** · `Júlia Prado` · **Coleta HOJE · Manhã** *(origem 09010-000 Santo André/SP, nº 300)*
 - **P2:** Destinatário `Loja Osasco Center` · CNPJ `60.004.004/0001-04` · CEP `06010-000` · Nº `100` — **NF 1004**: `8` vol · `120` kg · `40×40×40` · `7.000,00`; **NF 1005**: `6` vol · `100` kg · `40×40×40` · `5.000,00`
 - **P3:** taxável **220 kg** (2 NFs → 2× TDE+TDA) → **R$ 296,00** · **Boleto** · 15 dias
 
 #### ▸ P05 — C4 → AutoPeças Itaquera (São Paulo) · **R$ 100,00 (mínimo)** · *cancelar no Dia 13*
-- **P1:** Cliente **C4 — AutoPeças Expressa** · `Rafael Tonin` · **Coleta 02/07/2026 · Tarde** *(origem 13010-111 Campinas/SP, nº 95)*
+- **P1:** Cliente **C4 — AutoPeças Expressa** · `Rafael Tonin` · **Coleta HOJE · Tarde** *(origem 13010-111 Campinas/SP, nº 95)*
 - **P2:** Destinatário `AutoPeças Itaquera` · CNPJ `60.005.005/0001-05` · CEP `08210-000` · Nº `100` — Item **NF 1006**: `2` vol · `30` kg · `40×40×40` · `2.000,00`
 - **P3:** cálculo dá 66,00 → **elevado ao mínimo R$ 100,00** · **PIX** · Após entrega
 
 #### ▸ P06 — C3 → Eletro SBC (São Bernardo) · **R$ 615,00** · *2 NFs, pesado*
-- **P1:** Cliente **C3 — Magazine Casa & Cia** · `Júlia Prado` · **Coleta 01/07/2026 · Manhã** *(origem 09010-000 Santo André/SP, nº 300)*
+- **P1:** Cliente **C3 — Magazine Casa & Cia** · `Júlia Prado` · **Coleta HOJE · Manhã** *(origem 09010-000 Santo André/SP, nº 300)*
 - **P2:** Destinatário `Eletro SBC Atacado` · CNPJ `60.006.006/0001-06` · CEP `09710-000` · Nº `100` — **NF 1007**: `12` vol · `300` kg · `50×40×40` · `15.000,00`; **NF 1008**: `8` vol · `200` kg · `50×40×40` · `10.000,00`
 - **P3:** taxável **500 kg** (2 NFs) → **R$ 615,00** · **Boleto** · 15 dias
 
 #### ▸ P07 — C2 → Mercado Brás (São Paulo) · **R$ 138,00**
-- **P1:** Cliente **C2 — Distribuidora Norte SP** · `Carlos Nunes` · **Coleta 01/07/2026 · Manhã** *(origem 02011-000 Santana/SP, nº 750)*
+- **P1:** Cliente **C2 — Distribuidora Norte SP** · `Carlos Nunes` · **Coleta HOJE · Manhã** *(origem 02011-000 Santana/SP, nº 750)*
 - **P2:** Destinatário `Mercado Brás Ltda` · CNPJ `60.007.007/0001-07` · CEP `03007-000` · Nº `100` — Item **NF 1009**: `6` vol · `90` kg · `40×40×40` · `6.000,00`
 - **P3:** taxável **90 kg** → **R$ 138,00** · **PIX** · Após entrega
 
 #### ▸ P08 — C1 → Tech Berrini (São Paulo) · **R$ 330,00** · *cubagem governa · mensal*
-- **P1:** Cliente **C1 — Loja Online Tech** · `Ana Souza` · **Coleta 01/07/2026 · Manhã** *(origem 04571-010 Berrini/SP, nº 1200)*
+- **P1:** Cliente **C1 — Loja Online Tech** · `Ana Souza` · **Coleta HOJE · Manhã** *(origem 04571-010 Berrini/SP, nº 1200)*
 - **P2:** Destinatário `Tech Berrini Store` · CNPJ `60.008.008/0001-08` · CEP `04571-010` · Nº `100` — Item **NF 1010**: `8` vol · `60` kg · `60×60×60` cm · declarado `4.000,00`
 - **P3:** taxável **288 kg cubado** [(60×60×60)/6.000 = 36 × 8 = 288 > 60 real] → **R$ 330,00** · **Boleto** · **Faturamento mensal**
 
 #### ▸ P09 — C1 → Distribuidora Santana (São Paulo) · **R$ 171,00** · *mensal*
-- **P1:** Cliente **C1 — Loja Online Tech** · `Ana Souza` · **Coleta 01/07/2026 · Manhã** *(origem 04571-010 Berrini/SP, nº 1200)*
+- **P1:** Cliente **C1 — Loja Online Tech** · `Ana Souza` · **Coleta HOJE · Manhã** *(origem 04571-010 Berrini/SP, nº 1200)*
 - **P2:** Destinatário `Distribuidora Santana` · CNPJ `60.009.009/0001-09` · CEP `02011-000` · Nº `100` — Item **NF 1011**: `8` vol · `120` kg · `40×40×40` · `7.000,00`
 - **P3:** taxável **120 kg** → **R$ 171,00** · **Boleto** · **Faturamento mensal**
 
 #### ▸ P10 — C4 → AutoPeças Campinas (Campinas) · **R$ 260,00** · *cancelar no Dia 13*
-- **P1:** Cliente **C4 — AutoPeças Expressa** · `Rafael Tonin` · **Coleta 02/07/2026 · Tarde** *(origem 13010-111 Campinas/SP, nº 95)*
+- **P1:** Cliente **C4 — AutoPeças Expressa** · `Rafael Tonin` · **Coleta HOJE · Tarde** *(origem 13010-111 Campinas/SP, nº 95)*
 - **P2:** Destinatário `AutoPeças Campinas` · CNPJ `60.010.010/0001-10` · CEP `13010-111` · Nº `100` — Item **NF 1012**: `12` vol · `200` kg · `40×40×40` · `10.000,00`
 - **P3:** taxável **200 kg** → **R$ 260,00** · **PIX** · Após entrega
 
 #### ▸ P11 — C1 → Boutique Pinheiros (São Paulo) · **R$ 121,50** · *mensal*
-- **P1:** Cliente **C1 — Loja Online Tech** · `Ana Souza` · **Coleta 01/07/2026 · Manhã** *(origem 04571-010 Berrini/SP, nº 1200)*
+- **P1:** Cliente **C1 — Loja Online Tech** · `Ana Souza` · **Coleta HOJE · Manhã** *(origem 04571-010 Berrini/SP, nº 1200)*
 - **P2:** Destinatário `Boutique Pinheiros` · CNPJ `60.011.011/0001-11` · CEP `05422-000` · Nº `100` — Item **NF 1013**: `5` vol · `75` kg · `40×40×45` · `5.500,00`
 - **P3:** taxável **75 kg** → **R$ 121,50** · **Boleto** · **Faturamento mensal**
 
 #### ▸ P12 — C5 → Moda Vale (São José dos Campos) · **R$ 385,00** · *2 NFs, interior*
-- **P1:** Cliente **C5 — Moda Vale Confecções** · `Sônia Reis` · **Coleta 02/07/2026 · Tarde** *(origem 12210-130 SJC/SP, nº 410)*
+- **P1:** Cliente **C5 — Moda Vale Confecções** · `Sônia Reis` · **Coleta HOJE · Tarde** *(origem 12210-130 SJC/SP, nº 410)*
 - **P2:** Destinatário `Moda Vale SJC` · CNPJ `60.012.012/0001-12` · CEP `12210-130` · Nº `100` — **NF 1014**: `10` vol · `180` kg · `45×40×40` · `9.000,00`; **NF 1015**: `6` vol · `120` kg · `45×40×40` · `6.000,00`
 - **P3:** taxável **300 kg** (2 NFs) → **R$ 385,00** · **Transferência** · 15 dias
 
 #### ▸ P13 — C4 → Oficina Campinas Sul (Campinas) · **R$ 159,50**
-- **P1:** Cliente **C4 — AutoPeças Expressa** · `Rafael Tonin` · **Coleta 02/07/2026 · Tarde** *(origem 13010-111 Campinas/SP, nº 95)*
+- **P1:** Cliente **C4 — AutoPeças Expressa** · `Rafael Tonin` · **Coleta HOJE · Tarde** *(origem 13010-111 Campinas/SP, nº 95)*
 - **P2:** Destinatário `Oficina Campinas Sul` · CNPJ `60.013.013/0001-13` · CEP `13010-111` · Nº `100` — Item **NF 1016**: `7` vol · `110` kg · `45×45×45` · `6.500,00`
 - **P3:** taxável **110 kg** → **R$ 159,50** · **PIX** · Após entrega
 
 #### ▸ P14 — C6 → EletroBaixada (Santos) · **R$ 339,00** · *2 NFs, Baixada*
-- **P1:** Cliente **C6 — EletroBaixada Atacado** · `Diego Matos` · **Coleta 02/07/2026 · Tarde** *(origem 11013-000 Santos/SP, nº 88)*
+- **P1:** Cliente **C6 — EletroBaixada Atacado** · `Diego Matos` · **Coleta HOJE · Tarde** *(origem 11013-000 Santos/SP, nº 88)*
 - **P2:** Destinatário `EletroBaixada Santos` · CNPJ `60.014.014/0001-14` · CEP `11013-000` · Nº `100` — **NF 1017**: `8` vol · `160` kg · `45×45×45` · `8.000,00`; **NF 1018**: `6` vol · `100` kg · `45×45×45` · `5.000,00`
 - **P3:** taxável **260 kg** (2 NFs) → **R$ 339,00** · **PIX** · Após entrega
 
 #### ▸ P15 — C6 → Loja São Vicente (São Vicente) · **R$ 100,00 (mínimo)**
-- **P1:** Cliente **C6 — EletroBaixada Atacado** · `Diego Matos` · **Coleta 02/07/2026 · Tarde** *(origem 11013-000 Santos/SP, nº 88)*
+- **P1:** Cliente **C6 — EletroBaixada Atacado** · `Diego Matos` · **Coleta HOJE · Tarde** *(origem 11013-000 Santos/SP, nº 88)*
 - **P2:** Destinatário `Loja São Vicente` · CNPJ `60.015.015/0001-15` · CEP `11310-000` · Nº `100` — Item **NF 1019**: `3` vol · `40` kg · `40×40×40` · `2.500,00`
 - **P3:** cálculo dá 77,50 → **elevado ao mínimo R$ 100,00** · **PIX** · Após entrega
 
 #### ▸ P16 — C5 → Confecções Vale Norte (Jacareí) · **R$ 237,00**
-- **P1:** Cliente **C5 — Moda Vale Confecções** · `Sônia Reis` · **Coleta 02/07/2026 · Tarde** *(origem 12210-130 SJC/SP, nº 410)*
+- **P1:** Cliente **C5 — Moda Vale Confecções** · `Sônia Reis` · **Coleta HOJE · Tarde** *(origem 12210-130 SJC/SP, nº 410)*
 - **P2:** Destinatário `Confecções Vale Norte` · CNPJ `60.016.016/0001-16` · CEP `12308-010` (Jacareí/SP) · Nº `100` — Item **NF 1020**: `10` vol · `180` kg · `45×45×45` · `9.000,00`
 - **P3:** taxável **180 kg** → **R$ 237,00** · **Transferência** · 15 dias
 
-> **Ordem e datas de cadastro:** **25/06** (DIA 9) → P01–P04 · **26/06** (DIA 10) → P05–P09 · **27/06** (DIA 11) → P10–P13 · **28/06** (DIA 12) → P14–P16.
+> **Ordem de cadastro (tudo hoje):** P01–P04, depois P05–P09, P10–P13 e P14–P16. Pode cadastrar todos de uma vez — a "data de coleta" de todos é **HOJE**.
 
-## DIA 10 · 26/06/2026 (sex) — Conferência de cálculo
+## DIA 10 — Conferência de cálculo
 Depois de cadastrar P05–P09, ✅ VERIFICAR especialmente:
 - **P05:** o frete final é **R$ 100,00** (mínimo aplicado sobre os 66,00 calculados).
 - **P08:** o frete é **R$ 330,00** porque o sistema usou o **peso cubado (288 kg)**, não o real (60 kg). Se ele cobrar por 60 kg (= R$ 102,00), é **bug de cubagem** — anote.
 
-## DIA 11 · 27/06/2026 (sáb) — Conferência de NFs múltiplas
+## DIA 11 — Conferência de NFs múltiplas
 Depois de P10–P13, ✅ VERIFICAR no **P04** e **P06** (2 NFs): o resumo de frete deve cobrar **TDE+TDA dobrados** (R$ 20,00 em taxas de NF, não R$ 10,00). Se cobrar só 1× as taxas, o `nfCount` não está contando as 2 notas — anote.
 
-## DIA 12 · 28/06/2026 (dom) — Conclusão do cadastro
+## DIA 12 — Conclusão do cadastro
 Após P14–P16, ✅ VERIFICAR: a lista **Pedidos → Novos** tem **16 pedidos**, e a soma dos fretes do quadro-resumo é **R$ 3.695,00**.
 
-## DIA 13 · 29/06/2026 (seg) — Confirmações e recusas
+## DIA 13 — Confirmações e recusas
 - **Confirme** (status → Confirmado) **todos os 14 pedidos ativos**: P01, P02, P03, P04, P06, P07, P08, P09, P11, P12, P13, P14, P15, P16.
   ✅ VERIFICAR: ao confirmar, o sistema **cria a receita** correspondente (Financeiro → Receitas). O valor da receita = frete do pedido.
 - **Cancele** **P05** e **P10** (motivo: "cliente desistiu").
   ✅ VERIFICAR: a receita desses pedidos **não** fica ativa (some/zera). *(Se ficar "a receber", é vazamento de receita — anote.)*
 
-## DIA 14 · 30/06/2026 (ter) — Planejamento das rotas (consolidação)
+## DIA 14 — Planejamento das rotas (consolidação)
 Olhe os pedidos confirmados e agrupe por região (vamos despachar na Semana 3):
 
 | Rota | Veículo | Pedidos (consolidados) | Região |
@@ -623,15 +636,15 @@ Olhe os pedidos confirmados e agrupe por região (vamos despachar na Semana 3):
 
 ---
 
-# SEMANA 3 — Operação, rotas e entregas (01 a 09/07/2026)
+# SEMANA 3 — Operação, rotas e entregas
 
-## DIA 15 · 01/07/2026 (qua) — Liberar o Toco e criar as viagens
+## DIA 15 — Liberar o Toco e criar as viagens
 
 **Passo 1 — Tirar o FRC-3C33 da manutenção** (ele vai rodar R4 e R5):
 - Frota → **FRC-3C33** → **Editar** → Status: **Disponível** → **Salvar**.
 - ✅ VERIFICAR: ao voltar à lista da Frota, o status aparece **Disponível** na hora.
 
-**Passo 2 — Criar as 5 viagens.** Vá em **Despacho** (quadro caminhões × dias). Para cada rota: clique na célula **[veículo × 01/07/2026]**, adicione os pedidos listados (consolidação fracionada), escolha o **motorista** e clique em **Criar viagem**.
+**Passo 2 — Criar as 5 viagens.** Vá em **Despacho** (quadro caminhões × dias). Para cada rota: clique na célula **[veículo × HOJE]**, adicione os pedidos listados (consolidação fracionada), escolha o **motorista** e clique em **Criar viagem**.
 
 | Rota | Veículo | Motorista | Pedidos (paradas) | Ajudante |
 |---|---|---|---|---|
@@ -643,11 +656,11 @@ Olhe os pedidos confirmados e agrupe por região (vamos despachar na Semana 3):
 
 ✅ VERIFICAR: cada pedido sai de "Confirmado" para **Em coleta** e fica vinculado à sua viagem; os 3 veículos aparecem **Em rota**.
 
-## DIA 16 · 02/07/2026 (qui) — Saída e rastreio
+## DIA 16 — Saída e rastreio
 - Em **Viagens**, abra **R1** e **R2** e marque **Em trânsito** (partida).
 - ✅ VERIFICAR no **site público** → rastreamento: digite o protocolo do **P01** → mostra **Em trânsito** (sem expor dados sensíveis do cliente).
 
-## DIA 17 · 03/07/2026 (sex) — Entregas da R1 (POD por parada)
+## DIA 17 — Entregas da R1 (POD por parada)
 Em **Viagens → R1**, para cada parada registre a **entrega** (botão Entregar) com **assinatura no POD** + nome do recebedor:
 - **P01** → Varejo Pinheiros — recebido por `Marcos Aurélio`
 - **P03** → Depósito Guarulhos — recebido por `Pedro Henrique`
@@ -656,85 +669,85 @@ Em **Viagens → R1**, para cada parada registre a **entrega** (botão Entregar)
 
 Depois **Encerrar viagem R1** informando: **km rodado `120`**, **combustível `R$ 180,00`**, **pedágio `R$ 0,00`**.
 Em seguida, **Financeiro → Despesas → Nova Despesa**:
-- Categoria **Combustível** · Valor `180,00` · Descrição `Combustível rota R1 — FRC-1A11` · Situação **Pago** · Competência **03/07/2026** · Forma **PIX** · Fornecedor **Auto Posto Marginal Tietê** · Veículo **FRC-1A11** · Motorista **Antônio Ferreira**
+- Categoria **Combustível** · Valor `180,00` · Descrição `Combustível rota R1 — FRC-1A11` · Situação **Pago** · Data **HOJE** · Forma **PIX** · Fornecedor **Auto Posto Marginal Tietê** · Veículo **FRC-1A11** · Motorista **Antônio Ferreira**
 
 ✅ VERIFICAR: P01/P03/P07/P11 ficam **Entregue**; R1 fica **Concluída**.
 
-## DIA 18 · 04/07/2026 (sáb) — Entregas da R2 + ocorrência
+## DIA 18 — Entregas da R2 + ocorrência
 Em **Viagens → R2**:
 - **P02** → Casa & Cia Santo André — recebido por `Rogério Pinto`
 - **P04** → Loja Osasco Center → **primeiro registre uma OCORRÊNCIA**: tipo **Tentativa de entrega**, descrição "destinatário ausente"; depois **reentregue** — recebido por `Tânia Melo`
 - **P06** → Eletro SBC Atacado — recebido por `Evandro Dias`
 
 **Encerrar R2:** km `90` · combustível `R$ 150,00` · pedágio `R$ 0,00`.
-**Nova Despesa:** Combustível · `150,00` · `Combustível rota R2 — FRC-2B22` · **Pago** · Competência **04/07/2026** · PIX · Posto Marginal Tietê · Veículo **FRC-2B22** · Motorista **Beatriz Lima**.
+**Nova Despesa:** Combustível · `150,00` · `Combustível rota R2 — FRC-2B22` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-2B22** · Motorista **Beatriz Lima**.
 ✅ VERIFICAR: a ocorrência de P04 fica registrada no histórico do pedido e a entrega é concluída depois.
 
-## DIA 19 · 05/07/2026 (dom) — Entregas da R3 (carga volumosa)
+## DIA 19 — Entregas da R3 (carga volumosa)
 Em **Viagens → R3**:
 - **P08** → Tech Berrini Store — recebido por `Ana Souza`
 - **P09** → Distribuidora Santana — recebido por `Caio Tavares`
 
 **Encerrar R3:** km `70` · combustível `R$ 120,00` · pedágio `R$ 0,00`.
-**Nova Despesa:** Combustível · `120,00` · `Combustível rota R3 — FRC-2B22` · **Pago** · Competência **05/07/2026** · PIX · Posto Marginal Tietê · Veículo **FRC-2B22** · Motorista **Beatriz Lima**.
+**Nova Despesa:** Combustível · `120,00` · `Combustível rota R3 — FRC-2B22` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-2B22** · Motorista **Beatriz Lima**.
 ✅ VERIFICAR: P08 entregue com frete **R$ 330,00** (cobrado pelo **peso cubado 288 kg**). Se aparecer ~R$ 102,00, é bug de cubagem.
 
-## DIA 20 · 06/07/2026 (seg) — Rota interior R4 (Vale do Paraíba)
+## DIA 20 — Rota interior R4 (Vale do Paraíba)
 Em **Viagens → R4** (Toco + Cláudio + ajudante):
 - **P12** → Moda Vale SJC — recebido por `Sueli Ramos`
 - **P16** → Confecções Vale Norte (Jacareí) — recebido por `Otávio Lopes`
 
 **Encerrar R4:** km `210` · combustível `R$ 320,00` · pedágio `R$ 0,00`.
-**Nova Despesa 1 (combustível):** Combustível · `320,00` · `Combustível rota R4 — FRC-3C33` · **Pago** · Competência **06/07/2026** · PIX · Posto Marginal Tietê · Veículo **FRC-3C33** · Motorista **Cláudio Souza**.
-**Nova Despesa 2 (ajudante):** Categoria **Outros** · `120,00` · `Ajudante de rota R4` · **Pago** · Competência **06/07/2026** · PIX · Motorista **Cláudio Souza**.
+**Nova Despesa 1 (combustível):** Combustível · `320,00` · `Combustível rota R4 — FRC-3C33` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-3C33** · Motorista **Cláudio Souza**.
+**Nova Despesa 2 (ajudante):** Categoria **Outros** · `120,00` · `Ajudante de rota R4` · **Pago** · Data **HOJE** · PIX · Motorista **Cláudio Souza**.
 
-## DIA 21 · 07/07/2026 (ter) — Rota interior R5 (Campinas + Baixada)
+## DIA 21 — Rota interior R5 (Campinas + Baixada)
 Em **Viagens → R5**:
 - **P13** → Oficina Campinas Sul — recebido por `Renato Aguiar`
 - **P14** → EletroBaixada Santos — recebido por `Paula Furtado`
 
 **Encerrar R5:** km `190` · combustível `R$ 300,00` · pedágio `R$ 0,00`.
-**Nova Despesa 1 (combustível):** Combustível · `300,00` · `Combustível rota R5 — FRC-3C33` · **Pago** · Competência **07/07/2026** · PIX · Posto Marginal Tietê · Veículo **FRC-3C33** · Motorista **Cláudio Souza**.
-**Nova Despesa 2 (ajudante):** Outros · `120,00` · `Ajudante de rota R5` · **Pago** · Competência **07/07/2026** · PIX · Motorista **Cláudio Souza**.
+**Nova Despesa 1 (combustível):** Combustível · `300,00` · `Combustível rota R5 — FRC-3C33` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-3C33** · Motorista **Cláudio Souza**.
+**Nova Despesa 2 (ajudante):** Outros · `120,00` · `Ajudante de rota R5` · **Pago** · Data **HOJE** · PIX · Motorista **Cláudio Souza**.
 
 > Total de combustível das 5 rotas = **R$ 1.070,00**; ajudante = **R$ 240,00**. Guarde para o batimento.
 
-## DIA 22 · 08/07/2026 (qua) — Recebimentos
+## DIA 22 — Recebimentos
 Em Financeiro → Receitas, dê **baixa (recebido)** nas receitas dos pedidos **à vista/pix**: P01, P03, P06, P07, P08 = **R$ 1.322,00** (escolha "recebido", data = hoje).
 Deixe **a receber** as demais ativas: P02, P04, P09, P11, P12, P13, P14, P15, P16 = **R$ 2.013,00** — simulando prazo.
 ✅ VERIFICAR: recebido (1.322,00) + a receber (2.013,00) = **3.335,00**; o painel de **aging** se distribui corretamente.
 
 ---
 
-# SEMANA 4 — Financeiro, fatura mensal e fechamento (09 a 16/07/2026)
+# SEMANA 4 — Financeiro, fatura mensal e fechamento
 
-## DIA 23 · 09/07/2026 (qui) — Despesas fixas do mês
+## DIA 23 — Despesas fixas do mês
 Financeiro → Despesas → **Nova Despesa**. Cadastre **uma despesa por linha** abaixo (preencha Categoria, Valor, Descrição, Situação, datas e os vínculos indicados):
 
 | Categoria | Descrição | Valor | Situação | Datas | Fornecedor | Veículo |
 |---|---|---|---|---|---|---|
-| Salários | Folha — 3 motoristas | 8.400,00 | **Pago** | Competência 05/07 · Pagamento 05/07/2026 | — | — |
-| Aluguel | Galpão cross-docking | 3.500,00 | **Pago** | Competência 05/07 · Pagamento 05/07/2026 | — | — |
-| Seguro | Parcela seguro da frota | 1.200,00 | **A pagar** | Competência 09/07 · Vencimento 20/07/2026 | Protege Seguros | — |
-| Manutenção | Revisão FRC-2B22 | 680,00 | **A pagar** | Competência 07/07 · Vencimento 24/07/2026 | DieselFix Mecânica | FRC-2B22 |
-| Pneus | 2 pneus FRC-3C33 | 1.300,00 | **A pagar** | Competência 08/07 · Vencimento 31/07/2026 | PneuJá Distribuidora | FRC-3C33 |
-| Impostos | Simples/ISS do período | **200,10** | **A pagar** | Competência 09/07 · Vencimento 20/07/2026 | — | — |
+| Salários | Folha — 3 motoristas | 8.400,00 | **Pago** | Data **HOJE** | — | — |
+| Aluguel | Galpão cross-docking | 3.500,00 | **Pago** | Data **HOJE** | — | — |
+| Seguro | Parcela seguro da frota | 1.200,00 | **A pagar** | Competência HOJE · Vencimento **HOJE + 30 dias** | Protege Seguros | — |
+| Manutenção | Revisão FRC-2B22 | 680,00 | **A pagar** | Competência HOJE · Vencimento **HOJE + 25 dias** | DieselFix Mecânica | FRC-2B22 |
+| Pneus | 2 pneus FRC-3C33 | 1.300,00 | **A pagar** | Competência HOJE · Vencimento **HOJE + 40 dias** | PneuJá Distribuidora | FRC-3C33 |
+| Impostos | Simples/ISS do período | **200,10** | **A pagar** | Competência HOJE · Vencimento **HOJE + 30 dias** | — | — |
 
 > **Imposto:** `6% × R$ 3.335,00 (receita ativa) = R$ 200,10`.
 > Combustível (180+150+120+320+300 = **R$ 1.070,00**) e ajudante (2 × 120 = **R$ 240,00**) já foram lançados nas rotas da Semana 3 — **não lance de novo**.
 > ✅ VERIFICAR: o painel **A pagar** soma `1.200 + 680 + 1.300 + 200,10 = R$ 3.380,10` e o **aging** distribui pelas datas de vencimento.
 
-## DIA 24 · 10/07/2026 (sex) — Fatura mensal do cliente C1
+## DIA 24 — Fatura mensal do cliente C1
 Cadastros → Cliente **C1 (Loja Online Tech)** → **Fechar fatura**.
 - Pedidos do C1 no período: **P08 (330,00), P09 (171,00), P11 (121,50)** = **R$ 622,50**.
 - ⚠️ **Atenção (igual ao aviso do teste SQL):** como neste roteiro cada pedido **já gerou receita por pedido**, fechar a fatura mensal pode **duplicar** a receita do C1. Para o batimento fechar, **escolha um caminho**:
   - **(A) Recomendado p/ este teste:** **não feche** a fatura mensal (mantém receita por pedido). Apenas confira que a tela de fatura **lista** P08+P09+P11 e o total **R$ 622,50**.
   - **(B)** Se quiser testar o fechamento, **cancele antes** as 3 receitas por pedido do C1 e então gere a fatura — aí o total único deve ser **R$ 622,50**.
 
-## DIA 25 · 11/07/2026 (sáb) — DRE e fluxo de caixa
+## DIA 25 — DRE e fluxo de caixa
 Abra **Financeiro → DRE**. Confira os números com o batimento abaixo.
 
-## DIAS 26–30 · 12 a 16/07/2026 — Conferência final e limpeza de pendências
+## DIAS 26–30 — Conferência final e limpeza de pendências
 - Reentregue/baixe qualquer pendência.
 - Reveja o **aging** (a receber × vencido) conforme as datas avançam.
 - Confira alertas de documentos (Seguro FRC-3C33, CNH Beatriz) continuam sinalizados.
