@@ -83,6 +83,20 @@ export default function DispatchBoard() {
     },
   });
 
+  // Devolve TODOS os pedidos programados (sem viagem) para a fila — útil para reprogramar do zero
+  const unassignAllMutation = useMutation({
+    mutationFn: async () => {
+      for (const o of scheduled) {
+        await base44.entities.Order.update(o.id, { scheduled_truck_id: null, scheduled_date: null });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast({ title: "Todos os pedidos voltaram para a fila." });
+    },
+    onError: (e) => toast({ title: "Erro ao devolver", description: e?.message, variant: "destructive" }),
+  });
+
   const handleCellClick = (truck, day) => {
     if (selectedIds.length === 0) {
       toast({ title: "Selecione pedidos na fila", description: "Marque um ou mais pedidos à esquerda e clique na célula para programar." });
@@ -114,6 +128,11 @@ export default function DispatchBoard() {
   return (
     <div className="space-y-4">
       <PageHeader icon={CalendarDays} title="Despacho" subtitle="Selecione pedidos na fila e clique no dia/caminhão para programar">
+        {scheduled.length > 0 && (
+          <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => unassignAllMutation.mutate()} disabled={unassignAllMutation.isPending}>
+            <X className="w-3.5 h-3.5" /> Devolver {scheduled.length} à fila
+          </Button>
+        )}
         {activeTrips.length > 0 && (
           <Link to="/admin/viagens" className="text-xs text-primary hover:underline flex items-center gap-1">
             <Truck className="w-3.5 h-3.5" /> {activeTrips.length} viagem(ns) ativa(s) →
@@ -273,7 +292,7 @@ export default function DispatchBoard() {
                                     <button
                                       title="Devolver à fila"
                                       onClick={e => { e.stopPropagation(); unassignMutation.mutate(o); }}
-                                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-opacity">
+                                      className="absolute top-1 right-1 opacity-60 hover:opacity-100 text-muted-foreground hover:text-red-500 transition-opacity">
                                       <X className="w-3 h-3" />
                                     </button>
                                   </div>
