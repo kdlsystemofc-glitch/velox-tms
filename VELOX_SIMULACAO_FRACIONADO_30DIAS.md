@@ -659,55 +659,47 @@ Na aba **Pedidos → Confirmados**, cada pedido sem viagem mostra o botão **Des
 - Frota → **FRC-3C33** → **Editar** → Status: **Disponível** → **Salvar**.
 - ✅ VERIFICAR: ao voltar à lista da Frota, o status aparece **Disponível** na hora.
 
-**Passo 2 — Criar as 3 viagens no Despacho.** Vá em **Despacho**. Para **cada rota**:
-1. Na **fila de despacho** (esquerda), marque os pedidos da rota.
-2. Clique na célula do **caminhão da rota** na coluna de **HOJE** (ou no botão **Criar viagem**).
-3. Escolha o **motorista** → **Criar viagem**.
+**Passo 2 — Criar as 3 viagens.** Em **Despacho**, para **cada rota**: marque os pedidos da rota na **fila** (esquerda) → clique na **célula do caminhão** (coluna de HOJE) → botão **Viagem**. Abre a tela **Nova Viagem** — preencha:
+- **Pedidos:** confira que os pedidos da rota estão marcados.
+- **Motorista** *(obrigatório)*: o da rota — R1 **Antônio**, R2 **Beatriz**, R3 **Cláudio**.
+- **Caminhão** *(obrigatório)*: já vem pré-selecionado da célula.
+- **Data e hora de saída:** deixe **em branco** (assume agora).
+- **Adiantamento ao motorista (R$):** **deixe em branco / 0** — ⚠️ se preencher, o sistema cria uma despesa de vale-frete e o batimento não fecha com os números deste roteiro.
+- **Observações da viagem:** opcional.
+- **Iniciar imediatamente:** **deixe DESMARCADO** (vamos iniciar no Dia 16) → clique **Criar Viagem**.
 
-Faça isso 3 vezes (R1 com a VUC, R2 com o 3/4, R3 com o Toco), conforme a tabela do Dia 14.
+Repita para R1, R2 e R3.
 
-✅ VERIFICAR: os pedidos saem de **Confirmado** para **Em coleta**, vinculados à viagem; os 3 caminhões ficam **Em rota**; as 3 viagens aparecem no menu **Viagens**.
+✅ VERIFICAR: os pedidos saem da fila do Despacho (ganham viagem) e as 3 viagens aparecem em **Viagens** com status **Planejada**.
 
-## DIA 16 — Saída e rastreio
-- Em **Viagens**, abra as 3 viagens e marque **Em trânsito** (partida).
-- ✅ VERIFICAR no **site público** → rastreamento: digite o protocolo do **P01** → mostra **Em trânsito** (sem expor dados sensíveis do cliente).
+## DIA 16 — Iniciar as viagens (coleta) + rastreio
+Em **Viagens**, abra cada viagem e clique **Iniciar Viagem**.
+- ✅ VERIFICAR: os pedidos da viagem viram **Em coleta**, o caminhão fica **Em rota** e a viagem fica **Em Andamento**.
+- Rastreio: no **site público** → rastrear → digite o protocolo do **P01** → mostra o andamento (sem expor dados sensíveis).
 
-## DIA 17 — Entregas da R1 (VUC) + custos
-Em **Viagens → R1**, em cada parada registre a **entrega** (botão Entregar) com **assinatura no POD** + recebedor:
-- **P01** → Varejo Pinheiros — `Marcos Aurélio`
-- **P03** → Depósito Guarulhos — `Pedro Henrique`
-- **P07** → Mercado Brás — `Luiza Campos`
-- **P11** → Boutique Pinheiros — `Camila Reis`
+## DIA 17 — Concluir paradas e encerrar a R1 (VUC)
+Em **Viagens → R1**: a viagem tem **paradas** (a coleta + as entregas). Clique **Concluir** em cada parada. Ao concluir as entregas, o pedido passa a **Em trânsito** e, quando todas as suas entregas terminam, **Entregue**. *(A assinatura/POD é capturada no app do motorista; no admin você marca "Concluir".)*
+Recebedores: P01 `Marcos Aurélio` · P03 `Pedro Henrique` · P07 `Luiza Campos` · P11 `Camila Reis`.
 
-**Encerrar viagem R1:** km `120` · combustível `R$ 180,00` · pedágio `R$ 0,00`.
-**Financeiro → Despesas → Nova Despesa:** Combustível · `180,00` · `Combustível rota R1 — FRC-1A11` · **Pago** · Data **HOJE** · PIX · Fornecedor **Auto Posto Marginal Tietê** · Veículo **FRC-1A11** · Motorista **Antônio Ferreira**.
-✅ VERIFICAR: as 4 paradas ficam **Entregue**; R1 fica **Concluída**.
+Depois clique **Encerrar Viagem** e informe: **Km final `120`** · **Combustível `180,00`** · **Pedágio `0`** → **Encerrar**.
+> 💡 Ao encerrar, o sistema **cria sozinho** a despesa de **Combustível (R$ 180,00, paga)**, marca os pedidos como **Entregue** e o caminhão volta a **Disponível**. **NÃO lance o combustível manualmente** (senão duplica).
+✅ VERIFICAR: R1 fica **Concluída**; em **Financeiro → Despesas** surge "Combustível… R$ 180,00".
 
-## DIA 18 — Entregas da R2 (3/4) + ocorrência + custos
-Em **Viagens → R2**:
-- **P02** → Casa & Cia Santo André — `Rogério Pinto`
-- **P04** → Loja Osasco Center → **registre uma OCORRÊNCIA**: tipo **Tentativa de entrega**, descrição "destinatário ausente"; depois **reentregue** — `Tânia Melo`
-- **P06** → Eletro SBC Atacado — `Evandro Dias`
-- **P08** → Tech Berrini Store — `Ana Souza`
-- **P09** → Distribuidora Santana — `Caio Tavares`
+## DIA 18 — R2 (3/4): ocorrência, cubagem e encerrar
+Em **Viagens → R2**, conclua as paradas:
+- **P04**: antes de concluir a entrega, registre uma **ocorrência** — abra o pedido **P04** → aba **Ocorrências** → **Tentativa de entrega** ("destinatário ausente"); depois volte à viagem e **Concluir** a parada. Recebedor `Tânia Melo`.
+- Demais: P02 `Rogério Pinto` · P06 `Evandro Dias` · P08 `Ana Souza` · P09 `Caio Tavares`.
 
-**Encerrar R2:** km `160` · combustível `R$ 270,00` · pedágio `R$ 0,00`.
-**Nova Despesa:** Combustível · `270,00` · `Combustível rota R2 — FRC-2B22` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-2B22** · Motorista **Beatriz Lima**.
-✅ VERIFICAR: a ocorrência de P04 fica no histórico; o **P08** foi entregue com frete **R$ 330,00** (cobrado pelo **peso cubado 288 kg** — se aparecer ~R$ 102,00 é bug de cubagem).
+**Encerrar R2:** Km `160` · Combustível `270,00` · Pedágio `0` → a despesa de combustível é criada **automaticamente**.
+✅ VERIFICAR: a ocorrência de P04 fica no histórico do pedido; o **P08** foi entregue com frete **R$ 330,00** (cobrado pelo **peso cubado 288 kg** — se aparecer ~R$ 102,00, é bug de cubagem).
 
-## DIA 19 — Entregas da R3 (Toco, interior) + ajudante + custos
-Em **Viagens → R3** (Toco + Cláudio + ajudante):
-- **P12** → Moda Vale SJC — `Sueli Ramos`
-- **P13** → Oficina Campinas Sul — `Renato Aguiar`
-- **P14** → EletroBaixada Santos — `Paula Furtado`
-- **P15** → Loja São Vicente — `Bruno Alves`
-- **P16** → Confecções Vale Norte (Jacareí) — `Otávio Lopes`
+## DIA 19 — R3 (Toco, interior): encerrar + ajudante
+Em **Viagens → R3**, conclua as paradas: P12 `Sueli Ramos` · P13 `Renato Aguiar` · P14 `Paula Furtado` · P15 `Bruno Alves` · P16 `Otávio Lopes`.
 
-**Encerrar R3:** km `400` · combustível `R$ 620,00` · pedágio `R$ 0,00`.
-**Nova Despesa 1 (combustível):** Combustível · `620,00` · `Combustível rota R3 — FRC-3C33` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-3C33** · Motorista **Cláudio Souza**.
-**Nova Despesa 2 (ajudante):** Categoria **Outros** · `240,00` · `Ajudante — rota R3 (interior)` · **Pago** · Data **HOJE** · PIX · Motorista **Cláudio Souza**.
+**Encerrar R3:** Km `400` · Combustível `620,00` · Pedágio `0` → combustível criado **automaticamente**.
+Em seguida lance **apenas o ajudante** (esse não é automático): **Financeiro → Despesas → Nova Despesa** → Categoria **Outros** · Valor `240,00` · Descrição `Ajudante — rota R3 (interior)` · **Pago** · Data **HOJE** · Forma **PIX** · Motorista **Cláudio Souza**.
 
-> Total de combustível das 3 rotas = 180 + 270 + 620 = **R$ 1.070,00**; ajudante = **R$ 240,00**. Guarde para o batimento.
+> Combustível das 3 rotas (criado nos encerramentos) = 180 + 270 + 620 = **R$ 1.070,00**; ajudante (lançado à mão) = **R$ 240,00**. Guarde para o batimento.
 
 ## DIA 20 — Recebimentos
 Em Financeiro → Receitas, dê **baixa (recebido)** nas receitas dos pedidos **à vista/pix**: P01, P03, P06, P07, P08 = **R$ 1.322,00** (escolha "recebido", data = hoje).
