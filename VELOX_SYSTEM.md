@@ -544,9 +544,9 @@ Prioridade:
 
 ### Fluxo de aprovação de pedido
 1. Admin abre **Pedidos** (`/admin/coletas`), aba "Novos"
-2. Clica em "Confirmar" na própria linha → Sheet abre com sugestão de caminhão (bin-packing)
-3. Define data, caminhão, valor final do frete, forma de pagamento
-4. Confirma → pedido `confirmed` + Revenue criado via `ensureRevenueForOrder` (sem duplicar)
+2. Clica em "Confirmar" na própria linha → Sheet de confirmação
+3. Define data de coleta, valor final do frete e forma de pagamento (o **caminhão NÃO é escolhido aqui** — fica para o Despacho)
+4. Confirma → pedido `confirmed` + Revenue criado via `ensureRevenueForOrder` (sem duplicar) → entra na fila do Despacho
 
 ### Fluxo de despacho e viagem
 1. Admin abre **Despacho** (`/admin/despacho`): fila de confirmados sem viagem à esquerda

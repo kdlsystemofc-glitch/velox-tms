@@ -51,15 +51,15 @@ Você vai executar **toda a simulação numa sessão só, hoje**. Por isso:
 | DIA 8 | Teste de cobertura no site público |
 | DIAS 9–12 | Cadastrar os 16 pedidos (P01–P16) + conferências |
 | DIA 13 | Confirmar 14 ativos + cancelar P05 e P10 |
-| DIA 14 | Planejar as 5 rotas |
-| DIA 15 | Liberar Toco + criar as viagens |
+| DIA 14 | Planejar as 3 rotas |
+| DIA 15 | Liberar Toco + criar as 3 viagens |
 | DIA 16 | Marcar saída + rastreio |
-| DIAS 17–21 | Entregas das rotas R1–R5 (POD) + custos |
-| DIA 22 | Recebimentos |
-| DIA 23 | Despesas fixas do mês |
-| DIA 24 | Fatura mensal do C1 |
-| DIA 25 | DRE e fluxo de caixa |
-| DIAS 26–30 | Conferência final e pendências |
+| DIAS 17–19 | Entregas das rotas R1–R3 (POD) + custos |
+| DIA 20 | Recebimentos |
+| DIA 21 | Despesas fixas do mês |
+| DIA 22 | Fatura mensal do C1 |
+| DIA 23 | DRE e fluxo de caixa |
+| DIAS 24–30 | Conferência final e pendências |
 
 ---
 
@@ -639,95 +639,77 @@ Os 16 pedidos foram criados com status **Novo**. Confirmar é o que **gera a rec
 ## DIA 14 — Planejamento das rotas (consolidação)
 Na aba **Pedidos → Confirmados**, cada pedido sem viagem mostra o botão **Despachar** (leva ao quadro de Despacho). Vamos agrupar por região e despachar no Dia 15:
 
-| Rota | Veículo | Pedidos (consolidados) | Região |
-|---|---|---|---|
-| R1 | VUC (FRC-1A11) | P01, P03, P07, P11 | Capital |
-| R2 | 3/4 (FRC-2B22) | P02, P04, P06 | ABC |
-| R3 | 3/4 (FRC-2B22) | P08, P09 | Capital (volumoso) |
-| R4 | Toco (FRC-3C33) | P12, P16 | Vale do Paraíba |
-| R5 | Toco (FRC-3C33) | P13, P14 | Campinas + Baixada |
+| Rota | Caminhão | Motorista | Pedidos (paradas) | Região | Peso |
+|---|---|---|---|---|---|
+| **R1** | VUC FRC-1A11 | Antônio Ferreira | P01, P03, P07, P11 | Grande SP (capital) | ~290 kg |
+| **R2** | 3/4 FRC-2B22 | Beatriz Lima | P02, P04, P06, P08, P09 | ABC + capital | ~1.050 kg |
+| **R3** | Toco FRC-3C33 | Cláudio Souza (+ ajudante) | P12, P13, P14, P15, P16 | Vale + Campinas + Baixada | ~890 kg |
 
-> As viagens criadas no Despacho aparecem no menu **Viagens** (Operações → **Viagens**), onde você acompanha e **encerra** cada uma (Semana 3).
+> **Como ler isto:** cada **rota = 1 viagem = 1 caminhão**. São **3 caminhões, 3 viagens** — nenhum caminhão se repete. Cada viagem leva vários pedidos (paradas), porque é frete **fracionado** (consolidado). Os 14 pedidos ativos estão distribuídos nas 3 rotas.
+>
+> As viagens criadas no Despacho aparecem no menu **Viagens**, onde você acompanha e **encerra** cada uma.
 
 ---
 
 # SEMANA 3 — Operação, rotas e entregas
 
-## DIA 15 — Liberar o Toco e criar as viagens
+## DIA 15 — Liberar o Toco e criar as 3 viagens
 
-**Passo 1 — Tirar o FRC-3C33 da manutenção** (ele vai rodar R4 e R5):
+**Passo 1 — Tirar o FRC-3C33 da manutenção** (o Toco vai rodar a R3):
 - Frota → **FRC-3C33** → **Editar** → Status: **Disponível** → **Salvar**.
 - ✅ VERIFICAR: ao voltar à lista da Frota, o status aparece **Disponível** na hora.
 
-**Passo 2 — Criar as 5 viagens.** Vá em **Despacho** (quadro caminhões × dias). Para cada rota: clique na célula **[veículo × HOJE]**, adicione os pedidos listados (consolidação fracionada), escolha o **motorista** e clique em **Criar viagem**.
+**Passo 2 — Criar as 3 viagens no Despacho.** Vá em **Despacho**. Para **cada rota**:
+1. Na **fila de despacho** (esquerda), marque os pedidos da rota.
+2. Clique na célula do **caminhão da rota** na coluna de **HOJE** (ou no botão **Criar viagem**).
+3. Escolha o **motorista** → **Criar viagem**.
 
-| Rota | Veículo | Motorista | Pedidos (paradas) | Ajudante |
-|---|---|---|---|---|
-| **R1** | VUC FRC-1A11 | Antônio Ferreira | P01, P03, P07, P11 | não |
-| **R2** | 3/4 FRC-2B22 | Beatriz Lima | P02, P04, P06 | não |
-| **R3** | 3/4 FRC-2B22 | Beatriz Lima | P08, P09 | não |
-| **R4** | Toco FRC-3C33 | Cláudio Souza | P12, P16 | sim |
-| **R5** | Toco FRC-3C33 | Cláudio Souza | P13, P14 | sim |
+Faça isso 3 vezes (R1 com a VUC, R2 com o 3/4, R3 com o Toco), conforme a tabela do Dia 14.
 
-✅ VERIFICAR: cada pedido sai de "Confirmado" para **Em coleta** e fica vinculado à sua viagem; os 3 veículos aparecem **Em rota**.
+✅ VERIFICAR: os pedidos saem de **Confirmado** para **Em coleta**, vinculados à viagem; os 3 caminhões ficam **Em rota**; as 3 viagens aparecem no menu **Viagens**.
 
 ## DIA 16 — Saída e rastreio
-- Em **Viagens**, abra **R1** e **R2** e marque **Em trânsito** (partida).
+- Em **Viagens**, abra as 3 viagens e marque **Em trânsito** (partida).
 - ✅ VERIFICAR no **site público** → rastreamento: digite o protocolo do **P01** → mostra **Em trânsito** (sem expor dados sensíveis do cliente).
 
-## DIA 17 — Entregas da R1 (POD por parada)
-Em **Viagens → R1**, para cada parada registre a **entrega** (botão Entregar) com **assinatura no POD** + nome do recebedor:
-- **P01** → Varejo Pinheiros — recebido por `Marcos Aurélio`
-- **P03** → Depósito Guarulhos — recebido por `Pedro Henrique`
-- **P07** → Mercado Brás — recebido por `Luiza Campos`
-- **P11** → Boutique Pinheiros — recebido por `Camila Reis`
+## DIA 17 — Entregas da R1 (VUC) + custos
+Em **Viagens → R1**, em cada parada registre a **entrega** (botão Entregar) com **assinatura no POD** + recebedor:
+- **P01** → Varejo Pinheiros — `Marcos Aurélio`
+- **P03** → Depósito Guarulhos — `Pedro Henrique`
+- **P07** → Mercado Brás — `Luiza Campos`
+- **P11** → Boutique Pinheiros — `Camila Reis`
 
-Depois **Encerrar viagem R1** informando: **km rodado `120`**, **combustível `R$ 180,00`**, **pedágio `R$ 0,00`**.
-Em seguida, **Financeiro → Despesas → Nova Despesa**:
-- Categoria **Combustível** · Valor `180,00` · Descrição `Combustível rota R1 — FRC-1A11` · Situação **Pago** · Data **HOJE** · Forma **PIX** · Fornecedor **Auto Posto Marginal Tietê** · Veículo **FRC-1A11** · Motorista **Antônio Ferreira**
+**Encerrar viagem R1:** km `120` · combustível `R$ 180,00` · pedágio `R$ 0,00`.
+**Financeiro → Despesas → Nova Despesa:** Combustível · `180,00` · `Combustível rota R1 — FRC-1A11` · **Pago** · Data **HOJE** · PIX · Fornecedor **Auto Posto Marginal Tietê** · Veículo **FRC-1A11** · Motorista **Antônio Ferreira**.
+✅ VERIFICAR: as 4 paradas ficam **Entregue**; R1 fica **Concluída**.
 
-✅ VERIFICAR: P01/P03/P07/P11 ficam **Entregue**; R1 fica **Concluída**.
-
-## DIA 18 — Entregas da R2 + ocorrência
+## DIA 18 — Entregas da R2 (3/4) + ocorrência + custos
 Em **Viagens → R2**:
-- **P02** → Casa & Cia Santo André — recebido por `Rogério Pinto`
-- **P04** → Loja Osasco Center → **primeiro registre uma OCORRÊNCIA**: tipo **Tentativa de entrega**, descrição "destinatário ausente"; depois **reentregue** — recebido por `Tânia Melo`
-- **P06** → Eletro SBC Atacado — recebido por `Evandro Dias`
+- **P02** → Casa & Cia Santo André — `Rogério Pinto`
+- **P04** → Loja Osasco Center → **registre uma OCORRÊNCIA**: tipo **Tentativa de entrega**, descrição "destinatário ausente"; depois **reentregue** — `Tânia Melo`
+- **P06** → Eletro SBC Atacado — `Evandro Dias`
+- **P08** → Tech Berrini Store — `Ana Souza`
+- **P09** → Distribuidora Santana — `Caio Tavares`
 
-**Encerrar R2:** km `90` · combustível `R$ 150,00` · pedágio `R$ 0,00`.
-**Nova Despesa:** Combustível · `150,00` · `Combustível rota R2 — FRC-2B22` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-2B22** · Motorista **Beatriz Lima**.
-✅ VERIFICAR: a ocorrência de P04 fica registrada no histórico do pedido e a entrega é concluída depois.
+**Encerrar R2:** km `160` · combustível `R$ 270,00` · pedágio `R$ 0,00`.
+**Nova Despesa:** Combustível · `270,00` · `Combustível rota R2 — FRC-2B22` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-2B22** · Motorista **Beatriz Lima**.
+✅ VERIFICAR: a ocorrência de P04 fica no histórico; o **P08** foi entregue com frete **R$ 330,00** (cobrado pelo **peso cubado 288 kg** — se aparecer ~R$ 102,00 é bug de cubagem).
 
-## DIA 19 — Entregas da R3 (carga volumosa)
-Em **Viagens → R3**:
-- **P08** → Tech Berrini Store — recebido por `Ana Souza`
-- **P09** → Distribuidora Santana — recebido por `Caio Tavares`
+## DIA 19 — Entregas da R3 (Toco, interior) + ajudante + custos
+Em **Viagens → R3** (Toco + Cláudio + ajudante):
+- **P12** → Moda Vale SJC — `Sueli Ramos`
+- **P13** → Oficina Campinas Sul — `Renato Aguiar`
+- **P14** → EletroBaixada Santos — `Paula Furtado`
+- **P15** → Loja São Vicente — `Bruno Alves`
+- **P16** → Confecções Vale Norte (Jacareí) — `Otávio Lopes`
 
-**Encerrar R3:** km `70` · combustível `R$ 120,00` · pedágio `R$ 0,00`.
-**Nova Despesa:** Combustível · `120,00` · `Combustível rota R3 — FRC-2B22` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-2B22** · Motorista **Beatriz Lima**.
-✅ VERIFICAR: P08 entregue com frete **R$ 330,00** (cobrado pelo **peso cubado 288 kg**). Se aparecer ~R$ 102,00, é bug de cubagem.
+**Encerrar R3:** km `400` · combustível `R$ 620,00` · pedágio `R$ 0,00`.
+**Nova Despesa 1 (combustível):** Combustível · `620,00` · `Combustível rota R3 — FRC-3C33` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-3C33** · Motorista **Cláudio Souza**.
+**Nova Despesa 2 (ajudante):** Categoria **Outros** · `240,00` · `Ajudante — rota R3 (interior)` · **Pago** · Data **HOJE** · PIX · Motorista **Cláudio Souza**.
 
-## DIA 20 — Rota interior R4 (Vale do Paraíba)
-Em **Viagens → R4** (Toco + Cláudio + ajudante):
-- **P12** → Moda Vale SJC — recebido por `Sueli Ramos`
-- **P16** → Confecções Vale Norte (Jacareí) — recebido por `Otávio Lopes`
+> Total de combustível das 3 rotas = 180 + 270 + 620 = **R$ 1.070,00**; ajudante = **R$ 240,00**. Guarde para o batimento.
 
-**Encerrar R4:** km `210` · combustível `R$ 320,00` · pedágio `R$ 0,00`.
-**Nova Despesa 1 (combustível):** Combustível · `320,00` · `Combustível rota R4 — FRC-3C33` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-3C33** · Motorista **Cláudio Souza**.
-**Nova Despesa 2 (ajudante):** Categoria **Outros** · `120,00` · `Ajudante de rota R4` · **Pago** · Data **HOJE** · PIX · Motorista **Cláudio Souza**.
-
-## DIA 21 — Rota interior R5 (Campinas + Baixada)
-Em **Viagens → R5**:
-- **P13** → Oficina Campinas Sul — recebido por `Renato Aguiar`
-- **P14** → EletroBaixada Santos — recebido por `Paula Furtado`
-
-**Encerrar R5:** km `190` · combustível `R$ 300,00` · pedágio `R$ 0,00`.
-**Nova Despesa 1 (combustível):** Combustível · `300,00` · `Combustível rota R5 — FRC-3C33` · **Pago** · Data **HOJE** · PIX · Posto Marginal Tietê · Veículo **FRC-3C33** · Motorista **Cláudio Souza**.
-**Nova Despesa 2 (ajudante):** Outros · `120,00` · `Ajudante de rota R5` · **Pago** · Data **HOJE** · PIX · Motorista **Cláudio Souza**.
-
-> Total de combustível das 5 rotas = **R$ 1.070,00**; ajudante = **R$ 240,00**. Guarde para o batimento.
-
-## DIA 22 — Recebimentos
+## DIA 20 — Recebimentos
 Em Financeiro → Receitas, dê **baixa (recebido)** nas receitas dos pedidos **à vista/pix**: P01, P03, P06, P07, P08 = **R$ 1.322,00** (escolha "recebido", data = hoje).
 Deixe **a receber** as demais ativas: P02, P04, P09, P11, P12, P13, P14, P15, P16 = **R$ 2.013,00** — simulando prazo.
 ✅ VERIFICAR: recebido (1.322,00) + a receber (2.013,00) = **3.335,00**; o painel de **aging** se distribui corretamente.
@@ -736,7 +718,7 @@ Deixe **a receber** as demais ativas: P02, P04, P09, P11, P12, P13, P14, P15, P1
 
 # SEMANA 4 — Financeiro, fatura mensal e fechamento
 
-## DIA 23 — Despesas fixas do mês
+## DIA 21 — Despesas fixas do mês
 Financeiro → Despesas → **Nova Despesa**. Cadastre **uma despesa por linha** abaixo (preencha Categoria, Valor, Descrição, Situação, datas e os vínculos indicados):
 
 | Categoria | Descrição | Valor | Situação | Datas | Fornecedor | Veículo |
@@ -752,17 +734,17 @@ Financeiro → Despesas → **Nova Despesa**. Cadastre **uma despesa por linha**
 > Combustível (180+150+120+320+300 = **R$ 1.070,00**) e ajudante (2 × 120 = **R$ 240,00**) já foram lançados nas rotas da Semana 3 — **não lance de novo**.
 > ✅ VERIFICAR: o painel **A pagar** soma `1.200 + 680 + 1.300 + 200,10 = R$ 3.380,10` e o **aging** distribui pelas datas de vencimento.
 
-## DIA 24 — Fatura mensal do cliente C1
+## DIA 22 — Fatura mensal do cliente C1
 Cadastros → Cliente **C1 (Loja Online Tech)** → **Fechar fatura**.
 - Pedidos do C1 no período: **P08 (330,00), P09 (171,00), P11 (121,50)** = **R$ 622,50**.
 - ⚠️ **Atenção (igual ao aviso do teste SQL):** como neste roteiro cada pedido **já gerou receita por pedido**, fechar a fatura mensal pode **duplicar** a receita do C1. Para o batimento fechar, **escolha um caminho**:
   - **(A) Recomendado p/ este teste:** **não feche** a fatura mensal (mantém receita por pedido). Apenas confira que a tela de fatura **lista** P08+P09+P11 e o total **R$ 622,50**.
   - **(B)** Se quiser testar o fechamento, **cancele antes** as 3 receitas por pedido do C1 e então gere a fatura — aí o total único deve ser **R$ 622,50**.
 
-## DIA 25 — DRE e fluxo de caixa
+## DIA 23 — DRE e fluxo de caixa
 Abra **Financeiro → DRE**. Confira os números com o batimento abaixo.
 
-## DIAS 26–30 — Conferência final e limpeza de pendências
+## DIAS 24–30 — Conferência final e limpeza de pendências
 - Reentregue/baixe qualquer pendência.
 - Reveja o **aging** (a receber × vencido) conforme as datas avançam.
 - Confira alertas de documentos (Seguro FRC-3C33, CNH Beatriz) continuam sinalizados.

@@ -136,10 +136,8 @@ export default function OrdersWorkspace() {
 
   // ── Confirmar (mesma lógica da antiga Agenda) ─────────────────
   const openConfirm = (order) => {
-    const suggestions = suggestTruckForOrder(order, trucks, orders);
     const est = calculateFreight(order.total_weight_kg || 0, null, settings);
     setConfirmForm({
-      truck_id: suggestions[0]?.truck.id || "",
       date: order.collection_date || "",
       freight_value: order.freight_value || est || "",
       payment_method: order.payment_method || "pix",
@@ -150,10 +148,10 @@ export default function OrdersWorkspace() {
   const confirmMutation = useMutation({
     mutationFn: async ({ order, form }) => {
       const fv = typeof form.freight_value === "number" ? form.freight_value : parseFloat(String(form.freight_value).replace(",", ".")) || 0;
+      // Confirmar NÃO atribui caminhão — isso é feito no Despacho.
       await base44.entities.Order.update(order.id, {
         status: "confirmed",
-        scheduled_truck_id: form.truck_id || undefined,
-        scheduled_date: form.date || order.collection_date,
+        collection_date: form.date || order.collection_date,
         freight_value: fv,
         payment_method: form.payment_method || undefined,
         status_history: [...(order.status_history || []), { status: "confirmed", timestamp: new Date().toISOString(), user: "Admin", note: "Confirmado na fila de pedidos" }],
@@ -188,9 +186,6 @@ export default function OrdersWorkspace() {
     },
     onError: (e) => toast({ title: "Erro ao recusar", description: e?.message, variant: "destructive" }),
   });
-
-  const suggestions = confirmingOrder ? suggestTruckForOrder(confirmingOrder, trucks, orders) : [];
-  const selectedSuggestion = suggestions.find(s => s.truck.id === confirmForm.truck_id);
 
   return (
     <div className="space-y-4">
@@ -346,27 +341,6 @@ export default function OrdersWorkspace() {
                   <Input type="date" value={confirmForm.date} onChange={e => setConfirmForm(f => ({ ...f, date: e.target.value }))} />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">Caminhão sugerido</label>
-                  <Select value={confirmForm.truck_id} onValueChange={v => setConfirmForm(f => ({ ...f, truck_id: v }))}>
-                    <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
-                    <SelectContent>
-                      {suggestions.map(s => (
-                        <SelectItem key={s.truck.id} value={s.truck.id}>
-                          {s.truck.plate} — {s.truck.model} ({s.usagePercent.toFixed(0)}% cheio)
-                        </SelectItem>
-                      ))}
-                      {trucks.filter(t => !suggestions.find(s => s.truck.id === t.id)).map(t => (
-                        <SelectItem key={t.id} value={t.id}>{t.plate} — {t.model}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedSuggestion && (
-                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mt-1">
-                      ⚡ {selectedSuggestion.truck.plate}: {selectedSuggestion.availableKg.toLocaleString("pt-BR")} kg livres na data
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-1">
                   <label className="text-sm font-medium">Valor do frete (R$)</label>
                   <NumericInput currency value={confirmForm.freight_value} onChange={v => setConfirmForm(f => ({ ...f, freight_value: v }))} placeholder="ex: 1.250,00" />
                 </div>
@@ -382,6 +356,9 @@ export default function OrdersWorkspace() {
                     </SelectContent>
                   </Select>
                 </div>
+                <p className="text-xs text-muted-foreground bg-muted/30 border border-border rounded p-2">
+                  O <strong>caminhão</strong> e a rota são definidos depois, na tela de <strong>Despacho</strong>.
+                </p>
                 <div className="pt-2 flex gap-3">
                   <Button variant="outline" className="flex-1" onClick={() => setConfirmingOrder(null)}>Cancelar</Button>
                   <Button className="flex-1 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"

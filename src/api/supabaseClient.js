@@ -64,6 +64,13 @@ function sanitizePayload(payload) {
   for (const field of READ_ONLY_FIELDS) {
     delete clean[field];
   }
+  // String vazia em colunas UUID/DATE quebra o PostgREST (400 "invalid input
+  // syntax for type uuid/date"). Converte "" -> null nessas colunas.
+  for (const key of Object.keys(clean)) {
+    if (clean[key] === '' && /_(id|date|expiry)$/.test(key)) {
+      clean[key] = null;
+    }
+  }
   return clean;
 }
 

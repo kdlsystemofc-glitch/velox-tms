@@ -52,7 +52,7 @@ O painel foi reconstruído seguindo o padrão dos grandes TMS (McLeod, TMW, Benn
 
 1. **Operações** (`/admin` → `OperationsHub.jsx`) — torre de controle. Topo: *fila de ação* (só o que exige decisão agora: pedidos novos, confirmados sem viagem, alertas críticos, recebimentos atrasados). Depois: *pipeline* clicável (Novos → Confirmados → Em coleta → Em trânsito → Entregues), *operação de hoje* e *frota agora*.
 
-2. **Pedidos** (`/admin/coletas` → `OrdersWorkspace.jsx`) — fila única com abas por etapa do pipeline e **ações inline**: confirmar (Sheet com sugestão de caminhão), recusar e despachar sem trocar de tela. Substitui a antiga lista `Orders` + aba "Aguardando" da Agenda.
+2. **Pedidos** (`/admin/coletas` → `OrdersWorkspace.jsx`) — fila única com abas por etapa do pipeline e **ações inline**: confirmar (Sheet: data/valor/forma de pagamento — o **caminhão é definido depois no Despacho**), recusar e despachar sem trocar de tela. Substitui a antiga lista `Orders` + aba "Aguardando" da Agenda.
 
 3. **Despacho** (`/admin/despacho` → `DispatchBoard.jsx`) — o coração do TMS. Esquerda: fila de confirmados sem viagem. Direita: quadro **caminhões × dias** com capacidade. Fluxo: seleciona pedidos → clica na célula (caminhão+dia) → programado; botão "Viagem" na célula cria a viagem já com pedidos+caminhão pré-selecionados. Substitui a antiga `AgendaPage`.
 
@@ -76,7 +76,7 @@ O painel foi reconstruído seguindo o padrão dos grandes TMS (McLeod, TMW, Benn
 
 A migração manteve a assinatura original das chamadas `base44.entities.EntityName.method()` funcionando, apenas trocando o backend por Supabase.
 
-> **Nota de gravação (importante):** a leitura injeta os aliases Base44 `created_date`/`updated_date` (via `normalizeRecord`), que **não são colunas reais** no Supabase. Telas que carregam o registro inteiro e salvam de volta (ex.: Configurações) reenviavam esses campos, gerando **400 Bad Request** ("coluna inexistente"). Por isso `create`/`update` passam o payload por `sanitizePayload`, que remove `created_date`, `updated_date`, `created_at`, `updated_at` e `id` antes de gravar. Para reconciliar bancos criados de versões antigas do schema, rode `supabase/migrations/20260616_reconcile_schema.sql` (idempotente — adiciona toda coluna que o app usa).
+> **Nota de gravação (importante):** a leitura injeta os aliases Base44 `created_date`/`updated_date` (via `normalizeRecord`), que **não são colunas reais** no Supabase. Telas que carregam o registro inteiro e salvam de volta (ex.: Configurações) reenviavam esses campos, gerando **400 Bad Request** ("coluna inexistente"). Por isso `create`/`update` passam o payload por `sanitizePayload`, que remove `created_date`, `updated_date`, `created_at`, `updated_at` e `id` antes de gravar. O `sanitizePayload` também converte **string vazia `""` → `null`** em colunas `_id`/`_date`/`_expiry` (UUID/DATE), evitando o 400 `invalid input syntax for type uuid/date` quando um campo de caminhão/data é limpo. Para reconciliar bancos criados de versões antigas do schema, rode `supabase/migrations/20260616_reconcile_schema.sql` (idempotente — adiciona toda coluna que o app usa).
 
 ---
 

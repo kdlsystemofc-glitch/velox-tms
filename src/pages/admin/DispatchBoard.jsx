@@ -76,7 +76,7 @@ export default function DispatchBoard() {
 
   // ── Remover programação de um pedido ──────────────────────────
   const unassignMutation = useMutation({
-    mutationFn: (order) => base44.entities.Order.update(order.id, { scheduled_truck_id: "", scheduled_date: "" }),
+    mutationFn: (order) => base44.entities.Order.update(order.id, { scheduled_truck_id: null, scheduled_date: null }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       toast({ title: "Pedido devolvido à fila." });
