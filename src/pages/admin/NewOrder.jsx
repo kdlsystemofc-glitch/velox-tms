@@ -12,7 +12,7 @@ import { ArrowLeft, ArrowRight, Plus, Trash2, MapPin, User, Package, DollarSign,
 import { NumericInput } from "@/components/shared/NumericInput";
 import { AddressFields } from "@/components/shared/AddressFields";
 import { useFormValidation } from "@/hooks/useFormValidation";
-import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { calculateFreightFull, calculateFreight, getDeliveryDaysByState } from "@/utils/freightCalculator";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { validateNFeKey, nfNumberFromKey } from "@/utils/nfeUtils";
@@ -86,6 +86,7 @@ export default function NewOrder() {
       origin: { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "" },
       collection_date: "", collection_time: "morning", collection_notes: "",
       recipients: [{ ...emptyRecipient, items: [{ ...emptyItem }] }],
+      simple: { volumes: "", weight_kg: "", declared_value: "" },
       freight_value: "", freight_payer: "cif", payment_method: "pix", payment_terms: "after_delivery", payment_status: "pending",
       driver_id: "", truck_id: "", general_notes: "",
     };
@@ -130,6 +131,9 @@ export default function NewOrder() {
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
   const [chaveInput, setChaveInput] = useState("");
   const [repeating, setRepeating] = useState(false);
+  // Modo de captação (Fase 3): "detailed" (item por NF) ou "simple" (volume/peso total)
+  const [captureMode, setCaptureMode] = useState(settings?.collection_model === "simple" ? "simple" : "detailed");
+  const isSimple = captureMode === "simple";
   const clientSuggestions = clientSearch.length >= 2
     ? clients.filter(c => c.company_name?.toLowerCase().includes(clientSearch.toLowerCase()) || c.cpf_cnpj?.includes(clientSearch)).slice(0, 6)
     : [];
@@ -295,19 +299,38 @@ export default function NewOrder() {
 
   // ───────── Cotação / totais ─────────
   const freightBreakdown = useMemo(() => {
-    const allItems = form.recipients.flatMap(r => r.items || []);
-    const nfCount = allItems.filter(i => i.nf_number).length || 1;
-    const firstDestState = form.recipients[0]?.state || null;
     const selectedClient = clients.find(c => c.id === form.client_id);
     const cp = selectedClient?.custom_pricing;
     const clientPricing = cp && Object.keys(cp).some(k => cp[k] != null && cp[k] !== "") ? { ...(settings?.pricing || {}), ...cp } : null;
+
+    // Modo simplificado: estima pelo peso total informado (sem cubagem/itens)
+    if (isSimple) {
+      const kg = parseNum(form.simple?.weight_kg);
+      if (!kg) return null;
+      const total = calculateFreight(kg, null, settings, clientPricing) || 0;
+      return { taxableKg: kg, usedCubic: false, total, freightByWeight: total, grisValue: 0, adValoremValue: 0, tdeValue: 0, tdaValue: 0, tollValue: 0, fixedFee: 0 };
+    }
+
+    const allItems = form.recipients.flatMap(r => r.items || []);
+    const nfCount = allItems.filter(i => i.nf_number).length || 1;
+    const firstDestState = form.recipients[0]?.state || null;
     return calculateFreightFull({
       items: allItems, distanceKm: null, nfCount, pricing: settings?.pricing, clientPricing, settings,
       originState: form.origin?.state || null, destState: firstDestState,
     });
-  }, [form.recipients, form.origin?.state, form.client_id, clients, settings?.pricing]);
+  }, [isSimple, form.simple, form.recipients, form.origin?.state, form.client_id, clients, settings?.pricing]);
 
   const totals = useMemo(() => {
+    if (isSimple) {
+      return {
+        recipients: form.recipients.length,
+        volumes: parseInt(form.simple?.volumes) || 0,
+        weight: parseNum(form.simple?.weight_kg),
+        declared: parseNum(form.simple?.declared_value),
+        nfCount: 0,
+        freightValue: parseNum(form.freight_value),
+      };
+    }
     const items = form.recipients.flatMap(r => r.items || []);
     return {
       recipients: form.recipients.length,
@@ -317,7 +340,7 @@ export default function NewOrder() {
       nfCount: items.filter(i => i.nf_number || i.nf_key).length,
       freightValue: parseNum(form.freight_value),
     };
-  }, [form.recipients, form.freight_value]);
+  }, [isSimple, form.simple, form.recipients, form.freight_value]);
 
   // Prazo estimado (maior prazo entre os destinos) e capacidade do veículo
   const destStates = [...new Set(form.recipients.map(r => r.state).filter(Boolean))];
@@ -359,10 +382,11 @@ export default function NewOrder() {
       return;
     }
     const cleanedRecipients = form.recipients.map(r => {
-      const { cnpj_cpf, _search, ...rest } = r;
+      const { cnpj_cpf, _search, items, ...rest } = r;
       return {
         ...rest, cpf_cnpj: cnpj_cpf || "",
-        items: r.items.map(item => ({
+        // No modo simplificado os destinatários não têm itens (NFs entram depois)
+        items: isSimple ? [] : (items || []).map(item => ({
           nf_number: item.nf_number || undefined, nf_key: item.nf_key || undefined, ncm: item.ncm || undefined,
           description: item.description || undefined, package_type: item.package_type || undefined,
           fragile: !!item.fragile, dangerous: !!item.dangerous, volumes: Number(item.volumes) || 0,
@@ -372,9 +396,9 @@ export default function NewOrder() {
         })),
       };
     });
-    const totVol = cleanedRecipients.reduce((s, r) => s + r.items.reduce((ss, i) => ss + i.volumes, 0), 0);
-    const totKg = cleanedRecipients.reduce((s, r) => s + r.items.reduce((ss, i) => ss + (i.weight_kg || 0), 0), 0);
-    const totVal = cleanedRecipients.reduce((s, r) => s + r.items.reduce((ss, i) => ss + (i.declared_value || 0), 0), 0);
+    const totVol = isSimple ? (parseInt(form.simple?.volumes) || 0) : cleanedRecipients.reduce((s, r) => s + r.items.reduce((ss, i) => ss + i.volumes, 0), 0);
+    const totKg  = isSimple ? parseNum(form.simple?.weight_kg)     : cleanedRecipients.reduce((s, r) => s + r.items.reduce((ss, i) => ss + (i.weight_kg || 0), 0), 0);
+    const totVal = isSimple ? parseNum(form.simple?.declared_value) : cleanedRecipients.reduce((s, r) => s + r.items.reduce((ss, i) => ss + (i.declared_value || 0), 0), 0);
     const payload = {
       protocol, client_name: form.client_name,
       requester_name: form.requester_name || undefined, requester_role: form.requester_role || undefined,
@@ -408,7 +432,13 @@ export default function NewOrder() {
       });
     }
     if (n === 2) {
-      const ok = form.recipients.length > 0 && form.recipients.every(r => r.name.trim() && r.items.some(it => String(it.weight_kg).trim() || Number(it.volumes)));
+      if (isSimple) {
+        const okS = parseNum(form.simple?.weight_kg) > 0 && (parseInt(form.simple?.volumes) || 0) > 0
+          && form.recipients.length > 0 && form.recipients.every(r => r.name.trim());
+        if (!okS) toast({ title: "Carga incompleta", description: "Informe volumes e peso total, e ao menos um destinatário com nome.", variant: "destructive" });
+        return okS;
+      }
+      const ok = form.recipients.length > 0 && form.recipients.every(r => r.name.trim() && (r.items || []).some(it => String(it.weight_kg).trim() || Number(it.volumes)));
       if (!ok) toast({ title: "Cargas incompletas", description: "Cada destinatário precisa de nome e ao menos um item com peso/volumes.", variant: "destructive" });
       return ok;
     }
@@ -566,6 +596,23 @@ export default function NewOrder() {
           {/* PASSO 2 — Cargas e notas */}
           {step === 2 && (
             <>
+              {/* Modo de captação (Fase 3) */}
+              <div className="bg-card border border-border rounded-md p-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="text-xs font-medium text-muted-foreground">Modo de captação:</span>
+                <div className="flex gap-1">
+                  {[["detailed", "Detalhada (por NF)"], ["simple", "Simplificada (volume/peso total)"]].map(([v, l]) => (
+                    <button key={v} type="button" onClick={() => setCaptureMode(v)}
+                      className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${captureMode === v ? "border-velox-amber bg-velox-amber/10 font-semibold text-foreground" : "border-border text-muted-foreground hover:bg-muted/50"}`}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-[11px] text-muted-foreground basis-full">
+                  {isSimple ? "Coleta simplificada: informe o total das notas (sem detalhar item por item) e os destinatários. As NF-es podem ser vinculadas depois." : "Detalhada: cada destinatário com suas NFs/itens (cubagem por item)."}
+                </span>
+              </div>
+
+              {!isSimple && (<>
               {sectionCard(FileUp, "Importar NF-e", (
                 <div className="space-y-4">
                   <div className="flex flex-col sm:flex-row gap-3">
@@ -682,6 +729,47 @@ export default function NewOrder() {
                   ))}
                   <Button variant="outline" size="sm" onClick={addRecipient} className="gap-1"><Plus className="w-3.5 h-3.5" /> Adicionar destinatário</Button>
                 </div>
+              )}
+              </>)}
+
+              {isSimple && (
+                <>
+                  {sectionCard(Package, "Carga total (coleta simplificada)", (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FL label="Total de volumes" required>
+                        <Input type="text" inputMode="numeric" placeholder="ex: 20" value={form.simple.volumes} onChange={e => setForm(f => ({ ...f, simple: { ...f.simple, volumes: e.target.value.replace(/\D/g, "") } }))} />
+                      </FL>
+                      <FL label="Peso total (kg)" required>
+                        <NumericInput value={form.simple.weight_kg} onChange={v => setForm(f => ({ ...f, simple: { ...f.simple, weight_kg: v } }))} placeholder="ex: 850" />
+                      </FL>
+                      <FL label="Valor declarado total (R$)">
+                        <NumericInput currency value={form.simple.declared_value} onChange={v => setForm(f => ({ ...f, simple: { ...f.simple, declared_value: v } }))} placeholder="ex: 40.000,00" />
+                      </FL>
+                    </div>
+                  ), "Informe o total das notas — o detalhamento por NF entra depois (na coleta/CD)")}
+
+                  {sectionCard(MapPin, "Destinatários", (
+                    <div className="space-y-4">
+                      {form.recipients.map((r, ri) => (
+                        <div key={ri} className="border border-border rounded-lg p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold">Destinatário {ri + 1}</span>
+                            {form.recipients.length > 1 && (
+                              <Button variant="ghost" size="sm" onClick={() => removeRecipient(ri)} className="text-red-500 h-7 px-2"><Trash2 className="w-3 h-3" /></Button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <FL label="Nome do destinatário" required><Input placeholder="ex: Comércio Central Ltda" value={r.name} onChange={e => setRecipient(ri, "name", e.target.value)} /></FL>
+                            <FL label="CNPJ / CPF"><Input placeholder="ex: 12.345.678/0001-90" value={r.cnpj_cpf || ""} onChange={e => setRecipient(ri, "cnpj_cpf", e.target.value)} /></FL>
+                          </div>
+                          <AddressFields value={r} onChange={(addr) => setRecipientAddress(ri, addr)} />
+                          <FL label="Observações de entrega"><Textarea rows={2} className="resize-none" placeholder="ex: Portaria fecha às 17h." value={r.delivery_notes || ""} onChange={e => setRecipient(ri, "delivery_notes", e.target.value)} /></FL>
+                        </div>
+                      ))}
+                      <Button variant="outline" size="sm" onClick={addRecipient} className="gap-1"><Plus className="w-3.5 h-3.5" /> Adicionar destinatário</Button>
+                    </div>
+                  ), "Sem detalhar NF — só para onde a carga vai")}
+                </>
               )}
             </>
           )}

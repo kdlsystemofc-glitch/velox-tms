@@ -67,8 +67,8 @@ O elo coleta↔destinatário é sempre a **NF-e**.
   Botão "Separação automática": agrupa os pedidos confirmados por data + região + capacidade, mantendo coletas do mesmo local juntas, e propõe a carga de cada caminhão. Operador aplica/ajusta.
 - **FASE 2 — Roteirização da viagem** ✅ *(implementada — sem API)*
   `routeOptimizer.optimizeStops`: ordena as paradas por **proximidade de CEP** (nearest-neighbor 1D), respeitando **coleta antes da entrega** do mesmo pedido. Aplicada na criação da viagem (NewTrip) e com botão **"Otimizar rota"** + setas de reordenar manual no detalhe da viagem. *Upgrade futuro:* trocar a função de distância por geocódigo + matriz real (Google Distance Matrix — chave já existe em Configurações — ou OpenRouteService/OSRM).
-- **FASE 3 — Modelos de captação configuráveis**
-  Config "quando exigir destinatários" (A/B/C). Coleta só com volume/peso; vínculo posterior por NF-e.
+- **FASE 3 — Modelos de captação configuráveis** ✅ *(implementada — sem API)*
+  Config **Modelo de captação** em Operação (`collection_model`: detailed / simple / both). Na **Nova Coleta**, alternador **Detalhada × Simplificada**: no modo simplificado o operador informa **volume + peso total + valor declarado** e os **destinatários (sem itens)** — as NFs entram depois (na coleta/CD). Frete estimado pelo peso total. *(Vínculo posterior das NF-es por chave/DANFE → fase fiscal.)*
 - **FASE 4 — Tabelas profissionais**
   Fator de cubagem, **vigência** de tabela, tabela por modal/urgência, taxa de coleta separada.
 - **FASE 5 — Fiscal (CT-e/MDF-e)**

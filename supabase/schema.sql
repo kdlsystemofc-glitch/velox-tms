@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS company_settings (
   coverage_message TEXT DEFAULT 'Infelizmente não atendemos esta região no momento.',
   min_advance_days INTEGER DEFAULT 2,
   working_days JSONB DEFAULT '[1,2,3,4,5]'::jsonb,
+  collection_model TEXT DEFAULT 'both',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

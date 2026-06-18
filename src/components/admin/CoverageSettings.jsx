@@ -78,6 +78,31 @@ export default function CoverageSettings({ form, setF, onSave, saving }) {
           </div>
         </div>
 
+        {/* Modelo de captação de coleta */}
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-2">Modelo de captação de coleta</p>
+          <div className="flex flex-col gap-2">
+            {[
+              { value: "detailed", label: "Detalhada — item por NF (cubagem)" },
+              { value: "simple", label: "Simplificada — só volume/peso total + destinatários" },
+              { value: "both", label: "Ambos — operador escolhe em cada coleta" },
+            ].map(opt => (
+              <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer">
+                <input
+                  type="radio"
+                  name="collection_model"
+                  value={opt.value}
+                  checked={(form.collection_model || "both") === opt.value}
+                  onChange={() => setF("collection_model", opt.value)}
+                  className="accent-amber-500"
+                />
+                <span className="text-sm">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">Define como começa a tela "Nova Coleta". "Simplificada" é o padrão de grandes transportadoras (NFs vinculadas depois).</p>
+        </div>
+
         {/* Como define a área */}
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">Como você define sua área?</p>

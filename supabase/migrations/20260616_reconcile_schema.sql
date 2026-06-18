@@ -48,6 +48,7 @@ ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS coverage_cep_ranges JSONB 
 ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS coverage_message TEXT;
 ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS min_advance_days INTEGER DEFAULT 2;
 ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS working_days JSONB DEFAULT '[1,2,3,4,5]'::jsonb;
+ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS collection_model TEXT DEFAULT 'both';
 
 -- ---------- clients ----------
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS code TEXT;
