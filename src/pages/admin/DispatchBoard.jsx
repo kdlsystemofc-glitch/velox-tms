@@ -4,12 +4,14 @@ import { base44 } from "@/api/base44Client";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { useToast } from "@/components/ui/use-toast";
 import { todayLocalISO, toLocalISO, formatDateBR } from "@/utils/dateUtils";
+import { planLoads, regionLabel } from "@/utils/dispatchPlanner";
 import {
   Package, Truck, ChevronLeft, ChevronRight, MapPin,
-  CalendarDays, Send, X, ArrowRight
+  CalendarDays, Send, X, ArrowRight, Sparkles
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import { format, addDays, startOfWeek, isToday } from "date-fns";
@@ -28,6 +30,7 @@ export default function DispatchBoard() {
   const queryClient = useQueryClient();
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [plan, setPlan] = useState(null); // proposta da separação automática
 
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list(), select: d => d.filter(t => t.status !== "inactive") });
@@ -97,6 +100,34 @@ export default function DispatchBoard() {
     onError: (e) => toast({ title: "Erro ao devolver", description: e?.message, variant: "destructive" }),
   });
 
+  // ── Separação automática (load planning) ──────────────────────
+  const runAutoPlan = () => {
+    const result = planLoads(orders, trucks);
+    if (!result.loads.length) {
+      toast({ title: "Nada para sugerir", description: result.reason || "Sem pedidos/caminhões elegíveis.", variant: "destructive" });
+      return;
+    }
+    setPlan(result);
+  };
+
+  const applyPlanMutation = useMutation({
+    mutationFn: async () => {
+      for (const load of plan.loads) {
+        for (const o of load.orders) {
+          await base44.entities.Order.update(o.id, { scheduled_truck_id: load.truck.id, scheduled_date: load.date });
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      const n = plan.loads.reduce((s, l) => s + l.orders.length, 0);
+      toast({ title: "Separação aplicada!", description: `${n} pedido(s) distribuído(s) em ${plan.loads.length} carga(s). Revise no quadro e crie as viagens.` });
+      setPlan(null);
+      setSelectedIds([]);
+    },
+    onError: (e) => toast({ title: "Erro ao aplicar", description: e?.message, variant: "destructive" }),
+  });
+
   const handleCellClick = (truck, day) => {
     if (selectedIds.length === 0) {
       toast({ title: "Selecione pedidos na fila", description: "Marque um ou mais pedidos à esquerda e clique na célula para programar." });
@@ -128,6 +159,11 @@ export default function DispatchBoard() {
   return (
     <div className="space-y-4">
       <PageHeader icon={CalendarDays} title="Despacho" subtitle="Selecione pedidos na fila e clique no dia/caminhão para programar">
+        {unscheduled.length > 0 && (
+          <Button size="sm" className="text-xs gap-1 bg-velox-amber text-white font-bold hover:bg-velox-amber/90" onClick={runAutoPlan}>
+            <Sparkles className="w-3.5 h-3.5" /> Separação automática
+          </Button>
+        )}
         {scheduled.length > 0 && (
           <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => unassignAllMutation.mutate()} disabled={unassignAllMutation.isPending}>
             <X className="w-3.5 h-3.5" /> Devolver {scheduled.length} à fila
@@ -348,6 +384,61 @@ export default function DispatchBoard() {
           )}
         </div>
       </div>
+
+      {/* Diálogo: proposta de separação automática */}
+      <Dialog open={!!plan} onOpenChange={(o) => !o && setPlan(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+          <DialogHeader className="px-5 py-4 border-b border-border sticky top-0 bg-background z-10">
+            <DialogTitle className="flex items-center gap-2 text-base"><Sparkles className="w-4.5 h-4.5 text-velox-amber" /> Separação automática sugerida</DialogTitle>
+          </DialogHeader>
+          {plan && (
+            <div className="p-5 space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Agrupado por <strong>data de coleta</strong>, <strong>região de destino</strong> e <strong>capacidade</strong>, mantendo pedidos do <strong>mesmo local de coleta</strong> juntos. Revise e aplique — você ainda pode ajustar no quadro antes de criar as viagens.
+              </p>
+              {plan.loads.map((load, i) => {
+                const pct = load.truck.capacity_kg > 0 ? Math.round((load.weight / load.truck.capacity_kg) * 100) : 0;
+                return (
+                  <div key={i} className="border border-border rounded-md">
+                    <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border bg-muted/30">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Truck className="w-4 h-4 text-velox-amber flex-shrink-0" />
+                        <span className="font-mono font-semibold text-sm">{load.truck.plate}</span>
+                        <span className="text-xs text-muted-foreground truncate">{load.truck.model}</span>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <span className="text-xs text-muted-foreground">{formatDateBR(load.date)} · </span>
+                        <span className={`text-xs font-semibold ${pct > 100 ? "text-red-600" : "text-foreground"}`}>{load.weight.toLocaleString("pt-BR")} / {load.truck.capacity_kg.toLocaleString("pt-BR")} kg ({pct}%)</span>
+                      </div>
+                    </div>
+                    <div className="divide-y divide-border/50">
+                      {load.orders.map((o) => (
+                        <div key={o.id} className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs">
+                          <span className="font-mono text-muted-foreground">{o.protocol}</span>
+                          <span className="flex-1 truncate">{o.client_name}</span>
+                          <span className="text-muted-foreground">{regionLabel(o)}</span>
+                          <span className="font-mono">{(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              {plan.unassigned?.length > 0 && (
+                <div className="border border-amber-300 bg-amber-50 rounded-md p-3 text-xs text-amber-800">
+                  <strong>{plan.unassigned.length} pedido(s) não couberam</strong> (capacidade insuficiente nos caminhões disponíveis): {plan.unassigned.map(o => o.protocol).join(", ")}. Despache manualmente ou ajuste a frota.
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border sticky bottom-0 bg-background">
+            <Button variant="outline" onClick={() => setPlan(null)}>Cancelar</Button>
+            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" disabled={applyPlanMutation.isPending} onClick={() => applyPlanMutation.mutate()}>
+              <Sparkles className="w-4 h-4" /> {applyPlanMutation.isPending ? "Aplicando..." : "Aplicar separação"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
