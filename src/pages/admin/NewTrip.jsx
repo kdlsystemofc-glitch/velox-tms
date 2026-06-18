@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Package, Truck, Users, MapPin, DollarSign, AlertCircle } from "lucide-react";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { todayLocalISO } from "@/utils/dateUtils";
+import { optimizeStops } from "@/utils/routeOptimizer";
 
 export default function NewTrip() {
   const navigate = useNavigate();
@@ -106,12 +107,13 @@ export default function NewTrip() {
   const buildStops = () => {
     const stops = [];
     selectedOrderData.forEach(o => {
-      stops.push({ type: "collection", order_id: o.id, address: `${o.origin?.street || ""}, ${o.origin?.number || ""}, ${o.origin?.city || ""} - ${o.origin?.state || ""}`, city: o.origin?.city, state: o.origin?.state, status: "pending" });
+      stops.push({ type: "collection", order_id: o.id, cep: o.origin?.cep || "", address: `${o.origin?.street || ""}, ${o.origin?.number || ""}, ${o.origin?.city || ""} - ${o.origin?.state || ""}`, city: o.origin?.city, state: o.origin?.state, status: "pending" });
       (o.recipients || []).forEach(r => {
-        stops.push({ type: "delivery", order_id: o.id, recipient_name: r.name, address: `${r.street || ""}, ${r.number || ""}, ${r.city || ""} - ${r.state || ""}`, city: r.city, state: r.state, status: "pending" });
+        stops.push({ type: "delivery", order_id: o.id, cep: r.cep || "", recipient_name: r.name, address: `${r.street || ""}, ${r.number || ""}, ${r.city || ""} - ${r.state || ""}`, city: r.city, state: r.state, status: "pending" });
       });
     });
-    return stops;
+    // Roteiriza por proximidade de CEP (coleta antes da entrega do mesmo pedido)
+    return optimizeStops(stops);
   };
 
   const handleCreate = () => {

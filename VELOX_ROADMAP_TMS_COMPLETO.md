@@ -65,8 +65,8 @@ O elo coleta↔destinatário é sempre a **NF-e**.
 
 - **FASE 1 — Separação automática de carga (Despacho)** ⭐ *(em implementação)*
   Botão "Separação automática": agrupa os pedidos confirmados por data + região + capacidade, mantendo coletas do mesmo local juntas, e propõe a carga de cada caminhão. Operador aplica/ajusta.
-- **FASE 2 — Roteirização da viagem**
-  Ordenar paradas por proximidade (heurística UF/CEP; depois geocódigo), permitir reordenar; mostrar distância/sequência. Romaneio já existe (PDF).
+- **FASE 2 — Roteirização da viagem** ✅ *(implementada — sem API)*
+  `routeOptimizer.optimizeStops`: ordena as paradas por **proximidade de CEP** (nearest-neighbor 1D), respeitando **coleta antes da entrega** do mesmo pedido. Aplicada na criação da viagem (NewTrip) e com botão **"Otimizar rota"** + setas de reordenar manual no detalhe da viagem. *Upgrade futuro:* trocar a função de distância por geocódigo + matriz real (Google Distance Matrix — chave já existe em Configurações — ou OpenRouteService/OSRM).
 - **FASE 3 — Modelos de captação configuráveis**
   Config "quando exigir destinatários" (A/B/C). Coleta só com volume/peso; vínculo posterior por NF-e.
 - **FASE 4 — Tabelas profissionais**
@@ -76,4 +76,18 @@ O elo coleta↔destinatário é sempre a **NF-e**.
 - **FASE 6 — Acerto de viagem & comissões**
   Fechar a viagem confrontando adiantamento × custos reais; comissão por motorista.
 
-> Cada fase é entregável e testável isoladamente. Começamos pela **Fase 1**.
+> Cada fase é entregável e testável isoladamente.
+
+---
+
+## 4. Dependências de API (o que é grátis × o que exige serviço externo)
+
+| Recurso | Sem API (grátis, já dá) | Com API (externo) |
+|---|---|---|
+| Separação de carga (F1) | ✅ peso/capacidade/CEP | — |
+| Rota inteligente (F2) | ✅ heurística por CEP | distância real por estrada: Google Distance Matrix (`google_maps_api_key` já existe) / OpenRouteService / OSRM |
+| Distância origem→destino p/ frete | estimável por CEP | Google/ORS para km reais |
+| Pedágio real (F4) | estimado por kg | ANTT / Sem Parar / ConectCar |
+| CT-e / MDF-e (F5) | ❌ | SEFAZ via provider (PlugNotas, Focus NFe, NFe.io) + certificado A1 |
+
+As fases 1–4 rodam **sem custo de API**. Só **pedágio real** e **fiscal** exigem contratação — ficam para o fim, quando for decisão de negócio.

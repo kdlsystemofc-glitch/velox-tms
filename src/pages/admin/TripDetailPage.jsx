@@ -11,11 +11,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/components/ui/use-toast";
 import {
   ArrowLeft, MapPin, CheckCircle2, Circle, Truck, Package,
-  DollarSign, X, Play, Square, Plus, Trash2, FileText, AlertTriangle, FileDown
+  DollarSign, X, Play, Square, Plus, Trash2, FileText, AlertTriangle, FileDown,
+  Sparkles, ChevronUp, ChevronDown
 } from "lucide-react";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import FileUploadButton from "@/components/shared/FileUploadButton";
 import { todayLocalISO } from "@/utils/dateUtils";
+import { optimizeStops } from "@/utils/routeOptimizer";
 import { format } from "date-fns";
 
 export default function TripDetailPage() {
@@ -151,6 +153,20 @@ export default function TripDetailPage() {
     }
 
     toast({ title: "Viagem iniciada!" });
+  };
+
+  // ── Roteirização (Fase 2) ─────────────────────────────────────
+  const saveStopsOrder = (stops) => updateMutation.mutate({ stops: stops.map((s, idx) => ({ ...s, stop_order: idx + 1 })) });
+  const optimizeRoute = () => {
+    saveStopsOrder(optimizeStops(trip.stops || []));
+    toast({ title: "Rota otimizada", description: "Paradas reordenadas por proximidade de CEP (coleta antes da entrega)." });
+  };
+  const moveStop = (i, dir) => {
+    const stops = [...(trip.stops || [])];
+    const j = i + dir;
+    if (j < 0 || j >= stops.length) return;
+    [stops[i], stops[j]] = [stops[j], stops[i]];
+    saveStopsOrder(stops);
   };
 
   const closeTrip = async () => {
@@ -332,9 +348,16 @@ export default function TripDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Stops timeline */}
         <div className="lg:col-span-2">
-          <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-velox-amber" /> Paradas
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-sm flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-velox-amber" /> Paradas
+            </h3>
+            {trip.status !== "completed" && (trip.stops || []).length > 1 && (
+              <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={optimizeRoute}>
+                <Sparkles className="w-3.5 h-3.5" /> Otimizar rota
+              </Button>
+            )}
+          </div>
           <div className="space-y-3">
             {(trip.stops || []).length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-4">Nenhuma parada cadastrada.</p>
@@ -369,6 +392,12 @@ export default function TripDetailPage() {
                               : <span className="text-xs text-amber-500 flex items-center gap-1 mt-1"><AlertTriangle className="w-3.5 h-3.5" /> NF não enviada</span>
                         )}
                       </div>
+                      {trip.status !== "completed" && stop.status !== "completed" && (
+                        <div className="flex flex-col gap-0.5 flex-shrink-0" title="Reordenar parada">
+                          <button onClick={() => moveStop(i, -1)} disabled={i === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30"><ChevronUp className="w-4 h-4" /></button>
+                          <button onClick={() => moveStop(i, 1)} disabled={i === (trip.stops || []).length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-30"><ChevronDown className="w-4 h-4" /></button>
+                        </div>
+                      )}
                       {trip.status === "in_progress" && stop.status !== "completed" && (
                         <div className="flex gap-1">
                           {stop.status === "pending" && (
