@@ -186,3 +186,33 @@ na coleta de 15/06").
 não-alocação.
 
 ---
+
+## ONDA 3 — Central de Ocorrências com fluxo completo (Bloco 3)
+
+### Como era
+
+O motorista registrava uma ocorrência (tipo, descrição, foto) e ela **sumia para ele**.
+O gestor via dentro de cada pedido, com um único botão "Resolver" — sem responsável, sem
+plano de ação, sem registrar notificação ao cliente/seguro, sem linha do tempo e sem visão
+única de tudo o que estava aberto.
+
+### Como ficou
+
+Nova página **Ocorrências** (menu + Painel), com tudo numa torre só:
+
+- **F1 — Registro:** tipos ampliados (avaria, atraso, ausente, **carga não pronta**,
+  **entrega parcial**, roubo, acidente, recusada, outros). O motorista passou a **ver as
+  ocorrências em aberto** da viagem no app e **adicionar informações** durante o percurso.
+- **F2 — Tratativa do gestor:** lista **ordenada por gravidade** (roubo/acidente no topo,
+  atraso por último). Para cada uma: **responsável**, **plano de ação**, **prazo**, marcar
+  **cliente notificado** (com data/hora), **acionar seguro**.
+- **F3 — Acompanhamento:** **linha do tempo** com registro, tratativa, notificação, notas
+  e resolução. Gestor e motorista adicionam notas a qualquer momento.
+- **F4 — Resolução:** registra como foi resolvida, calcula o **tempo total de resolução** e
+  guarda no histórico do pedido/cliente.
+
+**Problema → Solução:** Ocorrência sem fluxo (sumia e travava) → central única por
+gravidade, com responsável, plano, notificação, seguro, prazo, linha do tempo, resolução
+cronometrada e acompanhamento pelo motorista.
+
+---

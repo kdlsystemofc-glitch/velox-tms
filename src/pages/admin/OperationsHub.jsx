@@ -8,6 +8,7 @@ import StatusBadge from "@/components/admin/StatusBadge";
 import { useAuth } from "@/lib/AuthContext";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
+import { incidentSeverity } from "@/utils/incidents";
 import {
   Package, Truck, CheckCircle2, AlertCircle, ArrowRight, Plus,
   Clock, MapPin, DollarSign, CalendarDays, Inbox, Wrench, UserX
@@ -37,6 +38,7 @@ export default function OperationsHub() {
   const { data: revenues = [] } = useQuery({ queryKey: ["revenues"], queryFn: () => base44.entities.Revenue.list("-due_date", 100), enabled: isAdmin });
   const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => base44.entities.Expense.list("-date", 100), enabled: isAdmin });
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
+  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => base44.entities.Incident.list("-created_date", 300), select: d => d.filter(i => i.status !== "resolved") });
 
   useEffect(() => {
     base44.functions.invoke("syncAlerts", {}).then(() => {
@@ -64,7 +66,16 @@ export default function OperationsHub() {
   const truckReplan = trucksNeedingReplan(trucks, orders, trips);
   const driverReplan = driversNeedingReplan(drivers, trips);
 
+  const criticalIncidents = incidents.filter(i => ["critical", "high"].includes(incidentSeverity(i)));
+
   const actionQueue = [
+    criticalIncidents.length > 0 && {
+      icon: AlertCircle, color: "border-red-300 bg-red-50",
+      iconColor: "text-red-600",
+      title: `${criticalIncidents.length} ocorrência(s) grave(s) em aberto`,
+      desc: "Roubo, acidente, avaria ou recusa — trate agora",
+      action: { label: "Tratar", to: "/admin/ocorrencias" },
+    },
     truckReplan.length > 0 && {
       icon: Wrench, color: "border-amber-300 bg-amber-50",
       iconColor: "text-amber-600",

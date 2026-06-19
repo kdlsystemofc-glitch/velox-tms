@@ -1,0 +1,277 @@
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
+import PageHeader from "@/components/shared/PageHeader";
+import {
+  AlertTriangle, CheckCircle2, Shield, BellRing, UserCheck, Clock, FileText, ExternalLink,
+} from "lucide-react";
+import {
+  sortByGravity, incidentSeverity, incidentTypeLabel, SEVERITY_META,
+  buildTimeline, resolutionHours, formatDuration,
+} from "@/utils/incidents";
+
+/**
+ * CENTRAL DE OCORRÊNCIAS (Bloco 3).
+ * F1 registro (motorista) · F2 tratativa (gestor) · F3 linha do tempo · F4 resolução.
+ */
+export default function Incidents() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState("open");
+  const [sevFilter, setSevFilter] = useState("all");
+  const [selected, setSelected] = useState(null);
+  const [form, setForm] = useState({ assigned_to: "", action_plan: "", due_date: "", note: "", resolution: "" });
+
+  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => base44.entities.Incident.list("-created_date", 300) });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
+  const orderById = Object.fromEntries(orders.map(o => [o.id, o]));
+
+  const openOnly = statusFilter === "open" ? incidents.filter(i => i.status !== "resolved")
+    : statusFilter === "resolved" ? incidents.filter(i => i.status === "resolved")
+    : incidents;
+  const filtered = sortByGravity(openOnly.filter(i => sevFilter === "all" || incidentSeverity(i) === sevFilter));
+
+  const counts = {
+    open: incidents.filter(i => i.status !== "resolved").length,
+    critical: incidents.filter(i => i.status !== "resolved" && incidentSeverity(i) === "critical").length,
+    resolved: incidents.filter(i => i.status === "resolved").length,
+  };
+
+  const update = useMutation({
+    mutationFn: ({ id, patch }) => base44.entities.Incident.update(id, patch),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["incidents-all"] });
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
+    },
+    onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),
+  });
+
+  const openManage = (inc) => {
+    setSelected(inc);
+    setForm({ assigned_to: inc.assigned_to || "", action_plan: inc.action_plan || "", due_date: inc.due_date || "", note: "", resolution: "" });
+  };
+
+  const tl = (inc, text, kind = "note") => ([...(inc.timeline || []), { at: new Date().toISOString(), by: "Gestão", text, kind }]);
+
+  const saveTratativa = async () => {
+    const inc = selected;
+    await update.mutateAsync({ id: inc.id, patch: {
+      assigned_to: form.assigned_to || null, action_plan: form.action_plan || null,
+      due_date: form.due_date || null, status: inc.status === "open" ? "in_progress" : inc.status,
+      timeline: tl(inc, `Tratativa: ${form.assigned_to ? `responsável ${form.assigned_to}. ` : ""}${form.action_plan ? `Plano: ${form.action_plan}.` : ""}${form.due_date ? ` Prazo ${form.due_date}.` : ""}`, "plan"),
+    }});
+    setSelected(s => ({ ...s, assigned_to: form.assigned_to, action_plan: form.action_plan, due_date: form.due_date, status: s.status === "open" ? "in_progress" : s.status }));
+    toast({ title: "Tratativa salva" });
+  };
+
+  const markNotified = async () => {
+    const inc = selected;
+    const now = new Date().toISOString();
+    await update.mutateAsync({ id: inc.id, patch: { client_notified: true, client_notified_at: now, timeline: tl(inc, "Cliente notificado", "notify") } });
+    setSelected(s => ({ ...s, client_notified: true, client_notified_at: now }));
+    toast({ title: "Cliente marcado como notificado" });
+  };
+
+  const toggleInsurance = async () => {
+    const inc = selected;
+    const val = !inc.insurance_triggered;
+    await update.mutateAsync({ id: inc.id, patch: { insurance_triggered: val, timeline: tl(inc, val ? "Seguro acionado" : "Acionamento de seguro cancelado", "insurance") } });
+    setSelected(s => ({ ...s, insurance_triggered: val }));
+  };
+
+  const addNote = async () => {
+    if (!form.note.trim()) return;
+    const inc = selected;
+    const newTl = tl(inc, form.note.trim(), "note");
+    await update.mutateAsync({ id: inc.id, patch: { timeline: newTl } });
+    setSelected(s => ({ ...s, timeline: newTl }));
+    setForm(f => ({ ...f, note: "" }));
+  };
+
+  const resolve = async () => {
+    if (!form.resolution.trim()) return;
+    const inc = selected;
+    await update.mutateAsync({ id: inc.id, patch: {
+      status: "resolved", resolution_notes: form.resolution.trim(), resolved_at: new Date().toISOString(),
+      timeline: tl(inc, `Resolvida: ${form.resolution.trim()}`, "resolved"),
+    }});
+    setSelected(null);
+    toast({ title: "Ocorrência resolvida!" });
+  };
+
+  return (
+    <div className="space-y-4">
+      <PageHeader icon={AlertTriangle} title="Ocorrências" subtitle="Central de tratativa — por gravidade, com plano de ação e linha do tempo" />
+
+      {/* Resumo */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Em aberto</p><p className="text-lg font-bold font-mono text-amber-600">{counts.open}</p></Card>
+        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Críticas</p><p className="text-lg font-bold font-mono text-red-600">{counts.critical}</p></Card>
+        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Resolvidas</p><p className="text-lg font-bold font-mono text-green-600">{counts.resolved}</p></Card>
+      </div>
+
+      {/* Filtros */}
+      <div className="flex gap-3 flex-wrap">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="open">Em aberto</SelectItem>
+            <SelectItem value="resolved">Resolvidas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={sevFilter} onValueChange={setSevFilter}>
+          <SelectTrigger className="w-44"><SelectValue placeholder="Gravidade" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toda gravidade</SelectItem>
+            <SelectItem value="critical">Crítica</SelectItem>
+            <SelectItem value="high">Alta</SelectItem>
+            <SelectItem value="medium">Média</SelectItem>
+            <SelectItem value="low">Baixa</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Lista */}
+      {filtered.length === 0 ? (
+        <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">
+          <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-400" /> Nenhuma ocorrência nesta visão.
+        </CardContent></Card>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map(inc => {
+            const sev = incidentSeverity(inc);
+            const meta = SEVERITY_META[sev];
+            const order = orderById[inc.order_id];
+            return (
+              <button key={inc.id} onClick={() => openManage(inc)}
+                className="w-full text-left rounded-xl border border-border p-3.5 hover:border-velox-amber/40 hover:shadow-sm transition-all bg-card">
+                <div className="flex items-start gap-3">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 ${meta.cls}`}>{meta.label}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold">{incidentTypeLabel(inc.type)}</span>
+                      {order && <span className="font-mono text-xs text-muted-foreground">{order.protocol}</span>}
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                        inc.status === "resolved" ? "bg-green-100 text-green-700" :
+                        inc.status === "in_progress" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
+                      }`}>{inc.status === "resolved" ? "Resolvida" : inc.status === "in_progress" ? "Em tratativa" : "Aberta"}</span>
+                      {inc.client_notified && <span className="text-[10px] text-green-600 flex items-center gap-0.5"><BellRing className="w-3 h-3" /> cliente avisado</span>}
+                      {inc.insurance_triggered && <span className="text-[10px] text-blue-600 flex items-center gap-0.5"><Shield className="w-3 h-3" /> seguro</span>}
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate mt-0.5">{inc.description}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {order?.client_name || "—"}{inc.recipient_name ? ` · ${inc.recipient_name}` : ""} · por {inc.reported_by_name || "—"}
+                      {inc.status === "resolved" && <> · resolvida em {formatDuration(resolutionHours(inc))}</>}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Gerenciar ocorrência */}
+      <Dialog open={!!selected} onOpenChange={o => !o && setSelected(null)}>
+        <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto">
+          {selected && (() => {
+            const order = orderById[selected.order_id];
+            const sev = incidentSeverity(selected);
+            const timeline = buildTimeline(selected);
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${SEVERITY_META[sev].cls}`}>{SEVERITY_META[sev].label}</span>
+                    {incidentTypeLabel(selected.type)}
+                    {order && <Link to={`/admin/coletas/${order.id}`} className="text-xs text-velox-amber hover:underline flex items-center gap-0.5 font-normal">{order.protocol} <ExternalLink className="w-3 h-3" /></Link>}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="p-3 bg-muted/30 rounded-lg text-sm">
+                    <p>{selected.description}</p>
+                    {selected.photo_urls?.length > 0 && (
+                      <a href={selected.photo_urls[0]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"><FileText className="w-3 h-3" /> Ver foto</a>
+                    )}
+                  </div>
+
+                  {selected.status !== "resolved" && (
+                    <>
+                      {/* Tratativa */}
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tratativa</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input placeholder="Responsável" value={form.assigned_to} onChange={e => setForm(f => ({ ...f, assigned_to: e.target.value }))} className="h-9 text-sm" />
+                          <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} className="h-9 text-sm" title="Prazo de resolução" />
+                        </div>
+                        <Textarea placeholder="Plano de ação — o que vai ser feito" rows={2} value={form.action_plan} onChange={e => setForm(f => ({ ...f, action_plan: e.target.value }))} className="resize-none text-sm" />
+                        <div className="flex gap-2 flex-wrap">
+                          <Button size="sm" variant="outline" className="text-xs gap-1" onClick={saveTratativa}><UserCheck className="w-3.5 h-3.5" /> Salvar tratativa</Button>
+                          <Button size="sm" variant="outline" className={`text-xs gap-1 ${selected.client_notified ? "text-green-600 border-green-200" : ""}`} onClick={markNotified} disabled={selected.client_notified}>
+                            <BellRing className="w-3.5 h-3.5" /> {selected.client_notified ? "Cliente notificado" : "Marcar cliente notificado"}
+                          </Button>
+                          <Button size="sm" variant="outline" className={`text-xs gap-1 ${selected.insurance_triggered ? "text-blue-600 border-blue-200" : ""}`} onClick={toggleInsurance}>
+                            <Shield className="w-3.5 h-3.5" /> {selected.insurance_triggered ? "Seguro acionado" : "Acionar seguro"}
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Linha do tempo */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Linha do tempo</p>
+                    <div className="space-y-2.5 border-l-2 border-border pl-3 ml-1">
+                      {timeline.map((e, i) => (
+                        <div key={i} className="relative">
+                          <span className="absolute -left-[18px] top-1 w-2.5 h-2.5 rounded-full bg-velox-amber" />
+                          <p className="text-sm">{e.text}</p>
+                          <p className="text-[11px] text-muted-foreground">{e.by} · {e.at ? new Date(e.at).toLocaleString("pt-BR") : ""}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selected.status !== "resolved" && (
+                    <>
+                      {/* Nota */}
+                      <div className="flex gap-2">
+                        <Input placeholder="Adicionar nota à linha do tempo..." value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} className="h-9 text-sm" onKeyDown={e => e.key === "Enter" && addNote()} />
+                        <Button size="sm" variant="outline" onClick={addNote} disabled={!form.note.trim()}>Adicionar</Button>
+                      </div>
+
+                      {/* Resolver */}
+                      <div className="border-t border-border pt-3 space-y-2">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Resolução</p>
+                        <Textarea placeholder="Como foi resolvida..." rows={2} value={form.resolution} onChange={e => setForm(f => ({ ...f, resolution: e.target.value }))} className="resize-none text-sm" />
+                        <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold gap-1" onClick={resolve} disabled={!form.resolution.trim()}>
+                          <CheckCircle2 className="w-4 h-4" /> Marcar como resolvida
+                        </Button>
+                      </div>
+                    </>
+                  )}
+
+                  {selected.status === "resolved" && (
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm">
+                      <p className="font-semibold text-green-800">Resolvida em {formatDuration(resolutionHours(selected))}</p>
+                      {selected.resolution_notes && <p className="text-green-700 mt-0.5">{selected.resolution_notes}</p>}
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

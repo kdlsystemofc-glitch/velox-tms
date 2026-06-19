@@ -13,6 +13,7 @@ import FileUploadButton from "@/components/shared/FileUploadButton";
 import SignaturePad from "@/components/shared/SignaturePad";
 import { storage } from "@/api/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
+import { incidentTypeLabel } from "@/utils/incidents";
 
 const CHECKLIST_ITEMS = [
   { key: "tires", label: "Pneus calibrados e em bom estado" },
@@ -53,6 +54,25 @@ export default function DriverTrip() {
     select: (d) => d[0],
     enabled: !!user?.id,
   });
+
+  // Ocorrências em aberto desta viagem (F1/F3) — o motorista acompanha e complementa.
+  const { data: tripIncidents = [] } = useQuery({
+    queryKey: ["trip-incidents", id],
+    queryFn: () => base44.entities.Incident.filter({ trip_id: id }),
+    select: (d) => d.filter(i => i.status !== "resolved"),
+    enabled: !!id,
+  });
+  const [incidentNote, setIncidentNote] = useState({});
+  const addDriverNote = async (inc) => {
+    const text = (incidentNote[inc.id] || "").trim();
+    if (!text) return;
+    await base44.entities.Incident.update(inc.id, {
+      timeline: [...(inc.timeline || []), { at: new Date().toISOString(), by: driver?.name || "Motorista", text, kind: "driver_note" }],
+    });
+    setIncidentNote(prev => ({ ...prev, [inc.id]: "" }));
+    queryClient.invalidateQueries({ queryKey: ["trip-incidents", id] });
+    toast({ title: "Informação adicionada à ocorrência" });
+  };
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Trip.update(id, data),
@@ -329,6 +349,30 @@ export default function DriverTrip() {
           <div className="rounded-xl border border-green-500/20 bg-green-900/20 px-4 py-2.5 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-green-400" />
             <span className="text-xs text-green-400 font-medium">Checklist de saída concluído</span>
+          </div>
+        )}
+        {/* Ocorrências em aberto desta viagem (F1/F3) */}
+        {tripIncidents.length > 0 && (
+          <div className="rounded-xl border border-red-500/30 bg-red-900/10 p-3 space-y-2">
+            <p className="text-xs font-semibold text-red-300 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4" /> Ocorrências em aberto ({tripIncidents.length})
+            </p>
+            {tripIncidents.map(inc => (
+              <div key={inc.id} className="rounded-lg bg-white/5 border border-white/10 p-2.5 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-white/90">{incidentTypeLabel(inc.type)}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300">
+                    {inc.status === "in_progress" ? "Em tratativa" : "Aberta"}
+                  </span>
+                </div>
+                <p className="text-xs text-white/60">{inc.description}</p>
+                <div className="flex gap-1.5">
+                  <input value={incidentNote[inc.id] || ""} onChange={e => setIncidentNote(prev => ({ ...prev, [inc.id]: e.target.value }))}
+                    placeholder="Adicionar informação..." className="flex-1 h-9 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-white/30 px-2.5 text-xs" />
+                  <Button size="sm" className="h-9 text-xs bg-velox-amber text-white" onClick={() => addDriverNote(inc)} disabled={!(incidentNote[inc.id] || "").trim()}>Enviar</Button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
         {(trip.stops || []).map((stop, i) => {
