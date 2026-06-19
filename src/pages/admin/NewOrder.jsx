@@ -317,8 +317,9 @@ export default function NewOrder() {
     return calculateFreightFull({
       items: allItems, distanceKm: null, nfCount, pricing: settings?.pricing, clientPricing, settings,
       originState: form.origin?.state || null, destState: firstDestState,
+      freightType: form.freight_type, refDate: form.collection_date || undefined,
     });
-  }, [isSimple, form.simple, form.recipients, form.origin?.state, form.client_id, clients, settings?.pricing]);
+  }, [isSimple, form.simple, form.recipients, form.origin?.state, form.client_id, form.freight_type, form.collection_date, clients, settings?.pricing]);
 
   const totals = useMemo(() => {
     if (isSimple) {
@@ -910,6 +911,8 @@ export default function NewOrder() {
                     {freightBreakdown.tdaValue > 0 && <div className="flex justify-between"><span className="text-muted-foreground">TDA</span><span className="font-mono">R$ {freightBreakdown.tdaValue.toFixed(2)}</span></div>}
                     {freightBreakdown.tollValue > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Pedágio</span><span className="font-mono">R$ {freightBreakdown.tollValue.toFixed(2)}</span></div>}
                     {freightBreakdown.fixedFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Taxa fixa</span><span className="font-mono">R$ {freightBreakdown.fixedFee.toFixed(2)}</span></div>}
+                    {freightBreakdown.pickupFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Taxa de coleta</span><span className="font-mono">R$ {freightBreakdown.pickupFee.toFixed(2)}</span></div>}
+                    {freightBreakdown.surchargeValue > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Adicional {form.freight_type === "urgent" ? "urgente" : "dedicado"} ({freightBreakdown.surchargePct}%)</span><span className="font-mono">R$ {freightBreakdown.surchargeValue.toFixed(2)}</span></div>}
                   </div>
                   <div className="border-t border-border pt-3 flex items-end justify-between gap-2">
                     <div className="min-w-0"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Frete estimado</p><p className="text-2xl font-bold font-mono text-foreground leading-tight">R$ {freightBreakdown.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></div>

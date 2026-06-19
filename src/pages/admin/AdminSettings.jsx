@@ -243,6 +243,30 @@ export default function AdminSettings({ only = null }) {
                     <NumericInput currency value={form.pricing?.toll_per_kg || ""} onChange={v => setNested("pricing", "toll_per_kg", v)} placeholder="ex: 0,05" />
                     <p className="text-[10px] text-muted-foreground">Estimativa proporcional ao peso da carga</p>
                   </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Taxa de coleta (R$)</label>
+                    <NumericInput currency value={form.pricing?.pickup_fee || ""} onChange={v => setNested("pricing", "pickup_fee", v)} placeholder="ex: 15,00" />
+                    <p className="text-[10px] text-muted-foreground">Cobrança da coleta, separada da entrega (fracionado)</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fator de cubagem (cm³ por kg)</label>
+                    <NumericInput integer value={form.pricing?.cubage_factor ?? 6000} onChange={v => setNested("pricing", "cubage_factor", v)} placeholder="6000" />
+                    <p className="text-[10px] text-muted-foreground">Padrão 6.000 (= 166,7 kg/m³). Menor = volume "pesa" mais.</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Adicional frete urgente (%)</label>
+                    <div className="relative">
+                      <NumericInput value={form.pricing?.urgent_percent || ""} onChange={v => setNested("pricing", "urgent_percent", v)} placeholder="ex: 50" />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Adicional frete dedicado (%)</label>
+                    <div className="relative">
+                      <NumericInput value={form.pricing?.dedicated_percent || ""} onChange={v => setNested("pricing", "dedicated_percent", v)} placeholder="ex: 20" />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -448,10 +472,11 @@ export default function AdminSettings({ only = null }) {
               <p className="text-xs text-muted-foreground">
                 Quando definido, o preço do corredor tem prioridade sobre a tabela padrão.
                 Deixe campos em branco para herdar o valor padrão da aba Preços.
+                <strong> Vigência</strong> (de/até): o corredor só é aplicado se a <strong>data de coleta</strong> do pedido estiver no intervalo — em branco = sempre vigente. Permite reajustes sem quebrar pedidos antigos.
               </p>
               <div className="border border-border rounded-xl overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs min-w-[700px]">
+                  <table className="w-full text-xs min-w-[900px]">
                     <thead className="bg-muted/30">
                       <tr>
                         <th className="text-left p-3 font-semibold">Origem</th>
@@ -461,6 +486,8 @@ export default function AdminSettings({ only = null }) {
                         <th className="text-left p-3 font-semibold">Taxa fixa</th>
                         <th className="text-left p-3 font-semibold">Mínimo</th>
                         <th className="text-left p-3 font-semibold">Prazo (d)</th>
+                        <th className="text-left p-3 font-semibold">Vigente de</th>
+                        <th className="text-left p-3 font-semibold">até</th>
                         <th className="p-3 w-8"></th>
                       </tr>
                     </thead>
@@ -489,6 +516,16 @@ export default function AdminSettings({ only = null }) {
                                 onChange={e => {
                                   const t = [...(form.route_pricing || [])];
                                   t[i] = { ...t[i], [field]: e.target.value === "" ? "" : Number(e.target.value) };
+                                  setF("route_pricing", t);
+                                }} />
+                            </td>
+                          ))}
+                          {["valid_from", "valid_until"].map(field => (
+                            <td key={field} className="p-2">
+                              <Input type="date" value={row[field] || ""} className="h-7 text-xs w-32"
+                                onChange={e => {
+                                  const t = [...(form.route_pricing || [])];
+                                  t[i] = { ...t[i], [field]: e.target.value };
                                   setF("route_pricing", t);
                                 }} />
                             </td>

@@ -26,14 +26,22 @@ export function getTaxableWeight(item) {
  * Resolve a tabela de preços para um corredor, respeitando prioridade:
  * clientPricing > route_pricing (por corredor) > pricing padrão
  */
-function resolvePricing(basePricing, clientPricing, originState, destState, settings) {
+function resolvePricing(basePricing, clientPricing, originState, destState, settings, refDate) {
   if (clientPricing) return clientPricing;
+
+  // Vigência: a tabela do corredor só vale entre valid_from e valid_until (ISO yyyy-mm-dd).
+  const inEffect = (r) => {
+    if (r.valid_from && refDate && refDate < r.valid_from) return false;
+    if (r.valid_until && refDate && refDate > r.valid_until) return false;
+    return true;
+  };
 
   if (originState && destState && settings?.route_pricing?.length > 0) {
     const routeMatch = settings.route_pricing.find(r =>
       r.active !== false &&
       r.origin_state === originState &&
-      r.dest_state === destState
+      r.dest_state === destState &&
+      inEffect(r)
     );
     if (routeMatch) {
       // Mescla: campos definidos na rota sobrescrevem o padrão
@@ -71,11 +79,17 @@ function resolvePricing(basePricing, clientPricing, originState, destState, sett
 export function calculateFreightFull(params) {
   const {
     items = [], distanceKm = null, nfCount = 1,
-    pricing: p, clientPricing, originState, destState, settings
+    pricing: p, clientPricing, originState, destState, settings,
+    freightType = "shared", refDate,
   } = params;
 
-  const pricing = resolvePricing(p, clientPricing, originState, destState, settings);
+  // Data de referência para a vigência da tabela (padrão: hoje)
+  const effectiveDate = refDate || new Date().toISOString().slice(0, 10);
+  const pricing = resolvePricing(p, clientPricing, originState, destState, settings, effectiveDate);
   if (!pricing) return null;
+
+  // Fator de cubagem configurável (cm³ por kg). Padrão 6.000 (= 166,7 kg/m³).
+  const cubageDivisor = Number(pricing.cubage_factor) > 0 ? Number(pricing.cubage_factor) : 6000;
 
   let totalRealKg = 0;
   let totalCubicKg = 0;
@@ -93,9 +107,9 @@ export function calculateFreightFull(params) {
     let formula = null;
 
     if (h && w && l) {
-      const perUnit = (h * w * l) / 6000;
+      const perUnit = (h * w * l) / cubageDivisor;
       cubic = perUnit * vols;
-      formula = `${vols} × (${h}×${w}×${l}÷6.000) = ${vols}×${perUnit.toFixed(2)} = ${cubic.toFixed(2)} kg`;
+      formula = `${vols} × (${h}×${w}×${l}÷${cubageDivisor.toLocaleString("pt-BR")}) = ${vols}×${perUnit.toFixed(2)} = ${cubic.toFixed(2)} kg`;
     }
 
     totalRealKg += real;
@@ -129,12 +143,24 @@ export function calculateFreightFull(params) {
   const tollPerKg = pricing.toll_per_kg || 0;
   const tollValue = taxableKg * tollPerKg;
   const fixedFee = pricing.fixed_fee || 0;
+  const pickupFee = pricing.pickup_fee || 0; // taxa de coleta (separada da entrega)
 
-  const subtotal = freightByWeight + freightByDistance + grisValue +
-                   adValoremValue + tdeValue + tdaValue + tollValue + fixedFee;
+  const baseSubtotal = freightByWeight + freightByDistance + grisValue +
+                   adValoremValue + tdeValue + tdaValue + tollValue + fixedFee + pickupFee;
+
+  // Adicional por tipo de frete (modal/urgência) — % sobre o subtotal
+  const surchargePct = freightType === "urgent" ? (pricing.urgent_percent || 0)
+                     : freightType === "dedicated" ? (pricing.dedicated_percent || 0)
+                     : 0;
+  const surchargeValue = baseSubtotal * (surchargePct / 100);
+  const subtotal = baseSubtotal + surchargeValue;
   const total = Math.max(subtotal, pricing.minimum_freight || 0);
 
   return {
+    pickupFee:         Number(pickupFee.toFixed(2)),
+    surchargePct,
+    surchargeValue:    Number(surchargeValue.toFixed(2)),
+    cubageDivisor,
     totalRealKg:       Number(totalRealKg.toFixed(3)),
     totalCubicKg:      Number(totalCubicKg.toFixed(3)),
     taxableKg:         Number(taxableKg.toFixed(3)),
