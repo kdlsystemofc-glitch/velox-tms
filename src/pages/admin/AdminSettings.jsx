@@ -249,6 +249,34 @@ export default function AdminSettings({ only = null }) {
                     <p className="text-[10px] text-muted-foreground">Cobrança da coleta, separada da entrega (fracionado)</p>
                   </div>
                   <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Taxa de entrega (R$)</label>
+                    <NumericInput currency value={form.pricing?.delivery_fee || ""} onChange={v => setNested("pricing", "delivery_fee", v)} placeholder="ex: 12,00" />
+                    <p className="text-[10px] text-muted-foreground">Cobrança da entrega (door-to-door)</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">TRT por NF (R$)</label>
+                    <NumericInput currency value={form.pricing?.trt_per_nf || ""} onChange={v => setNested("pricing", "trt_per_nf", v)} placeholder="ex: 6,00" />
+                    <p className="text-[10px] text-muted-foreground">Taxa de Restrição de Trânsito (centros urbanos)</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Taxa de espera (R$/hora)</label>
+                    <NumericInput currency value={form.pricing?.waiting_fee_hour || ""} onChange={v => setNested("pricing", "waiting_fee_hour", v)} placeholder="ex: 60,00" />
+                    <p className="text-[10px] text-muted-foreground">Aplicada por hora parada (estadia)</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Taxa de devolução (R$)</label>
+                    <NumericInput currency value={form.pricing?.return_fee || ""} onChange={v => setNested("pricing", "return_fee", v)} placeholder="ex: 80,00" />
+                    <p className="text-[10px] text-muted-foreground">Reentrega / devolução ao remetente</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Taxa de emergência (%)</label>
+                    <div className="relative">
+                      <NumericInput value={form.pricing?.emergency_percent || ""} onChange={v => setNested("pricing", "emergency_percent", v)} placeholder="ex: 20" />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Acionamento emergencial fora de operação</p>
+                  </div>
+                  <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Fator de cubagem (cm³ por kg)</label>
                     <NumericInput integer value={form.pricing?.cubage_factor ?? 6000} onChange={v => setNested("pricing", "cubage_factor", v)} placeholder="6000" />
                     <p className="text-[10px] text-muted-foreground">Padrão 6.000 (= 166,7 kg/m³). Menor = volume "pesa" mais.</p>

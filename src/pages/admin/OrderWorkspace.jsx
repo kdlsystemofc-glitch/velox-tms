@@ -143,7 +143,7 @@ export default function OrderWorkspace() {
     pricing: settings?.pricing, clientPricing, settings,
     originState: order.origin?.state || null, destState: firstDestState,
     freightType: order.freight_type, refDate: order.collection_date,
-    cubageFactor: order.cubage_factor,
+    cubageFactor: order.cubage_factor, extraCharges: order.extra_charges || [],
   });
 
   // ── Avanço de status (mesma lógica de negócio) ───────────────
@@ -273,6 +273,18 @@ export default function OrderWorkspace() {
     }
     setEditAddr(null);
   };
+
+  // Cobranças adicionais do pedido (espera, devolução, emergência, avulsa).
+  const addCharge = (charge) => {
+    const list = [...(order.extra_charges || []), charge];
+    updateMutation.mutate({ extra_charges: list });
+    toast({ title: "Cobrança adicionada", description: `${charge.label}: R$ ${Number(charge.amount).toFixed(2)}` });
+  };
+  const removeCharge = (idx) => {
+    const list = (order.extra_charges || []).filter((_, i) => i !== idx);
+    updateMutation.mutate({ extra_charges: list });
+  };
+  const pricingCfg = settings?.pricing || {};
 
   const saveFinancial = () => {
     updateMutation.mutate({
@@ -668,6 +680,37 @@ export default function OrderWorkspace() {
                       <FreightBreakdown breakdown={breakdown} compact />
                     </div>
                   )}
+                  {/* Cobranças adicionais (espera/devolução/emergência) */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between flex-wrap gap-1">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Cobranças adicionais</label>
+                      <div className="flex gap-1 flex-wrap">
+                        {Number(pricingCfg.waiting_fee_hour) > 0 && (
+                          <button className="text-[11px] border border-border rounded px-1.5 py-0.5 hover:bg-muted" onClick={() => { const h = Number(window.prompt("Horas de espera?")); if (h > 0) addCharge({ type: "waiting", label: `Espera ${h}h`, amount: +(h * Number(pricingCfg.waiting_fee_hour)).toFixed(2) }); }}>+ Espera</button>
+                        )}
+                        {Number(pricingCfg.return_fee) > 0 && (
+                          <button className="text-[11px] border border-border rounded px-1.5 py-0.5 hover:bg-muted" onClick={() => addCharge({ type: "return", label: "Devolução", amount: Number(pricingCfg.return_fee) })}>+ Devolução</button>
+                        )}
+                        {Number(pricingCfg.emergency_percent) > 0 && (
+                          <button className="text-[11px] border border-border rounded px-1.5 py-0.5 hover:bg-muted" onClick={() => { const base = Number(freightValue) || breakdown?.total || 0; addCharge({ type: "emergency", label: `Emergência ${pricingCfg.emergency_percent}%`, amount: +(base * Number(pricingCfg.emergency_percent) / 100).toFixed(2) }); }}>+ Emergência</button>
+                        )}
+                        <button className="text-[11px] border border-border rounded px-1.5 py-0.5 hover:bg-muted" onClick={() => { const label = window.prompt("Descrição da cobrança:"); if (!label) return; const amount = Number(window.prompt("Valor (R$):")); if (amount > 0) addCharge({ type: "other", label, amount }); }}>+ Avulsa</button>
+                      </div>
+                    </div>
+                    {(order.extra_charges || []).length > 0 && (
+                      <div className="space-y-1">
+                        {(order.extra_charges || []).map((c, i) => (
+                          <div key={i} className="flex items-center justify-between text-xs bg-muted/30 rounded px-2 py-1">
+                            <span>{c.label}</span>
+                            <span className="flex items-center gap-2">
+                              <span className="font-mono">R$ {Number(c.amount).toFixed(2)}</span>
+                              <button className="text-red-400 hover:text-red-600" onClick={() => removeCharge(i)}><XCircle className="w-3.5 h-3.5" /></button>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="text-sm">
                       <span className="text-muted-foreground text-xs">Receita vinculada: </span>

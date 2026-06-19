@@ -81,7 +81,7 @@ export function calculateFreightFull(params) {
   const {
     items = [], distanceKm = null, nfCount = 1,
     pricing: p, clientPricing, originState, destState, settings,
-    freightType = "shared", refDate, cubageFactor,
+    freightType = "shared", refDate, cubageFactor, extraCharges = [],
   } = params;
 
   // Data de referência para a vigência da tabela (padrão: hoje)
@@ -146,9 +146,14 @@ export function calculateFreightFull(params) {
   const tollValue = taxableKg * tollPerKg;
   const fixedFee = pricing.fixed_fee || 0;
   const pickupFee = pricing.pickup_fee || 0; // taxa de coleta (separada da entrega)
+  const deliveryFee = pricing.delivery_fee || 0; // taxa de entrega
+  const trtValue = (pricing.trt_per_nf || 0) * nfCount; // restrição de trânsito por NF
+  // Cobranças avulsas do pedido (espera, devolução, emergência, etc.)
+  const extraTotal = (extraCharges || []).reduce((s, c) => s + (Number(c.amount) || 0), 0);
 
   const baseSubtotal = freightByWeight + freightByDistance + grisValue +
-                   adValoremValue + tdeValue + tdaValue + tollValue + fixedFee + pickupFee;
+                   adValoremValue + tdeValue + tdaValue + tollValue + fixedFee +
+                   pickupFee + deliveryFee + trtValue + extraTotal;
 
   // Adicional por tipo de frete (modal/urgência) — % sobre o subtotal
   const surchargePct = freightType === "urgent" ? (pricing.urgent_percent || 0)
@@ -160,6 +165,10 @@ export function calculateFreightFull(params) {
 
   return {
     pickupFee:         Number(pickupFee.toFixed(2)),
+    deliveryFee:       Number(deliveryFee.toFixed(2)),
+    trtValue:          Number(trtValue.toFixed(2)),
+    extraCharges:      extraCharges || [],
+    extraTotal:        Number(extraTotal.toFixed(2)),
     surchargePct,
     surchargeValue:    Number(surchargeValue.toFixed(2)),
     cubageDivisor,
