@@ -3,8 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, CalendarDays, Truck,
   DollarSign, Settings, ChevronLeft, ChevronRight, LogOut, BookUser,
-  FolderOpen, MessageSquare, Route as RouteIcon
+  FolderOpen, MessageSquare, Route as RouteIcon, AlertTriangle
 } from "lucide-react";
+import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
@@ -16,6 +17,7 @@ const navItems = [
   { group: "Fluxo" },
   { icon: Package,         label: "Pedidos",        path: "/admin/coletas",    badge: "pendingOrders" },
   { icon: CalendarDays,    label: "Despacho",       path: "/admin/despacho",   badge: "toDispatch" },
+  { icon: AlertTriangle,   label: "Replanejamento", path: "/admin/replanejamento", badge: "replan" },
   { icon: RouteIcon,       label: "Viagens",        path: "/admin/viagens" },
   { icon: Truck,           label: "Frota",          path: "/admin/frota" },
 
@@ -41,10 +43,15 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
     queryFn: () => base44.entities.ContactMessage.list("-created_date", 100),
   });
 
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
+  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => base44.entities.Trip.list("-created_date", 80) });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
+
   const badges = {
     pendingOrders: allOrders.filter(o => o.status === "new").length,
     toDispatch: allOrders.filter(o => o.status === "confirmed" && !o.trip_id).length,
     unreadMessages: messages.filter(m => !m.read).length,
+    replan: trucksNeedingReplan(trucks, allOrders, trips).length + driversNeedingReplan(drivers, trips).length,
   };
 
   const isActive = (path, exact) => {

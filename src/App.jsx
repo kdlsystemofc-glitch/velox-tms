@@ -25,6 +25,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import OperationsHub from '@/pages/admin/OperationsHub';
 import OrdersWorkspace from '@/pages/admin/OrdersWorkspace';
 import DispatchBoard from '@/pages/admin/DispatchBoard';
+import Replanning from '@/pages/admin/Replanning';
 import OrderWorkspace from '@/pages/admin/OrderWorkspace';
 import NewOrder from '@/pages/admin/NewOrder';
 import TruckDetailPage from '@/pages/admin/TruckDetailPage';
@@ -98,6 +99,7 @@ const AuthenticatedApp = () => {
 
             {/* Despacho (novo quadro) */}
             <Route path="/admin/despacho" element={<DispatchBoard />} />
+            <Route path="/admin/replanejamento" element={<Replanning />} />
 
             {/* Redirecionamentos legados */}
             <Route path="/admin/pedidos" element={<Navigate to="/admin/coletas" replace />} />

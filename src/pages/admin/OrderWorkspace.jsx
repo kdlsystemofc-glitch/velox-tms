@@ -53,6 +53,7 @@ export default function OrderWorkspace() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [unproductiveFee, setUnproductiveFee] = useState("");
   const [resolvingIncident, setResolvingIncident] = useState(null);
   const [resolutionNotes, setResolutionNotes] = useState("");
   const [freightValue, setFreightValue] = useState("");
@@ -174,6 +175,60 @@ export default function OrderWorkspace() {
       } catch (e) { console.error(e); }
     }
     toast({ title: `Pedido ${STATUS_LABELS[newStatus]?.toLowerCase()}` });
+  };
+
+  const tripLive = trip && ["planned", "in_progress"].includes(trip.status);
+
+  // S10 — cancelamento com viagem em andamento: remove paradas do roteiro,
+  // recalcula a receita da viagem, registra taxa improdutiva e avisa o motorista.
+  const confirmCancel = async () => {
+    const reason = cancelReason.trim();
+    const fee = Number(unproductiveFee) || 0;
+
+    // 1) Remover este pedido do roteiro da viagem (marca paradas como puladas) + avisa motorista
+    if (tripLive) {
+      try {
+        const stops = (trip.stops || []).map(s =>
+          s.order_id === order.id ? { ...s, status: "skipped", skip_reason: "Pedido cancelado", skipped_at: new Date().toISOString() } : s
+        );
+        const newRevenue = Math.max(0, (trip.total_revenue || 0) - (order.freight_value || 0));
+        await base44.entities.Trip.update(trip.id, {
+          stops,
+          total_revenue: newRevenue,
+          order_ids: (trip.order_ids || []).filter(oid => oid !== order.id),
+          events: [...(trip.events || []), {
+            type: "order_cancelled",
+            description: `Pedido ${order.protocol} (${order.client_name}) cancelado — pule esta parada e continue a rota.`,
+            timestamp: new Date().toISOString(), user: "Admin",
+          }],
+        });
+        queryClient.invalidateQueries({ queryKey: ["trip-for-order", order.trip_id] });
+        await base44.entities.Alert.create({
+          type: "order_cancelled_in_trip", level: "warning",
+          message: `${order.protocol} cancelado durante a viagem ${trip.truck_plate || ""} — motorista avisado`,
+          reference_id: order.id, reference_type: "order", read: false, resolved: false,
+        }).catch(() => {});
+      } catch (e) { console.error(e); }
+    }
+
+    // 2) Taxa de deslocamento improdutivo (vira receita a cobrar)
+    if (fee > 0) {
+      await updateMutation.mutateAsync({ unproductive_fee: fee });
+      try {
+        await base44.entities.Revenue.create({
+          order_id: order.id, client_id: order.client_id || undefined,
+          description: `Taxa de deslocamento improdutivo — ${order.protocol}`,
+          amount: fee, due_date: todayLocalISO(), status: "receivable",
+        });
+        queryClient.invalidateQueries({ queryKey: ["revenues"] });
+      } catch (e) { console.error(e); }
+    }
+
+    // 3) Cancela o pedido (estorna a receita do frete)
+    await handleStatusChange("cancelled", `Cancelado — motivo: ${reason}${fee > 0 ? ` · taxa improdutiva R$ ${fee.toFixed(2)}` : ""}`);
+    setCancelOpen(false);
+    setCancelReason("");
+    setUnproductiveFee("");
   };
 
   const saveFinancial = () => {
@@ -358,9 +413,10 @@ export default function OrderWorkspace() {
                             Entrega {((order.recipients || []).length > 1) ? i + 1 : ""} — {r.name || "—"}
                             <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-semibold normal-case ${
                               r.delivery_status === "delivered" ? "bg-green-100 text-green-700" :
-                              r.delivery_status === "failed" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"
+                              r.delivery_status === "failed" ? "bg-red-100 text-red-700" :
+              r.delivery_status === "partial" ? "bg-teal-100 text-teal-700" : "bg-gray-100 text-gray-600"
                             }`}>
-                              {r.delivery_status === "delivered" ? "Entregue" : r.delivery_status === "failed" ? "Falhou" : "Pendente"}
+                              {r.delivery_status === "delivered" ? "Entregue" : r.delivery_status === "failed" ? "Falhou" : r.delivery_status === "partial" ? "Parcial" : "Pendente"}
                             </span>
                           </p>
                           <p className="text-sm">{[r.street, r.number, r.city, r.state].filter(Boolean).join(", ") || "—"}</p>
@@ -433,7 +489,8 @@ export default function OrderWorkspace() {
                       <p className="font-semibold text-sm">{r.name || `Destinatário ${ri + 1}`} <span className="text-muted-foreground font-normal text-xs">· {[r.city, r.state].filter(Boolean).join("/")}</span></p>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         r.delivery_status === "delivered" ? "bg-green-100 text-green-700" :
-                        r.delivery_status === "failed" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"
+                        r.delivery_status === "failed" ? "bg-red-100 text-red-700" :
+              r.delivery_status === "partial" ? "bg-teal-100 text-teal-700" : "bg-gray-100 text-gray-600"
                       }`}>
                         {r.delivery_status === "delivered" ? "Entregue" : r.delivery_status === "failed" ? "Falhou" : "Pendente"}
                       </span>
@@ -742,16 +799,25 @@ export default function OrderWorkspace() {
           <div className="space-y-3">
             <Textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)}
               placeholder="Motivo do cancelamento (obrigatório)" rows={3} className="resize-none" />
-            <p className="text-xs text-red-600">Receitas pendentes deste pedido serão estornadas.</p>
+            {tripLive && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
+                <p className="text-xs font-semibold text-amber-800 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Este pedido está em uma viagem em andamento
+                </p>
+                <p className="text-[11px] text-amber-700">A parada será removida do roteiro e o motorista será avisado. Deseja cobrar taxa de deslocamento improdutivo?</p>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-amber-800">Taxa improdutiva (R$)</label>
+                  <Input type="number" step="0.01" value={unproductiveFee} onChange={e => setUnproductiveFee(e.target.value)}
+                    placeholder="0,00" className="h-8 w-28 font-mono text-sm" />
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-red-600">Receitas pendentes do frete deste pedido serão estornadas.</p>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={() => { setCancelOpen(false); setCancelReason(""); }}>Voltar</Button>
+              <Button variant="outline" size="sm" onClick={() => { setCancelOpen(false); setCancelReason(""); setUnproductiveFee(""); }}>Voltar</Button>
               <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white font-bold"
                 disabled={!cancelReason.trim()}
-                onClick={() => {
-                  handleStatusChange("cancelled", `Cancelado — motivo: ${cancelReason.trim()}`);
-                  setCancelOpen(false);
-                  setCancelReason("");
-                }}>
+                onClick={confirmCancel}>
                 Cancelar Pedido
               </Button>
             </div>

@@ -7,9 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { useAuth } from "@/lib/AuthContext";
 import { todayLocalISO } from "@/utils/dateUtils";
+import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
 import {
   Package, Truck, CheckCircle2, AlertCircle, ArrowRight, Plus,
-  Clock, MapPin, DollarSign, CalendarDays, Inbox
+  Clock, MapPin, DollarSign, CalendarDays, Inbox, Wrench, UserX
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -35,6 +36,7 @@ export default function OperationsHub() {
   const { data: alerts = [] } = useQuery({ queryKey: ["alerts"], queryFn: () => base44.entities.Alert.list("-created_date", 100), select: d => d.filter(a => !a.resolved) });
   const { data: revenues = [] } = useQuery({ queryKey: ["revenues"], queryFn: () => base44.entities.Revenue.list("-due_date", 100), enabled: isAdmin });
   const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => base44.entities.Expense.list("-date", 100), enabled: isAdmin });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
 
   useEffect(() => {
     base44.functions.invoke("syncAlerts", {}).then(() => {
@@ -58,7 +60,25 @@ export default function OperationsHub() {
   const criticalAlerts = alerts.filter(a => a.level === "critical");
   const overdueRevenues = isAdmin ? revenues.filter(r => r.status === "overdue" || (r.status === "receivable" && r.due_date && r.due_date < todayStr)) : [];
 
+  // Replanejamento (S1/S2): caminhões indisponíveis com carga e motoristas ausentes com viagem.
+  const truckReplan = trucksNeedingReplan(trucks, orders, trips);
+  const driverReplan = driversNeedingReplan(drivers, trips);
+
   const actionQueue = [
+    truckReplan.length > 0 && {
+      icon: Wrench, color: "border-amber-300 bg-amber-50",
+      iconColor: "text-amber-600",
+      title: `${truckReplan.length} caminhão(ões) indisponível(eis) com carga programada`,
+      desc: "Redistribua os pedidos/viagens afetados",
+      action: { label: "Replanejar", to: "/admin/replanejamento" },
+    },
+    driverReplan.length > 0 && {
+      icon: UserX, color: "border-orange-300 bg-orange-50",
+      iconColor: "text-orange-600",
+      title: `${driverReplan.reduce((s, d) => s + d.trips.length, 0)} viagem(ns) sem motorista hoje`,
+      desc: "Reatribua a um motorista disponível",
+      action: { label: "Reatribuir", to: "/admin/replanejamento" },
+    },
     newOrders.length > 0 && {
       icon: Inbox, color: "border-blue-300 bg-blue-50",
       iconColor: "text-blue-600",

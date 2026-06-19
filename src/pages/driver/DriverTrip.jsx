@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, CheckCircle2, MapPin, AlertTriangle, FileText, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, CheckCircle2, MapPin, AlertTriangle, FileText, ClipboardCheck, PackageX, UserX, Clock } from "lucide-react";
 import { format } from "date-fns";
 import FileUploadButton from "@/components/shared/FileUploadButton";
 import SignaturePad from "@/components/shared/SignaturePad";
@@ -33,6 +33,13 @@ export default function DriverTrip() {
   const [stopActions, setStopActions] = useState({});
   const [currentOrderId, setCurrentOrderId] = useState(null);
   const [checklist, setChecklist] = useState({});
+  // Exceções operacionais (S5 / S12 / S13)
+  const [partialModal, setPartialModal] = useState(null);   // { index } entrega parcial
+  const [partialForm, setPartialForm] = useState({ delivered_volumes: "", reason: "recusado" });
+  const [absentModal, setAbsentModal] = useState(null);     // { index } destinatário ausente
+  const [absentForm, setAbsentForm] = useState({ action: "retry", notes: "" });
+  const [cargoModal, setCargoModal] = useState(null);       // { index } carga não pronta
+  const [cargoNotes, setCargoNotes] = useState("");
 
   const { data: trip, isLoading } = useQuery({
     queryKey: ["trip", id],
@@ -181,6 +188,99 @@ export default function DriverTrip() {
     toast({ title: "Ocorrência registrada!" });
   };
 
+  // Cria um alerta para o gestor (torre de controle). Falha em silêncio se a entidade não existir.
+  const notifyManager = async ({ type, level = "warning", message, reference_id }) => {
+    try {
+      await base44.entities.Alert.create({ type, level, message, reference_id, reference_type: "order", read: false, resolved: false });
+    } catch { /* alerta é best-effort */ }
+  };
+
+  // S12 — Entrega parcial: parte dos volumes foi entregue, o restante volta.
+  const handlePartial = async (index) => {
+    const action = stopActions[index] || {};
+    const stop = trip.stops[index];
+    if (!action.nf_url || !action.signature_url) {
+      toast({ title: "NF e assinatura obrigatórias", description: "Anexe a NF e capture a assinatura do que foi entregue.", variant: "destructive" });
+      return;
+    }
+    const delivered = Number(partialForm.delivered_volumes) || 0;
+    const reasonLabel = { recusado: "recusado pelo cliente", avaria: "avaria", volume_errado: "volume errado", outro: "outro" }[partialForm.reason] || partialForm.reason;
+    const stops = [...(trip.stops || [])];
+    stops[index] = { ...stops[index], status: "completed", delivery_result: "partial", delivered_volumes: delivered, partial_reason: partialForm.reason, completed_at: new Date().toISOString(), nf_signed_url: action.nf_url, signature_url: action.signature_url, receiver_name: action.receiver_name || undefined, notes: action.notes || undefined };
+    updateMutation.mutate({ stops, events: [...(trip.events || []), { type: "partial_delivery", description: `Entrega PARCIAL em ${stop.recipient_name || stop.address}: ${delivered} volume(s) entregue(s); restante ${reasonLabel}`, timestamp: new Date().toISOString(), user: driverName }] });
+
+    if (stop.order_id) {
+      try {
+        const order = (await base44.entities.Order.filter({ id: stop.order_id }))[0];
+        if (order) {
+          const recipients = (order.recipients || []).map(r => r.name === stop.recipient_name
+            ? { ...r, delivery_status: "partial", delivered_volumes: delivered, partial_reason: partialForm.reason, delivered_at: new Date().toISOString(), nf_signed_url: action.nf_url, signature_url: action.signature_url, receiver_name: action.receiver_name || r.receiver_name }
+            : r);
+          // pedido nunca fica 100% entregue se há parcial → status partially_delivered
+          await base44.entities.Order.update(stop.order_id, { recipients, status: "partially_delivered", status_history: [...(order.status_history || []), { status: "partially_delivered", timestamp: new Date().toISOString(), user: driverName, note: `Entrega parcial p/ ${stop.recipient_name}: ${delivered} vol., restante ${reasonLabel}` }] });
+          await base44.entities.Incident.create({ order_id: stop.order_id, trip_id: trip.id, type: "entrega_parcial", description: `${delivered} volume(s) entregue(s) a ${stop.recipient_name}. Restante: ${reasonLabel}.`, recipient_name: stop.recipient_name, reported_by_name: driverName, reported_by_role: "motorista", status: "open" });
+          await notifyManager({ type: "delivery_attempt", message: `Entrega parcial — ${order.protocol} (${stop.recipient_name}): ${reasonLabel}`, reference_id: stop.order_id });
+        }
+      } catch { /* silent */ }
+    }
+    setPartialModal(null);
+    setPartialForm({ delivered_volumes: "", reason: "recusado" });
+    setStopActions(prev => { const n = { ...prev }; delete n[index]; return n; });
+    toast({ title: "Entrega parcial registrada", description: "O gestor foi avisado do volume que retornou." });
+  };
+
+  // S13 — Destinatário ausente: define o que fazer com a carga.
+  const handleAbsent = async (index) => {
+    const stop = trip.stops[index];
+    const actionLabel = { retry: "tentar novamente amanhã", wait: "aguardar instrução do gestor", return: "devolver ao remetente" }[absentForm.action];
+    const stops = [...(trip.stops || [])];
+    const nextAttempt = absentForm.action === "retry" ? new Date(Date.now() + 86400000).toISOString().slice(0, 10) : null;
+    stops[index] = { ...stops[index], status: "completed", delivery_result: "failed", failure_action: absentForm.action, next_attempt_date: nextAttempt, completed_at: new Date().toISOString(), notes: absentForm.notes || undefined };
+    updateMutation.mutate({ stops, events: [...(trip.events || []), { type: "recipient_absent", description: `Destinatário ausente em ${stop.recipient_name || stop.address}. Ação: ${actionLabel}.`, timestamp: new Date().toISOString(), user: driverName }] });
+
+    if (stop.order_id) {
+      try {
+        const order = (await base44.entities.Order.filter({ id: stop.order_id }))[0];
+        if (order) {
+          const recipients = (order.recipients || []).map(r => {
+            if (r.name !== stop.recipient_name) return r;
+            const attempts = [...(r.attempts || []), { date: new Date().toISOString(), action: absentForm.action, notes: absentForm.notes || "", by: driverName }];
+            return { ...r, delivery_status: "failed", failure_action: absentForm.action, next_attempt_date: nextAttempt, attempts };
+          });
+          await base44.entities.Order.update(stop.order_id, { recipients, status_history: [...(order.status_history || []), { status: order.status, timestamp: new Date().toISOString(), user: driverName, note: `Destinatário ${stop.recipient_name} ausente — ${actionLabel}` }] });
+          await base44.entities.Incident.create({ order_id: stop.order_id, trip_id: trip.id, type: "destinatario_ausente", description: `Destinatário ${stop.recipient_name} ausente. Ação definida: ${actionLabel}.${absentForm.notes ? " Obs: " + absentForm.notes : ""}`, recipient_name: stop.recipient_name, reported_by_name: driverName, reported_by_role: "motorista", status: "open", due_date: nextAttempt });
+          await notifyManager({ type: "delivery_attempt", level: absentForm.action === "wait" ? "critical" : "warning", message: `Destinatário ausente — ${order.protocol} (${stop.recipient_name}): ${actionLabel}`, reference_id: stop.order_id });
+        }
+      } catch { /* silent */ }
+    }
+    setAbsentModal(null);
+    setAbsentForm({ action: "retry", notes: "" });
+    toast({ title: "Ocorrência registrada", description: `Pode pular esta parada e seguir a rota. ${actionLabel}.` });
+  };
+
+  // S5 — Carga não estava pronta na coleta.
+  const handleCargoNotReady = async (index) => {
+    const stop = trip.stops[index];
+    const arrivedAt = stop.arrived_at || new Date().toISOString();
+    const stops = [...(trip.stops || [])];
+    stops[index] = { ...stops[index], status: "arrived", awaiting_cargo: true, cargo_hold_notes: cargoNotes, cargo_hold_at: new Date().toISOString() };
+    updateMutation.mutate({ stops, events: [...(trip.events || []), { type: "cargo_not_ready", description: `Carga não estava pronta em ${stop.recipient_name || stop.address}. ${cargoNotes || ""}`, timestamp: new Date().toISOString(), user: driverName }] });
+
+    if (stop.order_id) {
+      try {
+        const order = (await base44.entities.Order.filter({ id: stop.order_id }))[0];
+        if (order) {
+          await base44.entities.Order.update(stop.order_id, { status: "awaiting_cargo", status_history: [...(order.status_history || []), { status: "awaiting_cargo", timestamp: new Date().toISOString(), user: driverName, note: `Carga não estava pronta (chegada ${new Date(arrivedAt).toLocaleString("pt-BR")}). ${cargoNotes || ""}` }] });
+          await base44.entities.Incident.create({ order_id: stop.order_id, trip_id: trip.id, type: "carga_nao_pronta", description: `Carga não estava pronta no momento da coleta. Chegada às ${new Date(arrivedAt).toLocaleString("pt-BR")}. ${cargoNotes || ""}`, reported_by_name: driverName, reported_by_role: "motorista", status: "open" });
+          await notifyManager({ type: "cargo_hold", level: "warning", message: `Carga não pronta — ${order.protocol} (${order.client_name})`, reference_id: stop.order_id });
+        }
+      } catch { /* silent */ }
+    }
+    setCargoModal(null);
+    setCargoNotes("");
+    toast({ title: "Registrado: carga não pronta", description: "Você pode seguir para a próxima parada e voltar depois." });
+  };
+
   const setStopField = (index, field, value) => setStopActions(prev => ({ ...prev, [index]: { ...(prev[index] || {}), [field]: value } }));
 
   return (
@@ -247,6 +347,11 @@ export default function DriverTrip() {
                     {stop.recipient_name && <span className="font-semibold text-sm text-white">{stop.recipient_name}</span>}
                   </div>
                   <p className="text-xs text-white/40 mt-1">{stop.address}</p>
+                  {stop.awaiting_cargo && stop.status !== "completed" && (
+                    <p className="text-xs text-orange-300 mt-1 flex items-center gap-1"><Clock className="w-3 h-3" /> Aguardando liberação de carga — você pode voltar depois</p>
+                  )}
+                  {stop.delivery_result === "partial" && <p className="text-xs text-teal-300 mt-1">Entrega parcial: {stop.delivered_volumes} volume(s)</p>}
+                  {stop.delivery_result === "failed" && <p className="text-xs text-orange-300 mt-1">Destinatário ausente</p>}
                   {stop.completed_at && <p className="text-xs text-green-400 mt-1">✓ {format(new Date(stop.completed_at), "dd/MM HH:mm")}</p>}
 
                   {/* Actions */}
@@ -318,6 +423,27 @@ export default function DriverTrip() {
                               {!action.nf_url ? "Anexe a NF" : "Capture a assinatura"} para confirmar a entrega
                             </p>
                           )}
+                          {/* Exceções (S5 / S12 / S13) */}
+                          <div className="grid grid-cols-2 gap-2 pt-1">
+                            {stop.type === "delivery" && (
+                              <>
+                                <Button variant="outline" className="h-11 text-xs border-teal-500/40 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 gap-1"
+                                  onClick={() => { setPartialModal({ index: i }); setPartialForm({ delivered_volumes: "", reason: "recusado" }); }}>
+                                  <PackageX className="w-3.5 h-3.5" /> Entrega parcial
+                                </Button>
+                                <Button variant="outline" className="h-11 text-xs border-orange-500/40 bg-orange-500/10 text-orange-300 hover:bg-orange-500/20 gap-1"
+                                  onClick={() => { setAbsentModal({ index: i }); setAbsentForm({ action: "retry", notes: "" }); }}>
+                                  <UserX className="w-3.5 h-3.5" /> Destinatário ausente
+                                </Button>
+                              </>
+                            )}
+                            {stop.type === "collection" && !stop.awaiting_cargo && (
+                              <Button variant="outline" className="h-11 text-xs col-span-2 border-orange-500/40 bg-orange-500/10 text-orange-300 hover:bg-orange-500/20 gap-1"
+                                onClick={() => { setCargoModal({ index: i }); setCargoNotes(""); }}>
+                                <Clock className="w-3.5 h-3.5" /> Carga não estava pronta
+                              </Button>
+                            )}
+                          </div>
                         </>
                       )}
                     </div>
@@ -339,6 +465,77 @@ export default function DriverTrip() {
           </div>
         </div>
       )}
+
+      {/* S12 — Entrega parcial */}
+      <Dialog open={!!partialModal} onOpenChange={o => !o && setPartialModal(null)}>
+        <DialogContent className="max-w-sm mx-4">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><PackageX className="w-4 h-4 text-teal-600" /> Entrega parcial</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-xs text-muted-foreground">Anexe a NF e a assinatura do que foi entregue (nos botões da parada), depois registre aqui.</p>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Volumes entregues</label>
+              <input type="number" min="0" value={partialForm.delivered_volumes}
+                onChange={e => setPartialForm(p => ({ ...p, delivered_volumes: e.target.value }))}
+                className="w-full h-11 rounded-lg border px-3 text-sm" placeholder="ex: 8" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Motivo dos demais</label>
+              <Select value={partialForm.reason} onValueChange={v => setPartialForm(p => ({ ...p, reason: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recusado">Recusado pelo cliente</SelectItem>
+                  <SelectItem value="avaria">Avaria</SelectItem>
+                  <SelectItem value="volume_errado">Volume errado</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold" onClick={() => handlePartial(partialModal.index)}>
+              Registrar entrega parcial
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* S13 — Destinatário ausente */}
+      <Dialog open={!!absentModal} onOpenChange={o => !o && setAbsentModal(null)}>
+        <DialogContent className="max-w-sm mx-4">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><UserX className="w-4 h-4 text-orange-600" /> Destinatário ausente</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">O que fazer com a carga?</label>
+              <Select value={absentForm.action} onValueChange={v => setAbsentForm(p => ({ ...p, action: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="retry">Tentar novamente amanhã</SelectItem>
+                  <SelectItem value="wait">Aguardar instrução do gestor</SelectItem>
+                  <SelectItem value="return">Devolver ao remetente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Textarea placeholder="Observações (opcional)" rows={2} value={absentForm.notes}
+              onChange={e => setAbsentForm(p => ({ ...p, notes: e.target.value }))} className="resize-none" />
+            <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold" onClick={() => handleAbsent(absentModal.index)}>
+              Registrar e seguir rota
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* S5 — Carga não estava pronta */}
+      <Dialog open={!!cargoModal} onOpenChange={o => !o && setCargoModal(null)}>
+        <DialogContent className="max-w-sm mx-4">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Clock className="w-4 h-4 text-orange-600" /> Carga não estava pronta</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-xs text-muted-foreground">A hora da sua chegada é registrada automaticamente. O gestor será avisado e você pode seguir para a próxima parada.</p>
+            <Textarea placeholder="O que aconteceu? (ex: ainda em produção, separação incompleta)" rows={3} value={cargoNotes}
+              onChange={e => setCargoNotes(e.target.value)} className="resize-none" />
+            <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold" onClick={() => handleCargoNotReady(cargoModal.index)}>
+              Registrar e continuar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Incident modal */}
       <Dialog open={incidentModal} onOpenChange={setIncidentModal}>

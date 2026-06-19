@@ -11,6 +11,8 @@ export const orderStatusConfig = {
   in_transit: { label: "Em trânsito", dot: "bg-violet-500",  cls: "text-violet-700 bg-violet-50 border-violet-200" },
   delivered:  { label: "Entregue",    dot: "bg-green-600",   cls: "text-green-700 bg-green-50 border-green-200" },
   cancelled:  { label: "Cancelado",   dot: "bg-red-500",     cls: "text-red-700 bg-red-50 border-red-200" },
+  awaiting_cargo:       { label: "Aguardando carga",  dot: "bg-orange-500", cls: "text-orange-700 bg-orange-50 border-orange-200" },
+  partially_delivered:  { label: "Entrega parcial",   dot: "bg-teal-500",   cls: "text-teal-700 bg-teal-50 border-teal-200" },
   // trips
   planned:     { label: "Planejada",   dot: "bg-blue-500",   cls: "text-blue-700 bg-blue-50 border-blue-200" },
   in_progress: { label: "Em rota",     dot: "bg-green-600 animate-pulse", cls: "text-green-700 bg-green-50 border-green-200" },
