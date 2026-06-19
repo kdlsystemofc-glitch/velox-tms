@@ -169,6 +169,7 @@ Todos os diálogos de criação/edição (Caminhão, Motorista, Fornecedor, **Cl
 | `role` | text | `motorista` / `ajudante` / `administrativo` |
 | `contract_type` | text | `clt` / `pj` / `diarista` |
 | `base_salary` | numeric | Salário base |
+| `commission_percent` | numeric | % de comissão sobre a receita da viagem (acerto no encerramento) — Fase 6 |
 | `status` | text | `active` / `away` / `terminated` |
 | `user_id` | uuid FK → auth.users | Vínculo com usuário Supabase |
 | `created_date` | timestamptz | — |
@@ -224,6 +225,7 @@ Todos os diálogos de criação/edição (Caminhão, Motorista, Fornecedor, **Cl
 | `total_cost` | numeric | Custo total (calculado no encerramento) |
 | `net_profit` | numeric | Receita - Custo |
 | `advance_amount` | numeric | Adiantamento (vale-frete) pago ao motorista antes da saída |
+| `commission_amount` | numeric | Comissão do motorista calculada no encerramento (% × receita) — Fase 6 |
 | `advance_date` | date | Data do adiantamento |
 | `notes` | text | — |
 | `created_date` | timestamptz | — |
@@ -315,12 +317,13 @@ Tabela com **uma única linha**. Campos principais:
 |-------|--------|
 | Empresa | `company_name`, `cnpj`, `phone`, `email`, `whatsapp`, `address`, `region`, `mission`, `vision`, `values` |
 | Redes Sociais | `social_instagram`, `social_linkedin`, `social_facebook` |
-| Preços base | `pricing: {price_per_kg, price_per_km, fixed_fee, minimum_freight, gris_percent, ad_valorem_percent, tde_per_nf, tda_per_nf, toll_per_kg}` |
-| Tabela por corredor | `route_pricing: [{origin_state, dest_state, price_per_kg, price_per_km, fixed_fee, minimum_freight, gris_percent, tde_per_nf, tda_per_nf, toll_per_kg, delivery_days, active}]` |
+| Preços base | `pricing: {price_per_kg, price_per_km, fixed_fee, minimum_freight, gris_percent, ad_valorem_percent, tde_per_nf, tda_per_nf, toll_per_kg, `**`pickup_fee, cubage_factor, urgent_percent, dedicated_percent`**`}` (Fase 4) |
+| Tabela por corredor | `route_pricing: [{origin_state, dest_state, price_per_kg, price_per_km, fixed_fee, minimum_freight, gris_percent, tde_per_nf, tda_per_nf, toll_per_kg, delivery_days, active, `**`valid_from, valid_until`**`}]` — vigência aplicada pela data de coleta (Fase 4) |
 | Prazo de entrega | `km_per_day` (fallback), `delivery_days_table: [{state, days}]` |
 | Financeiro | `tax_rate_percent`, `monthly_depreciation` |
 | Alertas | `alert_days_cnh`, `alert_days_crlv`, `alert_days_insurance` |
 | Agendamento | `working_days` (array int 0-6), `min_advance_days` |
+| Captação (Fase 3) | `collection_model` (`detailed`/`simple`/`both`) — modo inicial da Nova Coleta |
 | Cobertura | `coverage_type` (`none`/`states`/`cities`/`cep_range`), `coverage_states`, `coverage_cities`, `coverage_cep_ranges` |
 | Site público | `hero_title`, `hero_subtitle`, `about_text` |
 | API | `google_maps_api_key` |

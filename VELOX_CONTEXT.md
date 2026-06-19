@@ -208,6 +208,9 @@ C:/vl/velox-tms/
 │   │   ├── nfeXml.js             # parseNFeXML — lê XML da NF-e e extrai destinatário/itens (import no Novo Pedido)
 │   │   ├── generateDeliveryReceipt.js # Geração de PDF de comprovante
 │   │   ├── generateTripManifest.js # Romaneio de carga (manifesto de viagem) em PDF
+│   │   ├── generateShipmentDoc.js # Documento interno de transporte (espelho/pré-CT-e, PDF) — Fase 5
+│   │   ├── dispatchPlanner.js    # Separação automática de carga (planLoads) — Fase 1
+│   │   ├── routeOptimizer.js     # Roteirização heurística por CEP (optimizeStops) — Fase 2
 │   │   ├── routePlanner.js       # Planejamento de rotas
 │   │   └── index.ts              # Re-exports de utils
 │   ├── pages/

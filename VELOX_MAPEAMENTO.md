@@ -916,6 +916,21 @@ Caixa de entrada de contatos do site público (leads). Lista com não lidas em d
 
 ---
 
+## PARTE 5.9 — Recursos TMS avançados (Fases 1–6, 2026)
+
+Ver visão geral e dependências de API em `VELOX_ROADMAP_TMS_COMPLETO.md`.
+
+- **Fase 1 — Separação automática de carga.** `src/utils/dispatchPlanner.js` (`planLoads`): agrupa pedidos confirmados sem viagem por **data de coleta + região de destino (UF+CEP) + capacidade**, mantendo pedidos do **mesmo CEP de origem juntos**; só usa caminhões disponíveis. UI: botão **"Separação automática"** no **Despacho** → diálogo com a proposta → "Aplicar" programa no quadro. Também há **"Devolver N à fila"** (desfaz toda a programação). *Sem API.*
+- **Fase 2 — Roteirização heurística.** `src/utils/routeOptimizer.js` (`optimizeStops`): nearest-neighbor por **proximidade de CEP**, respeitando **coleta antes da entrega**. Aplicada ao criar a viagem (`NewTrip.buildStops`) e via botão **"Otimizar rota"** + setas ↑/↓ no **detalhe da viagem**. *Sem API (upgrade futuro: Google Distance Matrix/ORS).*
+- **Fase 3 — Modelos de captação.** Config `company_settings.collection_model` (`detailed`/`simple`/`both`) em **Configurações → Operação**. Na **Nova Coleta** (Passo 2) há o alternador **Detalhada × Simplificada**; no modo simplificado captura **volume + peso total + valor declarado** e destinatários **sem itens** (NFs vinculadas depois); frete estimado pelo peso total.
+- **Fase 4 — Tabelas profissionais** (em `pricing` JSONB + `route_pricing`): **fator de cubagem** (`cubage_factor`, padrão 6000), **taxa de coleta** (`pickup_fee`), **adicional por tipo de frete** (`urgent_percent`/`dedicated_percent`) e **vigência por corredor** (`route_pricing[].valid_from/valid_until`, aplicada pela data de coleta). `freightCalculator.calculateFreightFull` aceita `freightType` e `refDate`. Campos novos na aba **Preços** + colunas de vigência na **Tabela de Rotas**.
+- **Fase 5 (gratuita) — Documento interno de transporte.** `src/utils/generateShipmentDoc.js`: PDF "espelho / pré-CT-e" (SEM VALOR FISCAL) por pedido — menu **⋯ → "Doc. de transporte (PDF)"** no workspace do pedido. CT-e/MDF-e fiscal (SEFAZ) = fase paga, adiada.
+- **Fase 6 — Acerto de viagem & comissões.** `drivers.commission_percent` (campo no cadastro do motorista) + `trips.commission_amount`. Ao **encerrar a viagem** (`TripDetailPage.closeTrip`), calcula a comissão (% sobre a receita), grava na viagem e lança despesa **"a pagar"**; card **"Acerto do motorista"** (comissão − adiantamento). *Sem API.*
+
+> **Confirmação de pedido (mudança 2026):** o Sheet de confirmar **não atribui mais caminhão** (só data/valor/forma de pagamento) — o veículo é definido no Despacho. `OrdersWorkspace`.
+
+---
+
 ## PARTE 6 — ROTAS E REDIRECIONAMENTOS
 
 ### Rotas públicas
