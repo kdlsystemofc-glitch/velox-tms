@@ -19,26 +19,27 @@ const statusConfig = {
   cancelled: { label: "Cancelado", color: "bg-gray-100 text-gray-500" },
 };
 
-/** Faixas de aging (contas a receber em aberto). */
+/** Faixas de aging (contas a receber em aberto) — padrão TMS. */
 const AGING = [
-  { key: "overdue", label: "Vencidas",      cls: "text-red-700 bg-red-50 border-red-200 hover:bg-red-100" },
-  { key: "d7",      label: "Vence ≤ 7 dias", cls: "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100" },
-  { key: "d30",     label: "8–30 dias",      cls: "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100" },
-  { key: "d60",     label: "31–60 dias",     cls: "text-indigo-700 bg-indigo-50 border-indigo-200 hover:bg-indigo-100" },
-  { key: "future",  label: "> 60 dias",      cls: "text-slate-700 bg-slate-50 border-slate-200 hover:bg-slate-100" },
+  { key: "today",        label: "Vence hoje",     cls: "text-amber-800 bg-amber-100 border-amber-300 hover:bg-amber-200" },
+  { key: "d7",           label: "Vence ≤ 7 dias", cls: "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100" },
+  { key: "d30",          label: "8–30 dias",      cls: "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100" },
+  { key: "d60",          label: "31–60 dias",     cls: "text-indigo-700 bg-indigo-50 border-indigo-200 hover:bg-indigo-100" },
+  { key: "overdue30",    label: "Venceu < 30d",   cls: "text-red-700 bg-red-50 border-red-200 hover:bg-red-100" },
+  { key: "overdue30p",   label: "Venceu > 30d",   cls: "text-red-800 bg-red-100 border-red-300 hover:bg-red-200" },
 ];
 
 /** Classifica uma conta em aberto pela data de vencimento. */
 function agingOf(dueDate) {
   const d = parseLocalDate(dueDate);
-  if (!d) return "future";
+  if (!d) return "d60";
   const today = parseLocalDate(_today());
   const days = Math.round((d - today) / 86400000);
-  if (days < 0) return "overdue";
+  if (days === 0) return "today";
+  if (days < 0) return days >= -30 ? "overdue30" : "overdue30p";
   if (days <= 7) return "d7";
   if (days <= 30) return "d30";
-  if (days <= 60) return "d60";
-  return "future";
+  return "d60";
 }
 
 export default function Revenues({ hideTitle = false }) {
@@ -103,7 +104,7 @@ export default function Revenues({ hideTitle = false }) {
       </div>
 
       {/* Resumo + Aging de contas a receber */}
-      <div className="grid grid-cols-2 lg:grid-cols-7 gap-2.5">
+      <div className="grid grid-cols-2 lg:grid-cols-8 gap-2.5">
         <Card className="p-3 lg:col-span-1">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Total a receber</p>
           <p className="text-lg font-bold font-mono text-amber-600">R$ {totalReceivable.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>

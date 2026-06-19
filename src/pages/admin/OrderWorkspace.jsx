@@ -63,6 +63,7 @@ export default function OrderWorkspace() {
   const [cte, setCte] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [paymentTerms, setPaymentTerms] = useState("after_delivery");
+  const [cubageFactor, setCubageFactor] = useState("");
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", id],
@@ -111,6 +112,7 @@ export default function OrderWorkspace() {
       setCte(order.cte_number || "");
       setPaymentMethod(order.payment_method || "pix");
       setPaymentTerms(order.payment_terms || "after_delivery");
+      setCubageFactor(order.cubage_factor != null ? order.cubage_factor : "");
     }
   }, [order]);
 
@@ -137,6 +139,8 @@ export default function OrderWorkspace() {
     items: allItems, distanceKm: null, nfCount,
     pricing: settings?.pricing, clientPricing, settings,
     originState: order.origin?.state || null, destState: firstDestState,
+    freightType: order.freight_type, refDate: order.collection_date,
+    cubageFactor: order.cubage_factor,
   });
 
   // ── Avanço de status (mesma lógica de negócio) ───────────────
@@ -239,6 +243,7 @@ export default function OrderWorkspace() {
       freight_value: Number(freightValue) || undefined,
       payment_method: paymentMethod,
       payment_terms: paymentTerms,
+      cubage_factor: cubageFactor === "" ? null : Number(cubageFactor),
       general_notes: notes,
     });
     toast({ title: "Dados salvos!" });
@@ -591,6 +596,12 @@ export default function OrderWorkspace() {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-muted-foreground">Fator de cubagem deste pedido (opcional)</label>
+                    <Input type="number" step="1" value={cubageFactor} onChange={e => setCubageFactor(e.target.value)}
+                      placeholder="padrão 6000" className="h-8 w-32 font-mono text-sm" />
+                    <span className="text-[11px] text-muted-foreground">cm³/kg — vazio usa rota/global</span>
                   </div>
                   {breakdown && (
                     <div className="p-3 bg-muted/30 rounded-lg">

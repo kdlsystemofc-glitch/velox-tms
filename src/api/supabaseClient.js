@@ -31,6 +31,7 @@ const TABLE_MAP = {
   Expense:         'expenses',
   Alert:           'alerts',
   Incident:        'incidents',
+  OrderTemplate:   'order_templates',
   ScheduleBlock:   'schedule_blocks',
   ContactMessage:  'contact_messages',
   Testimonial:     'testimonials',

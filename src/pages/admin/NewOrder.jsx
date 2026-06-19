@@ -126,6 +126,43 @@ export default function NewOrder() {
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
+  const { data: templates = [] } = useQuery({ queryKey: ["order-templates"], queryFn: () => base44.entities.OrderTemplate.list("-created_at", 100) });
+  // Histórico do cliente p/ autofill inteligente (5.1)
+  const { data: clientPastOrders = [] } = useQuery({
+    queryKey: ["client-past-orders", form.client_id],
+    queryFn: () => base44.entities.Order.filter({ client_id: form.client_id }, "-created_at", 50),
+    enabled: !!form.client_id,
+  });
+  // Sugestões a partir do histórico: destinatários frequentes + valor médio declarado.
+  const clientInsights = React.useMemo(() => {
+    const past = (clientPastOrders || []).filter(o => o.status !== "cancelled");
+    if (past.length === 0) return null;
+    const freq = {};
+    past.forEach(o => (o.recipients || []).forEach(r => {
+      if (!r.name) return;
+      freq[r.name] = freq[r.name] || { ...r, count: 0 };
+      freq[r.name].count += 1;
+    }));
+    const topRecipients = Object.values(freq).sort((a, b) => b.count - a.count).slice(0, 5);
+    const declaredVals = past.map(o => o.total_declared_value).filter(v => v > 0);
+    const avgDeclared = declaredVals.length ? declaredVals.reduce((s, v) => s + v, 0) / declaredVals.length : 0;
+    return { count: past.length, topRecipients, avgDeclared };
+  }, [clientPastOrders]);
+  const addSuggestedRecipient = (r) => {
+    setForm(f => {
+      const recipients = [...f.recipients];
+      const blankIdx = recipients.findIndex(isBlankRecipient);
+      const rec = {
+        ...emptyRecipient, name: r.name || "", cnpj_cpf: r.cpf_cnpj || r.cnpj_cpf || "", phone: r.phone || "",
+        cep: r.cep || "", street: r.street || "", number: r.number || "", complement: r.complement || "",
+        neighborhood: r.neighborhood || "", city: r.city || "", state: r.state || "", delivery_notes: r.delivery_notes || "",
+        delivery_window: r.delivery_window, items: [{ ...emptyItem }],
+      };
+      if (blankIdx >= 0) recipients[blankIdx] = rec; else recipients.push(rec);
+      return { ...f, recipients };
+    });
+    toast({ title: `Destinatário "${r.name}" adicionado` });
+  };
   const { settings } = useCompanySettings();
 
   const [clientSearch, setClientSearch] = useState("");
@@ -236,6 +273,42 @@ export default function NewOrder() {
     } finally {
       setRepeating(false);
     }
+  };
+
+  // ───────── Modelos de pedido (S11) ─────────
+  const templateData = () => ({
+    freight_type: form.freight_type, freight_payer: form.freight_payer,
+    payment_method: form.payment_method, payment_terms: form.payment_terms,
+    origin: form.origin, collection_notes: form.collection_notes,
+    recipients: form.recipients,
+  });
+  const saveTemplate = async () => {
+    const name = window.prompt("Nome do modelo (ex: Remessa mensal Curitiba):");
+    if (!name?.trim()) return;
+    try {
+      await base44.entities.OrderTemplate.create({
+        name: name.trim(), client_id: form.client_id || null, client_name: form.client_name || null,
+        data: templateData(),
+      });
+      queryClient.invalidateQueries({ queryKey: ["order-templates"] });
+      toast({ title: "Modelo salvo!", description: `"${name.trim()}" pode ser reutilizado a qualquer momento.` });
+    } catch (e) {
+      toast({ title: "Erro ao salvar modelo", description: e?.message, variant: "destructive" });
+    }
+  };
+  const applyTemplate = (t) => {
+    const d = t.data || {};
+    setForm(f => ({
+      ...f,
+      freight_type: d.freight_type || f.freight_type,
+      freight_payer: d.freight_payer || f.freight_payer,
+      payment_method: d.payment_method || f.payment_method,
+      payment_terms: d.payment_terms || f.payment_terms,
+      origin: d.origin || f.origin,
+      collection_notes: d.collection_notes || f.collection_notes,
+      recipients: (d.recipients || []).length ? d.recipients : f.recipients,
+    }));
+    toast({ title: `Modelo "${t.name}" aplicado`, description: "Ajuste a data de coleta e as NFs e envie." });
   };
 
   // ───────── Importar múltiplas NF-e (XML) ─────────
@@ -533,15 +606,47 @@ export default function NewOrder() {
                         ))}
                       </div>
                     )}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
                       <p className="text-[11px] text-muted-foreground">Selecionar traz endereço de coleta, condição de pagamento e tabela negociada.</p>
-                      {form.client_id && (
-                        <button type="button" onClick={repeatLastOrder} disabled={repeating}
-                          className="text-xs text-primary hover:underline flex items-center gap-1 font-medium flex-shrink-0">
-                          <Repeat className="w-3 h-3" /> {repeating ? "Buscando..." : "Repetir último pedido"}
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {templates.length > 0 && (
+                          <select defaultValue="" onChange={e => { const t = templates.find(x => x.id === e.target.value); if (t) applyTemplate(t); e.target.value = ""; }}
+                            className="text-xs border border-border rounded-md h-7 px-2 bg-background text-foreground max-w-[180px]">
+                            <option value="" disabled>Usar modelo…</option>
+                            {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                          </select>
+                        )}
+                        <button type="button" onClick={saveTemplate}
+                          className="text-xs text-primary hover:underline flex items-center gap-1 font-medium">
+                          <FileUp className="w-3 h-3" /> Salvar como modelo
                         </button>
-                      )}
+                        {form.client_id && (
+                          <button type="button" onClick={repeatLastOrder} disabled={repeating}
+                            className="text-xs text-primary hover:underline flex items-center gap-1 font-medium">
+                            <Repeat className="w-3 h-3" /> {repeating ? "Buscando..." : "Repetir último pedido"}
+                          </button>
+                        )}
+                      </div>
                     </div>
+                    {clientInsights && (
+                      <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 space-y-2">
+                        <p className="text-xs font-semibold text-blue-800">
+                          Este cliente tem {clientInsights.count} pedido(s) anterior(es).
+                          {clientInsights.avgDeclared > 0 && <span className="font-normal"> Valor médio declarado: R$ {clientInsights.avgDeclared.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}.</span>}
+                        </p>
+                        {clientInsights.topRecipients.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="text-[11px] text-blue-700">Destinatários frequentes:</span>
+                            {clientInsights.topRecipients.map((r, i) => (
+                              <button key={i} type="button" onClick={() => addSuggestedRecipient(r)}
+                                className="text-[11px] bg-white border border-blue-200 rounded-full px-2 py-0.5 hover:bg-blue-100 text-blue-800">
+                                + {r.name} {r.count > 1 && <span className="text-blue-400">({r.count}x)</span>}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <FL label="Razão Social / Nome" required error={errors.client_name}>

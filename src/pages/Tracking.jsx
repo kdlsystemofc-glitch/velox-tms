@@ -186,6 +186,27 @@ export default function Tracking() {
                 ))}
               </div>
 
+              {/* Histórico detalhado de eventos (5.9) */}
+              {(order.status_history || []).filter(h => h.timestamp).length > 0 && (
+                <div className="mt-8 pt-8 border-t border-gray-100">
+                  <h3 className="font-heading font-bold text-velox-dark mb-4 text-sm">Histórico detalhado</h3>
+                  <div className="space-y-2.5 border-l-2 border-gray-100 pl-4 ml-1">
+                    {[...(order.status_history || [])]
+                      .filter(h => h.timestamp)
+                      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+                      .map((h, i) => (
+                        <div key={i} className="relative">
+                          <span className={`absolute -left-[22px] top-1 w-2.5 h-2.5 rounded-full ${h.status === "incident" ? "bg-red-500" : "bg-velox-amber"}`} />
+                          <p className="text-sm text-gray-700">{h.note || h.status}</p>
+                          <p className="text-[11px] text-gray-400">
+                            {new Date(h.timestamp).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
               {/* Status por destinatário */}
               {(order.recipients || []).length > 0 && (
                 <div className="mt-8 pt-8 border-t border-gray-100">

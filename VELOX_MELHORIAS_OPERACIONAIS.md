@@ -216,3 +216,69 @@ gravidade, com responsável, plano, notificação, seguro, prazo, linha do tempo
 cronometrada e acompanhamento pelo motorista.
 
 ---
+
+## ONDA 4 — Recursos de grandes TMS (Bloco 5) + Modelos (S11)
+
+### 5.1 — Autofill inteligente no pedido
+**Como era:** Selecionar o cliente só preenchia o remetente. **Como ficou:** aparece "Este
+cliente tem N pedidos anteriores", com **destinatários frequentes** em chips (1 clique
+adiciona) e o **valor médio declarado** como referência.
+**Problema → Solução:** Preenchimento cego → sugestões a partir do histórico do cliente.
+
+### 5.6 — Histórico de preço por cliente
+**Como era:** Só dava para ver protocolo + status. **Como ficou:** aba **"Histórico de
+preços"** no cliente, com cada pedido em ordem (peso, valor declarado, frete e **R$/kg**),
+média de R$/kg e marcação ▲/▼ de quem ficou **>30% fora da média**.
+**Problema → Solução:** Sem comparação de preço → tabela de R$/kg por pedido com desvio.
+
+### 5.5 — Custo e margem real por viagem
+**Como era:** Ao encerrar, só registrava lucro líquido. **Como ficou:** o resumo da viagem
+mostra **margem (R$ e %)** e **custo por km rodado**, além de receita e custos.
+**Problema → Solução:** Sem leitura de rentabilidade → margem % e custo/km por viagem.
+
+### S11 — Modelos de pedido salvos
+**Como era:** Só "Repetir último pedido". **Como ficou:** **"Salvar como modelo"** (com nome,
+ex.: "Remessa mensal Curitiba") e **"Usar modelo"** reaplicam remetente, destinatários, tipo
+de carga e valores. Serve para cliente recorrente e uso interno.
+**Problema → Solução:** Sem modelos nomeados → biblioteca de modelos reutilizáveis.
+
+### 5.9 — Rastreamento com linha do tempo detalhada
+**Como era:** Timeline só dos 5 status. **Como ficou:** além dos marcos, um **histórico
+detalhado** com **todos os eventos** (inclusive ocorrências e notas), cada um com **hora
+exata**, e status por destinatário.
+**Problema → Solução:** Rastreio resumido → linha do tempo completa com horários.
+
+### 5.3 — Fator de cubagem por rota e por pedido
+**Como era:** Fator de cubagem só global. **Como ficou:** pode ser definido **por corredor**
+(tabela de rotas) e **por pedido** (campo no financeiro do pedido). Prioridade: pedido >
+rota/cliente > global > 6.000.
+**Problema → Solução:** Cubagem única → fator ajustável por rota e por pedido.
+
+### 5.4 — Aging de recebíveis no padrão TMS
+**Como era:** Faixas genéricas. **Como ficou:** **Vence hoje · ≤7 dias · 8–30 · 31–60 ·
+venceu <30d · venceu >30d**, cada faixa clicável com total e recebimento ali mesmo.
+**Problema → Solução:** Aging impreciso → faixas exatas do padrão pedido.
+
+### 5.7 — Romaneio completo
+**Como era:** Romaneio sem telefone/CEP/valor de seguro e com uma assinatura só. **Como
+ficou:** cada parada traz **CEP, telefone, NFs, volumes, peso e valor declarado (seguro)** e
+uma **linha de assinatura de recebimento por parada**; o rodapé soma peso e **valor total
+declarado** da viagem.
+**Problema → Solução:** Romaneio incompleto → todos os campos de uma transportadora
+profissional + assinatura por parada.
+
+### 5.2 — Vigência de tabela (observação)
+A vigência **por corredor** (início/fim) já existe e é aplicada pela data do pedido. O
+versionamento com histórico da **tabela base** fica como evolução futura (não-bloqueante).
+
+### Itens deixados para decisão de negócio
+- **5.10 Pedágio por eixo** — o cálculo é grátis, mas depende da **tabela ANTT** por eixo.
+- **5.8 Portal do cliente com login** — viável sem custo, mas é um módulo próprio; sugerido
+  tratar à parte. O rastreio público já cobre consulta por protocolo/CT-e/NF.
+
+---
+
+## Migrations a aplicar (Supabase SQL Editor, em ordem)
+1. `20260619_onda1_operacional.sql`
+2. `20260619_onda2_cubagem_janela.sql`
+3. `20260619_onda4_tms.sql`

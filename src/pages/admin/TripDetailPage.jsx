@@ -531,6 +531,23 @@ export default function TripDetailPage() {
                     <span>Lucro líquido</span>
                     <span className={`font-mono ${(trip.net_profit || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>R$ {(trip.net_profit || 0).toFixed(2)}</span>
                   </div>
+                  {(() => {
+                    const rev = trip.total_revenue || 0;
+                    const margin = rev > 0 ? ((trip.net_profit || 0) / rev) * 100 : 0;
+                    const costPerKm = Number(trip.real_km) > 0 ? (trip.total_cost || 0) / trip.real_km : null;
+                    return (
+                      <>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Margem</span>
+                          <span className={`font-mono font-semibold ${margin >= 0 ? "text-green-600" : "text-red-600"}`}>{margin.toFixed(1)}%</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Custo por km</span>
+                          <span className="font-mono">{costPerKm != null ? `R$ ${costPerKm.toFixed(2)}/km` : "—"}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>Km real</span><span className="font-mono">{trip.real_km || "—"} km</span>
                   </div>

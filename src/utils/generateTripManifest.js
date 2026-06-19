@@ -62,10 +62,11 @@ export function generateTripManifest(trip, orders = [], company = {}) {
   y += 2;
 
   // ── Resumo da carga ───────────────────────────────────────
-  let totVol = 0, totKg = 0, totNfs = 0;
+  let totVol = 0, totKg = 0, totNfs = 0, totDeclared = 0;
   orders.forEach(o => {
     totVol += Number(o.total_volumes) || 0;
     totKg += Number(o.total_weight_kg) || 0;
+    totDeclared += Number(o.total_declared_value) || 0;
     (o.recipients || []).forEach(r => (r.items || []).forEach(i => { if (i.nf_number) totNfs++; }));
   });
   doc.setFillColor(240, 240, 240);
@@ -73,7 +74,7 @@ export function generateTripManifest(trip, orders = [], company = {}) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   doc.text(
-    `CARGA TOTAL:  ${totVol} volumes   ·   ${totKg.toLocaleString("pt-BR")} kg   ·   ${totNfs} NF(s)`,
+    `CARGA TOTAL:  ${totVol} volumes   ·   ${totKg.toLocaleString("pt-BR")} kg   ·   ${totNfs} NF(s)   ·   Valor seguro R$ ${totDeclared.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
     margin + 2, y + 5.5
   );
   y += 12;
@@ -102,16 +103,20 @@ export function generateTripManifest(trip, orders = [], company = {}) {
     }
     y += 9;
 
-    // Endereço
+    // Endereço (com CEP) + telefone do destinatário
+    const recipientForStop = !isCollection && order ? (order.recipients || []).find(r => r.name === stop.recipient_name) : null;
+    const cep = stop.cep || recipientForStop?.cep || (isCollection ? order?.origin?.cep : "");
+    const phone = recipientForStop?.phone || (isCollection ? order?.client_phone : "");
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(90, 90, 90);
-    doc.text(String(stop.address || "—").substring(0, 110), margin + 4, y);
-    y += 5;
+    doc.text(`${String(stop.address || "—").substring(0, 95)}${cep ? ` · CEP ${cep}` : ""}`, margin + 4, y);
+    y += 4.5;
+    if (phone) { doc.text(`Tel: ${phone}`, margin + 4, y); y += 4.5; }
 
     // Itens (apenas em entregas, do destinatário específico)
     if (!isCollection && order) {
-      const recipient = (order.recipients || []).find(r => r.name === stop.recipient_name);
+      const recipient = recipientForStop;
       const items = recipient?.items || [];
       if (items.length > 0) {
         doc.setTextColor(60, 60, 60);
@@ -134,6 +139,19 @@ export function generateTripManifest(trip, orders = [], company = {}) {
         doc.setTextColor(60, 60, 60);
         y += 4.5;
       }
+      // Valor declarado (seguro) + linha de recebimento por parada
+      const recDeclared = items.reduce((s, it) => s + (Number(it.declared_value) || 0), 0);
+      const recKg = items.reduce((s, it) => s + (Number(it.weight_kg) || 0), 0);
+      ensureSpace(10);
+      doc.setTextColor(90, 90, 90);
+      doc.text(`Peso parada: ${recKg.toLocaleString("pt-BR")} kg${recDeclared > 0 ? ` · Valor seguro: R$ ${recDeclared.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : ""}`, margin + 6, y);
+      y += 6;
+      doc.setDrawColor(170, 170, 170);
+      doc.line(margin + 6, y, margin + 70, y);
+      doc.text("Recebido por (nome/assinatura)", margin + 6, y + 3.5);
+      doc.line(margin + 110, y, margin + 160, y);
+      doc.text("Data ___/___/___", margin + 110, y + 3.5);
+      y += 8;
     }
     if (isCollection && order?.collection_date) {
       doc.setTextColor(90, 90, 90);

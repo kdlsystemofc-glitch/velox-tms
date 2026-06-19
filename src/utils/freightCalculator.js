@@ -56,6 +56,7 @@ function resolvePricing(basePricing, clientPricing, originState, destState, sett
         ...(routeMatch.tde_per_nf       != null && routeMatch.tde_per_nf       !== "" ? { tde_per_nf:           Number(routeMatch.tde_per_nf) }           : {}),
         ...(routeMatch.tda_per_nf       != null && routeMatch.tda_per_nf       !== "" ? { tda_per_nf:           Number(routeMatch.tda_per_nf) }           : {}),
         ...(routeMatch.toll_per_kg      != null && routeMatch.toll_per_kg      !== "" ? { toll_per_kg:          Number(routeMatch.toll_per_kg) }          : {}),
+        ...(routeMatch.cubage_factor    != null && routeMatch.cubage_factor    !== "" ? { cubage_factor:        Number(routeMatch.cubage_factor) }        : {}),
       };
     }
   }
@@ -80,7 +81,7 @@ export function calculateFreightFull(params) {
   const {
     items = [], distanceKm = null, nfCount = 1,
     pricing: p, clientPricing, originState, destState, settings,
-    freightType = "shared", refDate,
+    freightType = "shared", refDate, cubageFactor,
   } = params;
 
   // Data de referência para a vigência da tabela (padrão: hoje)
@@ -88,8 +89,9 @@ export function calculateFreightFull(params) {
   const pricing = resolvePricing(p, clientPricing, originState, destState, settings, effectiveDate);
   if (!pricing) return null;
 
-  // Fator de cubagem configurável (cm³ por kg). Padrão 6.000 (= 166,7 kg/m³).
-  const cubageDivisor = Number(pricing.cubage_factor) > 0 ? Number(pricing.cubage_factor) : 6000;
+  // Fator de cubagem (cm³/kg). Prioridade: pedido > rota/cliente > global > 6.000.
+  const cubageDivisor = Number(cubageFactor) > 0 ? Number(cubageFactor)
+    : Number(pricing.cubage_factor) > 0 ? Number(pricing.cubage_factor) : 6000;
 
   let totalRealKg = 0;
   let totalCubicKg = 0;
