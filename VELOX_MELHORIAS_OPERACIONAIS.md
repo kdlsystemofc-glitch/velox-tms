@@ -105,6 +105,19 @@ recalculada e um evento avisa o motorista para seguir a rota.
 **Problema → Solução:** Cancelamento em viagem sem tratamento → remoção da parada +
 recálculo da viagem + taxa improdutiva + aviso ao motorista.
 
+### S4 — O endereço de entrega mudou depois da viagem criada
+
+**Como era:** Não dava para alterar o endereço de um destinatário pela tela do pedido, e
+nada chegava ao motorista.
+
+**Como ficou:** Botão **"Alterar endereço"** em cada destinatário (com busca por CEP). Se o
+pedido já tem viagem, ao salvar o sistema **atualiza a parada do roteiro**, registra um
+aviso ("a rota do motorista foi atualizada") e o motorista vê o **novo endereço destacado**
+no app ("Endereço de entrega ATUALIZADO").
+
+**Problema → Solução:** Mudança de endereço sem propagação → edição com sincronização da
+parada + destaque no app do motorista + alerta.
+
 ---
 
 ## ONDA 2 — Inteligência do despacho

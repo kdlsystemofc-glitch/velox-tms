@@ -390,7 +390,10 @@ export default function DriverTrip() {
                     </span>
                     {stop.recipient_name && <span className="font-semibold text-sm text-white">{stop.recipient_name}</span>}
                   </div>
-                  <p className="text-xs text-white/40 mt-1">{stop.address}</p>
+                  <p className={`text-xs mt-1 ${stop.address_changed ? "text-amber-300 font-semibold" : "text-white/40"}`}>{stop.address}</p>
+                  {stop.address_changed && stop.status !== "completed" && (
+                    <p className="text-[11px] text-amber-300 mt-0.5 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Endereço de entrega ATUALIZADO</p>
+                  )}
                   {stop.awaiting_cargo && stop.status !== "completed" && (
                     <p className="text-xs text-orange-300 mt-1 flex items-center gap-1"><Clock className="w-3 h-3" /> Aguardando liberação de carga — você pode voltar depois</p>
                   )}

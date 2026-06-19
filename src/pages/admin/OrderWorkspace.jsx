@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/components/ui/use-toast";
 import StatusBadge from "@/components/admin/StatusBadge";
 import FileUploadButton from "@/components/shared/FileUploadButton";
+import { AddressFields } from "@/components/shared/AddressFields";
 import { FreightBreakdown } from "@/components/shared/FreightBreakdown";
 import CollapsibleSection from "@/components/shared/CollapsibleSection";
 import { generateDeliveryReceipt } from "@/utils/generateDeliveryReceipt";
@@ -64,6 +65,8 @@ export default function OrderWorkspace() {
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [paymentTerms, setPaymentTerms] = useState("after_delivery");
   const [cubageFactor, setCubageFactor] = useState("");
+  const [editAddr, setEditAddr] = useState(null); // { ri }
+  const [addrForm, setAddrForm] = useState({});
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", id],
@@ -236,6 +239,39 @@ export default function OrderWorkspace() {
     setCancelOpen(false);
     setCancelReason("");
     setUnproductiveFee("");
+  };
+
+  // S4 — endereço de entrega alterado depois da viagem criada.
+  const openEditAddr = (ri) => {
+    const r = order.recipients[ri] || {};
+    setAddrForm({ cep: r.cep || "", street: r.street || "", number: r.number || "", complement: r.complement || "", neighborhood: r.neighborhood || "", city: r.city || "", state: r.state || "" });
+    setEditAddr({ ri });
+  };
+  const saveAddress = async () => {
+    const ri = editAddr.ri;
+    const recName = order.recipients[ri]?.name;
+    const recipients = order.recipients.map((r, i) => i !== ri ? r : { ...r, ...addrForm });
+    await updateMutation.mutateAsync({
+      recipients,
+      status_history: [...(order.status_history || []), { status: order.status, timestamp: new Date().toISOString(), user: "Admin", note: `Endereço de entrega de ${recName} alterado` }],
+    });
+    if (order.trip_id && trip && ["planned", "in_progress"].includes(trip.status)) {
+      const newAddr = [addrForm.street, addrForm.number, addrForm.city, addrForm.state].filter(Boolean).join(", ");
+      const stops = (trip.stops || []).map(s =>
+        (s.type === "delivery" && s.order_id === order.id && s.recipient_name === recName)
+          ? { ...s, address: newAddr, cep: addrForm.cep, address_changed: true, address_changed_at: new Date().toISOString() } : s
+      );
+      await base44.entities.Trip.update(trip.id, {
+        stops,
+        events: [...(trip.events || []), { type: "address_changed", description: `Endereço de entrega de ${recName} alterado para ${newAddr}`, timestamp: new Date().toISOString(), user: "Admin" }],
+      });
+      queryClient.invalidateQueries({ queryKey: ["trip-for-order", order.trip_id] });
+      await base44.entities.Alert.create({ type: "address_changed", level: "warning", message: `Endereço de entrega alterado — ${order.protocol} (${recName})`, reference_id: order.id, reference_type: "order", read: false, resolved: false }).catch(() => {});
+      toast({ title: "Endereço atualizado", description: "A rota do motorista foi atualizada." });
+    } else {
+      toast({ title: "Endereço atualizado" });
+    }
+    setEditAddr(null);
   };
 
   const saveFinancial = () => {
@@ -495,6 +531,10 @@ export default function OrderWorkspace() {
                   <CardContent className="pt-4">
                     <div className="flex items-center justify-between mb-3">
                       <p className="font-semibold text-sm">{r.name || `Destinatário ${ri + 1}`} <span className="text-muted-foreground font-normal text-xs">· {[r.city, r.state].filter(Boolean).join("/")}</span></p>
+                      <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" className="h-6 text-xs gap-1 text-muted-foreground" onClick={() => openEditAddr(ri)}>
+                        <MapPin className="w-3 h-3" /> Alterar endereço
+                      </Button>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         r.delivery_status === "delivered" ? "bg-green-100 text-green-700" :
                         r.delivery_status === "failed" ? "bg-red-100 text-red-700" :
@@ -502,6 +542,7 @@ export default function OrderWorkspace() {
                       }`}>
                         {r.delivery_status === "delivered" ? "Entregue" : r.delivery_status === "failed" ? "Falhou" : "Pendente"}
                       </span>
+                      </div>
                     </div>
                     {(r.items || []).length === 0 ? (
                       <p className="text-xs text-muted-foreground">Nenhum item.</p>
@@ -863,6 +904,29 @@ export default function OrderWorkspace() {
                 disabled={!cancelReason.trim()}
                 onClick={confirmCancel}>
                 Cancelar Pedido
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Modal: alterar endereço de entrega (S4) ── */}
+      <Dialog open={!!editAddr} onOpenChange={o => !o && setEditAddr(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><MapPin className="w-4 h-4 text-velox-amber" /> Alterar endereço de entrega</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {order.trip_id && trip && ["planned", "in_progress"].includes(trip.status) && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+                Este pedido já tem viagem. Ao salvar, a parada do motorista será atualizada e ele verá o novo endereço destacado.
+              </p>
+            )}
+            <AddressFields value={addrForm} onChange={(addr) => setAddrForm(a => ({ ...a, ...addr }))} />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setEditAddr(null)}>Cancelar</Button>
+              <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={saveAddress} disabled={updateMutation.isPending}>
+                Salvar endereço
               </Button>
             </div>
           </div>
