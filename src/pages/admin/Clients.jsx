@@ -20,8 +20,10 @@ import { DollarSign, Users } from "lucide-react";
 const EMPTY_CLIENT = {
   company_name: "", cpf_cnpj: "", type: "pj", email: "", phone: "",
   client_type: "eventual", status: "active", notes: "", billing_type: "per_trip",
+  trade_name: "", credit_limit: null,
   address: { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "" },
-  delivery_window: { days: [], start: "", end: "" },
+  collection_window: { days: [], start: "", end: "", pause_start: "", pause_end: "" },
+  delivery_window: { days: [], start: "", end: "", pause_start: "", pause_end: "" },
   contacts: [],
 };
 
@@ -100,6 +102,9 @@ export default function Clients({ hideTitle = false }) {
                 <Field label="Razão Social / Nome" required colSpan={2}>
                   <Input placeholder="Empresa Ltda ou João Silva" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
                 </Field>
+                <Field label="Nome fantasia" colSpan={2}>
+                  <Input placeholder="Como o cliente é conhecido" value={form.trade_name || ""} onChange={(e) => setForm({ ...form, trade_name: e.target.value })} />
+                </Field>
                 <Field label="CPF / CNPJ" required>
                   <Input placeholder="00.000.000/0001-00" value={form.cpf_cnpj} onChange={(e) => setForm({ ...form, cpf_cnpj: e.target.value })} />
                 </Field>
@@ -163,6 +168,9 @@ export default function Clients({ hideTitle = false }) {
                     </Field>
                   </>
                 )}
+                <Field label="Limite de crédito (R$)" colSpan={2}>
+                  <Input type="number" step="0.01" placeholder="0 = sem limite" value={form.credit_limit ?? ""} onChange={e => setForm(f => ({ ...f, credit_limit: e.target.value === "" ? null : Number(e.target.value) }))} />
+                </Field>
               </FormSection>
 
               <FormSection title="Contatos" cols={1}>
@@ -219,8 +227,10 @@ export default function Clients({ hideTitle = false }) {
                 onChange={addr => setForm(f => ({ ...f, address: addr }))}
               />
 
-              <FormSection title="Recebimento" cols={1}>
-                <DeliveryWindowEditor value={form.delivery_window} onChange={(w) => setForm(f => ({ ...f, delivery_window: w }))} />
+              <FormSection title="Janelas (coleta e entrega)" cols={1}>
+                <DeliveryWindowEditor label="Janela de coleta" value={form.collection_window} onChange={(w) => setForm(f => ({ ...f, collection_window: w }))} />
+                <div className="h-2" />
+                <DeliveryWindowEditor label="Janela de entrega" value={form.delivery_window} onChange={(w) => setForm(f => ({ ...f, delivery_window: w }))} />
               </FormSection>
 
               <FormSection title="Observações" cols={1}>

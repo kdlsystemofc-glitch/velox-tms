@@ -32,13 +32,24 @@ export default function DeliveryWindowEditor({ value, onChange, label = "Janela 
         })}
       </div>
       {(win.days || []).length > 0 && (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">das</span>
-          <input type="time" value={win.start || ""} onChange={(e) => onChange({ ...win, start: e.target.value })}
-            className="h-8 rounded-md border border-border px-2 text-sm" />
-          <span className="text-xs text-muted-foreground">às</span>
-          <input type="time" value={win.end || ""} onChange={(e) => onChange({ ...win, end: e.target.value })}
-            className="h-8 rounded-md border border-border px-2 text-sm" />
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground w-8">das</span>
+            <input type="time" value={win.start || ""} onChange={(e) => onChange({ ...win, start: e.target.value })}
+              className="h-8 rounded-md border border-border px-2 text-sm" />
+            <span className="text-xs text-muted-foreground">às</span>
+            <input type="time" value={win.end || ""} onChange={(e) => onChange({ ...win, end: e.target.value })}
+              className="h-8 rounded-md border border-border px-2 text-sm" />
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground w-8">pausa</span>
+            <input type="time" value={win.pause_start || ""} onChange={(e) => onChange({ ...win, pause_start: e.target.value })}
+              className="h-8 rounded-md border border-border px-2 text-sm" placeholder="almoço" />
+            <span className="text-xs text-muted-foreground">às</span>
+            <input type="time" value={win.pause_end || ""} onChange={(e) => onChange({ ...win, pause_end: e.target.value })}
+              className="h-8 rounded-md border border-border px-2 text-sm" />
+            <span className="text-[10px] text-muted-foreground">(intervalo que não recebe)</span>
+          </div>
         </div>
       )}
     </div>

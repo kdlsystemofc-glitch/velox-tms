@@ -315,6 +315,16 @@ export default function OrderWorkspace() {
 
   const activeRevenue = orderRevenues.find(r => r.status !== "cancelled");
 
+  // Limite de crédito do cliente: exposição = fretes em aberto (não pagos/não cancelados).
+  const creditInfo = (() => {
+    const limit = Number(orderClient?.credit_limit) || 0;
+    if (limit <= 0) return null;
+    const used = allOrders
+      .filter(o => o.client_id === order.client_id && o.status !== "cancelled" && o.payment_status !== "paid")
+      .reduce((s, o) => s + (o.freight_value || 0), 0);
+    return { limit, used, over: used > limit, pct: Math.min((used / limit) * 100, 100) };
+  })();
+
   return (
     <div className="space-y-5 max-w-6xl">
       {/* ── HEADER: identidade + stepper + ação primária ── */}
@@ -760,6 +770,28 @@ export default function OrderWorkspace() {
 
         {/* ── RAIL DIREITO: atribuição operacional ── */}
         <div className="space-y-4">
+          {/* Limite de crédito do cliente */}
+          {creditInfo && (
+            <Card className={creditInfo.over ? "border-red-300 bg-red-50/60" : ""}>
+              <CardContent className="pt-4 space-y-1.5">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                  <DollarSign className="w-3.5 h-3.5 text-velox-amber" /> Limite de crédito
+                </p>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Em aberto</span>
+                  <span className={`font-mono font-semibold ${creditInfo.over ? "text-red-600" : ""}`}>R$ {creditInfo.used.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Limite</span>
+                  <span className="font-mono">R$ {creditInfo.limit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className={`h-full ${creditInfo.over ? "bg-red-500" : creditInfo.pct > 80 ? "bg-amber-500" : "bg-green-500"}`} style={{ width: `${creditInfo.pct}%` }} />
+                </div>
+                {creditInfo.over && <p className="text-[11px] text-red-600 font-medium">Cliente acima do limite de crédito.</p>}
+              </CardContent>
+            </Card>
+          )}
           {/* Encaixe rápido de URGENTE (S3) */}
           {order.freight_type === "urgent" && order.status === "confirmed" && !order.trip_id && (
             <Card className="border-red-200 bg-red-50/60">

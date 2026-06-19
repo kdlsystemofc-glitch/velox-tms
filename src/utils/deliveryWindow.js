@@ -1,10 +1,17 @@
 /**
- * VELOX — Janela de recebimento do destinatário (S6 / B2-B).
+ * VELOX — Janela de recebimento/coleta (S6 / B2-B).
  *
- * Estrutura do campo `delivery_window` (no cliente e/ou no destinatário):
- *   { days: [1,2,3,4,5], start: "08:00", end: "11:00" }
+ * Estrutura do campo (no cliente e/ou no destinatário):
+ *   { days:[1,2,3,4,5], start:"08:00", end:"18:00", pause_start:"12:00", pause_end:"13:00" }
  *   days = dias da semana (0=domingo … 6=sábado). Vazio/ausente = sem restrição.
+ *   pause_* = intervalo (almoço) em que NÃO recebe, dentro do horário.
  */
+
+const toMin = (t) => {
+  if (!t || !/^\d{1,2}:\d{2}$/.test(t)) return null;
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+};
 
 export const WEEKDAYS = [
   { v: 1, label: "Seg" }, { v: 2, label: "Ter" }, { v: 3, label: "Qua" },
@@ -23,6 +30,19 @@ export function dateAllowedByWindow(win, dateStr) {
   return win.days.includes(d.getDay());
 }
 
+/** Um horário ("HH:MM") cai dentro da janela, respeitando a pausa (almoço)? */
+export function timeAllowedByWindow(win, timeStr) {
+  if (!hasWindow(win)) return true;
+  const t = toMin(timeStr);
+  if (t == null) return true;
+  const s = toMin(win.start), e = toMin(win.end);
+  if (s != null && t < s) return false;
+  if (e != null && t > e) return false;
+  const ps = toMin(win.pause_start), pe = toMin(win.pause_end);
+  if (ps != null && pe != null && t >= ps && t < pe) return false; // dentro do almoço
+  return true;
+}
+
 /** Texto curto para exibir a janela. */
 export function windowLabel(win) {
   if (!hasWindow(win)) return "Sem restrição";
@@ -31,7 +51,8 @@ export function windowLabel(win) {
     .filter(Boolean)
     .join(", ");
   const hours = win.start && win.end ? ` ${win.start}–${win.end}` : "";
-  return `${days}${hours}`;
+  const pause = win.pause_start && win.pause_end ? ` (pausa ${win.pause_start}–${win.pause_end})` : "";
+  return `${days}${hours}${pause}`;
 }
 
 /**
