@@ -1006,3 +1006,46 @@ Antes, anon lia **todos** os pedidos e clientes (policies `public_read_order_by_
 - `next_protocol()` — protocolo sequencial sem ler `orders` (usado em `generateProtocol`)
 
 O cliente tenta a RPC e **faz fallback** para o comportamento antigo se a função ainda não existir — então o deploy do front e a aplicação da migration podem acontecer em qualquer ordem sem quebrar. **Após aplicar a migration, o fallback deixa de ser alcançável** (anon perde o SELECT).
+
+---
+
+## PARTE 5.10 — Ondas operacionais 0–4 (situações do dia a dia, jun/2026)
+
+Conjunto de melhorias para a operação real. O "como era → como ficou" e o "problema →
+solução" de cada item estão em **`VELOX_MELHORIAS_OPERACIONAIS.md`**.
+
+**Onda 0 — Correção:** `closeTrip` (TripDetailPage) consultava `drivers` sem carregar →
+encerramento de viagem quebrava. Corrigido com `useQuery(["drivers"])`.
+
+**Onda 1 — Exceções (S1,S2,S5,S10,S12,S13):**
+- App do motorista (`DriverTrip.jsx`): **entrega parcial**, **destinatário ausente** (com nova
+  tentativa) e **carga não pronta**; lista de ocorrências em aberto com adição de nota.
+- `Replanning.jsx` (`/admin/replanejamento`) + `utils/replanner.js`: redistribui caminhão em
+  manutenção e reatribui motorista ausente em massa. Surge no Painel e no sidebar (badge).
+- `OrderWorkspace`: cancelamento com viagem ativa remove a parada, recalcula a receita,
+  cobra taxa improdutiva e avisa o motorista. **S4:** "Alterar endereço" sincroniza a parada.
+
+**Onda 2 — Despacho inteligente (S3,S6,S7,S8,S9,B2):**
+- `utils/cargoVolume.js` (volume m³) + `utils/deliveryWindow.js` (janela). `dispatchPlanner`
+  agora pondera **volume**, aloca **urgentes primeiro**, explica cada alocação e o motivo de
+  não-alocação. `DispatchBoard`: barra de volume, selo "Mesma região", aviso fora da janela.
+- `OrderWorkspace`: encaixe rápido de **urgente** (caminhões com espaço nos 2 dias).
+- `TripDetailPage`: sugestão de **retorno (backhaul)** quando as entregas terminam.
+- `DeliveryWindowEditor` no cadastro de cliente e no destinatário do pedido.
+
+**Onda 3 — Central de ocorrências (Bloco 3):** `Incidents.jsx` (`/admin/ocorrencias`) +
+`utils/incidents.js`. Lista por gravidade; tratativa (responsável, plano, prazo, cliente
+notificado, seguro); **linha do tempo**; resolução cronometrada. Motorista acompanha e
+complementa pelo app.
+
+**Onda 4 — Recursos TMS (Bloco 5) + S11:**
+- `NewOrder`: autofill inteligente (destinatários frequentes + valor médio) e **modelos de
+  pedido** (`order_templates`).
+- `ClientDetailPage`: **histórico de preço** por pedido (R$/kg + desvio).
+- `TripDetailPage`: **margem %** e **custo/km**. `Revenues`: aging no padrão (vence hoje /
+  venceu <30 / >30). `freightCalculator`: cubagem por rota e por pedido.
+- `Tracking`: linha do tempo detalhada. `generateTripManifest`: romaneio completo (CEP,
+  telefone, valor de seguro, assinatura por parada).
+
+**Adiados (custo/decisão):** 5.10 pedágio por eixo (tabela ANTT) e 5.8 portal do cliente com
+login. Fiscal SEFAZ (CT-e/MDF-e) permanece adiado.

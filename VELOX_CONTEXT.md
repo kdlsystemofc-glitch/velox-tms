@@ -437,3 +437,26 @@ git add src/ VELOX_CONTEXT.md VELOX_SYSTEM.md VELOX_MAPEAMENTO.md
 git commit -m "feat/fix/refactor: descrição da mudança + docs atualizados"
 git push
 ```
+
+---
+
+## Ondas operacionais 0–4 (jun/2026)
+
+Melhorias de operação real (situações do dia a dia). Detalhe completo
+("como era → como ficou" e "problema → solução") em **`VELOX_MELHORIAS_OPERACIONAIS.md`**.
+
+**Novas páginas/rotas**
+- `src/pages/admin/Replanning.jsx` → `/admin/replanejamento` (caminhão quebrou / motorista faltou)
+- `src/pages/admin/Incidents.jsx` → `/admin/ocorrencias` (central de ocorrências)
+
+**Novos utilitários**
+- `src/utils/replanner.js` — caminhões/motoristas indisponíveis com carga + sugestão de redistribuição
+- `src/utils/cargoVolume.js` — volume físico (m³) de caminhão e carga (cubagem)
+- `src/utils/deliveryWindow.js` — janela de recebimento (dias/horário) e conflitos
+- `src/utils/incidents.js` — gravidade, linha do tempo e duração das ocorrências
+
+**Novos componentes**
+- `src/components/shared/DeliveryWindowEditor.jsx` — editor da janela de recebimento
+
+**Migrations** (rodar no Supabase, em ordem): `20260619_onda1_operacional.sql`,
+`20260619_onda2_cubagem_janela.sql`, `20260619_onda4_tms.sql`.

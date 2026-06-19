@@ -631,3 +631,35 @@ Prioridade:
 - App mobile nativo (atualmente é PWA via navegador)
 - Assinatura digital de comprovante (coleta foto, mas sem assinatura eletrônica)
 - Integração com Correios/transportadoras parceiras
+
+---
+
+## Modelo de dados — Ondas operacionais 0–4 (jun/2026)
+
+> Detalhe funcional em `VELOX_MELHORIAS_OPERACIONAIS.md`. Migrations:
+> `20260619_onda1_operacional.sql`, `20260619_onda2_cubagem_janela.sql`, `20260619_onda4_tms.sql`.
+
+**orders**
+- `status` ganhou `awaiting_cargo` (carga não pronta — S5) e `partially_delivered` (entrega parcial — S12)
+- `unproductive_fee` NUMERIC — taxa de deslocamento improdutivo (S10)
+- `cubage_factor` NUMERIC — fator de cubagem específico do pedido (5.3)
+- `recipients[]` (JSONB) ganhou: `delivery_status` aceita `partial`/`failed`; `delivered_volumes`,
+  `partial_reason`, `failure_action`, `next_attempt_date`, `attempts[]`, `delivery_window`
+
+**incidents**
+- novos tipos: `carga_nao_pronta`, `entrega_parcial`, `destinatario_ausente`
+- novos campos: `severity`, `assigned_to`, `action_plan`, `client_notified`, `client_notified_at`,
+  `insurance_triggered`, `due_date`, `timeline` (JSONB), `stop_index`, `recipient_name`
+
+**alerts**
+- novos tipos: `truck_breakdown`, `driver_absent`, `cargo_hold`, `delivery_attempt`,
+  `order_cancelled_in_trip`, `address_changed`, `recipient_window`
+
+**trips.stops[]** (JSONB) — novos campos: `delivery_result` (`partial`/`failed`), `delivered_volumes`,
+`partial_reason`, `failure_action`, `next_attempt_date`, `awaiting_cargo`, `cargo_hold_notes`,
+`skipped`/`skip_reason`, `address_changed`/`address_changed_at`
+
+**clients** — `delivery_window` JSONB (`{days,start,end}` — janela de recebimento, S6)
+
+**order_templates** (nova tabela) — modelos de pedido salvos (S11): `name`, `client_id`,
+`client_name`, `data` (JSONB com remetente/destinatários/tipo/valores)
