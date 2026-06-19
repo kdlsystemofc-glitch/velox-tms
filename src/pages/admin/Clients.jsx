@@ -14,12 +14,14 @@ import { useToast } from "@/components/ui/use-toast";
 import DataTable from "@/components/shared/DataTable";
 import { FormSection, Field } from "@/components/shared/FormSection";
 import { AddressFields } from "@/components/shared/AddressFields";
+import DeliveryWindowEditor from "@/components/shared/DeliveryWindowEditor";
 import { DollarSign, Users } from "lucide-react";
 
 const EMPTY_CLIENT = {
   company_name: "", cpf_cnpj: "", type: "pj", email: "", phone: "",
   client_type: "eventual", status: "active", notes: "", billing_type: "per_trip",
   address: { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "" },
+  delivery_window: { days: [], start: "", end: "" },
   contacts: [],
 };
 
@@ -216,6 +218,10 @@ export default function Clients({ hideTitle = false }) {
                 value={form.address || {}}
                 onChange={addr => setForm(f => ({ ...f, address: addr }))}
               />
+
+              <FormSection title="Recebimento" cols={1}>
+                <DeliveryWindowEditor value={form.delivery_window} onChange={(w) => setForm(f => ({ ...f, delivery_window: w }))} />
+              </FormSection>
 
               <FormSection title="Observações" cols={1}>
                 <Field label="Anotações internas" optional>

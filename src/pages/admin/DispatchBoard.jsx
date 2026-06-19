@@ -8,7 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import StatusBadge from "@/components/admin/StatusBadge";
 import { useToast } from "@/components/ui/use-toast";
 import { todayLocalISO, toLocalISO, formatDateBR } from "@/utils/dateUtils";
-import { planLoads, regionLabel } from "@/utils/dispatchPlanner";
+import { planLoads, regionLabel, localityKey } from "@/utils/dispatchPlanner";
+import { truckVolumeM3, orderVolumeM3, fmtM3 } from "@/utils/cargoVolume";
+import { orderWindowConflicts } from "@/utils/deliveryWindow";
 import {
   Package, Truck, ChevronLeft, ChevronRight, MapPin,
   CalendarDays, Send, X, ArrowRight, Sparkles
@@ -48,6 +50,10 @@ export default function DispatchBoard() {
 
   const selectedOrders = orders.filter(o => selectedIds.includes(o.id));
   const selectedKg = selectedOrders.reduce((s, o) => s + (o.total_weight_kg || 0), 0);
+  const selectedVol = selectedOrders.reduce((s, o) => s + orderVolumeM3(o), 0);
+
+  // "Mesma região" (S8): conta pedidos por cidade+bairro para destacar quem fica perto.
+  const localityCount = unscheduled.reduce((acc, o) => { const k = localityKey(o); acc[k] = (acc[k] || 0) + 1; return acc; }, {});
 
   const toggleSelect = (id) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -134,17 +140,35 @@ export default function DispatchBoard() {
       return;
     }
     const dateStr = toLocalISO(day);
-    // valida capacidade
-    const usedKg = scheduled
-      .filter(o => o.scheduled_truck_id === truck.id && o.scheduled_date === dateStr)
-      .reduce((s, o) => s + (o.total_weight_kg || 0), 0);
+    // valida capacidade de PESO
+    const cellOrders = scheduled.filter(o => o.scheduled_truck_id === truck.id && o.scheduled_date === dateStr);
+    const usedKg = cellOrders.reduce((s, o) => s + (o.total_weight_kg || 0), 0);
     if (truck.capacity_kg > 0 && usedKg + selectedKg > truck.capacity_kg) {
       toast({
-        title: "Capacidade excedida",
+        title: "Capacidade de peso excedida",
         description: `${truck.plate}: ${(usedKg + selectedKg).toLocaleString("pt-BR")} kg > ${truck.capacity_kg.toLocaleString("pt-BR")} kg. Remova pedidos ou escolha outro dia/caminhão.`,
         variant: "destructive",
       });
       return;
+    }
+    // valida VOLUME físico (S7) — só quando o caminhão tem dimensões cadastradas
+    const capVol = truckVolumeM3(truck);
+    const usedVol = cellOrders.reduce((s, o) => s + orderVolumeM3(o), 0);
+    if (capVol > 0 && usedVol + selectedVol > capVol) {
+      toast({
+        title: "Espaço físico excedido",
+        description: `${truck.plate}: ${fmtM3(usedVol + selectedVol)} > ${fmtM3(capVol)} de baú. A carga não cabe pelo tamanho, mesmo dentro do peso.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    // aviso de janela de recebimento (S6) — informativo, não bloqueia
+    const windowWarnings = selectedOrders.flatMap(o => orderWindowConflicts(o, dateStr).map(c => `${c.recipient} (${c.window})`));
+    if (windowWarnings.length > 0) {
+      toast({
+        title: "Fora da janela de recebimento",
+        description: `Atenção: ${windowWarnings.join("; ")} não recebe(m) neste dia da semana. Confirme a data com o destinatário.`,
+      });
     }
     assignMutation.mutate({ truckId: truck.id, dateStr });
   };
@@ -194,7 +218,7 @@ export default function DispatchBoard() {
           {selectedIds.length > 0 && (
             <div className="rounded-lg bg-velox-amber/10 border border-velox-amber/30 px-3 py-2.5 space-y-2">
               <p className="text-xs font-medium text-velox-dark">
-                {selectedIds.length} selecionado(s) · {selectedKg.toLocaleString("pt-BR")} kg
+                {selectedIds.length} selecionado(s) · {selectedKg.toLocaleString("pt-BR")} kg{selectedVol > 0 ? ` · ${fmtM3(selectedVol)}` : ""}
               </p>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" className="h-7 text-xs flex-1" onClick={() => setSelectedIds([])}>Limpar</Button>
@@ -226,10 +250,18 @@ export default function DispatchBoard() {
                   <Checkbox checked={selectedIds.includes(o.id)} onCheckedChange={() => toggleSelect(o.id)} className="mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono text-xs font-semibold">{o.protocol}</span>
+                      <span className="font-mono text-xs font-semibold flex items-center gap-1">
+                        {o.protocol}
+                        {o.freight_type === "urgent" && <span className="text-[9px] bg-red-100 text-red-700 font-bold px-1 rounded uppercase">Urgente</span>}
+                      </span>
                       <span className="text-xs font-mono text-muted-foreground">{(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</span>
                     </div>
-                    <p className="text-sm font-medium truncate mt-0.5">{o.client_name}</p>
+                    <p className="text-sm font-medium truncate mt-0.5">
+                      {o.client_name}
+                      {localityCount[localityKey(o)] > 1 && (
+                        <span className="ml-1.5 text-[9px] bg-blue-100 text-blue-700 font-semibold px-1 py-0.5 rounded">Mesma região</span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted-foreground truncate">
                       <MapPin className="w-3 h-3 inline mr-0.5" />
                       {o.origin?.city || "—"} → {(o.recipients || []).map(r => r.city).filter(Boolean).join(", ") || "—"}
@@ -303,6 +335,9 @@ export default function DispatchBoard() {
                         const cellOrders = scheduled.filter(o => o.scheduled_truck_id === truck.id && o.scheduled_date === dateStr);
                         const usedKg = cellOrders.reduce((s, o) => s + (o.total_weight_kg || 0), 0);
                         const pct = truck.capacity_kg > 0 ? (usedKg / truck.capacity_kg) * 100 : 0;
+                        const capVol = truckVolumeM3(truck);
+                        const usedVol = cellOrders.reduce((s, o) => s + orderVolumeM3(o), 0);
+                        const volPct = capVol > 0 ? (usedVol / capVol) * 100 : 0;
                         const clickable = selectedIds.length > 0;
                         return (
                           <td key={di}
@@ -333,12 +368,20 @@ export default function DispatchBoard() {
                                     </button>
                                   </div>
                                 ))}
-                                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div className="h-1.5 bg-muted rounded-full overflow-hidden" title={`Peso: ${Math.round(pct)}%`}>
                                   <div className={`h-full rounded-full ${pct > 90 ? "bg-red-500" : pct > 70 ? "bg-amber-500" : "bg-green-500"}`}
                                     style={{ width: `${Math.min(pct, 100)}%` }} />
                                 </div>
+                                {capVol > 0 && (
+                                  <div className="h-1.5 bg-muted rounded-full overflow-hidden" title={`Volume: ${Math.round(volPct)}% (${fmtM3(usedVol)} / ${fmtM3(capVol)})`}>
+                                    <div className={`h-full rounded-full ${volPct > 100 ? "bg-red-500" : volPct > 85 ? "bg-amber-500" : "bg-blue-400"}`}
+                                      style={{ width: `${Math.min(volPct, 100)}%` }} />
+                                  </div>
+                                )}
                                 <div className="flex items-center justify-between">
-                                  <span className="text-[10px] text-muted-foreground font-mono">{usedKg.toLocaleString("pt-BR")} kg</span>
+                                  <span className="text-[10px] text-muted-foreground font-mono" title="peso · volume">
+                                    {usedKg.toLocaleString("pt-BR")} kg{capVol > 0 ? ` · ${usedVol.toFixed(1)}m³` : ""}
+                                  </span>
                                   <button
                                     onClick={e => { e.stopPropagation(); createTripFromCell(truck, dateStr, cellOrders); }}
                                     className="text-[10px] font-bold text-velox-amber hover:underline flex items-center gap-0.5">
@@ -409,24 +452,40 @@ export default function DispatchBoard() {
                       <div className="text-right flex-shrink-0">
                         <span className="text-xs text-muted-foreground">{formatDateBR(load.date)} · </span>
                         <span className={`text-xs font-semibold ${pct > 100 ? "text-red-600" : "text-foreground"}`}>{load.weight.toLocaleString("pt-BR")} / {load.truck.capacity_kg.toLocaleString("pt-BR")} kg ({pct}%)</span>
+                        {load.capVol > 0 && (
+                          <span className="block text-[11px] text-muted-foreground">{fmtM3(load.volume)} / {fmtM3(load.capVol)} de baú</span>
+                        )}
                       </div>
                     </div>
                     <div className="divide-y divide-border/50">
-                      {load.orders.map((o) => (
-                        <div key={o.id} className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs">
-                          <span className="font-mono text-muted-foreground">{o.protocol}</span>
-                          <span className="flex-1 truncate">{o.client_name}</span>
-                          <span className="text-muted-foreground">{regionLabel(o)}</span>
-                          <span className="font-mono">{(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</span>
-                        </div>
-                      ))}
+                      {load.orders.map((o) => {
+                        const r = (load.reasons || []).find(x => x.protocol === o.protocol);
+                        return (
+                          <div key={o.id} className="px-3 py-1.5 text-xs">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-mono text-muted-foreground">{o.protocol}{o.freight_type === "urgent" && <span className="ml-1 text-[9px] bg-red-100 text-red-700 font-bold px-1 rounded">URG</span>}</span>
+                              <span className="flex-1 truncate">{o.client_name}</span>
+                              <span className="text-muted-foreground">{regionLabel(o)}</span>
+                              <span className="font-mono">{(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</span>
+                            </div>
+                            {r?.why && <p className="text-[10px] text-blue-600 mt-0.5">↳ {r.why}</p>}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
               })}
               {plan.unassigned?.length > 0 && (
-                <div className="border border-amber-300 bg-amber-50 rounded-md p-3 text-xs text-amber-800">
-                  <strong>{plan.unassigned.length} pedido(s) não couberam</strong> (capacidade insuficiente nos caminhões disponíveis): {plan.unassigned.map(o => o.protocol).join(", ")}. Despache manualmente ou ajuste a frota.
+                <div className="border border-amber-300 bg-amber-50 rounded-md p-3 text-xs text-amber-800 space-y-1.5">
+                  <strong>{plan.unassigned.length} pedido(s) não alocado(s):</strong>
+                  {plan.unassigned.map((u, idx) => (
+                    <div key={idx} className="flex items-start gap-1.5">
+                      <span className="font-mono font-semibold flex-shrink-0">{u.order.protocol}</span>
+                      <span className="text-amber-700">— {u.reason}</span>
+                    </div>
+                  ))}
+                  <p className="text-[11px] text-amber-600 pt-1">Despache manualmente ou ajuste a frota.</p>
                 </div>
               )}
             </div>

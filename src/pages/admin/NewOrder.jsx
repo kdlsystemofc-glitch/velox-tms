@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, ArrowRight, Plus, Trash2, MapPin, User, Package, DollarSign, AlertCircle, Search, FileUp, Calculator, Check, Repeat, Truck as TruckIcon, ClipboardPaste, Clock } from "lucide-react";
+import DeliveryWindowEditor from "@/components/shared/DeliveryWindowEditor";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { AddressFields } from "@/components/shared/AddressFields";
 import { useFormValidation } from "@/hooks/useFormValidation";
@@ -663,7 +664,8 @@ export default function NewOrder() {
                                     ...rec, name: c.company_name || "", cnpj_cpf: c.cpf_cnpj || "", phone: c.phone || "",
                                     cep: c.address?.cep || rec.cep, street: c.address?.street || rec.street, number: c.address?.number || rec.number,
                                     complement: c.address?.complement || rec.complement, neighborhood: c.address?.neighborhood || rec.neighborhood,
-                                    city: c.address?.city || rec.city, state: c.address?.state || rec.state, delivery_notes: c.notes || rec.delivery_notes, _search: "",
+                                    city: c.address?.city || rec.city, state: c.address?.state || rec.state, delivery_notes: c.notes || rec.delivery_notes,
+                                    delivery_window: c.delivery_window || rec.delivery_window, _search: "",
                                   }) }))}>
                                   <p className="font-medium text-sm">{c.company_name}</p>
                                   <p className="text-xs text-muted-foreground">{c.cpf_cnpj}{c.address?.city && ` · ${c.address.city}/${c.address.state}`}</p>
@@ -678,6 +680,7 @@ export default function NewOrder() {
                         <FL label="CNPJ / CPF"><Input placeholder="ex: 12.345.678/0001-90" value={r.cnpj_cpf || ""} onChange={e => setRecipient(ri, "cnpj_cpf", e.target.value)} /></FL>
                       </div>
                       <AddressFields value={r} onChange={(addr) => setRecipientAddress(ri, addr)} />
+                      <DeliveryWindowEditor value={r.delivery_window} onChange={(w) => setRecipient(ri, "delivery_window", w)} />
                       <FL label="Observações de entrega"><Textarea placeholder="ex: Entregar somente ao gerente. Portaria fecha às 17h." rows={2} value={r.delivery_notes || ""} onChange={e => setRecipient(ri, "delivery_notes", e.target.value)} className="resize-none" /></FL>
 
                       {/* Itens / NFs */}

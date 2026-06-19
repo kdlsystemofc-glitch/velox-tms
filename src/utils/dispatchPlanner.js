@@ -4,14 +4,21 @@
  * Agrupa pedidos CONFIRMADOS e SEM viagem em cargas sugeridas por caminhão,
  * ponderando, na ordem:
  *  1. Data de coleta  — só agrupa o que coleta no mesmo dia.
- *  2. Mesmo local de coleta (CEP de origem) — esses pedidos NÃO se separam
- *     entre caminhões (evita mandar 2 veículos ao mesmo ponto no mesmo dia).
- *  3. Região de destino (UF + prefixo de CEP) — junta o que é próximo.
- *  4. Peso × capacidade do veículo (bin-packing first-fit).
- *  5. Disponibilidade do veículo (só status "available", capacidade > 0).
+ *  2. Prioridade — pedidos URGENTES são alocados primeiro (B2-C).
+ *  3. Mesmo local de coleta (CEP de origem) — não se separam entre caminhões.
+ *  4. Região de destino (UF + prefixo de CEP) — junta o que é próximo.
+ *  5. Peso × capacidade E volume × cubagem interna do veículo (B2-A / S7).
+ *  6. Disponibilidade do veículo (só status "available").
  *
- * Retorna { loads, unassigned } onde cada load = { truck, date, orders, weight, regions }.
+ * Cada sugestão vem com uma EXPLICAÇÃO (B2-D) e os não-alocados vêm com o
+ * MOTIVO específico (B2-E).
+ *
+ * Retorna { loads, unassigned, reason } onde:
+ *   load = { truck, date, orders, weight, volume, regions, why }
+ *   unassigned = [{ order, reason }]
  */
+
+import { truckVolumeM3, orderVolumeM3 } from "./cargoVolume";
 
 const onlyDigits = (s) => (s || "").replace(/\D/g, "");
 
@@ -34,14 +41,22 @@ export function regionLabel(order) {
   return `${d.city}/${d.uf}`;
 }
 
+/** Chave de "mesma região" mais fina: cidade + bairro (S8). */
+export function localityKey(order) {
+  const r = (order.recipients && order.recipients[0]) || {};
+  const city = (r.city || "").toLowerCase().trim();
+  const hood = (r.neighborhood || "").toLowerCase().trim();
+  return `${city}|${hood}`;
+}
+
 export function planLoads(orders = [], trucks = []) {
   const pool = orders.filter((o) => o.status === "confirmed" && !o.trip_id);
   const fleet = trucks
     .filter((t) => t.status === "available" && (t.capacity_kg || 0) > 0)
     .sort((a, b) => (b.capacity_kg || 0) - (a.capacity_kg || 0));
 
-  if (!pool.length) return { loads: [], unassigned: [], reason: pool.length ? null : "Nenhum pedido confirmado na fila." };
-  if (!fleet.length) return { loads: [], unassigned: pool, reason: "Nenhum caminhão disponível (verifique status/capacidade na Frota)." };
+  if (!pool.length) return { loads: [], unassigned: [], reason: "Nenhum pedido confirmado na fila." };
+  if (!fleet.length) return { loads: [], unassigned: pool.map((o) => ({ order: o, reason: "Nenhum caminhão disponível (verifique status/capacidade na Frota)." })), reason: null };
 
   // 1) agrupa por data de coleta
   const byDate = {};
@@ -65,35 +80,65 @@ export function planLoads(orders = [], trucks = []) {
     let units = Object.values(pickup).map((group) => ({
       orders: group,
       weight: group.reduce((s, o) => s + (o.total_weight_kg || 0), 0),
+      volume: group.reduce((s, o) => s + orderVolumeM3(o), 0),
       region: regionKey(group[0]),
+      regionName: regionLabel(group[0]),
+      urgent: group.some((o) => o.freight_type === "urgent"),
     }));
 
-    // 3) ordena por região (clusteriza) e peso desc
-    units.sort((a, b) => a.region.localeCompare(b.region) || b.weight - a.weight);
+    // 3) urgentes primeiro; depois clusteriza por região e peso desc (B2-C)
+    units.sort((a, b) =>
+      Number(b.urgent) - Number(a.urgent) ||
+      a.region.localeCompare(b.region) ||
+      b.weight - a.weight
+    );
 
-    // 4) bin-packing: 1 carga por caminhão por data
-    const truckLoads = fleet.map((t) => ({ truck: t, date, orders: [], weight: 0, regions: new Set() }));
+    // 4) bin-packing: 1 carga por caminhão por data, respeitando peso E volume
+    const truckLoads = fleet.map((t) => ({
+      truck: t, date, orders: [], weight: 0, volume: 0,
+      capVol: truckVolumeM3(t), regions: new Set(), reasons: [],
+    }));
+
     units.forEach((u) => {
-      const target = truckLoads
-        .filter((tl) => tl.weight + u.weight <= tl.truck.capacity_kg)
-        .sort((a, b) => {
-          // prefere caminhão que já leva a mesma região; depois o menos carregado
-          const aHas = a.regions.has(u.region) ? 0 : 1;
-          const bHas = b.regions.has(u.region) ? 0 : 1;
-          return aHas - bHas || a.weight - b.weight;
-        })[0];
+      const candidates = truckLoads.filter((tl) => {
+        const fitsWeight = tl.weight + u.weight <= (tl.truck.capacity_kg || 0);
+        const fitsVolume = tl.capVol <= 0 || tl.volume + u.volume <= tl.capVol; // sem dimensões = só peso
+        return fitsWeight && fitsVolume;
+      }).sort((a, b) => {
+        // prefere caminhão que já leva a mesma região; depois o menos carregado
+        const aHas = a.regions.has(u.region) ? 0 : 1;
+        const bHas = b.regions.has(u.region) ? 0 : 1;
+        return aHas - bHas || a.weight - b.weight;
+      });
+
+      const target = candidates[0];
       if (!target) {
-        unassigned.push(...u.orders);
+        // motivo específico (B2-E)
+        const maxCap = Math.max(...fleet.map((t) => t.capacity_kg || 0));
+        const reason = u.weight > maxCap
+          ? `Nenhum caminhão tem capacidade para ${u.weight.toLocaleString("pt-BR")} kg na coleta de ${date}.`
+          : `Sem espaço (peso/volume) restante nos caminhões disponíveis na data ${date}.`;
+        u.orders.forEach((o) => unassigned.push({ order: o, reason }));
         return;
       }
+      const sameRegion = target.regions.has(u.region);
       target.orders.push(...u.orders);
       target.weight += u.weight;
+      target.volume += u.volume;
       target.regions.add(u.region);
+      u.orders.forEach((o) => target.reasons.push({
+        protocol: o.protocol,
+        why: `${u.urgent ? "Urgente — alocado primeiro. " : ""}${sameRegion ? `Mesma região (${u.regionName}) já neste caminhão.` : `Caminhão com mais espaço para ${u.regionName}.`}`,
+      }));
     });
 
     truckLoads
       .filter((tl) => tl.orders.length)
-      .forEach((tl) => loads.push({ ...tl, regions: [...tl.regions] }));
+      .forEach((tl) => loads.push({
+        ...tl,
+        regions: [...tl.regions],
+        why: `${tl.orders.length} pedido(s) · ${tl.weight.toLocaleString("pt-BR")} kg${tl.capVol > 0 ? ` · ${tl.volume.toFixed(2)}/${tl.capVol.toFixed(2)} m³` : ""}`,
+      }));
   });
 
   return { loads, unassigned, reason: null };
