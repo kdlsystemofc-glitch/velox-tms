@@ -35,7 +35,7 @@ export default function Drivers({ hideTitle = false }) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const EMPTY_DRIVER = { name: "", cpf: "", phone: "", email: "", birth_date: "", hire_date: "", cnh_number: "", cnh_category: "C", cnh_expiry: "", role: "motorista", contract_type: "clt", base_salary: "", status: "active", address: { street: "", number: "", neighborhood: "", city: "", state: "", cep: "" }, bank_info: { bank: "", agency: "", account: "", pix_key: "" }, notes: "" };
+  const EMPTY_DRIVER = { name: "", cpf: "", phone: "", email: "", birth_date: "", hire_date: "", cnh_number: "", cnh_category: "C", cnh_expiry: "", role: "motorista", contract_type: "clt", base_salary: "", commission_percent: "", status: "active", address: { street: "", number: "", neighborhood: "", city: "", state: "", cep: "" }, bank_info: { bank: "", agency: "", account: "", pix_key: "" }, notes: "" };
   const [form, setForm] = useState(EMPTY_DRIVER);
 
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
@@ -138,6 +138,9 @@ export default function Drivers({ hideTitle = false }) {
                 </Field>
                 <Field label="Salário base (R$)">
                   <NumericInput currency value={form.base_salary} onChange={v => setForm(f => ({ ...f, base_salary: v }))} placeholder="3.500,00" />
+                </Field>
+                <Field label="Comissão (% do frete)" hint="Aplicada no acerto ao encerrar a viagem">
+                  <NumericInput value={form.commission_percent} onChange={v => setForm(f => ({ ...f, commission_percent: v }))} placeholder="ex: 10" />
                 </Field>
                 <Field label="Status" colSpan={2}>
                   <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>

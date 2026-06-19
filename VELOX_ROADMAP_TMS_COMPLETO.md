@@ -74,10 +74,11 @@ O elo coleta↔destinatário é sempre a **NF-e**.
   ✅ **Taxa de coleta separada** (`pricing.pickup_fee`) — somada ao frete, exibida no breakdown.
   ✅ **Adicional por tipo de frete** (`pricing.urgent_percent` / `dedicated_percent`) — % aplicado conforme o tipo do pedido.
   ✅ **Vigência de tabela** — cada corredor (`route_pricing`) tem `valid_from`/`valid_until`; `resolvePricing` só aplica o corredor se a **data de coleta** estiver no intervalo (em branco = sempre). Permite reajuste sem quebrar pedidos antigos.
-- **FASE 5 — Fiscal (CT-e/MDF-e)**
-  Integração SEFAZ (certificado). Maior esforço; depende de decisão de negócio.
-- **FASE 6 — Acerto de viagem & comissões**
-  Fechar a viagem confrontando adiantamento × custos reais; comissão por motorista.
+- **FASE 5 — Fiscal (CT-e/MDF-e)** 🟡 *(parte gratuita feita; transmissão fiscal = paga)*
+  ✅ **Documento interno de transporte (espelho / pré-CT-e)** em PDF por pedido (`generateShipmentDoc` + botão no pedido): remetente, destinatários, NFs, peso, valor, frete, CIF/FOB — marcado "SEM VALOR FISCAL". Romaneio/Manifesto da viagem já existe (PDF).
+  ⏳ **Transmissão fiscal (SEFAZ)** — CT-e/MDF-e autorizados exigem provider (PlugNotas/Focus NFe) + certificado A1. **Pago — deixado para depois.**
+- **FASE 6 — Acerto de viagem & comissões** ✅ *(implementada — sem API)*
+  Motorista tem **% de comissão** (`drivers.commission_percent`). Ao **encerrar a viagem**, o sistema calcula a comissão (% sobre a receita), grava em `trips.commission_amount`, lança uma **despesa "a pagar"** e mostra o card **"Acerto do motorista"** (comissão − adiantamento = saldo a pagar/receber).
 
 > Cada fase é entregável e testável isoladamente.
 

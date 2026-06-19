@@ -174,6 +174,11 @@ export default function TripDetailPage() {
     const totalCost = Number(closeForm.fuel_cost || 0) + Number(closeForm.tolls_cost || 0) + otherCostsTotal;
     const netProfit = (trip.total_revenue || 0) - totalCost;
 
+    // Comissão do motorista (% sobre a receita da viagem) — Fase 6
+    const tripDriver = drivers.find(d => d.id === trip.driver_id);
+    const commissionPct = Number(tripDriver?.commission_percent) || 0;
+    const commission = Math.round((trip.total_revenue || 0) * (commissionPct / 100) * 100) / 100;
+
     await updateMutation.mutateAsync({
       status: "completed",
       arrival_date: new Date().toISOString(),
@@ -184,6 +189,7 @@ export default function TripDetailPage() {
       other_costs: closeForm.other_costs,
       total_cost: totalCost,
       net_profit: netProfit,
+      commission_amount: commission,
       events: [...(trip.events || []), {
         type: "completed",
         description: `Viagem encerrada. Km final: ${closeForm.real_km}`,
@@ -227,6 +233,18 @@ export default function TripDetailPage() {
         });
       }
     });
+    // Comissão do motorista vira despesa A PAGAR (acertada com o motorista)
+    if (commission > 0) {
+      expensesToCreate.push({
+        category: "salaries",
+        description: `Comissão ${commissionPct}% — ${trip.driver_name || tripDriver?.name || "motorista"} (viagem ${trip.truck_plate})`,
+        amount: commission,
+        date: today,
+        status: "pending",
+        trip_id: trip.id,
+        driver_id: trip.driver_id || undefined,
+      });
+    }
     if (expensesToCreate.length > 0) {
       await Promise.all(expensesToCreate.map(e => base44.entities.Expense.create(e)));
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
@@ -449,6 +467,29 @@ export default function TripDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {trip.status === "completed" && (Number(trip.commission_amount) > 0 || Number(trip.advance_amount) > 0) && (() => {
+            const comm = Number(trip.commission_amount) || 0;
+            const adv = Number(trip.advance_amount) || 0;
+            const saldo = comm - adv;
+            return (
+              <Card>
+                <CardHeader className="py-3 border-b border-border bg-muted/30">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2"><Truck className="w-4 h-4 text-velox-amber" /> Acerto do motorista</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm pt-4">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Motorista</span><span className="font-medium">{trip.driver_name || "—"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Comissão</span><span className="font-mono text-green-600">R$ {comm.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">(−) Adiantamento (vale-frete)</span><span className="font-mono text-amber-600">R$ {adv.toFixed(2)}</span></div>
+                  <div className="flex justify-between border-t border-border pt-2 font-semibold">
+                    <span>Saldo a {saldo >= 0 ? "pagar ao" : "receber do"} motorista</span>
+                    <span className={`font-mono ${saldo >= 0 ? "text-green-600" : "text-red-600"}`}>R$ {Math.abs(saldo).toFixed(2)}</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">A comissão foi lançada como despesa "a pagar" em Financeiro → Despesas.</p>
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           {trip.events && trip.events.length > 0 && (
             <Card>

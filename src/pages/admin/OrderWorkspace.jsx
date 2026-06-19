@@ -14,6 +14,7 @@ import FileUploadButton from "@/components/shared/FileUploadButton";
 import { FreightBreakdown } from "@/components/shared/FreightBreakdown";
 import CollapsibleSection from "@/components/shared/CollapsibleSection";
 import { generateDeliveryReceipt } from "@/utils/generateDeliveryReceipt";
+import { generateShipmentDoc } from "@/utils/generateShipmentDoc";
 import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO, formatDateBR } from "@/utils/dateUtils";
@@ -199,6 +200,20 @@ export default function OrderWorkspace() {
     }
   };
 
+  const downloadShipmentDoc = () => {
+    try {
+      const blob = generateShipmentDoc(order, settings);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `DocTransporte-${order.protocol}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast({ title: "Erro ao gerar documento", variant: "destructive" });
+    }
+  };
+
   const activeRevenue = orderRevenues.find(r => r.status !== "cancelled");
 
   return (
@@ -240,6 +255,10 @@ export default function OrderWorkspace() {
                 <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/40 text-left"
                   onClick={() => { setMenuOpen(false); navigate("/admin/coletas/nova", { state: { duplicate: order } }); }}>
                   <Copy className="w-4 h-4 text-muted-foreground" /> Duplicar pedido
+                </button>
+                <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/40 text-left"
+                  onClick={() => { setMenuOpen(false); downloadShipmentDoc(); }}>
+                  <FileText className="w-4 h-4 text-muted-foreground" /> Doc. de transporte (PDF)
                 </button>
                 {order.status === "delivered" && (
                   <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/40 text-left"
