@@ -45,6 +45,12 @@ export default function TripDetailPage() {
     queryFn: () => base44.entities.Driver.list(),
   });
 
+  // Pedidos — para sugestão de retorno (backhaul, S9).
+  const { data: allOrders = [] } = useQuery({
+    queryKey: ["orders"],
+    queryFn: () => base44.entities.Order.list("-created_date", 500),
+  });
+
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Trip.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["trip", id] }),
@@ -55,6 +61,45 @@ export default function TripDetailPage() {
   const completedStops = (trip.stops || []).filter(s => s.status === "completed").length;
   const totalStops = (trip.stops || []).length;
   const userName = user?.full_name || "Sistema";
+
+  // ── Backhaul (S9): caminhão terminou as entregas e volta vazio ──
+  const linkedOrders = allOrders.filter(o => (trip.order_ids || []).includes(o.id));
+  const deliveryCities = new Set(
+    linkedOrders.flatMap(o => (o.recipients || []).map(r => (r.city || "").toLowerCase().trim())).filter(Boolean)
+  );
+  const deliveryStops = (trip.stops || []).filter(s => s.type === "delivery");
+  const allDeliveriesDone = deliveryStops.length > 0 && deliveryStops.every(s => s.status === "completed");
+  const backhaulCandidates = (trip.status === "in_progress" && allDeliveriesDone)
+    ? allOrders.filter(o => o.status === "confirmed" && !o.trip_id && o.origin?.city && deliveryCities.has(o.origin.city.toLowerCase().trim()))
+    : [];
+
+  const addBackhaul = useMutation({
+    mutationFn: async (order) => {
+      const stop = {
+        type: "collection", order_id: order.id,
+        recipient_name: order.client_name,
+        address: [order.origin?.street, order.origin?.number, order.origin?.city, order.origin?.state].filter(Boolean).join(", "),
+        cep: order.origin?.cep || "", status: "pending", stop_order: (trip.stops || []).length + 1,
+      };
+      await base44.entities.Trip.update(trip.id, {
+        stops: [...(trip.stops || []), stop],
+        order_ids: [...(trip.order_ids || []), order.id],
+        order_protocols: [...(trip.order_protocols || []), order.protocol],
+        total_revenue: (trip.total_revenue || 0) + (order.freight_value || 0),
+        events: [...(trip.events || []), { type: "backhaul_added", description: `Coleta de retorno adicionada: ${order.protocol} (${order.client_name}) em ${order.origin?.city}`, timestamp: new Date().toISOString(), user: userName }],
+      });
+      await base44.entities.Order.update(order.id, {
+        trip_id: trip.id, truck_id: trip.truck_id, driver_id: trip.driver_id, status: "collecting",
+        status_history: [...(order.status_history || []), { status: "collecting", timestamp: new Date().toISOString(), user: userName, note: `Aproveitamento de retorno — viagem ${trip.truck_plate}` }],
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trip", id] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast({ title: "Coleta de retorno adicionada!", description: "O pedido entrou na viagem para aproveitar o retorno." });
+    },
+    onError: (e) => toast({ title: "Erro ao adicionar", description: e?.message, variant: "destructive" }),
+  });
 
   const updateStop = async (index, newStatus) => {
     const stops = [...(trip.stops || [])];
@@ -372,6 +417,32 @@ export default function TripDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Stops timeline */}
         <div className="lg:col-span-2">
+          {backhaulCandidates.length > 0 && (
+            <Card className="mb-3 border-blue-200 bg-blue-50/60">
+              <CardContent className="pt-4">
+                <p className="text-sm font-semibold text-blue-800 flex items-center gap-2 mb-1">
+                  <MapPin className="w-4 h-4" /> Aproveitar o retorno?
+                </p>
+                <p className="text-xs text-blue-700 mb-3">
+                  As entregas terminaram. O caminhão vai voltar vazio e há coleta(s) pendente(s) na mesma região:
+                </p>
+                <div className="space-y-2">
+                  {backhaulCandidates.map(o => (
+                    <div key={o.id} className="flex items-center justify-between gap-2 rounded-lg border border-blue-200 bg-white p-2.5">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{o.client_name} <span className="font-mono text-xs text-muted-foreground">{o.protocol}</span></p>
+                        <p className="text-xs text-muted-foreground">{o.origin?.city}/{o.origin?.state} · {(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</p>
+                      </div>
+                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1 flex-shrink-0"
+                        disabled={addBackhaul.isPending} onClick={() => addBackhaul.mutate(o)}>
+                        <Plus className="w-3.5 h-3.5" /> Adicionar à viagem
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-sm flex items-center gap-2">
               <MapPin className="w-4 h-4 text-velox-amber" /> Paradas

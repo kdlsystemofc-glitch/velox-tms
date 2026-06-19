@@ -17,8 +17,10 @@ import { generateDeliveryReceipt } from "@/utils/generateDeliveryReceipt";
 import { generateShipmentDoc } from "@/utils/generateShipmentDoc";
 import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
-import { todayLocalISO, formatDateBR } from "@/utils/dateUtils";
+import { todayLocalISO, formatDateBR, toLocalISO } from "@/utils/dateUtils";
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
+import { suggestTrucks } from "@/utils/replanner";
+import { addDays } from "date-fns";
 import {
   ArrowLeft, Package, User, MapPin, Truck, DollarSign, CheckCircle2, Circle,
   FileText, FileDown, AlertTriangle, Copy, MoreHorizontal, XCircle, ArrowRight
@@ -69,6 +71,7 @@ export default function OrderWorkspace() {
   });
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
+  const { data: allOrders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
   const { data: incidents = [] } = useQuery({
     queryKey: ["incidents", id],
     queryFn: () => base44.entities.Incident.filter({ order_id: id }),
@@ -705,6 +708,36 @@ export default function OrderWorkspace() {
 
         {/* ── RAIL DIREITO: atribuição operacional ── */}
         <div className="space-y-4">
+          {/* Encaixe rápido de URGENTE (S3) */}
+          {order.freight_type === "urgent" && order.status === "confirmed" && !order.trip_id && (
+            <Card className="border-red-200 bg-red-50/60">
+              <CardContent className="pt-4 space-y-2">
+                <p className="text-xs font-semibold text-red-700 uppercase tracking-wide flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Urgente — encaixe rápido
+                </p>
+                <p className="text-[11px] text-muted-foreground">Caminhões com espaço nos próximos 2 dias. Clique para programar direto.</p>
+                {[0, 1].map(offset => {
+                  const dateStr = toLocalISO(addDays(new Date(), offset));
+                  const opts = suggestTrucks(trucks, allOrders, null, dateStr).slice(0, 4);
+                  const need = order.total_weight_kg || 0;
+                  return (
+                    <div key={offset} className="space-y-1">
+                      <p className="text-[11px] font-medium text-foreground">{offset === 0 ? "Hoje" : "Amanhã"} · {formatDateBR(dateStr)}</p>
+                      {opts.length === 0 ? <p className="text-[11px] text-muted-foreground">Nenhum caminhão disponível.</p> :
+                        opts.map(({ truck: t, free }) => (
+                          <button key={t.id}
+                            onClick={() => { updateMutation.mutate({ scheduled_truck_id: t.id, scheduled_date: dateStr, status_history: [...(order.status_history || []), { status: order.status, timestamp: new Date().toISOString(), user: "Admin", note: `Encaixe urgente em ${t.plate} (${formatDateBR(dateStr)})` }] }); toast({ title: `Programado em ${t.plate}`, description: formatDateBR(dateStr) }); }}
+                            className={`w-full flex items-center justify-between text-xs rounded-lg border p-2 transition-colors ${free >= need ? "border-green-300 bg-green-50 hover:bg-green-100" : "border-border hover:bg-muted/40"}`}>
+                            <span className="font-mono font-semibold">{t.plate}</span>
+                            <span className={`font-mono ${free >= need ? "text-green-700" : "text-amber-600"}`}>{free.toLocaleString("pt-BR")} kg livres</span>
+                          </button>
+                        ))}
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardContent className="pt-4 space-y-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">

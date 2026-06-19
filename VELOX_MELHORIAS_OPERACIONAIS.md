@@ -106,3 +106,83 @@ recalculada e um evento avisa o motorista para seguir a rota.
 recálculo da viagem + taxa improdutiva + aviso ao motorista.
 
 ---
+
+## ONDA 2 — Inteligência do despacho
+
+### S7 + B2-A — A carga não coube por tamanho, não por peso
+
+**Como era:** O despacho só somava o **peso**. Caixas grandes e leves "estouravam" o
+baú sem o sistema perceber.
+
+**Como ficou:** Cada caminhão usa **comprimento × largura × altura** (já no cadastro) para
+o volume interno (m³); cada item gera volume pelo tamanho. No quadro, cada célula tem
+**duas barras: peso e volume**. Ao programar, o sistema bloqueia se o **volume** estourar,
+mesmo dentro do peso.
+
+**Problema → Solução:** Só media peso → passou a medir peso **e** espaço físico (m³) com
+indicador duplo e bloqueio por volume.
+
+### S6 + B2-B — Destinatário só recebe em horários específicos
+
+**Como era:** Não havia onde registrar a janela; entregas eram programadas às cegas.
+
+**Como ficou:** Campo **"Janela de recebimento"** (dias da semana + horário) no cadastro do
+cliente e no destinatário do pedido. Ao programar para um dia fora da janela, o despacho
+**avisa** antes de confirmar.
+
+**Problema → Solução:** Sem janela de recebimento → campo configurável + aviso ao
+programar fora do dia aceito.
+
+### B2-C — Pedidos urgentes primeiro
+
+**Como era:** A separação automática ordenava por região e peso; urgente competia igual.
+
+**Como ficou:** O motor aloca **todos os urgentes primeiro** e só depois distribui os
+normais no espaço restante.
+
+**Problema → Solução:** Urgente sem prioridade → urgentes alocados antes de tudo.
+
+### S3 + B4-D — Surgiu uma coleta urgente
+
+**Como era:** Para um pedido urgente, o gestor ia ao despacho procurar espaço na mão.
+
+**Como ficou:** No pedido urgente confirmado, card **"Urgente — encaixe rápido"** mostra os
+caminhões com **espaço livre (kg) hoje e amanhã** e, em **1 clique**, programa o pedido
+naquele caminhão/dia — sem abrir o despacho. Verde = cabe o peso do pedido.
+
+**Problema → Solução:** Urgente sem visão de capacidade → sugestão de caminhões com espaço
+nos próximos 2 dias + encaixe direto.
+
+### S8 — Dois destinatários na mesma região
+
+**Como era:** Pedidos próximos podiam cair em caminhões diferentes sem aviso.
+
+**Como ficou:** Na fila do despacho, pedidos para a **mesma cidade+bairro** ganham o selo
+**"Mesma região"**, e o motor prioriza colocá-los no mesmo caminhão.
+
+**Problema → Solução:** Sem visão de proximidade → selo "Mesma região" + agrupamento no
+automático.
+
+### S9 — O caminhão vai voltar vazio
+
+**Como era:** Terminava as entregas e voltava vazio, mesmo havendo coleta na região.
+
+**Como ficou:** Quando **todas as entregas** da viagem terminam, o detalhe da viagem mostra
+**"Aproveitar o retorno?"** com as coletas pendentes na mesma cidade e um botão
+**"Adicionar à viagem"** que insere a coleta no roteiro.
+
+**Problema → Solução:** Retorno vazio → sugestão de backhaul + inclusão da coleta na viagem.
+
+### B2-D / B2-E — Explicar as sugestões e os não-alocados
+
+**Como era:** A separação automática só dizia "X não couberam", sem motivo nem raciocínio.
+
+**Como ficou:** Cada pedido alocado mostra **por que** ("urgente — alocado primeiro",
+"mesma região já neste caminhão", "caminhão com mais espaço para Curitiba"). Cada
+não-alocado mostra o **motivo específico** ("nenhum caminhão tem capacidade para 12.000 kg
+na coleta de 15/06").
+
+**Problema → Solução:** Sugestão opaca → explicação por pedido + motivo detalhado de
+não-alocação.
+
+---
