@@ -430,6 +430,29 @@ push, WhatsApp, EDI, conciliação OFX (pagos).
 
 ---
 
+---
+
+## MÓDULO A MÓDULO — Operações (torre de controle)
+
+Aprofundamento do `OperationsHub` rumo ao nível TMS global.
+
+**Correções:** card de alertas críticos apontava para Configurações (→ `/admin/alertas`);
+"A receber" não somava os títulos vencidos (→ inclui `overdue`).
+
+- **Op-1 — Torre viva e precisa:** auto-refresh (45s) + selo "Ao vivo"; "Frota agora" e
+  "Em rota" cientes de **comboio** (Onda 7); KPIs ampliados — **ocupação da frota**, **OTD do
+  dia**, **atrasados/em risco (SLA)**, **ocorrências abertas**.
+- **Op-2 — Visão do dia completa:** **painel de exceções** (aguardando carga, entrega parcial,
+  em transferência, tentativa sem sucesso, prazo estourado — o que sumia do pipeline);
+  **capacidade do dia** (barras de peso e volume × frota); **selo de SLA** na agenda.
+- **Op-3 — Produtividade:** **seletor de período** (Hoje/Amanhã/Semana) na agenda + **feed de
+  alertas ao vivo** com link contextual.
+
+**Teto restante (Op-4):** mapa dos veículos/rotas. Parte grátis (mapa estático/embed) viável;
+**GPS ao vivo depende de rastreador (pago)**.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
