@@ -44,7 +44,7 @@ export default function Fleet({ hideTitle = false }) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const EMPTY_FORM = { plate: "", model: "", manufacturer: "", year: "", truck_type: "truck", capacity_kg: "", status: "available", color: "", renavam: "", chassis: "", dimensions: { length_m: "", width_m: "", height_m: "" }, crlv_expiry: "", insurance_expiry: "", tachograph_last: "", tachograph_next: "", total_km: "", km_alert_oil: "", km_alert_review: "", km_alert_tires: "", notes: "" };
+  const EMPTY_FORM = { plate: "", model: "", manufacturer: "", year: "", truck_type: "truck", capacity_kg: "", status: "available", color: "", renavam: "", chassis: "", dimensions: { length_m: "", width_m: "", height_m: "" }, axles: "", tare_weight: "", body_type: "", ownership: "proprio", owner_name: "", tracker_provider: "", tracker_id: "", crlv_expiry: "", insurance_expiry: "", tachograph_last: "", tachograph_next: "", total_km: "", km_alert_oil: "", km_alert_review: "", km_alert_tires: "", notes: "" };
   const [form, setForm] = useState(EMPTY_FORM);
 
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
@@ -130,6 +130,44 @@ export default function Fleet({ hideTitle = false }) {
                 </Field>
               </FormSection>
 
+              <FormSection title="Especificações e propriedade" icon={Ruler} cols={2}>
+                <Field label="Nº de eixos" hint="Usado no pedágio (ANTT)">
+                  <NumericInput integer value={form.axles} onChange={v => setForm(f => ({ ...f, axles: v }))} placeholder="Ex: 6" />
+                </Field>
+                <Field label="Tara (kg)">
+                  <NumericInput integer value={form.tare_weight} onChange={v => setForm(f => ({ ...f, tare_weight: v }))} placeholder="Ex: 9000" />
+                </Field>
+                <Field label="Carroceria">
+                  <Select value={form.body_type || ""} onValueChange={v => setForm(f => ({ ...f, body_type: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
+                    <SelectContent>
+                      {["Baú", "Sider", "Graneleiro", "Frigorífico", "Carga seca", "Tanque", "Caçamba", "Prancha", "Outro"].map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Propriedade">
+                  <Select value={form.ownership || "proprio"} onValueChange={v => setForm(f => ({ ...f, ownership: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="proprio">Próprio</SelectItem>
+                      <SelectItem value="agregado">Agregado</SelectItem>
+                      <SelectItem value="terceiro">Terceiro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                {form.ownership !== "proprio" && (
+                  <Field label="Proprietário (agregado/terceiro)" colSpan={2}>
+                    <Input placeholder="Nome do proprietário do veículo" value={form.owner_name} onChange={e => setForm(f => ({ ...f, owner_name: e.target.value }))} />
+                  </Field>
+                )}
+                <Field label="Rastreador (provedor)">
+                  <Input placeholder="Ex: Sascar, Omnilink" value={form.tracker_provider} onChange={e => setForm(f => ({ ...f, tracker_provider: e.target.value }))} />
+                </Field>
+                <Field label="ID do rastreador">
+                  <Input placeholder="Identificador / nº do equipamento" value={form.tracker_id} onChange={e => setForm(f => ({ ...f, tracker_id: e.target.value }))} />
+                </Field>
+              </FormSection>
+
               <FormSection title="Documentação" description="Datas de vencimento — geram alertas automáticos" icon={FileCheck2} cols={2}>
                 <Field label="Vencimento CRLV">
                   <Input type="date" value={form.crlv_expiry} onChange={e => setForm(f => ({ ...f, crlv_expiry: e.target.value }))} />
@@ -174,6 +212,8 @@ export default function Fleet({ hideTitle = false }) {
                   ...form,
                   year: Number(form.year) || undefined,
                   capacity_kg: Number(form.capacity_kg) || undefined,
+                  axles: Number(form.axles) || undefined,
+                  tare_weight: Number(form.tare_weight) || undefined,
                   crlv_expiry: form.crlv_expiry || undefined,
                   insurance_expiry: form.insurance_expiry || undefined,
                   tachograph_last: form.tachograph_last || undefined,

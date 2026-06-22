@@ -35,10 +35,11 @@ export default function Drivers({ hideTitle = false }) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const EMPTY_DRIVER = { name: "", cpf: "", phone: "", email: "", birth_date: "", hire_date: "", cnh_number: "", cnh_category: "C", cnh_expiry: "", role: "motorista", contract_type: "clt", base_salary: "", commission_percent: "", status: "active", address: { street: "", number: "", neighborhood: "", city: "", state: "", cep: "" }, bank_info: { bank: "", agency: "", account: "", pix_key: "" }, notes: "" };
+  const EMPTY_DRIVER = { name: "", cpf: "", phone: "", email: "", birth_date: "", hire_date: "", cnh_number: "", cnh_category: "C", cnh_expiry: "", exam_aso_expiry: "", exam_toxic_expiry: "", default_truck_id: "", role: "motorista", contract_type: "clt", base_salary: "", commission_percent: "", status: "active", address: { street: "", number: "", neighborhood: "", city: "", state: "", cep: "" }, bank_info: { bank: "", agency: "", account: "", pix_key: "" }, notes: "" };
   const [form, setForm] = useState(EMPTY_DRIVER);
 
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Driver.create(data),
@@ -109,6 +110,24 @@ export default function Drivers({ hideTitle = false }) {
                 </Field>
                 <Field label="Vencimento" hint="Gera alerta automático">
                   <Input type="date" value={form.cnh_expiry} onChange={e => setForm(f => ({ ...f, cnh_expiry: e.target.value }))} />
+                </Field>
+              </FormSection>
+
+              <FormSection title="Saúde e veículo" icon={IdCard} cols={3}>
+                <Field label="Validade ASO" hint="Exame ocupacional">
+                  <Input type="date" value={form.exam_aso_expiry} onChange={e => setForm(f => ({ ...f, exam_aso_expiry: e.target.value }))} />
+                </Field>
+                <Field label="Validade toxicológico">
+                  <Input type="date" value={form.exam_toxic_expiry} onChange={e => setForm(f => ({ ...f, exam_toxic_expiry: e.target.value }))} />
+                </Field>
+                <Field label="Veículo padrão">
+                  <Select value={form.default_truck_id || "none"} onValueChange={v => setForm(f => ({ ...f, default_truck_id: v === "none" ? "" : v }))}>
+                    <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      {trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.plate} — {t.model}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </Field>
               </FormSection>
 
