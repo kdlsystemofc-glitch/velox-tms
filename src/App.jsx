@@ -15,6 +15,8 @@ import Tracking from '@/pages/Tracking';
 // Auth pages
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
+import NoAccess from '@/pages/NoAccess';
+import UserManagement from '@/pages/admin/UserManagement';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 
@@ -83,6 +85,7 @@ const AuthenticatedApp = () => {
       {/* Auth routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/sem-acesso" element={<NoAccess />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
@@ -146,6 +149,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/financeiro/fluxo" element={<Navigate to="/admin/financeiro?aba=fluxo" replace />} />
             <Route path="/admin/config" element={<ConfigPage />} />
             <Route path="/admin/configuracoes" element={<Navigate to="/admin/config" replace />} />
+            <Route path="/admin/usuarios" element={<UserManagement />} />
           </Route>
         </Route>
       </Route>

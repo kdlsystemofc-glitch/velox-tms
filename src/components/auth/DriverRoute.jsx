@@ -7,9 +7,10 @@ export default function DriverRoute() {
 
   if (isLoadingAuth) return null;
 
-  if (!user || user.role !== "motorista") {
-    return <Navigate to="/login" replace />;
+  if (user?.role === "motorista") return <Outlet />;
+  if (user?.role === "admin" || user?.role === "operator" || user?.role === "operador") {
+    return <Navigate to="/admin" replace />;
   }
-
-  return <Outlet />;
+  if (!user) return <Navigate to="/login" replace />;
+  return <Navigate to="/sem-acesso" replace />;
 }

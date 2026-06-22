@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, CalendarDays, Truck,
   DollarSign, Settings, ChevronLeft, ChevronRight, LogOut, BookUser,
-  FolderOpen, MessageSquare, Route as RouteIcon, AlertTriangle, ShieldAlert, BarChart3, ArrowLeftRight
+  FolderOpen, MessageSquare, Route as RouteIcon, AlertTriangle, ShieldAlert, BarChart3, ArrowLeftRight, Users
 } from "lucide-react";
 import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
 import { base44 } from "@/api/base44Client";
@@ -29,6 +29,7 @@ const navItems = [
   { icon: MessageSquare,   label: "Mensagens",      path: "/admin/mensagens",  badge: "unreadMessages" },
   { icon: DollarSign,      label: "Financeiro",     path: "/admin/financeiro", adminOnly: true },
   { icon: BarChart3,       label: "Indicadores",    path: "/admin/indicadores", adminOnly: true },
+  { icon: Users,           label: "Usuários",       path: "/admin/usuarios",   adminOnly: true },
   { icon: Settings,        label: "Configurações",  path: "/admin/config",     adminOnly: true },
 ];
 

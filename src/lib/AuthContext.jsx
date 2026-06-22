@@ -47,11 +47,17 @@ export const AuthProvider = ({ children }) => {
         .eq('id', authUser.id)
         .single();
 
+      // Segurança: NINGUÉM vira admin sozinho. Sem perfil = 'pending' (sem acesso);
+      // desativado pelo admin (active=false) também perde o acesso.
+      const effectiveRole = profile
+        ? (profile.active === false ? 'pending' : (profile.role || 'pending'))
+        : 'pending';
+
       const userWithRole = {
         id: authUser.id,
         email: authUser.email,
         full_name: profile?.full_name || authUser.user_metadata?.full_name || '',
-        role: profile?.role || 'admin',
+        role: effectiveRole,
         driver_id: profile?.driver_id || null,
       };
 
@@ -65,20 +71,23 @@ export const AuthProvider = ({ children }) => {
         .single();
       setAppPublicSettings(settings);
 
+      // Quem entra sem perfil fica como 'pending' até um admin liberar o papel.
       if (!profile) {
         await supabase.from('user_profiles').upsert({
           id: authUser.id,
           email: authUser.email,
           full_name: authUser.user_metadata?.full_name || '',
-          role: 'admin',
+          role: 'pending',
+          active: false,
         });
       }
     } catch (err) {
+      // Em erro, NÃO concede admin — mantém autenticado sem privilégio.
       setUser({
         id: authUser.id,
         email: authUser.email,
         full_name: authUser.user_metadata?.full_name || '',
-        role: 'admin',
+        role: 'pending',
       });
       setIsAuthenticated(true);
     }

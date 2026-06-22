@@ -27,12 +27,17 @@ export default function Login() {
       const { data: { user } } = await supabase.auth.getUser();
       const { data: profile } = await supabase
         .from("user_profiles")
-        .select("role")
+        .select("role, active")
         .eq("id", user.id)
         .single();
 
-      const role = profile?.role || "admin";
-      window.location.href = role === "motorista" ? "/motorista" : "/admin";
+      const role = profile?.role || "pending";
+      const blocked = profile && profile.active === false;
+      const dest = blocked ? "/sem-acesso"
+        : role === "motorista" ? "/motorista"
+        : (role === "admin" || role === "operator") ? "/admin"
+        : "/sem-acesso";
+      window.location.href = dest;
     } catch (err) {
       setError(err.message || "E-mail ou senha inválidos");
     } finally {
