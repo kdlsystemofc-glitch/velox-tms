@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
         .from('user_profiles')
         .select('*')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
 
       // Segurança: NINGUÉM vira admin sozinho. Sem perfil = 'pending' (sem acesso);
       // desativado pelo admin (active=false) também perde o acesso.
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
         .from('company_settings')
         .select('*')
         .limit(1)
-        .single();
+        .maybeSingle();
       setAppPublicSettings(settings);
 
       // Quem entra sem perfil fica como 'pending' até um admin liberar o papel.

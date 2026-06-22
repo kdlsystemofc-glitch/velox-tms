@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
@@ -69,16 +69,16 @@ export default function Expenses({ hideTitle = false }) {
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
 
-  const createMutation = {
-    isPending: false,
-    mutate: async (data) => {
-      await base44.entities.Expense.create(data);
+  const createMutation = useMutation({
+    mutationFn: (data) => base44.entities.Expense.create(data),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
       setShowModal(false);
       setForm(EMPTY_FORM);
       toast({ title: "Despesa registrada!" });
     },
-  };
+    onError: (e) => toast({ title: "Erro ao registrar despesa", description: e?.message, variant: "destructive" }),
+  });
 
   const open = expenses.filter(e => e.status === "pending" || e.status === "installment");
   const agingTotals = AGING.reduce((acc, b) => {

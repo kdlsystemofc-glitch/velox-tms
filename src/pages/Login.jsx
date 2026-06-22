@@ -29,7 +29,7 @@ export default function Login() {
         .from("user_profiles")
         .select("role, active")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       const role = profile?.role || "pending";
       const blocked = profile && profile.active === false;

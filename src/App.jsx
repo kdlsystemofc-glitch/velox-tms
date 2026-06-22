@@ -105,7 +105,6 @@ const AuthenticatedApp = () => {
             <Route path="/admin/despacho" element={<DispatchBoard />} />
             <Route path="/admin/replanejamento" element={<Replanning />} />
             <Route path="/admin/ocorrencias" element={<Incidents />} />
-            <Route path="/admin/indicadores" element={<Indicators />} />
             <Route path="/admin/transferencias" element={<Transfers />} />
 
             {/* Redirecionamentos legados */}
@@ -148,6 +147,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/config" element={<ConfigPage />} />
             <Route path="/admin/configuracoes" element={<Navigate to="/admin/config" replace />} />
             <Route path="/admin/usuarios" element={<UserManagement />} />
+            <Route path="/admin/indicadores" element={<Indicators />} />
           </Route>
         </Route>
       </Route>

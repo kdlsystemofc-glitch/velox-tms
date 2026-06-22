@@ -126,7 +126,7 @@ export default function DriverTrip() {
     }
     const stops = [...(trip.stops || [])];
     stops[index] = {
-      ...stops[index], status: "completed", completed_at: new Date().toISOString(),
+      ...stops[index], status: "completed", completed_at: new Date().toISOString(), awaiting_cargo: false,
       nf_signed_url: action.nf_url || undefined, notes: action.notes || undefined, photo_url: action.photo_url || undefined,
       signature_url: action.signature_url || undefined, receiver_name: action.receiver_name || undefined,
     };

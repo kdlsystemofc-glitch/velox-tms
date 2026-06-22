@@ -68,6 +68,34 @@ export function FreightBreakdown({ breakdown, compact = false }) {
       value: breakdown.fixedFee,
       show: breakdown.fixedFee > 0,
     },
+    {
+      label: "Taxa de coleta",
+      value: breakdown.pickupFee,
+      show: breakdown.pickupFee > 0,
+    },
+    {
+      label: "Taxa de entrega",
+      value: breakdown.deliveryFee,
+      show: breakdown.deliveryFee > 0,
+    },
+    {
+      label: "TRT (restrição de trânsito)",
+      value: breakdown.trtValue,
+      detail: `${breakdown.nfCount} NF(s)`,
+      show: breakdown.trtValue > 0,
+    },
+    {
+      label: "Adicional por tipo de frete",
+      value: breakdown.surchargeValue,
+      detail: breakdown.surchargePct ? `${breakdown.surchargePct}% (urgente/dedicado)` : null,
+      show: breakdown.surchargeValue > 0,
+    },
+    // Cobranças avulsas do pedido (espera, devolução, emergência…)
+    ...((breakdown.extraCharges || []).map(c => ({
+      label: c.label || "Cobrança adicional",
+      value: Number(c.amount) || 0,
+      show: (Number(c.amount) || 0) > 0,
+    }))),
   ].filter(r => r.show);
 
   return (
