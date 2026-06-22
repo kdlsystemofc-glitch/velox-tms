@@ -127,6 +127,7 @@ export default function NewOrder() {
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
   const { data: templates = [] } = useQuery({ queryKey: ["order-templates"], queryFn: () => base44.entities.OrderTemplate.list("-created_at", 100) });
+  const { data: recipientBook = [] } = useQuery({ queryKey: ["recipients"], queryFn: () => base44.entities.Recipient.list("-created_date") });
   // Histórico do cliente p/ autofill inteligente (5.1)
   const { data: clientPastOrders = [] } = useQuery({
     queryKey: ["client-past-orders", form.client_id],
@@ -760,20 +761,33 @@ export default function NewOrder() {
                             onChange={e => setRecipient(ri, "_search", e.target.value)} />
                         </div>
                         {(r._search || "").length >= 2 && (() => {
-                          const sugs = clients.filter(c => c.company_name?.toLowerCase().includes((r._search || "").toLowerCase()) || c.cpf_cnpj?.includes(r._search || "")).slice(0, 5);
+                          const q = (r._search || "").toLowerCase();
+                          // Prioridade: cadastro de destinatários; depois clientes.
+                          const recs = recipientBook
+                            .filter(rc => rc.name?.toLowerCase().includes(q) || rc.cpf_cnpj?.includes(r._search || ""))
+                            .slice(0, 5)
+                            .map(rc => ({ id: "r-" + rc.id, kind: "dest", name: rc.name, cpf: rc.cpf_cnpj, phone: rc.phone, address: rc.address, notes: rc.notes, window: rc.delivery_window }));
+                          const cls = clients
+                            .filter(c => c.company_name?.toLowerCase().includes(q) || c.cpf_cnpj?.includes(r._search || ""))
+                            .slice(0, 5)
+                            .map(c => ({ id: "c-" + c.id, kind: "cli", name: c.company_name, cpf: c.cpf_cnpj, phone: c.phone, address: c.address, notes: c.notes, window: c.delivery_window }));
+                          const sugs = [...recs, ...cls].slice(0, 6);
                           return sugs.length > 0 ? (
                             <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-lg shadow-lg overflow-hidden">
                               {sugs.map(c => (
                                 <button key={c.id} type="button" className="w-full text-left px-4 py-3 hover:bg-muted/50 border-b border-border/50 last:border-0"
                                   onClick={() => setForm(prev => ({ ...prev, recipients: prev.recipients.map((rec, i) => i !== ri ? rec : {
-                                    ...rec, name: c.company_name || "", cnpj_cpf: c.cpf_cnpj || "", phone: c.phone || "",
+                                    ...rec, name: c.name || "", cnpj_cpf: c.cpf || "", phone: c.phone || "",
                                     cep: c.address?.cep || rec.cep, street: c.address?.street || rec.street, number: c.address?.number || rec.number,
                                     complement: c.address?.complement || rec.complement, neighborhood: c.address?.neighborhood || rec.neighborhood,
                                     city: c.address?.city || rec.city, state: c.address?.state || rec.state, delivery_notes: c.notes || rec.delivery_notes,
-                                    delivery_window: c.delivery_window || rec.delivery_window, _search: "",
+                                    delivery_window: c.window || rec.delivery_window, _search: "",
                                   }) }))}>
-                                  <p className="font-medium text-sm">{c.company_name}</p>
-                                  <p className="text-xs text-muted-foreground">{c.cpf_cnpj}{c.address?.city && ` · ${c.address.city}/${c.address.state}`}</p>
+                                  <p className="font-medium text-sm flex items-center gap-1.5">
+                                    {c.name}
+                                    <span className={`text-[9px] px-1 rounded ${c.kind === "dest" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>{c.kind === "dest" ? "destinatário" : "cliente"}</span>
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">{c.cpf}{c.address?.city && ` · ${c.address.city}/${c.address.state}`}</p>
                                 </button>
                               ))}
                             </div>

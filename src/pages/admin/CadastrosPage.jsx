@@ -1,15 +1,17 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Package, BookUser } from "lucide-react";
+import { Building2, Package, BookUser, MapPin } from "lucide-react";
 import Clients from "@/pages/admin/Clients";
 import Suppliers from "@/pages/admin/Suppliers";
+import Recipients from "@/pages/admin/Recipients";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import PageHeader, { segmentedTabsClass, segmentedTriggerClass } from "@/components/shared/PageHeader";
 
 export default function CadastrosPage() {
   const params = new URLSearchParams(window.location.search);
-  const initialTab = params.get("aba") === "fornecedores" ? "fornecedores" : "clientes";
+  const abaParam = params.get("aba");
+  const initialTab = abaParam === "fornecedores" ? "fornecedores" : abaParam === "destinatarios" ? "destinatarios" : "clientes";
   const [tab, setTab] = useState(initialTab);
 
   const { data: clients = [] } = useQuery({
@@ -19,6 +21,10 @@ export default function CadastrosPage() {
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers"],
     queryFn: () => base44.entities.Supplier.list("-created_date"),
+  });
+  const { data: recipients = [] } = useQuery({
+    queryKey: ["recipients"],
+    queryFn: () => base44.entities.Recipient.list("-created_date"),
   });
 
   return (
@@ -31,6 +37,10 @@ export default function CadastrosPage() {
             <Building2 className="w-3.5 h-3.5" /> Clientes
             {clients.length > 0 && <span className="bg-background text-muted-foreground text-[10px] font-bold rounded px-1.5 py-0.5 ml-1">{clients.length}</span>}
           </TabsTrigger>
+          <TabsTrigger value="destinatarios" className={segmentedTriggerClass}>
+            <MapPin className="w-3.5 h-3.5" /> Destinatários
+            {recipients.length > 0 && <span className="bg-background text-muted-foreground text-[10px] font-bold rounded px-1.5 py-0.5 ml-1">{recipients.length}</span>}
+          </TabsTrigger>
           <TabsTrigger value="fornecedores" className={segmentedTriggerClass}>
             <Package className="w-3.5 h-3.5" /> Fornecedores
             {suppliers.length > 0 && <span className="bg-background text-muted-foreground text-[10px] font-bold rounded px-1.5 py-0.5 ml-1">{suppliers.length}</span>}
@@ -39,6 +49,9 @@ export default function CadastrosPage() {
 
         <TabsContent value="clientes" className="mt-4">
           <Clients hideTitle />
+        </TabsContent>
+        <TabsContent value="destinatarios" className="mt-4">
+          <Recipients hideTitle />
         </TabsContent>
         <TabsContent value="fornecedores" className="mt-4">
           <Suppliers hideTitle />

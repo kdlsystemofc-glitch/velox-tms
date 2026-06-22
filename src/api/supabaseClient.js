@@ -32,6 +32,7 @@ const TABLE_MAP = {
   Alert:           'alerts',
   Incident:        'incidents',
   OrderTemplate:   'order_templates',
+  Recipient:       'recipients',
   ScheduleBlock:   'schedule_blocks',
   ContactMessage:  'contact_messages',
   Testimonial:     'testimonials',
