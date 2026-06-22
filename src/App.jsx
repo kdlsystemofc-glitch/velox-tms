@@ -92,12 +92,10 @@ const AuthenticatedApp = () => {
       {/* Protected admin routes */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AdminLayout />}>
-          {/* Painel de Operações — todos */}
-          <Route path="/admin" element={<OperationsHub />} />
-          <Route path="/admin/viagens/:id" element={<TripDetailPage />} />
-
-          {/* Rotas operacionais — admin e operador */}
+          {/* Rotas operacionais — admin e operador (inclui Painel e detalhe da viagem) */}
           <Route element={<OperatorRoute />}>
+            <Route path="/admin" element={<OperationsHub />} />
+            <Route path="/admin/viagens/:id" element={<TripDetailPage />} />
             {/* Pedidos (nova rota canônica) */}
             <Route path="/admin/coletas" element={<OrdersWorkspace />} />
             <Route path="/admin/coletas/nova" element={<NewOrder />} />

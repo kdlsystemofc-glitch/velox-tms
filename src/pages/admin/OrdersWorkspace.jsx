@@ -15,6 +15,7 @@ import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { calculateFreight } from "@/utils/freightCalculator";
 import { todayLocalISO, formatDateBR } from "@/utils/dateUtils";
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
+import { supabase } from "@/api/supabaseClient";
 import { Search, Plus, Package, CheckCircle, XCircle, CalendarDays, Eye, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 
@@ -148,6 +149,17 @@ export default function OrdersWorkspace() {
   const confirmMutation = useMutation({
     mutationFn: async ({ order, form }) => {
       const fv = typeof form.freight_value === "number" ? form.freight_value : parseFloat(String(form.freight_value).replace(",", ".")) || 0;
+      const dueDate = form.date || order.collection_date || todayLocalISO();
+      // Caminho ATÔMICO (atualiza status + frete/forma/data + receita numa transação)
+      try {
+        const { error } = await supabase.rpc("confirm_order", {
+          p_order_id: order.id, p_amount: fv, p_due_date: dueDate,
+          p_payment_method: form.payment_method || null, p_user: "Admin",
+          p_collection_date: form.date || order.collection_date || null,
+        });
+        if (!error) return;
+        throw error;
+      } catch { /* fallback cliente abaixo */ }
       // Confirmar NÃO atribui caminhão — isso é feito no Despacho.
       await base44.entities.Order.update(order.id, {
         status: "confirmed",

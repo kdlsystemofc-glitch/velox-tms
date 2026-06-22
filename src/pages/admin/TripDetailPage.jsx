@@ -247,7 +247,9 @@ export default function TripDetailPage() {
   };
 
   const closeTrip = async () => {
-    const otherCostsTotal = (closeForm.other_costs || []).reduce((s, c) => s + Number(c.amount || 0), 0);
+    // Remove linhas de custo vazias (sem valor) — evitam erro de cast na transação (M2)
+    const otherCosts = (closeForm.other_costs || []).filter(c => Number(c.amount) > 0);
+    const otherCostsTotal = otherCosts.reduce((s, c) => s + Number(c.amount || 0), 0);
     const totalCost = Number(closeForm.fuel_cost || 0) + Number(closeForm.tolls_cost || 0) + otherCostsTotal;
     const netProfit = (trip.total_revenue || 0) - totalCost;
 
@@ -279,7 +281,7 @@ export default function TripDetailPage() {
         p_fuel_liters: Number(closeForm.fuel_liters) || null,
         p_fuel_cost: Number(closeForm.fuel_cost) || 0,
         p_tolls_cost: Number(closeForm.tolls_cost) || 0,
-        p_other_costs: closeForm.other_costs || [],
+        p_other_costs: otherCosts,
         p_total_cost: totalCost,
         p_net_profit: netProfit,
         p_commission_amount: commission,
@@ -308,7 +310,7 @@ export default function TripDetailPage() {
       fuel_liters: Number(closeForm.fuel_liters),
       fuel_cost: Number(closeForm.fuel_cost),
       tolls_cost: Number(closeForm.tolls_cost),
-      other_costs: closeForm.other_costs,
+      other_costs: otherCosts,
       total_cost: totalCost,
       net_profit: netProfit,
       commission_amount: commission,
@@ -343,7 +345,7 @@ export default function TripDetailPage() {
         trip_id: trip.id,
       });
     }
-    (closeForm.other_costs || []).forEach(c => {
+    otherCosts.forEach(c => {
       if (Number(c.amount) > 0) {
         expensesToCreate.push({
           category: "other",
@@ -385,7 +387,9 @@ export default function TripDetailPage() {
         try {
           const orders = await base44.entities.Order.filter({ id: orderId });
           const order = orders[0];
-          if (!order || order.status === "delivered" || order.status === "cancelled") return;
+          // Preserva estados de exceção registrados pelo motorista (Onda 1):
+          // só conclui como entregue quem ainda estava em coleta/trânsito.
+          if (!order || !["in_transit", "collecting"].includes(order.status)) return;
           await base44.entities.Order.update(orderId, {
             status: "delivered",
             status_history: [...(order.status_history || []), {
