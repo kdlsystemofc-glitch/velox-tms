@@ -18,7 +18,8 @@ import {
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import FileUploadButton from "@/components/shared/FileUploadButton";
 import { todayLocalISO } from "@/utils/dateUtils";
-import { optimizeStops } from "@/utils/routeOptimizer";
+import { optimizeStops, optimizeStopsByCoords } from "@/utils/routeOptimizer";
+import { geocodeCeps, haversineKm, googleMapsRouteUrl } from "@/utils/geocode";
 import { format } from "date-fns";
 
 export default function TripDetailPage() {
@@ -215,9 +216,27 @@ export default function TripDetailPage() {
 
   // ── Roteirização (Fase 2) ─────────────────────────────────────
   const saveStopsOrder = (stops) => updateMutation.mutate({ stops: stops.map((s, idx) => ({ ...s, stop_order: idx + 1 })) });
-  const optimizeRoute = () => {
-    saveStopsOrder(optimizeStops(trip.stops || []));
+  const optimizeRoute = async () => {
+    const stops = trip.stops || [];
+    const apiKey = settings?.google_maps_api_key;
+    // Com chave do Google: distância geográfica real; sem chave: heurística por CEP.
+    if (apiKey) {
+      try {
+        const coords = await geocodeCeps(stops.map(s => s.cep), apiKey);
+        if (Object.values(coords).some(Boolean)) {
+          saveStopsOrder(optimizeStopsByCoords(stops, coords, haversineKm));
+          toast({ title: "Rota otimizada (mapa real)", description: "Paradas reordenadas por distância geográfica (Google), coleta antes da entrega." });
+          return;
+        }
+      } catch { /* cai na heurística */ }
+    }
+    saveStopsOrder(optimizeStops(stops));
     toast({ title: "Rota otimizada", description: "Paradas reordenadas por proximidade de CEP (coleta antes da entrega)." });
+  };
+  const openInMaps = () => {
+    const url = googleMapsRouteUrl(trip.stops || []);
+    if (url) window.open(url, "_blank", "noopener");
+    else toast({ title: "Sem endereços para mapear", variant: "destructive" });
   };
   const moveStop = (i, dir) => {
     const stops = [...(trip.stops || [])];
@@ -499,11 +518,18 @@ export default function TripDetailPage() {
             <h3 className="font-semibold text-sm flex items-center gap-2">
               <MapPin className="w-4 h-4 text-velox-amber" /> Paradas
             </h3>
-            {trip.status !== "completed" && (trip.stops || []).length > 1 && (
-              <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={optimizeRoute}>
-                <Sparkles className="w-3.5 h-3.5" /> Otimizar rota
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {(trip.stops || []).length > 0 && (
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={openInMaps}>
+                  <MapPin className="w-3.5 h-3.5" /> Google Maps
+                </Button>
+              )}
+              {trip.status !== "completed" && (trip.stops || []).length > 1 && (
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={optimizeRoute}>
+                  <Sparkles className="w-3.5 h-3.5" /> Otimizar rota
+                </Button>
+              )}
+            </div>
           </div>
           <div className="space-y-3">
             {(trip.stops || []).length === 0 ? (
