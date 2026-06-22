@@ -109,7 +109,7 @@ export default function OperationsHub() {
       iconColor: "text-red-600",
       title: `${criticalAlerts.length} alerta${criticalAlerts.length > 1 ? "s" : ""} crítico${criticalAlerts.length > 1 ? "s" : ""}`,
       desc: criticalAlerts[0]?.message || "Documentos ou manutenção",
-      action: { label: "Ver alertas", to: "/admin/config" },
+      action: { label: "Ver alertas", to: "/admin/alertas" },
     },
     isAdmin && overdueRevenues.length > 0 && {
       icon: DollarSign, color: "border-amber-300 bg-amber-50",
@@ -138,7 +138,7 @@ export default function OperationsHub() {
   });
 
   // ── Financeiro do dia (admin) ───────────────────────────────
-  const toReceive = isAdmin ? revenues.filter(r => r.status === "receivable").reduce((s, r) => s + (r.amount || 0), 0) : 0;
+  const toReceive = isAdmin ? revenues.filter(r => r.status === "receivable" || r.status === "overdue").reduce((s, r) => s + (r.amount || 0), 0) : 0;
   const toPay = isAdmin ? expenses.filter(e => e.status === "pending").reduce((s, e) => s + (e.amount || 0), 0) : 0;
 
   // ── Métricas de comando (faixa superior) ────────────────────
