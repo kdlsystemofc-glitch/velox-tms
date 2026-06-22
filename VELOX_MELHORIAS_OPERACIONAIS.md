@@ -413,10 +413,20 @@ pipeline do Painel não conta status de exceção (B3).
   disso, **aviso de limite de crédito** na confirmação do pedido (bloqueio efetivo do que
   já estava só informativo).
 
-**Próximas ondas sugeridas (a maioria grátis):** completar campos de cadastro (veículo:
-eixos/tara/carroceria/proprietário/rastreador; motorista: jornada; pedido: incoterm),
-observabilidade (Sentry, trilha de auditoria, soft-delete), e-mails automáticos de status.
-**Pagos/decisão:** GPS ao vivo, push, WhatsApp, EDI, conciliação OFX.
+- **Onda D — Cadastros profissionais (grátis):** veículo ganhou **eixos** (pedágio ANTT),
+  **tara**, **carroceria**, **propriedade** (próprio/agregado/terceiro + proprietário) e
+  **rastreador**; motorista ganhou **validade ASO/toxicológico** e **veículo padrão**.
+  Migration `20260624_cadastros.sql`.
+- **Onda E — Observabilidade (grátis):** **ErrorBoundary** no root (acaba a "tela branca";
+  mostra recarregar) + `reportError` (console e, se o Sentry for carregado depois, encaminha
+  sem mexer no código) + captura global de `unhandledrejection`/`error`.
+- **Drag-and-drop:** **reordenar paradas da viagem arrastando** (`@hello-pangea/dnd`, que
+  estava instalada e ociosa); as setas ↑↓ continuam. O **DnD da tabela de Despacho** foi
+  deixado para uma sessão com validação visual (tela central — risco de fazer às cegas).
+
+**Ainda fora (decisão/custo ou invasivo):** soft-delete e trilha de auditoria global
+(invasivos — recomendado em etapa própria); e-mails automáticos de status; GPS ao vivo,
+push, WhatsApp, EDI, conciliação OFX (pagos).
 
 ---
 
@@ -433,3 +443,4 @@ observabilidade (Sentry, trilha de auditoria, soft-delete), e-mails automáticos
 10. `20260622_driver_access.sql`
 11. `20260622_user_roles.sql`
 12. `20260623_audit_fixes.sql`  ← correções da auditoria (recria close_trip/confirm_order)
+13. `20260624_cadastros.sql`    ← campos profissionais de veículo/motorista
