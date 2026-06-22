@@ -33,6 +33,8 @@ const TABLE_MAP = {
   Incident:        'incidents',
   OrderTemplate:   'order_templates',
   Recipient:       'recipients',
+  Branch:          'branches',
+  Transfer:        'transfers',
   ScheduleBlock:   'schedule_blocks',
   ContactMessage:  'contact_messages',
   Testimonial:     'testimonials',

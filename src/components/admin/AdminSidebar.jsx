@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, CalendarDays, Truck,
   DollarSign, Settings, ChevronLeft, ChevronRight, LogOut, BookUser,
-  FolderOpen, MessageSquare, Route as RouteIcon, AlertTriangle, ShieldAlert, BarChart3
+  FolderOpen, MessageSquare, Route as RouteIcon, AlertTriangle, ShieldAlert, BarChart3, ArrowLeftRight
 } from "lucide-react";
 import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
 import { base44 } from "@/api/base44Client";
@@ -20,6 +20,7 @@ const navItems = [
   { icon: AlertTriangle,   label: "Replanejamento", path: "/admin/replanejamento", badge: "replan" },
   { icon: ShieldAlert,     label: "Ocorrências",    path: "/admin/ocorrencias", badge: "openIncidents" },
   { icon: RouteIcon,       label: "Viagens",        path: "/admin/viagens" },
+  { icon: ArrowLeftRight,  label: "Transferências", path: "/admin/transferencias" },
   { icon: Truck,           label: "Frota",          path: "/admin/frota" },
 
   { group: "Cadastros & Gestão" },

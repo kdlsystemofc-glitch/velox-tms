@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Package, BookUser, MapPin } from "lucide-react";
+import { Building2, Package, BookUser, MapPin, Warehouse } from "lucide-react";
 import Clients from "@/pages/admin/Clients";
 import Suppliers from "@/pages/admin/Suppliers";
 import Recipients from "@/pages/admin/Recipients";
+import Branches from "@/pages/admin/Branches";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import PageHeader, { segmentedTabsClass, segmentedTriggerClass } from "@/components/shared/PageHeader";
@@ -11,7 +12,7 @@ import PageHeader, { segmentedTabsClass, segmentedTriggerClass } from "@/compone
 export default function CadastrosPage() {
   const params = new URLSearchParams(window.location.search);
   const abaParam = params.get("aba");
-  const initialTab = abaParam === "fornecedores" ? "fornecedores" : abaParam === "destinatarios" ? "destinatarios" : "clientes";
+  const initialTab = abaParam === "fornecedores" ? "fornecedores" : abaParam === "destinatarios" ? "destinatarios" : abaParam === "filiais" ? "filiais" : "clientes";
   const [tab, setTab] = useState(initialTab);
 
   const { data: clients = [] } = useQuery({
@@ -45,6 +46,9 @@ export default function CadastrosPage() {
             <Package className="w-3.5 h-3.5" /> Fornecedores
             {suppliers.length > 0 && <span className="bg-background text-muted-foreground text-[10px] font-bold rounded px-1.5 py-0.5 ml-1">{suppliers.length}</span>}
           </TabsTrigger>
+          <TabsTrigger value="filiais" className={segmentedTriggerClass}>
+            <Warehouse className="w-3.5 h-3.5" /> Filiais & CDs
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="clientes" className="mt-4">
@@ -55,6 +59,9 @@ export default function CadastrosPage() {
         </TabsContent>
         <TabsContent value="fornecedores" className="mt-4">
           <Suppliers hideTitle />
+        </TabsContent>
+        <TabsContent value="filiais" className="mt-4">
+          <Branches hideTitle />
         </TabsContent>
       </Tabs>
     </div>
