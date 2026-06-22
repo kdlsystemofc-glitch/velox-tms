@@ -9,9 +9,12 @@ import { useAuth } from "@/lib/AuthContext";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
 import { incidentSeverity } from "@/utils/incidents";
+import { slaStatus } from "@/utils/sla";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import {
   Package, Truck, CheckCircle2, AlertCircle, ArrowRight, Plus,
-  Clock, MapPin, DollarSign, CalendarDays, Inbox, Wrench, UserX
+  Clock, MapPin, DollarSign, CalendarDays, Inbox, Wrench, UserX,
+  TrendingUp, Percent, ShieldAlert, Activity
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -30,15 +33,18 @@ export default function OperationsHub() {
   const queryClient = useQueryClient();
   const isAdmin = user?.role === "admin";
   const todayStr = todayLocalISO();
+  const { settings } = useCompanySettings();
 
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 300) });
-  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => base44.entities.Trip.list("-created_date", 50) });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
-  const { data: alerts = [] } = useQuery({ queryKey: ["alerts"], queryFn: () => base44.entities.Alert.list("-created_date", 100), select: d => d.filter(a => !a.resolved) });
+  // Torre "ao vivo": auto-atualiza com a tela aberta (TMS deixa o painel num telão).
+  const LIVE = 45000;
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 400), refetchInterval: LIVE });
+  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => base44.entities.Trip.list("-created_date", 80), refetchInterval: LIVE });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list(), refetchInterval: LIVE });
+  const { data: alerts = [] } = useQuery({ queryKey: ["alerts"], queryFn: () => base44.entities.Alert.list("-created_date", 100), select: d => d.filter(a => !a.resolved), refetchInterval: LIVE });
   const { data: revenues = [] } = useQuery({ queryKey: ["revenues"], queryFn: () => base44.entities.Revenue.list("-due_date", 100), enabled: isAdmin });
   const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => base44.entities.Expense.list("-date", 100), enabled: isAdmin });
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
-  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => base44.entities.Incident.list("-created_date", 300), select: d => d.filter(i => i.status !== "resolved") });
+  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => base44.entities.Incident.list("-created_date", 300), select: d => d.filter(i => i.status !== "resolved"), refetchInterval: LIVE });
 
   useEffect(() => {
     base44.functions.invoke("syncAlerts", {}).then(() => {
@@ -127,10 +133,15 @@ export default function OperationsHub() {
     .filter(o => (o.collection_date === todayStr || o.scheduled_date === todayStr) && !["delivered", "cancelled"].includes(o.status))
     .sort((a, b) => (periodOrder[a.collection_time] ?? 2) - (periodOrder[b.collection_time] ?? 2));
 
-  // ── Frota agora ─────────────────────────────────────────────
+  // ── Frota agora (ciente de comboio — Onda 7) ────────────────
   const activeTrips = trips.filter(t => t.status === "in_progress");
+  const truckTripMap = {};
+  activeTrips.forEach(t => {
+    const ids = (t.vehicles && t.vehicles.length) ? t.vehicles.map(v => v.truck_id) : [t.truck_id];
+    ids.filter(Boolean).forEach(id => { if (!truckTripMap[id]) truckTripMap[id] = t; });
+  });
   const fleetNow = trucks.filter(t => t.status !== "inactive").map(truck => {
-    const trip = activeTrips.find(t => t.truck_id === truck.id);
+    const trip = truckTripMap[truck.id];
     const completed = trip ? (trip.stops || []).filter(s => s.status === "completed").length : 0;
     const total = trip ? (trip.stops || []).length : 0;
     const nextStop = trip ? (trip.stops || []).find(s => s.status !== "completed") : null;
@@ -142,15 +153,36 @@ export default function OperationsHub() {
   const toPay = isAdmin ? expenses.filter(e => e.status === "pending").reduce((s, e) => s + (e.amount || 0), 0) : 0;
 
   // ── Métricas de comando (faixa superior) ────────────────────
+  const activeTrucks = trucks.filter(t => t.status !== "inactive");
   const trucksAvailable = trucks.filter(t => t.status === "available").length;
-  const trucksOnRoute = activeTrips.length;
+  const trucksOnRoute = Object.keys(truckTripMap).length;
   const collectingToday = active.filter(o => o.status === "collecting" && (o.collection_date === todayStr || o.scheduled_date === todayStr)).length;
-  const deliveredToday = orders.filter(o => o.status === "delivered" && (o.status_history || []).some(h => h.status === "delivered" && (h.timestamp || "").slice(0, 10) === todayStr)).length;
+  const deliveredTodayList = orders.filter(o => o.status === "delivered" && (o.status_history || []).some(h => h.status === "delivered" && (h.timestamp || "").slice(0, 10) === todayStr));
+  const deliveredToday = deliveredTodayList.length;
+
+  // SLA: atrasados/em risco entre os pedidos em andamento + OTD de hoje
+  const inFlight = active.filter(o => ["confirmed", "collecting", "in_transit", "awaiting_cargo", "partially_delivered"].includes(o.status));
+  const lateOrders = inFlight.filter(o => slaStatus(o, settings) === "late").length;
+  const atRiskOrders = inFlight.filter(o => slaStatus(o, settings) === "at_risk").length;
+  const onTimeToday = deliveredTodayList.filter(o => slaStatus(o, settings) === "on_time").length;
+  const otdToday = deliveredToday > 0 ? Math.round((onTimeToday / deliveredToday) * 100) : null;
+
+  // Ocupação da frota hoje: peso programado/em rota ÷ capacidade total ativa
+  const todaysLoadKg = active
+    .filter(o => ["collecting", "in_transit"].includes(o.status) || o.scheduled_date === todayStr)
+    .reduce((s, o) => s + (o.total_weight_kg || 0), 0);
+  const totalCapacityKg = activeTrucks.reduce((s, t) => s + (t.capacity_kg || 0), 0);
+  const occupancy = totalCapacityKg > 0 ? Math.round((todaysLoadKg / totalCapacityKg) * 100) : 0;
+
   const metrics = [
-    { label: "Frota disponível", value: `${trucksAvailable}/${trucks.filter(t => t.status !== "inactive").length}`, icon: Truck, color: "text-blue-600" },
+    { label: "Frota disponível", value: `${trucksAvailable}/${activeTrucks.length}`, icon: Truck, color: "text-blue-600" },
     { label: "Em rota agora", value: trucksOnRoute, icon: MapPin, color: "text-green-600" },
+    { label: "Ocupação da frota", value: `${occupancy}%`, icon: Percent, color: "text-indigo-600" },
     { label: "Coletas hoje", value: collectingToday, icon: Clock, color: "text-amber-600" },
     { label: "Entregas hoje", value: deliveredToday, icon: CheckCircle2, color: "text-violet-600" },
+    { label: "No prazo (hoje)", value: otdToday != null ? `${otdToday}%` : "—", icon: TrendingUp, color: otdToday != null && otdToday < 90 ? "text-amber-600" : "text-green-600" },
+    { label: "Atrasados / em risco", value: `${lateOrders}/${atRiskOrders}`, icon: ShieldAlert, color: lateOrders > 0 ? "text-red-600" : "text-muted-foreground" },
+    { label: "Ocorrências abertas", value: incidents.length, icon: Activity, color: incidents.length > 0 ? "text-orange-600" : "text-muted-foreground" },
   ];
 
   return (
@@ -158,7 +190,12 @@ export default function OperationsHub() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-xl font-bold text-foreground">Painel de Operações</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold text-foreground">Painel de Operações</h1>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Ao vivo
+            </span>
+          </div>
           <p className="text-muted-foreground text-xs capitalize">
             {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
