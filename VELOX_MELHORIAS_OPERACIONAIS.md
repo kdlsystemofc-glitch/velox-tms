@@ -366,9 +366,14 @@ tabela-base de preços segue como evolução (a vigência por corredor já exist
   há chave (heurística por CEP sem chave); botão **"Google Maps"** abre a rota (URL, custo
   zero). Sem chave configurada = **R$ 0**.
 
-**Ainda falta (mesma linha, quando quiser):** mover também **confirmar pedido**, **receber
-transferência**, **redistribuir (replanejamento)** e **cancelar em viagem** para transações
-no servidor; e ampliar os testes para componentes.
+- **Operações críticas atômicas (completo):** além de encerrar viagem, agora **confirmar
+  pedido**, **cancelar (com viagem)**, **receber transferência** e **replanejar
+  (redistribuir caminhão / reatribuir motorista)** também rodam como transação no servidor
+  (`confirm_order`, `cancel_order`, `receive_transfer`, `redistribute_truck`,
+  `reassign_driver`), todas com fallback para o caminho antigo.
+
+**Ainda falta (mesma linha, quando quiser):** ampliar os testes para componentes de tela
+(hoje a suíte cobre a lógica pura de negócio).
 
 ---
 
