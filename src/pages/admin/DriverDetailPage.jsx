@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, User, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, User, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle, Smartphone, KeyRound, Power, Trash2 } from "lucide-react";
 import { differenceInDays, parseISO, format } from "date-fns";
 
 function docStatus(expiry) {
@@ -26,6 +27,9 @@ export default function DriverDetailPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
+  const [accessEmail, setAccessEmail] = useState("");
+  const [accessPwd, setAccessPwd] = useState("");
+  const [accessBusy, setAccessBusy] = useState(false);
 
   const { data: driver } = useQuery({
     queryKey: ["driver", id],
@@ -57,6 +61,35 @@ export default function DriverDetailPage() {
   );
   const monthRevenue = thisMonthOrders.reduce((s, o) => s + (o.freight_value || 0), 0);
   const avgTicket = thisMonthOrders.length > 0 ? monthRevenue / thisMonthOrders.length : 0;
+
+  // ── Gestão de acesso ao app (funções transacionais no servidor) ──
+  const access = driver.app_access || "none";
+  const runAccess = async (fn, args, okMsg) => {
+    setAccessBusy(true);
+    try {
+      const { error } = await supabase.rpc(fn, args);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["driver", id] });
+      queryClient.invalidateQueries({ queryKey: ["drivers"] });
+      toast({ title: okMsg });
+      setAccessEmail(""); setAccessPwd("");
+    } catch (e) {
+      toast({ title: "Erro", description: e?.message || "Falhou. A migration de acesso foi aplicada?", variant: "destructive" });
+    } finally {
+      setAccessBusy(false);
+    }
+  };
+  const createLogin = () => {
+    if (!accessEmail.trim() || accessPwd.length < 6) { toast({ title: "Informe e-mail e senha (mín. 6)", variant: "destructive" }); return; }
+    runAccess("admin_create_driver_login", { p_driver_id: id, p_email: accessEmail.trim(), p_password: accessPwd }, "Acesso criado! Passe as credenciais ao motorista.");
+  };
+  const resetPwd = () => {
+    const pwd = window.prompt("Nova senha (mín. 6 caracteres):");
+    if (pwd && pwd.length >= 6) runAccess("admin_reset_driver_password", { p_driver_id: id, p_password: pwd }, "Senha redefinida.");
+    else if (pwd) toast({ title: "Senha muito curta", variant: "destructive" });
+  };
+  const toggleFreeze = () => runAccess("admin_set_driver_access", { p_driver_id: id, p_frozen: access !== "frozen" }, access === "frozen" ? "Acesso reativado." : "Acesso congelado.");
+  const deleteLogin = () => { if (window.confirm("Excluir o acesso do motorista ao app? Ele não conseguirá mais entrar.")) runAccess("admin_delete_driver_login", { p_driver_id: id }, "Acesso excluído."); };
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -197,6 +230,47 @@ export default function DriverDetailPage() {
                       <p className="font-medium">{val}</p>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Acesso ao app do motorista */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center justify-between">
+                <span className="flex items-center gap-2"><Smartphone className="w-4 h-4 text-velox-amber" /> Acesso ao app</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  access === "active" ? "bg-green-100 text-green-700" :
+                  access === "frozen" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"
+                }`}>
+                  {access === "active" ? "Com acesso" : access === "frozen" ? "Congelado" : "Sem acesso"}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {access === "none" ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">Crie o login do motorista para ele usar o app pelo celular.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Input placeholder="E-mail de acesso" value={accessEmail} onChange={e => setAccessEmail(e.target.value)} />
+                    <Input type="text" placeholder="Senha inicial (mín. 6)" value={accessPwd} onChange={e => setAccessPwd(e.target.value)} />
+                  </div>
+                  <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-1.5" disabled={accessBusy} onClick={createLogin}>
+                    <KeyRound className="w-3.5 h-3.5" /> Criar acesso
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm">Login: <span className="font-mono font-medium">{driver.app_email || "—"}</span></p>
+                  {access === "frozen" && <p className="text-xs text-amber-700">Acesso congelado — o motorista não consegue entrar.</p>}
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" className="text-xs gap-1.5" disabled={accessBusy} onClick={resetPwd}><KeyRound className="w-3.5 h-3.5" /> Redefinir senha</Button>
+                    <Button size="sm" variant="outline" className={`text-xs gap-1.5 ${access === "frozen" ? "text-green-600" : "text-amber-600"}`} disabled={accessBusy} onClick={toggleFreeze}>
+                      <Power className="w-3.5 h-3.5" /> {access === "frozen" ? "Reativar" : "Congelar"}
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-xs gap-1.5 text-red-600" disabled={accessBusy} onClick={deleteLogin}><Trash2 className="w-3.5 h-3.5" /> Excluir acesso</Button>
+                  </div>
                 </div>
               )}
             </CardContent>
