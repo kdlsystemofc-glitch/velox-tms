@@ -13,8 +13,9 @@ import { useToast } from "@/components/ui/use-toast";
 import {
   ArrowLeft, MapPin, CheckCircle2, Circle, Truck, Package,
   DollarSign, X, Play, Square, Plus, Trash2, FileText, AlertTriangle, FileDown,
-  Sparkles, ChevronUp, ChevronDown
+  Sparkles, ChevronUp, ChevronDown, GripVertical
 } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import FileUploadButton from "@/components/shared/FileUploadButton";
 import { todayLocalISO } from "@/utils/dateUtils";
@@ -237,6 +238,13 @@ export default function TripDetailPage() {
     const url = googleMapsRouteUrl(trip.stops || []);
     if (url) window.open(url, "_blank", "noopener");
     else toast({ title: "Sem endereços para mapear", variant: "destructive" });
+  };
+  const onStopDragEnd = (result) => {
+    if (!result.destination || result.destination.index === result.source.index) return;
+    const stops = [...(trip.stops || [])];
+    const [moved] = stops.splice(result.source.index, 1);
+    stops.splice(result.destination.index, 0, moved);
+    saveStopsOrder(stops);
   };
   const moveStop = (i, dir) => {
     const stops = [...(trip.stops || [])];
@@ -535,14 +543,24 @@ export default function TripDetailPage() {
               )}
             </div>
           </div>
-          <div className="space-y-3">
+          <DragDropContext onDragEnd={onStopDragEnd}>
+          <Droppable droppableId="stops">
+          {(dndProvided) => (
+          <div className="space-y-3" ref={dndProvided.innerRef} {...dndProvided.droppableProps}>
             {(trip.stops || []).length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-4">Nenhuma parada cadastrada.</p>
             ) : (
               (trip.stops || []).map((stop, i) => (
-                <Card key={i} className={stop.status === "completed" ? "opacity-70" : ""}>
+                <Draggable key={i} draggableId={`stop-${i}`} index={i} isDragDisabled={trip.status === "completed" || stop.status === "completed"}>
+                {(dp) => (
+                <Card ref={dp.innerRef} {...dp.draggableProps} className={stop.status === "completed" ? "opacity-70" : ""}>
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
+                      {trip.status !== "completed" && stop.status !== "completed" && (
+                        <div {...dp.dragHandleProps} className="text-muted-foreground/50 hover:text-foreground cursor-grab active:cursor-grabbing pt-1" title="Arraste para reordenar">
+                          <GripVertical className="w-4 h-4" />
+                        </div>
+                      )}
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${stop.status === "completed" ? "bg-green-100 text-green-700" : stop.status === "arrived" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
                         {stop.status === "completed" ? <CheckCircle2 className="w-4 h-4" /> : <span>{i + 1}</span>}
                       </div>
@@ -597,9 +615,15 @@ export default function TripDetailPage() {
                     </div>
                   </CardContent>
                 </Card>
+                )}
+                </Draggable>
               ))
             )}
+            {dndProvided.placeholder}
           </div>
+          )}
+          </Droppable>
+          </DragDropContext>
         </div>
 
         {/* Summary */}
