@@ -10,6 +10,8 @@ import { todayLocalISO } from "@/utils/dateUtils";
 import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
 import { incidentSeverity } from "@/utils/incidents";
 import { slaStatus } from "@/utils/sla";
+import { orderVolumeM3, truckVolumeM3, fmtM3 } from "@/utils/cargoVolume";
+import { incidentTypeLabel } from "@/utils/incidents";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import {
   Package, Truck, CheckCircle2, AlertCircle, ArrowRight, Plus,
@@ -185,6 +187,31 @@ export default function OperationsHub() {
     { label: "Ocorrências abertas", value: incidents.length, icon: Activity, color: incidents.length > 0 ? "text-orange-600" : "text-muted-foreground" },
   ];
 
+  // ── Selo de SLA por pedido ──────────────────────────────────
+  const slaBadge = (o) => {
+    const st = slaStatus(o, settings);
+    if (st === "late") return { label: "Atrasado", cls: "bg-red-100 text-red-700" };
+    if (st === "at_risk") return { label: "Risco", cls: "bg-amber-100 text-amber-700" };
+    return null;
+  };
+
+  // ── Painel de exceções (o que "some" do pipeline) ───────────
+  const exceptionReason = (o) => {
+    if (o.status === "awaiting_cargo") return "Aguardando carga";
+    if (o.status === "partially_delivered") return "Entrega parcial";
+    if (o.status === "in_transfer") return "Em transferência";
+    if ((o.recipients || []).some(r => r.delivery_status === "failed")) return "Tentativa sem sucesso";
+    if (["confirmed", "collecting", "in_transit"].includes(o.status) && slaStatus(o, settings) === "late") return "Prazo estourado";
+    return null;
+  };
+  const exceptions = active.map(o => ({ o, reason: exceptionReason(o) })).filter(x => x.reason);
+
+  // ── Capacidade do dia (peso e volume programados × frota) ───
+  const todaysOrdersForCap = active.filter(o => ["collecting", "in_transit"].includes(o.status) || o.scheduled_date === todayStr);
+  const todaysLoadVol = todaysOrdersForCap.reduce((s, o) => s + orderVolumeM3(o), 0);
+  const totalCapVol = activeTrucks.reduce((s, t) => s + truckVolumeM3(t), 0);
+  const occVol = totalCapVol > 0 ? Math.round((todaysLoadVol / totalCapVol) * 100) : 0;
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -267,6 +294,75 @@ export default function OperationsHub() {
         </CardContent>
       </Card>
 
+      {/* Exceções + Capacidade do dia */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+        {/* Exceções operacionais */}
+        <Card>
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-heading font-semibold text-sm flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-velox-amber" /> Exceções operacionais
+                <span className="text-muted-foreground font-normal">({exceptions.length})</span>
+              </h2>
+              <Link to="/admin/ocorrencias" className="text-xs text-velox-amber hover:underline">Ocorrências →</Link>
+            </div>
+            {exceptions.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-500" /> Nenhuma exceção. Tudo dentro do fluxo normal.
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {exceptions.slice(0, 12).map(({ o, reason }) => (
+                  <Link key={o.id} to={`/admin/coletas/${o.id}`}
+                    className="flex items-center gap-3 p-2.5 rounded-lg border border-amber-200 bg-amber-50/40 hover:border-velox-amber/50 transition-colors">
+                    <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{o.client_name} <span className="font-mono text-xs text-muted-foreground">{o.protocol}</span></p>
+                      <p className="text-xs text-amber-700">{reason}</p>
+                    </div>
+                    <StatusBadge status={o.status} />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Capacidade do dia */}
+        <Card>
+          <CardContent className="pt-5">
+            <h2 className="font-heading font-semibold text-sm flex items-center gap-2 mb-4">
+              <Percent className="w-4 h-4 text-velox-amber" /> Capacidade do dia
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">Peso</span>
+                  <span className="font-mono">{todaysLoadKg.toLocaleString("pt-BR")} / {totalCapacityKg.toLocaleString("pt-BR")} kg</span>
+                </div>
+                <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full ${occupancy > 95 ? "bg-red-500" : occupancy > 80 ? "bg-amber-500" : "bg-green-500"}`} style={{ width: `${Math.min(occupancy, 100)}%` }} />
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{occupancy}% da frota</p>
+              </div>
+              {totalCapVol > 0 && (
+                <div>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-muted-foreground">Volume</span>
+                    <span className="font-mono">{fmtM3(todaysLoadVol)} / {fmtM3(totalCapVol)}</span>
+                  </div>
+                  <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${occVol > 95 ? "bg-red-500" : occVol > 80 ? "bg-amber-500" : "bg-blue-400"}`} style={{ width: `${Math.min(occVol, 100)}%` }} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{occVol}% do baú</p>
+                </div>
+              )}
+              <Link to="/admin/despacho" className="block text-center text-xs text-velox-amber hover:underline pt-1">Abrir o despacho →</Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Operação de hoje */}
         <Card>
@@ -294,6 +390,7 @@ export default function OperationsHub() {
                         {o.origin?.city || "—"} → {(o.recipients || []).map(r => r.city).filter(Boolean).join(", ") || "—"}
                       </p>
                     </div>
+                    {(() => { const b = slaBadge(o); return b ? <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${b.cls}`}>{b.label}</span> : null; })()}
                     <StatusBadge status={o.status} />
                   </Link>
                 ))}
