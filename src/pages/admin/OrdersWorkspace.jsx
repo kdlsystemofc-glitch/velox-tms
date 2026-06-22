@@ -16,7 +16,8 @@ import { calculateFreight } from "@/utils/freightCalculator";
 import { todayLocalISO, formatDateBR } from "@/utils/dateUtils";
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
 import { supabase } from "@/api/supabaseClient";
-import { Search, Plus, Package, CheckCircle, XCircle, CalendarDays, Eye, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { Search, Plus, Package, CheckCircle, XCircle, CalendarDays, Eye, ChevronUp, ChevronDown, ChevronsUpDown, Download } from "lucide-react";
+import { downloadCsv, csvMoney, csvDate } from "@/utils/exportCsv";
 import PageHeader from "@/components/shared/PageHeader";
 
 function SortTh({ label, k, sort, onSort, align = "left", className = "" }) {
@@ -202,6 +203,20 @@ export default function OrdersWorkspace() {
   return (
     <div className="space-y-4">
       <PageHeader icon={Package} title="Pedidos" subtitle="Fila única — confirme, recuse e despache sem sair da tela">
+        <Button variant="outline" className="gap-2" disabled={filtered.length === 0}
+          onClick={() => downloadCsv(`pedidos-${todayLocalISO()}`, filtered, [
+            { key: "protocol", label: "Protocolo" },
+            { key: "client_name", label: "Cliente" },
+            { key: "status", label: "Status" },
+            { key: "origin", label: "Origem", format: (o) => o?.city || "" },
+            { key: "recipients", label: "Destinos", format: (rs) => (rs || []).map(r => r.city).filter(Boolean).join(", ") },
+            { key: "total_weight_kg", label: "Peso (kg)" },
+            { key: "freight_value", label: "Frete", format: csvMoney },
+            { key: "collection_date", label: "Coleta", format: csvDate },
+            { key: "created_date", label: "Criado", format: csvDate },
+          ])}>
+          <Download className="w-4 h-4" /> Exportar
+        </Button>
         <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => navigate("/admin/coletas/nova")}>
           <Plus className="w-4 h-4" /> Novo Pedido
         </Button>

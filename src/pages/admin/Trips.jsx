@@ -5,7 +5,8 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Truck, User, MapPin, CheckCircle2, Clock, Route } from "lucide-react";
+import { Plus, Truck, User, MapPin, CheckCircle2, Clock, Route, Download } from "lucide-react";
+import { downloadCsv, csvMoney, csvDate } from "@/utils/exportCsv";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import PageHeader from "@/components/shared/PageHeader";
@@ -91,6 +92,21 @@ export default function Trips() {
   return (
     <div className="space-y-4">
       <PageHeader icon={Truck} title="Viagens" subtitle="Gestão de rotas e viagens">
+        <Button variant="outline" className="gap-2" disabled={trips.length === 0}
+          onClick={() => downloadCsv(`viagens-${new Date().toISOString().slice(0,10)}`, trips, [
+            { key: "truck_plate", label: "Placa" },
+            { key: "driver_name", label: "Motorista" },
+            { key: "status", label: "Status" },
+            { key: "order_ids", label: "Pedidos", format: (v) => (v || []).length },
+            { key: "departure_date", label: "Saída", format: csvDate },
+            { key: "arrival_date", label: "Chegada", format: csvDate },
+            { key: "real_km", label: "Km" },
+            { key: "total_revenue", label: "Receita", format: csvMoney },
+            { key: "total_cost", label: "Custo", format: csvMoney },
+            { key: "net_profit", label: "Lucro", format: csvMoney },
+          ])}>
+          <Download className="w-4 h-4" /> Exportar
+        </Button>
         <Button
           className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
           onClick={() => navigate("/admin/viagens/nova")}

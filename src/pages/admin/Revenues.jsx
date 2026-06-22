@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, TrendingUp, Search, CheckCircle2 } from "lucide-react";
+import { Plus, TrendingUp, Search, CheckCircle2, Download } from "lucide-react";
+import { downloadCsv, csvMoney, csvDate } from "@/utils/exportCsv";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { parseLocalDate, todayLocalISO as _today, formatDateBR } from "@/utils/dateUtils";
 
@@ -98,9 +99,21 @@ export default function Revenues({ hideTitle = false }) {
             <p className="text-muted-foreground text-xs mt-0.5">Gestão de contas a receber</p>
           </div>
         ) : <div />}
-        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => setShowModal(true)}>
-          <Plus className="w-4 h-4" /> Nova Receita
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2" disabled={filtered.length === 0}
+            onClick={() => downloadCsv(`receitas-${todayLocalISO()}`, filtered, [
+              { key: "description", label: "Descrição" },
+              { key: "amount", label: "Valor", format: csvMoney },
+              { key: "due_date", label: "Vencimento", format: csvDate },
+              { key: "status", label: "Status", format: v => (statusConfig[v] || {}).label || v },
+              { key: "received_date", label: "Recebido em", format: csvDate },
+            ])}>
+            <Download className="w-4 h-4" /> Exportar
+          </Button>
+          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => setShowModal(true)}>
+            <Plus className="w-4 h-4" /> Nova Receita
+          </Button>
+        </div>
       </div>
 
       {/* Resumo + Aging de contas a receber */}

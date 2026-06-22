@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, TrendingDown, Search, CheckCircle2, Receipt, Tag, Link2 } from "lucide-react";
+import { Plus, TrendingDown, Search, CheckCircle2, Receipt, Tag, Link2, Download } from "lucide-react";
+import { downloadCsv, csvMoney, csvDate } from "@/utils/exportCsv";
 import { NumericInput } from "@/components/shared/NumericInput";
 import FileUploadButton from "@/components/shared/FileUploadButton";
 import { parseLocalDate, formatDateBR } from "@/utils/dateUtils";
@@ -123,9 +124,24 @@ export default function Expenses({ hideTitle = false }) {
             <p className="text-muted-foreground text-xs mt-0.5">Controle de custos e pagamentos</p>
           </div>
         ) : <div />}
-        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => setShowModal(true)}>
-          <Plus className="w-4 h-4" /> Nova Despesa
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2" disabled={filtered.length === 0}
+            onClick={() => downloadCsv(`despesas-${todayLocalISO()}`, filtered, [
+              { key: "date", label: "Data", format: csvDate },
+              { key: "category", label: "Categoria", format: v => categoryLabels[v] || v },
+              { key: "cost_center", label: "Centro de custos" },
+              { key: "description", label: "Descrição" },
+              { key: "supplier_name", label: "Fornecedor" },
+              { key: "amount", label: "Valor", format: csvMoney },
+              { key: "status", label: "Status" },
+              { key: "due_date", label: "Vencimento", format: csvDate },
+            ])}>
+            <Download className="w-4 h-4" /> Exportar
+          </Button>
+          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => setShowModal(true)}>
+            <Plus className="w-4 h-4" /> Nova Despesa
+          </Button>
+        </div>
       </div>
 
       {/* Resumo + Aging de contas a pagar */}
