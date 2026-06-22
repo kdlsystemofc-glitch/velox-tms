@@ -346,6 +346,32 @@ tabela-base de preços segue como evolução (a vigência por corredor já exist
 
 ---
 
+---
+
+## ROBUSTEZ (item 1) — confiabilidade de engenharia
+
+> O dono perguntou se estava no nível de um TMS profissional. Resposta honesta: na
+> amplitude/UX sim; na **robustez de engenharia** ainda não. Início do fechamento dessa
+> lacuna (tudo **custo zero**):
+
+- **Rede de segurança (testes):** suíte **Vitest** com 38 testes da lógica de negócio
+  (frete, cubagem, taxas, vigência, separação, janela com pausa, SLA, ocorrências,
+  replanejamento, distância). Rode com `npm test`. Pega regressão antes de chegar em produção.
+- **Encerrar viagem ATÔMICO:** a operação com mais gravações virou **uma transação no
+  servidor** (`close_trip` no Postgres) — ou grava tudo, ou nada. A matemática continua no
+  JS testado; a função só aplica. Há **fallback** para o caminho antigo se a migration não
+  foi aplicada (não quebra nada).
+- **Geocodificação (Google Maps):** atrás da chave que já existe em Configurações
+  (`google_maps_api_key`). "Otimizar rota" passa a usar **distância geográfica real** quando
+  há chave (heurística por CEP sem chave); botão **"Google Maps"** abre a rota (URL, custo
+  zero). Sem chave configurada = **R$ 0**.
+
+**Ainda falta (mesma linha, quando quiser):** mover também **confirmar pedido**, **receber
+transferência**, **redistribuir (replanejamento)** e **cancelar em viagem** para transações
+no servidor; e ampliar os testes para componentes.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -354,3 +380,4 @@ tabela-base de preços segue como evolução (a vigência por corredor já exist
 5. `20260620_onda6_recipients.sql`
 6. `20260620_onda7_multiveiculo.sql`
 7. `20260620_onda8_crossdocking.sql`
+8. `20260621_close_trip_tx.sql`
