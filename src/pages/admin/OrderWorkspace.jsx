@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -149,6 +150,26 @@ export default function OrderWorkspace() {
 
   // ── Avanço de status (mesma lógica de negócio) ───────────────
   const handleStatusChange = async (newStatus, note) => {
+    // Confirmar: caminho ATÔMICO (atualiza status + cria receita numa transação)
+    if (newStatus === "confirmed") {
+      const fv = Number(freightValue) || Number(order.freight_value) || 0;
+      try {
+        const { error } = await supabase.rpc("confirm_order", {
+          p_order_id: order.id, p_amount: fv,
+          p_due_date: order.collection_date || todayLocalISO(),
+          p_payment_method: paymentMethod || order.payment_method || "pix", p_user: "Admin",
+        });
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ["order", id] });
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+        queryClient.invalidateQueries({ queryKey: ["revenues"] });
+        queryClient.invalidateQueries({ queryKey: ["revenues-for-order", id] });
+        toast({ title: "Pedido confirmado" });
+        if (fv <= 0) toast({ title: "Receita não criada", description: "Defina o valor do frete na aba Financeiro." });
+        return;
+      } catch { /* fallback cliente abaixo */ }
+    }
+
     await updateMutation.mutateAsync({
       status: newStatus,
       status_history: [...(order.status_history || []), {
@@ -195,6 +216,23 @@ export default function OrderWorkspace() {
   const confirmCancel = async () => {
     const reason = cancelReason.trim();
     const fee = Number(unproductiveFee) || 0;
+
+    // Caminho ATÔMICO: cancela, estorna receita, remove a parada e lança a taxa numa transação
+    try {
+      const { error } = await supabase.rpc("cancel_order", {
+        p_order_id: order.id, p_reason: `Cancelado — motivo: ${reason}${fee > 0 ? ` · taxa improdutiva R$ ${fee.toFixed(2)}` : ""}`,
+        p_fee: fee, p_user: "Admin",
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["order", id] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["revenues"] });
+      queryClient.invalidateQueries({ queryKey: ["revenues-for-order", id] });
+      queryClient.invalidateQueries({ queryKey: ["trip-for-order", order.trip_id] });
+      toast({ title: "Pedido cancelado" });
+      setCancelOpen(false); setCancelReason(""); setUnproductiveFee("");
+      return;
+    } catch { /* fallback cliente abaixo */ }
 
     // 1) Remover este pedido do roteiro da viagem (marca paradas como puladas) + avisa motorista
     if (tripLive) {

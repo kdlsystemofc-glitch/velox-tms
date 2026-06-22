@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -70,6 +71,12 @@ export default function Transfers() {
   // Receber no destino: cross-dock → pedidos voltam para a fila com origem no CD (nova rota)
   const receive = useMutation({
     mutationFn: async (t) => {
+      // Caminho ATÔMICO no servidor
+      try {
+        const { error } = await supabase.rpc("receive_transfer", { p_transfer_id: t.id, p_user: "Admin" });
+        if (!error) return;
+        throw error;
+      } catch { /* fallback cliente abaixo */ }
       const to = branches.find(b => b.id === t.to_branch_id);
       await base44.entities.Transfer.update(t.id, { status: "received", arrival_date: new Date().toISOString(), events: [...(t.events || []), { type: "received", description: `Recebido em ${to?.name || "destino"}`, timestamp: new Date().toISOString() }] });
       for (const oid of t.order_ids || []) {

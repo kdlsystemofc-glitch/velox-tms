@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,6 +38,15 @@ export default function Replanning() {
     mutationFn: async ({ brokenTruckId, replacementId, affectedOrders, affectedTrips }) => {
       const newTruck = trucks.find((t) => t.id === replacementId);
       if (!newTruck) throw new Error("Selecione o caminhão substituto.");
+      // Caminho ATÔMICO no servidor
+      try {
+        const { error } = await supabase.rpc("redistribute_truck", {
+          p_truck_id: replacementId, p_plate: newTruck.plate,
+          p_order_ids: affectedOrders.map((o) => o.id), p_trip_ids: affectedTrips.map((t) => t.id), p_user: "Admin",
+        });
+        if (!error) return;
+        throw error;
+      } catch { /* fallback cliente abaixo */ }
       for (const o of affectedOrders) {
         await base44.entities.Order.update(o.id, {
           scheduled_truck_id: replacementId,
@@ -64,6 +74,15 @@ export default function Replanning() {
     mutationFn: async ({ replacementId, affectedTrips }) => {
       const newDriver = drivers.find((d) => d.id === replacementId);
       if (!newDriver) throw new Error("Selecione o motorista substituto.");
+      // Caminho ATÔMICO no servidor
+      try {
+        const { error } = await supabase.rpc("reassign_driver", {
+          p_driver_id: replacementId, p_driver_name: newDriver.name,
+          p_trip_ids: affectedTrips.map((t) => t.id), p_user: "Admin",
+        });
+        if (!error) return;
+        throw error;
+      } catch { /* fallback cliente abaixo */ }
       for (const t of affectedTrips) {
         await base44.entities.Trip.update(t.id, {
           driver_id: replacementId,
