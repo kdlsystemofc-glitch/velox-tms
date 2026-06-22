@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link, useNavigate } from "react-router-dom";
@@ -36,6 +36,7 @@ export default function OperationsHub() {
   const isAdmin = user?.role === "admin";
   const todayStr = todayLocalISO();
   const { settings } = useCompanySettings();
+  const [period, setPeriod] = useState("today"); // today | tomorrow | week
 
   // Torre "ao vivo": auto-atualiza com a tela aberta (TMS deixa o painel num telão).
   const LIVE = 45000;
@@ -128,12 +129,19 @@ export default function OperationsHub() {
     },
   ].filter(Boolean);
 
-  // ── Operação de hoje ────────────────────────────────────────
+  // ── Operação por período (Hoje / Amanhã / Semana) ───────────
   const periodOrder = { morning: 0, afternoon: 1, to_arrange: 2 };
   const periodLabel = { morning: "Manhã", afternoon: "Tarde", to_arrange: "A combinar" };
+  const addDaysISO = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const periodRange = period === "today" ? [todayStr]
+    : period === "tomorrow" ? [addDaysISO(1)]
+    : Array.from({ length: 7 }, (_, i) => addDaysISO(i)); // semana
+  const inPeriod = (o) => periodRange.includes(o.collection_date) || periodRange.includes(o.scheduled_date);
   const todayOps = active
-    .filter(o => (o.collection_date === todayStr || o.scheduled_date === todayStr) && !["delivered", "cancelled"].includes(o.status))
-    .sort((a, b) => (periodOrder[a.collection_time] ?? 2) - (periodOrder[b.collection_time] ?? 2));
+    .filter(o => inPeriod(o) && !["delivered", "cancelled"].includes(o.status))
+    .sort((a, b) => ((a.scheduled_date || a.collection_date) || "").localeCompare((b.scheduled_date || b.collection_date) || "")
+      || (periodOrder[a.collection_time] ?? 2) - (periodOrder[b.collection_time] ?? 2));
+  const periodTitle = period === "today" ? "Operação de hoje" : period === "tomorrow" ? "Operação de amanhã" : "Operação da semana";
 
   // ── Frota agora (ciente de comboio — Onda 7) ────────────────
   const activeTrips = trips.filter(t => t.status === "in_progress");
@@ -367,15 +375,22 @@ export default function OperationsHub() {
         {/* Operação de hoje */}
         <Card>
           <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <h2 className="font-heading font-semibold text-sm flex items-center gap-2">
-                <Clock className="w-4 h-4 text-velox-amber" /> Operação de hoje
+                <Clock className="w-4 h-4 text-velox-amber" /> {periodTitle}
                 <span className="text-muted-foreground font-normal">({todayOps.length})</span>
               </h2>
-              <Link to="/admin/despacho" className="text-xs text-velox-amber hover:underline">Quadro completo →</Link>
+              <div className="flex items-center gap-1 bg-muted/40 rounded-lg p-0.5">
+                {[["today", "Hoje"], ["tomorrow", "Amanhã"], ["week", "Semana"]].map(([k, l]) => (
+                  <button key={k} onClick={() => setPeriod(k)}
+                    className={`text-[11px] font-medium px-2.5 py-1 rounded-md transition-colors ${period === k ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                    {l}
+                  </button>
+                ))}
+              </div>
             </div>
             {todayOps.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">Nenhuma coleta programada para hoje.</p>
+              <p className="text-sm text-muted-foreground py-6 text-center">Nada programado para o período.</p>
             ) : (
               <div className="space-y-2">
                 {todayOps.slice(0, 8).map(o => (
@@ -385,7 +400,12 @@ export default function OperationsHub() {
                       {periodLabel[o.collection_time] || "—"}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{o.client_name}</p>
+                      <p className="text-sm font-medium truncate">
+                        {o.client_name}
+                        {period === "week" && (o.scheduled_date || o.collection_date) && (
+                          <span className="ml-1.5 text-[10px] font-mono text-muted-foreground">{(o.scheduled_date || o.collection_date).slice(8, 10)}/{(o.scheduled_date || o.collection_date).slice(5, 7)}</span>
+                        )}
+                      </p>
                       <p className="text-xs text-muted-foreground truncate">
                         {o.origin?.city || "—"} → {(o.recipients || []).map(r => r.city).filter(Boolean).join(", ") || "—"}
                       </p>
@@ -447,6 +467,41 @@ export default function OperationsHub() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Feed de alertas ao vivo */}
+      <Card>
+        <CardContent className="pt-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-heading font-semibold text-sm flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-velox-amber" /> Alertas recentes
+              <span className="text-muted-foreground font-normal">({alerts.length})</span>
+            </h2>
+            <Link to="/admin/alertas" className="text-xs text-velox-amber hover:underline">Ver todos →</Link>
+          </div>
+          {alerts.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center flex items-center justify-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-green-500" /> Sem alertas ativos.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {alerts.slice(0, 6).map(a => {
+                const to = a.reference_type === "driver" ? `/admin/motoristas/${a.reference_id}`
+                  : a.reference_type === "truck" ? `/admin/frota/${a.reference_id}`
+                  : a.reference_type === "order" ? `/admin/coletas/${a.reference_id}` : "/admin/alertas";
+                return (
+                  <Link key={a.id} to={to} className="flex items-start gap-2 p-2 rounded-lg border border-border hover:border-velox-amber/40 transition-colors">
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${a.level === "critical" ? "bg-red-500" : a.level === "warning" ? "bg-amber-500" : "bg-blue-500"}`} />
+                    <div className="min-w-0">
+                      <p className="text-xs leading-snug truncate">{a.message}</p>
+                      <p className="text-[10px] text-muted-foreground">{a.created_date ? format(new Date(a.created_date), "dd/MM HH:mm") : ""}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Financeiro resumido (admin) */}
       {isAdmin && (
