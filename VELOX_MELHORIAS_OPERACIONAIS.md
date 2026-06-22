@@ -398,6 +398,28 @@ pipeline do Painel não conta status de exceção (B3).
 
 ---
 
+---
+
+## MELHORIAS & OTIMIZAÇÕES (jun/2026)
+
+- **Onda A — Performance (grátis):** páginas em `React.lazy` + `Suspense` e `manualChunks`
+  no Vite → bundle principal **2,2 MB → 331 KB** (PDF/gráficos/canvas carregam só quando
+  usados). Compressão de imagem no cliente antes do upload (`compressImage`) — fotos leves
+  no app do motorista. (Cache do React Query já tinha `staleTime`.)
+- **Onda B — Exportação (grátis):** `exportCsv.js` (CSV separado por `;` + BOM, abre direto
+  no Excel pt-BR) com botão **Exportar** em Pedidos, Receitas, Despesas e Viagens. +testes.
+- **Onda C — Produtividade:** *correção do diagnóstico* — a **busca global já existia**
+  (`AdminTopbar`, Ctrl+K, com debounce e agrupamento); não havia o que adicionar. Em vez
+  disso, **aviso de limite de crédito** na confirmação do pedido (bloqueio efetivo do que
+  já estava só informativo).
+
+**Próximas ondas sugeridas (a maioria grátis):** completar campos de cadastro (veículo:
+eixos/tara/carroceria/proprietário/rastreador; motorista: jornada; pedido: incoterm),
+observabilidade (Sentry, trilha de auditoria, soft-delete), e-mails automáticos de status.
+**Pagos/decisão:** GPS ao vivo, push, WhatsApp, EDI, conciliação OFX.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
