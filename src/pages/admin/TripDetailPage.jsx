@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -248,6 +249,38 @@ export default function TripDetailPage() {
       return { driver_id: v.driver_id, driver_name: v.driver_name || drv?.name, truck_plate: v.truck_plate, pct, amount: Math.round(rev * (pct / 100) * 100) / 100 };
     }).filter(r => r.amount > 0);
     const commission = commissionRows.reduce((s, r) => s + r.amount, 0);
+
+    // ── Caminho ATÔMICO no servidor (transação única) ──
+    // Tenta a função close_trip; se a migration ainda não foi aplicada, cai no fallback abaixo.
+    const crewTruckIds = crew.map(v => v.truck_id).filter(Boolean);
+    try {
+      const { error } = await supabase.rpc("close_trip", {
+        p_trip_id: id,
+        p_real_km: Number(closeForm.real_km) || null,
+        p_fuel_liters: Number(closeForm.fuel_liters) || null,
+        p_fuel_cost: Number(closeForm.fuel_cost) || 0,
+        p_tolls_cost: Number(closeForm.tolls_cost) || 0,
+        p_other_costs: closeForm.other_costs || [],
+        p_total_cost: totalCost,
+        p_net_profit: netProfit,
+        p_commission_amount: commission,
+        p_commission_rows: commissionRows,
+        p_truck_ids: crewTruckIds,
+        p_order_ids: trip.order_ids || [],
+        p_notes: closeForm.notes || null,
+        p_user: userName,
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["trip", id] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["trucks"] });
+      setShowCloseModal(false);
+      toast({ title: "Viagem encerrada!", description: `Lucro líquido: R$ ${netProfit.toFixed(2)}` });
+      return;
+    } catch (e) {
+      // RPC indisponível (migration pendente) → segue no caminho cliente abaixo
+    }
 
     await updateMutation.mutateAsync({
       status: "completed",
