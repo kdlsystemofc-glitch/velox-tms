@@ -27,6 +27,7 @@ import OrdersWorkspace from '@/pages/admin/OrdersWorkspace';
 import DispatchBoard from '@/pages/admin/DispatchBoard';
 import Replanning from '@/pages/admin/Replanning';
 import Incidents from '@/pages/admin/Incidents';
+import Indicators from '@/pages/admin/Indicators';
 import OrderWorkspace from '@/pages/admin/OrderWorkspace';
 import NewOrder from '@/pages/admin/NewOrder';
 import TruckDetailPage from '@/pages/admin/TruckDetailPage';
@@ -102,6 +103,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/despacho" element={<DispatchBoard />} />
             <Route path="/admin/replanejamento" element={<Replanning />} />
             <Route path="/admin/ocorrencias" element={<Incidents />} />
+            <Route path="/admin/indicadores" element={<Indicators />} />
 
             {/* Redirecionamentos legados */}
             <Route path="/admin/pedidos" element={<Navigate to="/admin/coletas" replace />} />

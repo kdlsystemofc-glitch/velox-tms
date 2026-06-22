@@ -45,7 +45,8 @@ const statusConfig = {
   installment: { label: "Parcelado", color: "bg-blue-100 text-blue-700" },
 };
 
-const EMPTY_FORM = { category: "fuel", description: "", amount: "", date: "", due_date: "", paid_date: "", payment_method: "pix", status: "paid", notes: "", supplier_id: "", supplier_name: "", truck_id: "", driver_id: "", receipt_url: "" };
+const EMPTY_FORM = { category: "fuel", description: "", amount: "", date: "", due_date: "", paid_date: "", payment_method: "pix", status: "paid", notes: "", supplier_id: "", supplier_name: "", truck_id: "", driver_id: "", cost_center: "", receipt_url: "" };
+const COST_CENTERS = ["Operação", "Frota", "Administrativo", "Comercial", "Manutenção", "Combustível"];
 
 export default function Expenses({ hideTitle = false }) {
   const { toast } = useToast();
@@ -190,7 +191,10 @@ export default function Expenses({ hideTitle = false }) {
                 {filtered.map(e => (
                   <tr key={e.id} className="border-b border-border/50 hover:bg-muted/20">
                     <td className="py-3 px-4 text-muted-foreground">{formatDateBR(e.date)}</td>
-                    <td className="py-3 px-4"><span className="text-xs bg-muted px-2 py-0.5 rounded">{categoryLabels[e.category] || e.category}</span></td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs bg-muted px-2 py-0.5 rounded">{categoryLabels[e.category] || e.category}</span>
+                      {e.cost_center && <span className="block text-[10px] text-muted-foreground mt-0.5">{e.cost_center}</span>}
+                    </td>
                     <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">
                       {e.description || "—"}
                       {e.status === "pending" && (
@@ -240,6 +244,10 @@ export default function Expenses({ hideTitle = false }) {
               </Field>
               <Field label="Descrição" required colSpan={2}>
                 <Input placeholder="ex: Abastecimento rota SP-RJ" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+              </Field>
+              <Field label="Centro de custos" colSpan={2}>
+                <Input list="cost-centers" placeholder="ex: Operação, Frota, Administrativo" value={form.cost_center} onChange={e => setForm(f => ({ ...f, cost_center: e.target.value }))} />
+                <datalist id="cost-centers">{COST_CENTERS.map(c => <option key={c} value={c} />)}</datalist>
               </Field>
             </FormSection>
 

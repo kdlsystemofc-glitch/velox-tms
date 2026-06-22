@@ -21,6 +21,7 @@ import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO, formatDateBR, toLocalISO } from "@/utils/dateUtils";
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
 import { suggestTrucks } from "@/utils/replanner";
+import { slaStatus, slaDeadline } from "@/utils/sla";
 import { addDays } from "date-fns";
 import {
   ArrowLeft, Package, User, MapPin, Truck, DollarSign, CheckCircle2, Circle,
@@ -351,6 +352,13 @@ export default function OrderWorkspace() {
             {order.freight_type === "urgent" && (
               <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full uppercase">Urgente</span>
             )}
+            {!isCancelled && (() => {
+              const st = slaStatus(order, settings);
+              const dl = slaDeadline(order, settings);
+              const meta = { on_time: ["No prazo", "bg-green-100 text-green-700"], late: ["Atrasado", "bg-red-100 text-red-700"], at_risk: ["Prazo em risco", "bg-amber-100 text-amber-700"], pending: [null, ""] }[st];
+              if (!meta[0]) return null;
+              return <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${meta[1]}`} title={dl ? `Prazo: ${dl.toLocaleDateString("pt-BR")}` : ""}>{meta[0]}</span>;
+            })()}
           </div>
           <p className="text-sm text-muted-foreground truncate">
             {order.client_name} · criado {order.created_date ? format(new Date(order.created_date), "dd/MM/yy 'às' HH:mm", { locale: ptBR }) : "—"}
