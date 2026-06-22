@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useFileUpload } from "@/hooks/useFileUpload";
+import { compressImage } from "@/utils/compressImage";
 import { Button } from "@/components/ui/button";
 import { FileText, CheckCircle2, X, Loader2, Upload } from "lucide-react";
 
@@ -11,12 +12,14 @@ export default function FileUploadButton({ onUpload, label = "Anexar arquivo", a
   const [previewUrl, setPreviewUrl] = useState(null);
 
   const handleChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setFileName(file.name);
-    if (preview && file.type.startsWith("image/")) {
-      setPreviewUrl(URL.createObjectURL(file));
+    const original = e.target.files?.[0];
+    if (!original) return;
+    setFileName(original.name);
+    if (preview && original.type.startsWith("image/")) {
+      setPreviewUrl(URL.createObjectURL(original));
     }
+    // Comprime imagens antes de enviar (uploads mais rápidos em 4G)
+    const file = await compressImage(original);
     const url = await uploadFile(file);
     if (url) {
       setUploadedUrl(url);

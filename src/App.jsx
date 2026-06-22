@@ -7,53 +7,53 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
-// Public pages
-import Home from '@/pages/Home';
-import BookingForm from '@/pages/BookingForm';
-import Tracking from '@/pages/Tracking';
+import { lazy, Suspense } from 'react';
 
-// Auth pages
+// Guards e layout — leves, carregados de imediato
+import AdminLayout from '@/components/admin/AdminLayout';
+import AdminRoute from '@/components/auth/AdminRoute';
+import OperatorRoute from '@/components/auth/OperatorRoute';
+import DriverRoute from '@/components/auth/DriverRoute';
+
+// Auth pages — primeiro contato, mantidas eager
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import NoAccess from '@/pages/NoAccess';
-import UserManagement from '@/pages/admin/UserManagement';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 
-// Admin layout
-import AdminLayout from '@/components/admin/AdminLayout';
-
-// Admin pages
-import OperationsHub from '@/pages/admin/OperationsHub';
-import OrdersWorkspace from '@/pages/admin/OrdersWorkspace';
-import DispatchBoard from '@/pages/admin/DispatchBoard';
-import Replanning from '@/pages/admin/Replanning';
-import Incidents from '@/pages/admin/Incidents';
-import Indicators from '@/pages/admin/Indicators';
-import Transfers from '@/pages/admin/Transfers';
-import OrderWorkspace from '@/pages/admin/OrderWorkspace';
-import NewOrder from '@/pages/admin/NewOrder';
-import TruckDetailPage from '@/pages/admin/TruckDetailPage';
-import DriverDetailPage from '@/pages/admin/DriverDetailPage';
-import Trips from '@/pages/admin/Trips';
-import NewTrip from '@/pages/admin/NewTrip';
-import TripDetailPage from '@/pages/admin/TripDetailPage';
-import ClientDetailPage from '@/pages/admin/ClientDetailPage';
-import AdminRoute from '@/components/auth/AdminRoute';
-import OperatorRoute from '@/components/auth/OperatorRoute';
-import CadastrosPage from '@/pages/admin/CadastrosPage';
-import Documents from '@/pages/admin/Documents';
-import Messages from '@/pages/admin/Messages';
-import AlertsPage from '@/pages/admin/AlertsPage';
-import QuickQuote from '@/pages/QuickQuote';
-import QuoteForm from '@/pages/QuoteForm';
-import FrotaPage from '@/pages/admin/FrotaPage';
-import FinanceiroPage from '@/pages/admin/FinanceiroPage';
-import ConfigPage from '@/pages/admin/ConfigPage';
-import DriverRoute from '@/components/auth/DriverRoute';
-import DriverHome from '@/pages/driver/DriverHome';
-import DriverTrip from '@/pages/driver/DriverTrip';
-import DriverHistory from '@/pages/driver/DriverHistory';
+// Demais páginas — carregadas sob demanda (code splitting)
+const Home = lazy(() => import('@/pages/Home'));
+const BookingForm = lazy(() => import('@/pages/BookingForm'));
+const Tracking = lazy(() => import('@/pages/Tracking'));
+const QuickQuote = lazy(() => import('@/pages/QuickQuote'));
+const QuoteForm = lazy(() => import('@/pages/QuoteForm'));
+const UserManagement = lazy(() => import('@/pages/admin/UserManagement'));
+const OperationsHub = lazy(() => import('@/pages/admin/OperationsHub'));
+const OrdersWorkspace = lazy(() => import('@/pages/admin/OrdersWorkspace'));
+const DispatchBoard = lazy(() => import('@/pages/admin/DispatchBoard'));
+const Replanning = lazy(() => import('@/pages/admin/Replanning'));
+const Incidents = lazy(() => import('@/pages/admin/Incidents'));
+const Indicators = lazy(() => import('@/pages/admin/Indicators'));
+const Transfers = lazy(() => import('@/pages/admin/Transfers'));
+const OrderWorkspace = lazy(() => import('@/pages/admin/OrderWorkspace'));
+const NewOrder = lazy(() => import('@/pages/admin/NewOrder'));
+const TruckDetailPage = lazy(() => import('@/pages/admin/TruckDetailPage'));
+const DriverDetailPage = lazy(() => import('@/pages/admin/DriverDetailPage'));
+const Trips = lazy(() => import('@/pages/admin/Trips'));
+const NewTrip = lazy(() => import('@/pages/admin/NewTrip'));
+const TripDetailPage = lazy(() => import('@/pages/admin/TripDetailPage'));
+const ClientDetailPage = lazy(() => import('@/pages/admin/ClientDetailPage'));
+const CadastrosPage = lazy(() => import('@/pages/admin/CadastrosPage'));
+const Documents = lazy(() => import('@/pages/admin/Documents'));
+const Messages = lazy(() => import('@/pages/admin/Messages'));
+const AlertsPage = lazy(() => import('@/pages/admin/AlertsPage'));
+const FrotaPage = lazy(() => import('@/pages/admin/FrotaPage'));
+const FinanceiroPage = lazy(() => import('@/pages/admin/FinanceiroPage'));
+const ConfigPage = lazy(() => import('@/pages/admin/ConfigPage'));
+const DriverHome = lazy(() => import('@/pages/driver/DriverHome'));
+const DriverTrip = lazy(() => import('@/pages/driver/DriverTrip'));
+const DriverHistory = lazy(() => import('@/pages/driver/DriverHistory'));
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -74,6 +74,11 @@ const AuthenticatedApp = () => {
   }
 
   return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-velox-amber/20 border-t-velox-amber rounded-full animate-spin" />
+      </div>
+    }>
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Home />} />
@@ -161,6 +166,7 @@ const AuthenticatedApp = () => {
 
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </Suspense>
   );
 };
 
