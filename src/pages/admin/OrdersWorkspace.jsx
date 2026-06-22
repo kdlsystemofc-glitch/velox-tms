@@ -83,6 +83,21 @@ export default function OrdersWorkspace() {
     queryFn: () => base44.entities.Order.list("-created_date", 1000),
   });
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
+
+  // Limite de crédito do cliente do pedido em confirmação (exposição em aberto).
+  const confirmCredit = (() => {
+    if (!confirmingOrder?.client_id) return null;
+    const client = clients.find(c => c.id === confirmingOrder.client_id);
+    const limit = Number(client?.credit_limit) || 0;
+    if (limit <= 0) return null;
+    const used = orders
+      .filter(o => o.client_id === confirmingOrder.client_id && o.status !== "cancelled" && o.payment_status !== "paid")
+      .reduce((s, o) => s + (o.freight_value || 0), 0);
+    const fv = typeof confirmForm.freight_value === "number" ? confirmForm.freight_value : parseFloat(String(confirmForm.freight_value).replace(",", ".")) || 0;
+    const projected = used + fv;
+    return { limit, used, projected, over: projected > limit };
+  })();
 
   useEffect(() => {
     const urlStatus = searchParams.get("status");
@@ -363,6 +378,12 @@ export default function OrdersWorkspace() {
                     {confirmingOrder.origin?.city || "—"} → {(confirmingOrder.recipients || []).map(r => r.city).filter(Boolean).join(", ")}
                   </p>
                 </div>
+                {confirmCredit?.over && (
+                  <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-800">
+                    <p className="font-semibold flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" /> Cliente acima do limite de crédito</p>
+                    <p className="mt-1">Em aberto + este frete: <strong>R$ {confirmCredit.projected.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong> · Limite: R$ {confirmCredit.limit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}. Confirme apenas se autorizado.</p>
+                  </div>
+                )}
                 <div className="space-y-1">
                   <label className="text-sm font-medium">Data de coleta</label>
                   <Input type="date" value={confirmForm.date} onChange={e => setConfirmForm(f => ({ ...f, date: e.target.value }))} />
