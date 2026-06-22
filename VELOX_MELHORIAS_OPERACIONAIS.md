@@ -377,6 +377,27 @@ tabela-base de preços segue como evolução (a vigência por corredor já exist
 
 ---
 
+---
+
+## AUDITORIA — correções (jun/2026)
+
+Revisão geral do código. Corrigido:
+- **A1** — `/admin` e `/admin/viagens/:id` agora exigem papel (OperatorRoute); usuário pendente/motorista não acessa mais o Painel.
+- **A2** — encerrar viagem **não sobrescreve** estados de exceção (entrega parcial / aguardando carga / falhou); só conclui quem estava em coleta/trânsito (cliente + `close_trip`).
+- **A3** — geocodificação migrada para o **Geocoder do Maps JS API** (funciona no navegador com a chave restrita por referenciador; o web service dava CORS).
+- **M1** — detalhamento do frete passou a listar coleta/entrega/TRT/adicional urgente/cobranças avulsas (a soma agora bate com o total).
+- **M2** — `close_trip` com cast seguro de valores; cliente filtra linhas de custo vazias.
+- **M3** — Indicadores (faturamento/margem) restritos a admin.
+- **M4** — Despesas com `useMutation` real (trava de duplo-clique + tratamento de erro).
+- **M5** — "Confirmar pedido" unificado e atômico (lista e detalhe usam `confirm_order`).
+- **B1** — `maybeSingle()` (sem ruído 406). **B4** — limpa a flag `awaiting_cargo` ao concluir a coleta.
+
+**Pendências conhecidas (não bloqueantes):** validar a criação de login do motorista na sua
+instância (M6); código possivelmente morto `Financial.jsx`/`MapPage.jsx`/`LoadingSimulator.jsx` (B2);
+pipeline do Painel não conta status de exceção (B3).
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -386,3 +407,7 @@ tabela-base de preços segue como evolução (a vigência por corredor já exist
 6. `20260620_onda7_multiveiculo.sql`
 7. `20260620_onda8_crossdocking.sql`
 8. `20260621_close_trip_tx.sql`
+9. `20260621_critical_ops_tx.sql`
+10. `20260622_driver_access.sql`
+11. `20260622_user_roles.sql`
+12. `20260623_audit_fixes.sql`  ← correções da auditoria (recria close_trip/confirm_order)
