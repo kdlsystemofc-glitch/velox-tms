@@ -61,6 +61,13 @@ export default function TripDetailPage() {
   const completedStops = (trip.stops || []).filter(s => s.status === "completed").length;
   const totalStops = (trip.stops || []).length;
   const userName = user?.full_name || "Sistema";
+  // Comboio (Onda 7): lista de veículos da viagem
+  const crew = (trip.vehicles && trip.vehicles.length) ? trip.vehicles : [{ truck_id: trip.truck_id, truck_plate: trip.truck_plate, driver_id: trip.driver_id, driver_name: trip.driver_name }];
+  const setStopVehicle = (i, idx) => {
+    const stops = [...(trip.stops || [])];
+    stops[i] = { ...stops[i], vehicle_index: idx };
+    updateMutation.mutate({ stops });
+  };
 
   // ── Backhaul (S9): caminhão terminou as entregas e volta vazio ──
   const linkedOrders = allOrders.filter(o => (trip.order_ids || []).includes(o.id));
@@ -175,10 +182,9 @@ export default function TripDetailPage() {
       }],
     });
 
-    // Update truck status to on_route
-    if (trip.truck_id) {
-      base44.entities.Truck.update(trip.truck_id, { status: "on_route" });
-    }
+    // Update truck status to on_route (todos os veículos do comboio)
+    const crewTrucks = (trip.vehicles && trip.vehicles.length) ? trip.vehicles.map(v => v.truck_id) : [trip.truck_id];
+    crewTrucks.filter(Boolean).forEach(tid => base44.entities.Truck.update(tid, { status: "on_route" }));
 
     // Update all linked orders to "collecting"
     if (trip.order_ids && trip.order_ids.length > 0) {
@@ -225,10 +231,23 @@ export default function TripDetailPage() {
     const totalCost = Number(closeForm.fuel_cost || 0) + Number(closeForm.tolls_cost || 0) + otherCostsTotal;
     const netProfit = (trip.total_revenue || 0) - totalCost;
 
-    // Comissão do motorista (% sobre a receita da viagem) — Fase 6
-    const tripDriver = drivers.find(d => d.id === trip.driver_id);
-    const commissionPct = Number(tripDriver?.commission_percent) || 0;
-    const commission = Math.round((trip.total_revenue || 0) * (commissionPct / 100) * 100) / 100;
+    // Comissão por motorista do comboio (% sobre a receita do SEU veículo) — Fase 6 / Onda 7
+    const crew = (trip.vehicles && trip.vehicles.length) ? trip.vehicles : [{ truck_id: trip.truck_id, truck_plate: trip.truck_plate, driver_id: trip.driver_id, driver_name: trip.driver_name }];
+    const orderVehicleIndex = (orderId) => {
+      const col = (trip.stops || []).find(s => s.order_id === orderId && s.type === "collection");
+      return col?.vehicle_index || 0;
+    };
+    const revenueOfVehicle = (idx) => linkedOrders
+      .filter(o => orderVehicleIndex(o.id) === idx)
+      .reduce((s, o) => s + (o.freight_value || 0), 0);
+    const commissionRows = crew.map((v, idx) => {
+      const drv = drivers.find(d => d.id === v.driver_id);
+      const pct = Number(drv?.commission_percent) || 0;
+      // se só há 1 veículo, usa a receita total; senão, a receita do veículo
+      const rev = crew.length === 1 ? (trip.total_revenue || 0) : revenueOfVehicle(idx);
+      return { driver_id: v.driver_id, driver_name: v.driver_name || drv?.name, truck_plate: v.truck_plate, pct, amount: Math.round(rev * (pct / 100) * 100) / 100 };
+    }).filter(r => r.amount > 0);
+    const commission = commissionRows.reduce((s, r) => s + r.amount, 0);
 
     await updateMutation.mutateAsync({
       status: "completed",
@@ -284,29 +303,29 @@ export default function TripDetailPage() {
         });
       }
     });
-    // Comissão do motorista vira despesa A PAGAR (acertada com o motorista)
-    if (commission > 0) {
+    // Comissão de cada motorista do comboio vira despesa A PAGAR (acerto)
+    commissionRows.forEach(r => {
       expensesToCreate.push({
         category: "salaries",
-        description: `Comissão ${commissionPct}% — ${trip.driver_name || tripDriver?.name || "motorista"} (viagem ${trip.truck_plate})`,
-        amount: commission,
+        description: `Comissão ${r.pct}% — ${r.driver_name || "motorista"} (viagem ${r.truck_plate || trip.truck_plate})`,
+        amount: r.amount,
         date: today,
         status: "pending",
         trip_id: trip.id,
-        driver_id: trip.driver_id || undefined,
+        driver_id: r.driver_id || undefined,
       });
-    }
+    });
     if (expensesToCreate.length > 0) {
       await Promise.all(expensesToCreate.map(e => base44.entities.Expense.create(e)));
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
     }
 
-    // Update truck back to available (and update odometer if km provided)
-    if (trip.truck_id) {
-      const truckUpdate = { status: "available" };
-      if (Number(closeForm.real_km) > 0) truckUpdate.total_km = Number(closeForm.real_km);
-      base44.entities.Truck.update(trip.truck_id, truckUpdate);
-    }
+    // Update trucks back to available (todos do comboio; odômetro só no líder)
+    crew.map(v => v.truck_id).filter(Boolean).forEach((tid, i) => {
+      const upd = { status: "available" };
+      if (i === 0 && Number(closeForm.real_km) > 0) upd.total_km = Number(closeForm.real_km);
+      base44.entities.Truck.update(tid, upd);
+    });
 
     // Ensure all linked orders are delivered
     if (trip.order_ids && trip.order_ids.length > 0) {
@@ -472,6 +491,15 @@ export default function TripDetailPage() {
                           {stop.recipient_name && <span className="font-medium text-sm">{stop.recipient_name}</span>}
                         </div>
                         <p className="text-xs text-muted-foreground">{stop.address}</p>
+                        {crew.length > 1 && trip.status !== "completed" && (
+                          <select value={stop.vehicle_index || 0} onChange={e => setStopVehicle(i, Number(e.target.value))}
+                            className="mt-1 text-[11px] border border-border rounded px-1.5 py-0.5 bg-background">
+                            {crew.map((v, vi) => <option key={vi} value={vi}>{v.truck_plate || `Veículo ${vi + 1}`}</option>)}
+                          </select>
+                        )}
+                        {crew.length > 1 && trip.status === "completed" && (
+                          <span className="text-[11px] text-muted-foreground"> · {crew[stop.vehicle_index || 0]?.truck_plate}</span>
+                        )}
                         {stop.completed_at && <p className="text-xs text-green-600 mt-1">Concluído em {format(new Date(stop.completed_at), "dd/MM HH:mm")}</p>}
                         {stop.type === "delivery" && (
                           stop.nf_signed_url
@@ -513,6 +541,22 @@ export default function TripDetailPage() {
 
         {/* Summary */}
         <div className="space-y-4">
+          {crew.length > 1 && (
+            <Card>
+              <CardHeader className="py-3 border-b border-border bg-muted/30">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2"><Truck className="w-4 h-4 text-velox-amber" /> Comboio ({crew.length})</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-3 space-y-1.5">
+                {crew.map((v, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs">
+                    <span className="font-mono font-semibold">{v.truck_plate || "—"}</span>
+                    <span className="text-muted-foreground">{v.driver_name || "—"}{i === 0 ? " · líder" : ""}</span>
+                  </div>
+                ))}
+                <p className="text-[10px] text-muted-foreground pt-1">Atribua cada parada a um veículo na lista de paradas.</p>
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader className="py-3 border-b border-border bg-muted/30">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">

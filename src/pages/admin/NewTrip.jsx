@@ -30,6 +30,7 @@ export default function NewTrip() {
   const [notes, setNotes] = useState("");
   const [startNow, setStartNow] = useState(false);
   const [advanceAmount, setAdvanceAmount] = useState("");
+  const [extraVehicles, setExtraVehicles] = useState([]); // comboio: [{ driver_id, truck_id }]
 
   const { data: orders = [] } = useQuery({
     queryKey: ["orders"],
@@ -55,9 +56,10 @@ export default function NewTrip() {
       try {
         trip = await base44.entities.Trip.create(data);
       } catch (e) {
-        // Banco ainda sem as colunas de adiantamento (migration pendente) — recria sem elas
-        if (String(e?.message || "").includes("advance")) {
-          const { advance_amount, advance_date, ...rest } = data;
+        // Banco ainda sem colunas novas (migration pendente) — recria sem elas
+        const msg = String(e?.message || "");
+        if (msg.includes("advance") || msg.includes("vehicles")) {
+          const { advance_amount, advance_date, vehicles, ...rest } = data;
           trip = await base44.entities.Trip.create(rest);
         } else {
           throw e;
@@ -99,9 +101,20 @@ export default function NewTrip() {
   const totalRevenue = selectedOrderData.reduce((s, o) => s + (o.freight_value || 0), 0);
   const selectedTruck = trucks.find(t => t.id === truckId);
   const selectedDriver = drivers.find(d => d.id === driverId);
-  const isOverCapacity = selectedTruck && selectedTruck.capacity_kg > 0 && totalKg > selectedTruck.capacity_kg;
-  const excessKg = isOverCapacity ? totalKg - selectedTruck.capacity_kg : 0;
-  const overCapacity = isOverCapacity; // keep alias
+  // Comboio: capacidade somada de todos os veículos da viagem
+  const crewTruckIds = [truckId, ...extraVehicles.map(v => v.truck_id)].filter(Boolean);
+  const totalCapacity = crewTruckIds.reduce((s, tid) => s + (trucks.find(t => t.id === tid)?.capacity_kg || 0), 0);
+  const isOverCapacity = totalCapacity > 0 && totalKg > totalCapacity;
+  const excessKg = isOverCapacity ? totalKg - totalCapacity : 0;
+
+  const buildVehicles = () => {
+    const lead = { truck_id: truckId, truck_plate: selectedTruck?.plate || "", driver_id: driverId, driver_name: selectedDriver?.name || "" };
+    const extras = extraVehicles.filter(v => v.truck_id && v.driver_id).map(v => {
+      const t = trucks.find(x => x.id === v.truck_id); const d = drivers.find(x => x.id === v.driver_id);
+      return { truck_id: v.truck_id, truck_plate: t?.plate || "", driver_id: v.driver_id, driver_name: d?.name || "" };
+    });
+    return [lead, ...extras];
+  };
 
   // Build stops from selected orders
   const buildStops = () => {
@@ -127,6 +140,7 @@ export default function NewTrip() {
       status: startNow ? "in_progress" : "planned",
       departure_date: departureDate || new Date().toISOString(),
       stops: buildStops(),
+      vehicles: buildVehicles(),
       total_revenue: totalRevenue,
       ...(Number(advanceAmount) > 0 ? { advance_amount: Number(advanceAmount), advance_date: todayLocalISO() } : {}),
       notes,
@@ -224,6 +238,29 @@ export default function NewTrip() {
               </SelectContent>
             </Select>
           </div>
+          {/* Comboio: veículos/motoristas adicionais */}
+          <div className="md:col-span-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Veículos adicionais (comboio)</label>
+              <Button type="button" variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => setExtraVehicles(v => [...v, { driver_id: "", truck_id: "" }])}>+ Adicionar veículo</Button>
+            </div>
+            {extraVehicles.map((v, i) => (
+              <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
+                <Select value={v.driver_id} onValueChange={val => setExtraVehicles(arr => arr.map((x, j) => j === i ? { ...x, driver_id: val } : x))}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Motorista" /></SelectTrigger>
+                  <SelectContent>{drivers.filter(d => d.id !== driverId).map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                </Select>
+                <Select value={v.truck_id} onValueChange={val => setExtraVehicles(arr => arr.map((x, j) => j === i ? { ...x, truck_id: val } : x))}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Caminhão" /></SelectTrigger>
+                  <SelectContent>{trucks.filter(t => t.id !== truckId).map(t => <SelectItem key={t.id} value={t.id}>{t.plate} — {t.model}</SelectItem>)}</SelectContent>
+                </Select>
+                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-red-400" onClick={() => setExtraVehicles(arr => arr.filter((_, j) => j !== i))}>×</Button>
+              </div>
+            ))}
+            {crewTruckIds.length > 0 && (
+              <p className="text-[11px] text-muted-foreground">Capacidade total do comboio: {totalCapacity.toLocaleString("pt-BR")} kg ({crewTruckIds.length} veículo(s))</p>
+            )}
+          </div>
           {isOverCapacity && (
             <div className="md:col-span-2 bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-red-700 font-medium">
@@ -231,10 +268,10 @@ export default function NewTrip() {
                 Capacidade excedida — não é possível criar a viagem
               </div>
               <p className="text-red-600 text-sm mt-1">
-                Peso total: {totalKg.toLocaleString("pt-BR")} kg · Capacidade do caminhão: {selectedTruck.capacity_kg.toLocaleString("pt-BR")} kg · Excesso: {excessKg.toLocaleString("pt-BR")} kg
+                Peso total: {totalKg.toLocaleString("pt-BR")} kg · Capacidade do comboio: {totalCapacity.toLocaleString("pt-BR")} kg · Excesso: {excessKg.toLocaleString("pt-BR")} kg
               </p>
               <p className="text-red-600 text-sm mt-1">
-                Remova pedidos ou selecione um caminhão com maior capacidade.
+                Remova pedidos ou adicione um veículo ao comboio.
               </p>
             </div>
           )}
