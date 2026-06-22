@@ -460,3 +460,21 @@ Melhorias de operação real (situações do dia a dia). Detalhe completo
 
 **Migrations** (rodar no Supabase, em ordem): `20260619_onda1_operacional.sql`,
 `20260619_onda2_cubagem_janela.sql`, `20260619_onda4_tms.sql`.
+
+## Ondas 5–8 (nível enterprise, jun/2026)
+
+Detalhe em **`VELOX_MELHORIAS_OPERACIONAIS.md`** (seção Ondas 5–8).
+
+**Novas páginas/rotas**
+- `src/pages/admin/Indicators.jsx` → `/admin/indicadores` (KPIs operacionais)
+- `src/pages/admin/Recipients.jsx` → aba "Destinatários" em Cadastros (entidade própria)
+- `src/pages/admin/Branches.jsx` → aba "Filiais & CDs" em Cadastros
+- `src/pages/admin/Transfers.jsx` → `/admin/transferencias` (cross-docking)
+
+**Novos utilitários**
+- `src/utils/sla.js` — prazo previsto × realizado (OTD)
+
+**Novas entidades** (TABLE_MAP): `Recipient`→recipients, `Branch`→branches, `Transfer`→transfers
+
+**Migrations**: `20260620_onda5_profundidade.sql`, `20260620_onda6_recipients.sql`,
+`20260620_onda7_multiveiculo.sql`, `20260620_onda8_crossdocking.sql`.

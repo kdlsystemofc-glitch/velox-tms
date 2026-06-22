@@ -663,3 +663,31 @@ Prioridade:
 
 **order_templates** (nova tabela) — modelos de pedido salvos (S11): `name`, `client_id`,
 `client_name`, `data` (JSONB com remetente/destinatários/tipo/valores)
+
+---
+
+## Modelo de dados — Ondas 5–8 (enterprise, jun/2026)
+
+**clients** — `collection_window` JSONB (janela de coleta), `credit_limit` NUMERIC,
+`trade_name`, `served_regions` JSONB. As janelas agora têm `pause_start`/`pause_end` (almoço).
+
+**orders** — `delivery_deadline` DATE (SLA), `extra_charges` JSONB (espera/devolução/emergência),
+`current_branch_id` UUID; `status` ganhou `in_transfer`.
+
+**expenses** — `cost_center` TEXT (centro de custos).
+
+**drivers** — `exam_aso_expiry`, `exam_toxic_expiry` DATE.
+
+**company_settings.pricing** (JSONB) — novas taxas: `delivery_fee`, `trt_per_nf`,
+`waiting_fee_hour`, `return_fee`, `emergency_percent`.
+
+**trips** — `vehicles` JSONB (comboio: `[{truck_id,truck_plate,driver_id,driver_name}]`);
+`stops[].vehicle_index` indica o veículo da parada.
+
+**recipients** (nova tabela) — destinatário como cadastro próprio (fixo/eventual, endereço,
+janela, vínculo opcional a cliente).
+
+**branches** (nova tabela) — filiais/CDs (`type`: filial/cd/base, endereço).
+
+**transfers** (nova tabela) — transferências/cross-docking: `from/to_branch`, `order_ids`,
+`truck/driver`, `status` (planned/in_transit/received/cancelled), eventos.

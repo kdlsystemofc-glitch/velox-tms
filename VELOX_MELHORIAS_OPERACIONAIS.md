@@ -1,4 +1,4 @@
-# Velox TMS — Melhorias Operacionais (Ondas 0–4)
+# Velox TMS — Melhorias Operacionais (Ondas 0–8)
 
 > Registro de cada problema identificado pelo dono da operação, com o mapa **como era → como ficou**
 > e a confirmação **problema → solução**. Implementado em ondas, por impacto operacional real.
@@ -291,7 +291,66 @@ versionamento com histórico da **tabela base** fica como evolução futura (nã
 
 ---
 
+---
+
+## ONDAS 5–8 — Rumo ao nível enterprise
+
+Após o dono apontar que o sistema, embora funcional, ainda não tinha a **profundidade** dos
+grandes TMS, fizemos um diagnóstico honesto dos 18 módulos enterprise e abrimos 4 ondas.
+
+### Onda 5 — Profundidade de cadastros e tabelas
+- **Janela com pausa (almoço)** — o ponto que o dono notou: a janela agora é
+  `{dias, início, fim, pausa_início, pausa_fim}` e o sistema respeita o intervalo.
+- **Janela de coleta** separada da de entrega no cadastro do cliente.
+- **Nome fantasia** e **limite de crédito** do cliente (com card de exposição vs limite no pedido).
+- **Taxas faltantes**: taxa de entrega, **TRT por NF**, espera (R$/h), devolução, emergência (%) —
+  configuráveis e somadas ao frete; cobranças avulsas por pedido (espera/devolução/emergência).
+- **SLA no prazo**: prazo previsto (coleta + dias úteis do destino) × entregue; selo
+  **No prazo / Em risco / Atrasado** no pedido.
+- **Indicadores** (`/admin/indicadores`): coletas/entregas, **OTD**, frota disponível/em viagem,
+  **ocupação da frota**, faturamento e **margem operacional** do mês.
+- **Centro de custos** nas despesas.
+
+**Problema → Solução:** Cadastros/tabelas rasos e sem SLA/indicadores → janela com pausa,
+crédito, taxas completas, SLA e torre de KPIs.
+
+### Onda 6 — Destinatários como cadastro próprio
+Entidade independente (`recipients`): fixo/eventual, endereço, **janela de recebimento**,
+vínculo opcional ao cliente. Nova aba em Cadastros e busca priorizada na criação do pedido.
+
+**Problema → Solução:** Destinatário só existia dentro do pedido → cadastro reutilizável próprio.
+
+### Onda 7 — Múltiplos veículos/motoristas por viagem (comboio)
+A viagem deixou de ser 1 caminhão + 1 motorista: agora tem um **comboio** (`vehicles`),
+capacidade somada, **paradas atribuíveis a cada veículo** e **comissão por motorista**
+calculada sobre a receita do seu veículo.
+
+**Problema → Solução:** Viagem mono-veículo → comboio com acerto individual por motorista.
+
+### Onda 8 — Transferências e cross-docking
+**Filiais & CDs** (`branches`) + **Transferências** (`transfers`): movimentação entre
+unidades, **troca de veículo/motorista**, status **"Em transferência"** no rastreio e
+**entrada no CD → liberação para nova rota** (o pedido volta à fila com origem no CD).
+
+**Problema → Solução:** Sem filiais/cross-docking → módulo de transferências com
+rastreabilidade e re-roteirização a partir do CD.
+
+---
+
+## Onde o sistema está agora (vs. checklist enterprise dos 18 itens)
+Fechados nas Ondas 5–8: destinatário-entidade, multi-veículo, cross-docking, janela com
+pausa, crédito, taxas, SLA, indicadores, centro de custos.
+**Ainda fora (decisão/custo):** portal do cliente com login (5.8), roteirização real por
+estrada (API), pedágio ANTT por eixo (5.10), fiscal SEFAZ (CT-e/MDF-e). Versionamento da
+tabela-base de preços segue como evolução (a vigência por corredor já existe).
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
 3. `20260619_onda4_tms.sql`
+4. `20260620_onda5_profundidade.sql`
+5. `20260620_onda6_recipients.sql`
+6. `20260620_onda7_multiveiculo.sql`
+7. `20260620_onda8_crossdocking.sql`

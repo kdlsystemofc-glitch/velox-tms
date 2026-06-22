@@ -1049,3 +1049,25 @@ complementa pelo app.
 
 **Adiados (custo/decisão):** 5.10 pedágio por eixo (tabela ANTT) e 5.8 portal do cliente com
 login. Fiscal SEFAZ (CT-e/MDF-e) permanece adiado.
+
+---
+
+## PARTE 5.11 — Ondas 5–8 (nível enterprise, jun/2026)
+
+Após diagnóstico dos 18 módulos de TMS enterprise. Detalhe em `VELOX_MELHORIAS_OPERACIONAIS.md`.
+
+**Onda 5 — Profundidade:** janela com **pausa** (almoço) e **janela de coleta** separada
+(`DeliveryWindowEditor`, `deliveryWindow.js`); **limite de crédito** e **nome fantasia** do
+cliente; **taxas** entrega/TRT/espera/devolução/emergência (`freightCalculator` + AdminSettings)
+e cobranças avulsas no pedido; **SLA** (`utils/sla.js`) com selo no pedido; **Indicadores**
+(`Indicators.jsx`, `/admin/indicadores`); **centro de custos** (`Expenses`).
+
+**Onda 6 — Destinatários:** entidade `recipients` (`Recipients.jsx`, aba em Cadastros);
+busca priorizada na criação do pedido (`NewOrder`).
+
+**Onda 7 — Comboio:** `trips.vehicles` + `stops[].vehicle_index`; `NewTrip` adiciona veículos;
+`TripDetailPage` exibe o comboio, atribui paradas e calcula **comissão por motorista**.
+
+**Onda 8 — Cross-docking:** `branches` (`Branches.jsx`) e `transfers` (`Transfers.jsx`,
+`/admin/transferencias`); `orders.current_branch_id` + status `in_transfer`; receber no CD
+devolve o pedido à fila com origem na filial (nova rota).
