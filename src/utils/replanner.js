@@ -8,6 +8,14 @@
  */
 
 const TRIP_LIVE = ["planned", "in_progress"];
+// Categorias de CNH que habilitam a dirigir caminhão (C/D/E e combinações).
+const TRUCK_CNH = ["C", "D", "E", "AC", "AD", "AE"];
+
+/** O caminhão participa da viagem? (como líder OU veículo do comboio — Onda 7) */
+export function truckInTrip(trip, truckId) {
+  if (trip.truck_id === truckId) return true;
+  return (trip.vehicles || []).some((v) => v.truck_id === truckId);
+}
 
 /** Pedidos programados (no despacho, sem viagem) e viagens vinculadas a um caminhão. */
 export function affectedByTruck(truckId, orders = [], trips = []) {
@@ -15,8 +23,16 @@ export function affectedByTruck(truckId, orders = [], trips = []) {
     (o) => o.scheduled_truck_id === truckId && !o.trip_id &&
       ["confirmed", "collecting"].includes(o.status)
   );
-  const affectedTrips = trips.filter((t) => t.truck_id === truckId && TRIP_LIVE.includes(t.status));
+  const affectedTrips = trips.filter((t) => TRIP_LIVE.includes(t.status) && truckInTrip(t, truckId));
   return { orders: affectedOrders, trips: affectedTrips };
+}
+
+/** CNH do motorista é válida para caminhão? (categoria habilitada + não vencida) */
+export function driverCnhOk(driver) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (driver.cnh_expiry && driver.cnh_expiry < today) return false;
+  if (driver.cnh_category && !TRUCK_CNH.includes(driver.cnh_category)) return false;
+  return true;
 }
 
 /** Viagens planejadas/em andamento de um motorista. */
@@ -42,13 +58,14 @@ export function suggestTrucks(trucks = [], orders = [], excludeTruckId, dateStr)
     .sort((a, b) => b.free - a.free);
 }
 
-/** Motoristas ativos; marca quem já está numa viagem ativa (ocupado). */
+/** Motoristas ativos; marca ocupado (já em viagem) e CNH válida para caminhão. */
 export function suggestDrivers(drivers = [], trips = [], excludeDriverId) {
   const busy = new Set(trips.filter((t) => TRIP_LIVE.includes(t.status)).map((t) => t.driver_id));
   return drivers
     .filter((d) => d.id !== excludeDriverId && d.status === "active" && d.role !== "administrativo")
-    .map((d) => ({ driver: d, busy: busy.has(d.id) }))
-    .sort((a, b) => Number(a.busy) - Number(b.busy));
+    .map((d) => ({ driver: d, busy: busy.has(d.id), cnhOk: driverCnhOk(d) }))
+    // livres e com CNH ok primeiro
+    .sort((a, b) => Number(a.busy) - Number(b.busy) || Number(b.cnhOk) - Number(a.cnhOk));
 }
 
 /** Lista os caminhões que precisam de replanejamento (indisponíveis com carga). */

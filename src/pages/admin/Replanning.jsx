@@ -38,27 +38,37 @@ export default function Replanning() {
     mutationFn: async ({ brokenTruckId, replacementId, affectedOrders, affectedTrips }) => {
       const newTruck = trucks.find((t) => t.id === replacementId);
       if (!newTruck) throw new Error("Selecione o caminhão substituto.");
-      // Caminho ATÔMICO no servidor
+      let done = false;
+      // Caminho ATÔMICO no servidor (ciente de comboio)
       try {
         const { error } = await supabase.rpc("redistribute_truck", {
-          p_truck_id: replacementId, p_plate: newTruck.plate,
+          p_old_truck_id: brokenTruckId, p_new_truck_id: replacementId, p_plate: newTruck.plate,
           p_order_ids: affectedOrders.map((o) => o.id), p_trip_ids: affectedTrips.map((t) => t.id), p_user: "Admin",
         });
-        if (!error) return;
-        throw error;
+        if (error) throw error;
+        done = true;
       } catch { /* fallback cliente abaixo */ }
-      for (const o of affectedOrders) {
-        await base44.entities.Order.update(o.id, {
-          scheduled_truck_id: replacementId,
-          status_history: [...(o.status_history || []), { status: o.status, timestamp: new Date().toISOString(), user: "Admin", note: `Redistribuído para ${newTruck.plate} (caminhão anterior indisponível)` }],
-        });
+      if (!done) {
+        for (const o of affectedOrders) {
+          await base44.entities.Order.update(o.id, {
+            scheduled_truck_id: replacementId,
+            status_history: [...(o.status_history || []), { status: o.status, timestamp: new Date().toISOString(), user: "Admin", note: `Redistribuído para ${newTruck.plate} (caminhão anterior indisponível)` }],
+          });
+        }
+        for (const t of affectedTrips) {
+          const upd = {
+            events: [...(t.events || []), { type: "truck_reassigned", description: `Caminhão trocado para ${newTruck.plate} (anterior em manutenção/inativo)`, timestamp: new Date().toISOString(), user: "Admin" }],
+          };
+          if (t.truck_id === brokenTruckId) { upd.truck_id = replacementId; upd.truck_plate = newTruck.plate; }
+          if (t.vehicles && t.vehicles.length) {
+            upd.vehicles = t.vehicles.map((v) => v.truck_id === brokenTruckId ? { ...v, truck_id: replacementId, truck_plate: newTruck.plate } : v);
+          }
+          await base44.entities.Trip.update(t.id, upd);
+        }
       }
-      for (const t of affectedTrips) {
-        await base44.entities.Trip.update(t.id, {
-          truck_id: replacementId,
-          truck_plate: newTruck.plate,
-          events: [...(t.events || []), { type: "truck_reassigned", description: `Caminhão trocado para ${newTruck.plate} (anterior em manutenção/inativo)`, timestamp: new Date().toISOString(), user: "Admin" }],
-        });
+      // Substituto assume "em rota" se herdou uma viagem em andamento
+      if (affectedTrips.some((t) => t.status === "in_progress")) {
+        await base44.entities.Truck.update(replacementId, { status: "on_route" });
       }
     },
     onSuccess: () => {
@@ -219,15 +229,23 @@ export default function Replanning() {
                   <Select value={replacementId} onValueChange={(v) => setPickDriver((p) => ({ ...p, [driver.id]: v }))}>
                     <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Escolher motorista" /></SelectTrigger>
                     <SelectContent>
-                      {options.map(({ driver: d, busy }) => (
-                        <SelectItem key={d.id} value={d.id}>{d.name}{busy ? " · já em viagem" : " · livre"}</SelectItem>
+                      {options.map(({ driver: d, busy, cnhOk }) => (
+                        <SelectItem key={d.id} value={d.id}>{d.name}{busy ? " · já em viagem" : " · livre"}{!cnhOk ? " · CNH vencida/incompatível ⚠" : ""}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
                   disabled={!replacementId || reassignDriver.isPending}
-                  onClick={() => reassignDriver.mutate({ replacementId, affectedTrips })}>
+                  onClick={() => {
+                    const chosen = options.find((x) => x.driver.id === replacementId);
+                    if (chosen && !chosen.cnhOk) {
+                      toast({ title: "CNH incompatível", description: `${chosen.driver.name} está com CNH vencida ou categoria que não habilita caminhão. Escolha outro motorista.`, variant: "destructive" });
+                      return;
+                    }
+                    if (chosen?.busy && !window.confirm(`${chosen.driver.name} já está em outra viagem. Reatribuir mesmo assim?`)) return;
+                    reassignDriver.mutate({ replacementId, affectedTrips });
+                  }}>
                   Reatribuir viagens <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
