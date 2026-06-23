@@ -12,6 +12,7 @@ import { FormSection, Field } from "@/components/shared/FormSection";
 import { AddressFields } from "@/components/shared/AddressFields";
 import DeliveryWindowEditor from "@/components/shared/DeliveryWindowEditor";
 import { Plus, Search, MapPin, Pencil, Trash2, Building2 } from "lucide-react";
+import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
 
 const EMPTY = {
   name: "", trade_name: "", cpf_cnpj: "", type: "eventual", phone: "", email: "",
@@ -50,6 +51,11 @@ export default function Recipients({ hideTitle = false }) {
 
   const filtered = recipients.filter(r => !search ||
     [r.name, r.trade_name, r.cpf_cnpj, r.address?.city].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase()));
+
+  // Validação de CPF/CNPJ (formato + duplicidade, ignorando o próprio em edição).
+  const docDigits = onlyDigits(form.cpf_cnpj);
+  const docDuplicate = (docDigits.length === 11 || docDigits.length === 14) && recipients.some(r => r.id !== editingId && onlyDigits(r.cpf_cnpj) === docDigits);
+  const docInvalid = docDigits.length > 0 && !isValidCpfCnpj(docDigits);
 
   return (
     <div className="space-y-4">
@@ -109,7 +115,10 @@ export default function Recipients({ hideTitle = false }) {
                 <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="ex: Comércio Central Ltda" />
               </Field>
               <Field label="Nome fantasia"><Input value={form.trade_name} onChange={e => setForm(f => ({ ...f, trade_name: e.target.value }))} /></Field>
-              <Field label="CNPJ / CPF"><Input value={form.cpf_cnpj} onChange={e => setForm(f => ({ ...f, cpf_cnpj: e.target.value }))} placeholder="00.000.000/0001-00" /></Field>
+              <Field label="CNPJ / CPF" hint={docDuplicate ? "⚠ Já cadastrado" : docInvalid ? "⚠ Inválido" : undefined}>
+                <Input value={form.cpf_cnpj} onChange={e => setForm(f => ({ ...f, cpf_cnpj: formatCpfCnpj(e.target.value) }))} placeholder="00.000.000/0001-00"
+                  className={docDuplicate || docInvalid ? "border-red-400 focus-visible:ring-red-400" : ""} />
+              </Field>
               <Field label="Tipo">
                 <Select value={form.type} onValueChange={v => setForm(f => ({ ...f, type: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -147,7 +156,7 @@ export default function Recipients({ hideTitle = false }) {
 
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-              <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" disabled={!form.name.trim() || save.isPending} onClick={() => save.mutate(form)}>
+              <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" disabled={!form.name.trim() || docInvalid || docDuplicate || save.isPending} onClick={() => save.mutate(form)}>
                 {save.isPending ? "Salvando..." : "Salvar"}
               </Button>
             </div>

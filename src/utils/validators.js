@@ -54,3 +54,44 @@ export function isValidCPF(value) {
   };
   return calc(9) === Number(cpf[9]) && calc(10) === Number(cpf[10]);
 }
+
+// ── CNPJ ──────────────────────────────────────────────────────
+/** Aplica a máscara 00.000.000/0000-00 conforme digita. */
+export function formatCNPJ(value) {
+  const d = onlyDigits(value, 14);
+  if (d.length <= 2) return d;
+  if (d.length <= 5) return `${d.slice(0, 2)}.${d.slice(2)}`;
+  if (d.length <= 8) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5)}`;
+  if (d.length <= 12) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`;
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+}
+
+/** Validação completa de CNPJ (dígitos verificadores). */
+export function isValidCNPJ(value) {
+  const cnpj = onlyDigits(value, 14);
+  if (cnpj.length !== 14) return false;
+  if (/^(\d)\1{13}$/.test(cnpj)) return false;
+  const calc = (len) => {
+    const weights = len === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    let sum = 0;
+    for (let i = 0; i < len; i++) sum += Number(cnpj[i]) * weights[i];
+    const r = sum % 11;
+    return r < 2 ? 0 : 11 - r;
+  };
+  return calc(12) === Number(cnpj[12]) && calc(13) === Number(cnpj[13]);
+}
+
+// ── CPF/CNPJ combinado (detecta pelo tamanho) ─────────────────
+/** Máscara automática: ≤11 dígitos vira CPF, acima vira CNPJ. */
+export function formatCpfCnpj(value) {
+  const d = onlyDigits(value, 14);
+  return d.length <= 11 ? formatCPF(d) : formatCNPJ(d);
+}
+
+/** Válido se for um CPF (11) OU um CNPJ (14) com dígitos corretos. */
+export function isValidCpfCnpj(value) {
+  const d = onlyDigits(value, 14);
+  if (d.length === 11) return isValidCPF(d);
+  if (d.length === 14) return isValidCNPJ(d);
+  return false;
+}

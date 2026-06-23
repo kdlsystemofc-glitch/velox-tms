@@ -2,20 +2,19 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Building2, Search, Eye, X, MessageCircle } from "lucide-react";
+import { Plus, Building2, Eye, X, MessageCircle, DollarSign } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
 import DataTable from "@/components/shared/DataTable";
 import { FormSection, Field } from "@/components/shared/FormSection";
 import { AddressFields } from "@/components/shared/AddressFields";
 import DeliveryWindowEditor from "@/components/shared/DeliveryWindowEditor";
-import { DollarSign, Users } from "lucide-react";
+import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
 
 const EMPTY_CLIENT = {
   company_name: "", cpf_cnpj: "", type: "pj", email: "", phone: "",
@@ -35,19 +34,9 @@ async function generateClientCode(clients) {
   return `CLI${String(maxNum + 1).padStart(5, "0")}`;
 }
 
-function FormField({ label, children }) {
-  return (
-    <div>
-      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</label>
-      <div className="mt-1">{children}</div>
-    </div>
-  );
-}
-
 export default function Clients({ hideTitle = false }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState(EMPTY_CLIENT);
   const [viewingClient, setViewingClient] = useState(null);
@@ -71,11 +60,13 @@ export default function Clients({ hideTitle = false }) {
       setForm(EMPTY_CLIENT);
       toast({ title: "Cliente cadastrado!" });
     },
+    onError: (e) => toast({ title: "Erro ao cadastrar", description: e?.message, variant: "destructive" }),
   });
 
-  const filtered = clients.filter((c) =>
-    !search || c.company_name?.toLowerCase().includes(search.toLowerCase()) || c.cpf_cnpj?.includes(search)
-  );
+  // Validação de CPF/CNPJ (formato + duplicidade).
+  const docDigits = onlyDigits(form.cpf_cnpj);
+  const docDuplicate = (docDigits.length === 11 || docDigits.length === 14) && clients.some(c => onlyDigits(c.cpf_cnpj) === docDigits);
+  const docInvalid = docDigits.length > 0 && !isValidCpfCnpj(docDigits);
 
   return (
     <div className="space-y-6">
@@ -105,8 +96,10 @@ export default function Clients({ hideTitle = false }) {
                 <Field label="Nome fantasia" colSpan={2}>
                   <Input placeholder="Como o cliente é conhecido" value={form.trade_name || ""} onChange={(e) => setForm({ ...form, trade_name: e.target.value })} />
                 </Field>
-                <Field label="CPF / CNPJ" required>
-                  <Input placeholder="00.000.000/0001-00" value={form.cpf_cnpj} onChange={(e) => setForm({ ...form, cpf_cnpj: e.target.value })} />
+                <Field label="CPF / CNPJ" required hint={docDuplicate ? "⚠ Já cadastrado para outro cliente" : docInvalid ? "⚠ CPF/CNPJ inválido" : undefined}>
+                  <Input placeholder="00.000.000/0001-00" value={form.cpf_cnpj}
+                    onChange={(e) => setForm({ ...form, cpf_cnpj: formatCpfCnpj(e.target.value) })}
+                    className={docDuplicate || docInvalid ? "border-red-400 focus-visible:ring-red-400" : ""} />
                 </Field>
                 <Field label="Tipo de pessoa">
                   <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
@@ -212,6 +205,7 @@ export default function Clients({ hideTitle = false }) {
                               </SelectContent>
                             </Select>
                             <Input placeholder="Telefone" value={c.phone || ""} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, phone: e.target.value } : ct) }))} />
+                            <Input placeholder="WhatsApp" value={c.whatsapp || ""} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, whatsapp: e.target.value } : ct) }))} />
                             <Input placeholder="E-mail" value={c.email || ""} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, email: e.target.value } : ct) }))} />
                           </div>
                         </div>
@@ -244,7 +238,7 @@ export default function Clients({ hideTitle = false }) {
               <Button variant="outline" onClick={() => { setShowAdd(false); setForm(EMPTY_CLIENT); }}>Cancelar</Button>
               <Button
                 onClick={() => createMutation.mutate(form)}
-                disabled={!form.company_name || !form.cpf_cnpj || createMutation.isPending}
+                disabled={!form.company_name || !form.cpf_cnpj || docInvalid || docDuplicate || createMutation.isPending}
                 className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
               >
                 <Plus className="w-4 h-4" /> {createMutation.isPending ? "Salvando..." : "Cadastrar cliente"}

@@ -31,6 +31,10 @@ export default function Branches({ hideTitle = false }) {
   const remove = useMutation({
     mutationFn: (id) => base44.entities.Branch.delete(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["branches"] }); toast({ title: "Filial removida" }); },
+    onError: (e) => {
+      const inUse = /foreign key|violates|referenced/i.test(e?.message || "");
+      toast({ title: inUse ? "Filial em uso" : "Erro ao remover", description: inUse ? "Há transferências ou pedidos vinculados a esta filial. Inative-a em vez de excluir." : e?.message, variant: "destructive" });
+    },
   });
 
   return (

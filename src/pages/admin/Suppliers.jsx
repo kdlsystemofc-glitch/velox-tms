@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Building2, Search, Pencil, Phone, Mail, Trash2, MessageCircle, MapPin, DollarSign } from "lucide-react";
+import { Plus, Building2, Pencil, Phone, Mail, Trash2, MessageCircle, DollarSign } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import DataTable from "@/components/shared/DataTable";
 import { FormSection, Field } from "@/components/shared/FormSection";
 import { AddressFields } from "@/components/shared/AddressFields";
+import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
 
 const CATEGORIES = [
   { value: "fuel",        label: "Combustível" },
@@ -51,15 +52,19 @@ function FormField({ label, children }) {
   );
 }
 
-function SupplierForm({ form, setForm }) {
+function SupplierForm({ form, setForm, duplicate = false }) {
+  const docDigits = onlyDigits(form.cnpj_cpf);
+  const docInvalid = docDigits.length > 0 && !isValidCpfCnpj(docDigits);
   return (
     <div className="space-y-4">
       <FormSection title="Identificação" icon={Building2} cols={2}>
         <Field label="Razão social / Nome" required colSpan={2}>
           <Input placeholder="ex: Posto Rodoviário Silva" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
         </Field>
-        <Field label="CNPJ / CPF">
-          <Input placeholder="00.000.000/0001-00" value={form.cnpj_cpf} onChange={e => setForm(f => ({ ...f, cnpj_cpf: e.target.value }))} />
+        <Field label="CNPJ / CPF" hint={duplicate ? "⚠ Já cadastrado" : docInvalid ? "⚠ Inválido" : undefined}>
+          <Input placeholder="00.000.000/0001-00" value={form.cnpj_cpf}
+            onChange={e => setForm(f => ({ ...f, cnpj_cpf: formatCpfCnpj(e.target.value) }))}
+            className={duplicate || docInvalid ? "border-red-400 focus-visible:ring-red-400" : ""} />
         </Field>
         <Field label="Categoria">
           <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
@@ -208,7 +213,6 @@ function SupplierContactsSection({ contacts, onChange }) {
 export default function Suppliers({ hideTitle = false }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY);
@@ -231,6 +235,7 @@ export default function Suppliers({ hideTitle = false }) {
       setForm(EMPTY);
       toast({ title: "Fornecedor cadastrado!" });
     },
+    onError: (e) => toast({ title: "Erro ao cadastrar", description: e?.message, variant: "destructive" }),
   });
 
   const updateMutation = useMutation({
@@ -240,11 +245,14 @@ export default function Suppliers({ hideTitle = false }) {
       setEditingId(null);
       toast({ title: "Fornecedor atualizado!" });
     },
+    onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),
   });
 
-  const filtered = suppliers.filter(s =>
-    !search || s.name?.toLowerCase().includes(search.toLowerCase()) || s.cnpj_cpf?.includes(search)
-  );
+  // CPF/CNPJ: validade e duplicidade (ignorando o próprio na edição).
+  const docOk = (v) => { const d = onlyDigits(v); return d.length === 0 || isValidCpfCnpj(d); };
+  const isDup = (v, ignoreId) => { const d = onlyDigits(v); return (d.length === 11 || d.length === 14) && suppliers.some(s => s.id !== ignoreId && onlyDigits(s.cnpj_cpf) === d); };
+  const createDup = isDup(form.cnpj_cpf, null);
+  const editDup = isDup(editForm.cnpj_cpf, editingId);
 
   const catLabel = (v) => CATEGORIES.find(c => c.value === v)?.label || v;
 
@@ -265,11 +273,11 @@ export default function Suppliers({ hideTitle = false }) {
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Cadastrar Fornecedor</DialogTitle></DialogHeader>
-            <SupplierForm form={form} setForm={setForm} />
+            <SupplierForm form={form} setForm={setForm} duplicate={createDup} />
             <SupplierContactsSection contacts={form.contacts} onChange={v => setForm(f => ({ ...f, contacts: v }))} />
             <Button
               onClick={() => createMutation.mutate(form)}
-              disabled={!form.name || createMutation.isPending}
+              disabled={!form.name || createDup || !docOk(form.cnpj_cpf) || createMutation.isPending}
               className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold mt-2"
             >
               {createMutation.isPending ? "Salvando..." : "Cadastrar"}
@@ -316,11 +324,11 @@ export default function Suppliers({ hideTitle = false }) {
       <Dialog open={!!editingId} onOpenChange={(v) => { if (!v) setEditingId(null); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Editar Fornecedor</DialogTitle></DialogHeader>
-        <SupplierForm form={editForm} setForm={setEditForm} />
+        <SupplierForm form={editForm} setForm={setEditForm} duplicate={editDup} />
         <SupplierContactsSection contacts={editForm.contacts} onChange={v => setEditForm(f => ({ ...f, contacts: v }))} />
         <Button
           onClick={() => updateMutation.mutate({ id: editingId, data: editForm })}
-            disabled={!editForm.name || updateMutation.isPending}
+            disabled={!editForm.name || editDup || !docOk(editForm.cnpj_cpf) || updateMutation.isPending}
             className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold mt-2"
           >
             {updateMutation.isPending ? "Salvando..." : "Salvar"}
