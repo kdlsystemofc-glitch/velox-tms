@@ -596,6 +596,32 @@ do mesmo pedido. Nenhum crash — problemas de fluxo, resolvidos no Tr-1.
 
 ---
 
+## MÓDULO A MÓDULO — Frota (Carretas · Motoristas · Simulador)
+
+**Auditoria:** os cadastros de Carretas e Motoristas já eram fortes; sem crash. Achados reais:
+falha **silenciosa** no cadastro (mutations sem `onError` — placa duplicada/erro de banco não
+avisavam), **sem máscara/validação** de placa e CPF (e CPF não-único permitia motorista
+duplicado), e **código morto** (`filtered`/`search`). O **Simulador** era o ponto fraco: 2D
+ingênuo, só peso (ignorava volume m³, mesmo com o util pronto).
+
+- **Fr-1 — Cadastros profissionais + saúde da frota:** Carretas com **validação/máscara de
+  placa** (antiga e Mercosul), bloqueio de duplicada e `onError`; **volume útil (m³)** no form
+  e na lista. Motoristas com **máscara/validação de CPF**, bloqueio de duplicado, campos **EAR**
+  e **pontos na CNH**, e **alerta combinado de pendências** (CNH/ASO/toxicológico). **KPIs** no
+  topo da Frota. `validators.js` + 6 testes. (migration `20260634_fleet_pro.sql`)
+- **Fr-2 — Simulador 3D (three.js):** **baú 3D realista** da carreta (cabine/chassi/rodas) com
+  órbita/zoom, caixas posicionadas por **empacotamento 3D** (`loadPacker`), **cor por pedido +
+  legenda**, e **peso E volume** em barras separadas com avisos de excesso e de volumes que não
+  couberam. three.js isolado em chunk **lazy**. `loadPacker.js` + 4 testes.
+- **Fr-3 — Inteligência de carga:** **centro de gravidade** longitudinal com faixa ideal e aviso
+  de desbalanceamento; **restrições** (frágil por cima, carga perigosa isolada); **aproveitamento**
+  (o que limita, peso ou volume); **plano de carga** exportável (CSV) com sequência **LIFO** e
+  zona do baú (frente/meio/fundo).
+
+**Teto pago:** empacotamento de nível industrial (solver comercial), física de colisão real.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -619,3 +645,4 @@ do mesmo pedido. Nenhum crash — problemas de fluxo, resolvidos no Tr-1.
 20. `20260631_trip_settlement.sql` ← viagens: rateio de comissão por veículo + custo categorizado (recria close_trip)
 21. `20260632_transfer_ops.sql` ← transferências: estorno (cancel_transfer) + sincronização de frota (recria receive_transfer)
 22. `20260633_transfer_mesh.sql` ← transferências: malha de filiais (branch_history) + custo/km do trecho
+23. `20260634_fleet_pro.sql` ← frota: EAR + pontos na CNH do motorista
