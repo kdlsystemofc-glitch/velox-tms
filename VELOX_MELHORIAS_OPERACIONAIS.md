@@ -481,6 +481,27 @@ Aprofundamento das três telas (fila, workspace, assistente) rumo ao nível TMS 
 
 ---
 
+---
+
+## MÓDULO A MÓDULO — Despacho
+
+Aprofundamento do `DispatchBoard` rumo ao nível TMS global. Sem bugs de quebra encontrados.
+
+- **Des-1 — Produtividade no quadro:** **busca + filtro "Urgentes"** na fila; o quadro
+  **respeita `working_days`** (mostra/oculta domingo); **ocupação da frota por dia** (% do
+  peso programado) no cabeçalho.
+- **Des-2 — Drag-and-drop:** **arrastar o pedido da fila para a célula** (caminhão+dia) com as
+  mesmas validações de peso/volume/janela; célula destaca ao receber; clique+seleção continua
+  como alternativa (`@hello-pangea/dnd`, antes ociosa).
+- **Des-3 — Inteligência do motor + atômico:** `planLoads` prioriza **urgentes e
+  atrasados/em risco (SLA)** com o motivo no card; **programar/separar/devolver** viraram
+  **transações no servidor** (`schedule_orders`, `unschedule_orders`, `apply_dispatch_plan`)
+  com fallback.
+
+**Teto pago:** mapa com **GPS ao vivo** dos veículos (rastreador).
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -497,3 +518,4 @@ Aprofundamento das três telas (fila, workspace, assistente) rumo ao nível TMS 
 13. `20260624_cadastros.sql`    ← campos profissionais de veículo/motorista
 14. `20260625_pedidos.sql`      ← agendamento desejado/confirmado + anexos do pedido
 15. `20260626_multiorigem.sql`  ← coleta consolidada (vários pontos de coleta na OS)
+16. `20260627_dispatch_tx.sql`  ← despacho atômico (programar/separar/devolver)
