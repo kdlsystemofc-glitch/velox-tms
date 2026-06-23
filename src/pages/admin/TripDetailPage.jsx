@@ -39,7 +39,7 @@ export default function TripDetailPage() {
     queryFn: () => base44.entities.Trip.filter({ id }),
     select: (d) => d[0],
     staleTime: 15_000,
-    refetchInterval: (data) => data?.status === "in_progress" ? 30_000 : false,
+    refetchInterval: (query) => query?.state?.data?.[0]?.status === "in_progress" ? 30_000 : false,
   });
 
   // Motoristas — necessário para calcular a comissão no encerramento (acerto Fase 6).
