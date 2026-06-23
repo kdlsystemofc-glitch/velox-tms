@@ -666,6 +666,26 @@ Faltava também a **central de vencimentos** (recurso nº 1 de um módulo de doc
 
 ---
 
+## MÓDULO A MÓDULO — Mensagens (leads do site)
+
+**Auditoria:** sem crash e o "Criar pedido" já levava os dados ao `NewOrder`. Mas era **raso**:
+tratava lead como e-mail (lido/não lido), **sem ciclo de vida**, **sem rastrear conversão**
+(não gravava qual pedido nasceu do lead) e **sem registrar atendimento** — perdendo todo o
+funil comercial.
+
+- **Msg-1 — Pipeline & triagem:** **status** (novo → em contato → convertido/perdido/arquivado)
+  com selo, **abas de filtro** + contadores, **KPIs** (novos, em contato, convertidos, **taxa de
+  conversão**), **busca**, **nota interna** e **export CSV**; fallback de status para leads antigos.
+  (migration `20260636_message_pipeline.sql`)
+- **Msg-2 — Atendimento & conversão:** o `NewOrder` **grava o vínculo de volta** (lead →
+  convertido + `converted_order_id/protocol`, com link clicável ao pedido); **responder
+  e-mail/WhatsApp** registra contato (em contato + `last_contact_at`).
+- **Msg-3 — Métricas & origem:** **tempo médio até a 1ª resposta** e **selo de origem** (via site).
+
+**Teto pago:** caixa unificada de WhatsApp/e-mail (API Meta/IMAP), resposta dentro do sistema, chatbot.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -691,3 +711,4 @@ Faltava também a **central de vencimentos** (recurso nº 1 de um módulo de doc
 22. `20260633_transfer_mesh.sql` ← transferências: malha de filiais (branch_history) + custo/km do trecho
 23. `20260634_fleet_pro.sql` ← frota: EAR + pontos na CNH do motorista
 24. `20260635_document_files.sql` ← documentos: arquivos de frota (tacógrafo) e motorista (CNH/ASO/toxicológico)
+25. `20260636_message_pipeline.sql` ← mensagens: funil de leads (status, conversão, contato, notas)
