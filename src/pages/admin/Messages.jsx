@@ -45,6 +45,13 @@ export default function Messages() {
 
   const markRead = (msg) => { if (!msg.read) patch.mutate({ id: msg.id, data: { read: true } }); };
   const setStatus = (msg, status) => patch.mutate({ id: msg.id, data: { status, read: true } });
+  // Registrar um contato (responder e-mail/WhatsApp): move para "em contato" e marca a data.
+  const logContact = (msg) => {
+    const st = statusOf(msg);
+    const data = { read: true, last_contact_at: new Date().toISOString() };
+    if (st === "novo") data.status = "em_contato";
+    patch.mutate({ id: msg.id, data });
+  };
   const saveNote = (msg) => {
     const note = noteDraft[msg.id];
     if (note === undefined || note === (msg.internal_notes || "")) return;
@@ -163,6 +170,9 @@ export default function Messages() {
                     {expandedMsg === msg.id && (
                       <div className="border-t border-border px-3.5 pb-3.5 pt-3 space-y-3">
                         <p className="text-sm leading-relaxed">{msg.message}</p>
+                        {msg.last_contact_at && (
+                          <p className="text-[11px] text-muted-foreground">Último contato: {new Date(msg.last_contact_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</p>
+                        )}
 
                         {msg.converted_order_id && (
                           <button onClick={() => navigate(`/admin/coletas/${msg.converted_order_id}`)} className="text-xs text-green-700 font-medium hover:underline">
@@ -184,10 +194,10 @@ export default function Messages() {
                             <FilePlus className="w-3 h-3" /> Criar pedido
                           </Button>
                           {msg.email && (
-                            <a href={`mailto:${msg.email}`}><Button size="sm" variant="outline" className="text-xs gap-1"><Mail className="w-3 h-3" /> Responder por e-mail</Button></a>
+                            <a href={`mailto:${msg.email}`} onClick={() => logContact(msg)}><Button size="sm" variant="outline" className="text-xs gap-1"><Mail className="w-3 h-3" /> Responder por e-mail</Button></a>
                           )}
                           {msg.phone && (
-                            <a href={`https://wa.me/55${msg.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer"><Button size="sm" variant="outline" className="text-xs gap-1"><Phone className="w-3 h-3" /> WhatsApp</Button></a>
+                            <a href={`https://wa.me/55${msg.phone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" onClick={() => logContact(msg)}><Button size="sm" variant="outline" className="text-xs gap-1"><Phone className="w-3 h-3" /> WhatsApp</Button></a>
                           )}
                           <div className="flex-1" />
                           {st !== "perdido" && <Button size="sm" variant="ghost" className="text-xs text-red-500" onClick={() => setStatus(msg, "perdido")}>Perdido</Button>}

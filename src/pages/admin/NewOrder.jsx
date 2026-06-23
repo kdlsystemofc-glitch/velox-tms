@@ -210,6 +210,12 @@ export default function NewOrder() {
     onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       submittingRef.current = false;
+      // Lead → pedido: marca a mensagem de origem como convertida (Msg-2)
+      if (fromMessage?.message_id) {
+        base44.entities.ContactMessage.update(fromMessage.message_id, {
+          status: "convertido", read: true, converted_order_id: order.id, converted_order_protocol: order.protocol,
+        }).then(() => queryClient.invalidateQueries({ queryKey: ["contact-messages"] })).catch(() => {});
+      }
       if (!form.client_id && form.client_name?.trim()) setCreateClientPrompt({ protocol: order.protocol });
       else finishAndNavigate(order.protocol);
     },
