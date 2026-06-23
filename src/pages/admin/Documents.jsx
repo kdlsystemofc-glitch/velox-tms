@@ -13,7 +13,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import { downloadCsv, csvDate } from "@/utils/exportCsv";
 import { differenceInDays, parseISO, format } from "date-fns";
 
-const COMPANY_DOC_CATEGORIES = ["Contrato social", "Alvará", "Licença ANTT/RNTRC", "Apólice de seguro", "Certidão", "Outro"];
+const COMPANY_DOC_CATEGORIES = ["Contrato social", "Cartão CNPJ", "Inscrição estadual", "Alvará", "Licença ANTT/RNTRC", "Apólice de seguro", "Certidão negativa", "Procuração", "Contrato comercial", "Outro"];
 
 function docBadge(expiry) {
   if (!expiry) return null;
@@ -74,6 +74,7 @@ export default function Documents() {
   const [newDocCategory, setNewDocCategory] = useState("Contrato social");
   const [newDocExpiry, setNewDocExpiry] = useState("");
   const [expFilter, setExpFilter] = useState("60");
+  const [companyCatFilter, setCompanyCatFilter] = useState("all");
 
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 300) });
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
@@ -277,7 +278,21 @@ export default function Documents() {
         </TabsContent>
 
         {/* Tab 1: Orders / NFs */}
-        <TabsContent value="orders" className="mt-4">
+        <TabsContent value="orders" className="mt-4 space-y-3">
+          {filteredNf.length > 0 && (
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" className="gap-2"
+                onClick={() => downloadCsv(`nfs-assinadas-${new Date().toISOString().slice(0,10)}`, filteredNf, [
+                  { key: "protocol", label: "Protocolo" },
+                  { key: "client", label: "Cliente" },
+                  { key: "recipient", label: "Destinatário" },
+                  { key: "nf_number", label: "NF nº" },
+                  { key: "date", label: "Data", format: csvDate },
+                ])}>
+                <Download className="w-4 h-4" /> Exportar NFs
+              </Button>
+            </div>
+          )}
           <Card>
             <CardContent className="pt-4">
               {filteredNf.length === 0 ? (
@@ -335,6 +350,7 @@ export default function Documents() {
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     <span className="font-mono text-velox-amber">{truck.plate}</span>
                     <span className="text-muted-foreground font-normal">{truck.manufacturer} {truck.model}</span>
+                    {(() => { const n = [truck.crlv_url, truck.insurance_url, truck.tachograph_url].filter(Boolean).length; return <span className={`ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full ${n === 3 ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{n}/3 anexados</span>; })()}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -363,6 +379,7 @@ export default function Documents() {
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${driver.status === "active" ? "bg-green-100 text-green-700" : driver.status === "away" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
                       {driver.status === "active" ? "Ativo" : driver.status === "away" ? "Afastado" : "Desligado"}
                     </span>
+                    {(() => { const n = [driver.cnh_url, driver.aso_url, driver.toxic_url].filter(Boolean).length; return <span className={`ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full ${n === 3 ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{n}/3 anexados</span>; })()}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -401,6 +418,19 @@ export default function Documents() {
                 </label>
               </div>
 
+              {companyDocs.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Categoria:</span>
+                  <Select value={companyCatFilter} onValueChange={setCompanyCatFilter}>
+                    <SelectTrigger className="h-8 w-52 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      {COMPANY_DOC_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               {companyDocs.length === 0 ? (
                 <div className="text-center py-10 text-muted-foreground">
                   <Building2 className="w-10 h-10 mx-auto mb-2 opacity-20" />
@@ -420,7 +450,7 @@ export default function Documents() {
                       </tr>
                     </thead>
                     <tbody>
-                      {companyDocs.map((d, i) => (
+                      {companyDocs.map((d, i) => ({ d, i })).filter(({ d }) => companyCatFilter === "all" || d.category === companyCatFilter).map(({ d, i }) => (
                         <tr key={i} className="border-b border-border/40 hover:bg-muted/20">
                           <td className="py-2 font-medium">{d.name}</td>
                           <td className="py-2">{d.category}{d.expiry && docBadge(d.expiry) ? <span className="ml-2">{docBadge(d.expiry)}</span> : null}</td>
