@@ -83,3 +83,30 @@ export function driversNeedingReplan(drivers = [], trips = []) {
     .map((d) => ({ driver: d, trips: affectedByDriver(d.id, trips) }))
     .filter((x) => x.trips.length);
 }
+
+/** Células do despacho (caminhão+data) com peso acima da capacidade (excesso de carga). */
+export function overloadedCells(orders = [], trucks = []) {
+  const byCell = {};
+  orders
+    .filter((o) => o.scheduled_truck_id && o.scheduled_date && !o.trip_id && o.status !== "cancelled")
+    .forEach((o) => { const k = `${o.scheduled_truck_id}|${o.scheduled_date}`; (byCell[k] = byCell[k] || []).push(o); });
+  const out = [];
+  Object.entries(byCell).forEach(([k, list]) => {
+    const [truckId, date] = k.split("|");
+    const truck = trucks.find((t) => t.id === truckId);
+    if (!truck || !(truck.capacity_kg > 0)) return;
+    const kg = list.reduce((s, o) => s + (o.total_weight_kg || 0), 0);
+    if (kg > truck.capacity_kg) out.push({ truck, date, orders: list, kg, over: kg - truck.capacity_kg });
+  });
+  return out;
+}
+
+/** Viagens planejadas/em andamento sem motorista ou sem caminhão (recurso faltando). */
+export function tripsMissingResource(trips = []) {
+  return trips.filter((t) => TRIP_LIVE.includes(t.status) && (!t.driver_id || !t.truck_id));
+}
+
+/** Pedidos urgentes confirmados sem viagem e sem programação (sem recurso). */
+export function urgentWithoutResource(orders = []) {
+  return orders.filter((o) => o.freight_type === "urgent" && o.status === "confirmed" && !o.trip_id && (!o.scheduled_truck_id || !o.scheduled_date));
+}

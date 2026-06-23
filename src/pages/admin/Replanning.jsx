@@ -9,9 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/admin/StatusBadge";
-import { Wrench, UserX, Truck, AlertTriangle, CheckCircle2, ArrowRight, Package } from "lucide-react";
+import { Wrench, UserX, Truck, AlertTriangle, CheckCircle2, ArrowRight, Package, Scale, Zap, HelpCircle } from "lucide-react";
+import { formatDateBR } from "@/utils/dateUtils";
 import {
   trucksNeedingReplan, driversNeedingReplan, suggestTrucks, suggestDrivers,
+  overloadedCells, tripsMissingResource, urgentWithoutResource,
 } from "@/utils/replanner";
 
 /**
@@ -32,6 +34,9 @@ export default function Replanning() {
 
   const truckCases = trucksNeedingReplan(trucks, orders, trips);
   const driverCases = driversNeedingReplan(drivers, trips);
+  const overloaded = overloadedCells(orders, trucks);
+  const missingResource = tripsMissingResource(trips);
+  const urgentNoResource = urgentWithoutResource(orders);
 
   // ── Redistribuir caminhão (pedidos programados + viagens) ─────
   const redistTruck = useMutation({
@@ -108,7 +113,8 @@ export default function Replanning() {
     onError: (e) => toast({ title: "Erro ao reatribuir", description: e?.message, variant: "destructive" }),
   });
 
-  const nothing = truckCases.length === 0 && driverCases.length === 0;
+  const nothing = truckCases.length === 0 && driverCases.length === 0
+    && overloaded.length === 0 && missingResource.length === 0 && urgentNoResource.length === 0;
 
   return (
     <div className="space-y-5">
@@ -253,6 +259,62 @@ export default function Replanning() {
           </Card>
         );
       })}
+
+      {/* ── Excesso de carga (célula programada acima da capacidade) ── */}
+      {overloaded.map(({ truck, date, orders: cellOrders, kg, over }) => (
+        <Card key={`ovl-${truck.id}-${date}`} className="border-red-200">
+          <CardContent className="pt-5 space-y-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Scale className="w-5 h-5 text-red-600" />
+              <span className="font-mono font-bold">{truck.plate}</span>
+              <span className="text-sm text-muted-foreground">{formatDateBR(date)}</span>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">Excesso de carga</span>
+              <span className="text-xs text-muted-foreground ml-auto">
+                {kg.toLocaleString("pt-BR")} / {truck.capacity_kg.toLocaleString("pt-BR")} kg · <strong className="text-red-600">+{over.toLocaleString("pt-BR")} kg</strong>
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">{cellOrders.length} pedido(s) programados acima da capacidade. Reequilibre no despacho (mova parte para outro caminhão/dia).</p>
+            <Link to="/admin/despacho" className="inline-flex"><Button variant="outline" size="sm" className="gap-1.5">Abrir despacho <ArrowRight className="w-3.5 h-3.5" /></Button></Link>
+          </CardContent>
+        </Card>
+      ))}
+
+      {/* ── Viagens sem recurso (sem motorista ou sem caminhão) ── */}
+      {missingResource.length > 0 && (
+        <Card className="border-orange-200">
+          <CardContent className="pt-5 space-y-3">
+            <div className="flex items-center gap-2"><HelpCircle className="w-5 h-5 text-orange-600" /><span className="font-semibold">Viagens sem recurso ({missingResource.length})</span></div>
+            <div className="space-y-1.5">
+              {missingResource.map((t) => (
+                <Link key={t.id} to={`/admin/viagens/${t.id}`} className="flex items-center justify-between text-xs rounded-lg border border-border p-2 hover:border-velox-amber/40">
+                  <span className="flex-1 truncate">{t.truck_plate || <span className="text-red-600">sem caminhão</span>} · {t.driver_name || <span className="text-red-600">sem motorista</span>}</span>
+                  <StatusBadge status={t.status} />
+                </Link>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">Abra a viagem para atribuir o recurso que falta.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Urgentes sem recurso ── */}
+      {urgentNoResource.length > 0 && (
+        <Card className="border-red-200">
+          <CardContent className="pt-5 space-y-3">
+            <div className="flex items-center gap-2"><Zap className="w-5 h-5 text-red-600" /><span className="font-semibold">Urgentes sem recurso ({urgentNoResource.length})</span></div>
+            <div className="space-y-1.5">
+              {urgentNoResource.map((o) => (
+                <Link key={o.id} to={`/admin/coletas/${o.id}`} className="flex items-center justify-between text-xs rounded-lg border border-border p-2 hover:border-velox-amber/40">
+                  <span className="font-mono">{o.protocol}</span>
+                  <span className="truncate flex-1 mx-2">{o.client_name}</span>
+                  <span className="font-mono text-muted-foreground">{(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</span>
+                </Link>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">Abra o pedido e use o "encaixe rápido" para programar.</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
