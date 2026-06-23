@@ -524,6 +524,26 @@ Transformou a tela numa **central de gestão de disrupções**. Sem bugs de queb
 
 ---
 
+---
+
+## MÓDULO A MÓDULO — Ocorrências
+
+**Bug corrigido:** ações em sequência no modal (tratativa → notificar → seguro) **perdiam
+entradas da linha do tempo** (gravavam sobre uma cópia local desatualizada). Agora a timeline
+é íntegra.
+
+- **Oc-1 — Robustez & consistência:** **SLA** (selo "Prazo vencido" + card "Atrasadas" +
+  atrasadas no topo), **reabrir** ocorrência, **filtros** por tipo/responsável, e o **resolver
+  pelo pedido também registra na timeline**.
+- **Oc-2 — Documentação & impacto:** **impacto financeiro (R$)** + **causa-raiz**; o gestor
+  **anexa fotos/documentos** na ocorrência (migration `20260629_incidents_impact.sql`).
+- **Oc-3 — Analytics:** indicadores (**tempo médio de resolução, % no prazo, impacto
+  financeiro total, tipos mais frequentes**) + **export CSV**.
+
+**Teto pago:** notificação automática ao cliente (e-mail/WhatsApp).
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -542,3 +562,4 @@ Transformou a tela numa **central de gestão de disrupções**. Sem bugs de queb
 15. `20260626_multiorigem.sql`  ← coleta consolidada (vários pontos de coleta na OS)
 16. `20260627_dispatch_tx.sql`  ← despacho atômico (programar/separar/devolver)
 17. `20260628_replan_comboio.sql` ← replanejamento ciente de comboio
+18. `20260629_incidents_impact.sql` ← ocorrências: impacto financeiro + causa-raiz
