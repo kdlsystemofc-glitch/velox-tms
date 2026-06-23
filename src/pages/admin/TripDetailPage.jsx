@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -53,6 +53,18 @@ export default function TripDetailPage() {
     queryKey: ["orders"],
     queryFn: () => base44.entities.Order.list("-created_date", 500),
   });
+
+  // Viagens concluídas — referência de custo/km da frota (estimativa Vi-2).
+  const { data: allTrips = [] } = useQuery({
+    queryKey: ["trips"],
+    queryFn: () => base44.entities.Trip.list("-created_date", 100),
+  });
+  const fleetCostPerKm = useMemo(() => {
+    const done = allTrips.filter(t => t.status === "completed" && Number(t.real_km) > 0 && Number(t.total_cost) > 0);
+    if (done.length === 0) return null;
+    const avg = done.reduce((s, t) => s + t.total_cost / t.real_km, 0) / done.length;
+    return Math.round(avg * 100) / 100;
+  }, [allTrips]);
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.entities.Trip.update(id, data),
@@ -217,6 +229,15 @@ export default function TripDetailPage() {
 
   // ── Roteirização (Fase 2) ─────────────────────────────────────
   const saveStopsOrder = (stops) => updateMutation.mutate({ stops: stops.map((s, idx) => ({ ...s, stop_order: idx + 1 })) });
+  // Soma o comprimento (haversine) do trajeto na ordem dada, usando os CEPs geocodificados.
+  const pathKm = (ordered, coords) => {
+    let total = 0;
+    for (let k = 1; k < ordered.length; k++) {
+      const a = coords[ordered[k - 1].cep], b = coords[ordered[k].cep];
+      if (a && b) total += haversineKm(a, b);
+    }
+    return Math.round(total);
+  };
   const optimizeRoute = async () => {
     const stops = trip.stops || [];
     const apiKey = settings?.google_maps_api_key;
@@ -225,8 +246,16 @@ export default function TripDetailPage() {
       try {
         const coords = await geocodeCeps(stops.map(s => s.cep), apiKey);
         if (Object.values(coords).some(Boolean)) {
-          saveStopsOrder(optimizeStopsByCoords(stops, coords, haversineKm));
-          toast({ title: "Rota otimizada (mapa real)", description: "Paradas reordenadas por distância geográfica (Google), coleta antes da entrega." });
+          const ordered = optimizeStopsByCoords(stops, coords, haversineKm);
+          // Estimativa Vi-2: distância prevista do trajeto + custo previsto (referência da frota).
+          const estKm = pathKm(ordered, coords);
+          const estPatch = {};
+          if (estKm > 0) {
+            estPatch.estimated_km = estKm;
+            if (fleetCostPerKm) estPatch.estimated_cost = Math.round(estKm * fleetCostPerKm * 100) / 100;
+          }
+          updateMutation.mutate({ stops: ordered.map((s, idx) => ({ ...s, stop_order: idx + 1 })), ...estPatch });
+          toast({ title: "Rota otimizada (mapa real)", description: estKm > 0 ? `Trajeto previsto: ~${estKm} km.` : "Paradas reordenadas por distância geográfica (Google)." });
           return;
         }
       } catch { /* cai na heurística */ }
@@ -260,6 +289,22 @@ export default function TripDetailPage() {
     const otherCostsTotal = otherCosts.reduce((s, c) => s + Number(c.amount || 0), 0);
     const totalCost = Number(closeForm.fuel_cost || 0) + Number(closeForm.tolls_cost || 0) + otherCostsTotal;
     const netProfit = (trip.total_revenue || 0) - totalCost;
+
+    // Eficiência km/L (Vi-2) — apurada e gravada no histórico de consumo do veículo líder.
+    const realKm = Number(closeForm.real_km) || 0;
+    const liters = Number(closeForm.fuel_liters) || 0;
+    const kmPerLiter = (realKm > 0 && liters > 0) ? Math.round((realKm / liters) * 100) / 100 : null;
+    const recordEfficiency = async () => {
+      const leadId = (trip.vehicles && trip.vehicles[0]?.truck_id) || trip.truck_id;
+      try { await base44.entities.Trip.update(id, { km_per_liter: kmPerLiter }); } catch { /* não bloqueia */ }
+      if (!kmPerLiter || !leadId) return;
+      try {
+        const t = (await base44.entities.Truck.filter({ id: leadId }))[0];
+        const hist = [...((t?.consumption_history) || []), { date: todayLocalISO(), km: realKm, liters, km_per_liter: kmPerLiter, trip_id: id }];
+        await base44.entities.Truck.update(leadId, { last_km_per_liter: kmPerLiter, consumption_history: hist });
+        queryClient.invalidateQueries({ queryKey: ["trucks"] });
+      } catch { /* não bloqueia o encerramento */ }
+    };
 
     // Comissão por motorista do comboio (% sobre a receita do SEU veículo) — Fase 6 / Onda 7
     const crew = (trip.vehicles && trip.vehicles.length) ? trip.vehicles : [{ truck_id: trip.truck_id, truck_plate: trip.truck_plate, driver_id: trip.driver_id, driver_name: trip.driver_name }];
@@ -300,6 +345,7 @@ export default function TripDetailPage() {
         p_user: userName,
       });
       if (error) throw error;
+      await recordEfficiency();
       queryClient.invalidateQueries({ queryKey: ["trip", id] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
@@ -414,8 +460,43 @@ export default function TripDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     }
 
+    await recordEfficiency();
     setShowCloseModal(false);
     toast({ title: "Viagem encerrada!", description: `Lucro líquido: R$ ${netProfit.toFixed(2)}` });
+  };
+
+  // Romaneio PDF — viagem inteira (vehicleIndex null) ou só de um veículo do comboio (Vi-2).
+  const generateRomaneio = async (vehicleIndex = null) => {
+    setGeneratingManifest(true);
+    try {
+      const orderIds = trip.order_ids || [];
+      const orders = [];
+      for (const oid of orderIds) {
+        const res = await base44.entities.Order.filter({ id: oid });
+        if (res?.[0]) orders.push(res[0]);
+      }
+      let tripForPdf = trip, ordersForPdf = orders, suffix = "";
+      if (vehicleIndex != null && crew.length > 1) {
+        const v = crew[vehicleIndex];
+        const stops = (trip.stops || []).filter(s => (s.vehicle_index || 0) === vehicleIndex);
+        const vOrderIds = [...new Set(stops.map(s => s.order_id).filter(Boolean))];
+        tripForPdf = { ...trip, stops, order_ids: vOrderIds, truck_plate: v?.truck_plate, driver_name: v?.driver_name };
+        ordersForPdf = orders.filter(o => vOrderIds.includes(o.id));
+        suffix = `-${(v?.truck_plate || `v${vehicleIndex + 1}`).replace(/\s/g, "")}`;
+      }
+      const { generateTripManifest } = await import("@/utils/generateTripManifest");
+      const blob = generateTripManifest(tripForPdf, ordersForPdf, settings);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Romaneio-${tripForPdf.truck_plate || "viagem"}${suffix}-${todayLocalISO()}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast({ title: "Erro ao gerar romaneio", description: e?.message || "Tente novamente.", variant: "destructive" });
+    } finally {
+      setGeneratingManifest(false);
+    }
   };
 
   const stopTypeLabel = { departure: "Partida", collection: "Coleta", delivery: "Entrega" };
@@ -443,32 +524,10 @@ export default function TripDetailPage() {
           variant="outline"
           className="gap-2"
           disabled={generatingManifest}
-          onClick={async () => {
-            setGeneratingManifest(true);
-            try {
-              const orderIds = trip.order_ids || [];
-              const linkedOrders = [];
-              for (const oid of orderIds) {
-                const res = await base44.entities.Order.filter({ id: oid });
-                if (res?.[0]) linkedOrders.push(res[0]);
-              }
-              const { generateTripManifest } = await import("@/utils/generateTripManifest");
-              const blob = generateTripManifest(trip, linkedOrders, settings);
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `Romaneio-${trip.truck_plate || "viagem"}-${todayLocalISO()}.pdf`;
-              a.click();
-              URL.revokeObjectURL(url);
-            } catch (e) {
-              toast({ title: "Erro ao gerar romaneio", description: e?.message || "Tente novamente.", variant: "destructive" });
-            } finally {
-              setGeneratingManifest(false);
-            }
-          }}
+          onClick={() => generateRomaneio(null)}
         >
           <FileDown className="w-4 h-4" />
-          {generatingManifest ? "Gerando..." : "Romaneio PDF"}
+          {generatingManifest ? "Gerando..." : crew.length > 1 ? "Romaneio (todos)" : "Romaneio PDF"}
         </Button>
         {trip.status === "planned" && (
           <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={startTrip}>
@@ -635,12 +694,18 @@ export default function TripDetailPage() {
               </CardHeader>
               <CardContent className="pt-3 space-y-1.5">
                 {crew.map((v, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs">
-                    <span className="font-mono font-semibold">{v.truck_plate || "—"}</span>
-                    <span className="text-muted-foreground">{v.driver_name || "—"}{i === 0 ? " · líder" : ""}</span>
+                  <div key={i} className="flex items-center justify-between gap-2 text-xs">
+                    <div className="min-w-0">
+                      <span className="font-mono font-semibold">{v.truck_plate || "—"}</span>
+                      <span className="text-muted-foreground"> · {v.driver_name || "—"}{i === 0 ? " · líder" : ""}</span>
+                    </div>
+                    <button onClick={() => generateRomaneio(i)} disabled={generatingManifest}
+                      className="flex items-center gap-1 text-velox-amber hover:underline disabled:opacity-50 flex-shrink-0" title="Romaneio só deste veículo">
+                      <FileDown className="w-3.5 h-3.5" /> Romaneio
+                    </button>
                   </div>
                 ))}
-                <p className="text-[10px] text-muted-foreground pt-1">Atribua cada parada a um veículo na lista de paradas.</p>
+                <p className="text-[10px] text-muted-foreground pt-1">Atribua cada parada a um veículo na lista de paradas. Cada veículo tem seu próprio romaneio.</p>
               </CardContent>
             </Card>
           )}
@@ -655,6 +720,12 @@ export default function TripDetailPage() {
               {Number(trip.advance_amount) > 0 && (
                 <div className="flex justify-between"><span className="text-muted-foreground">Adiantamento pago</span><span className="font-mono text-amber-600">R$ {Number(trip.advance_amount).toFixed(2)}</span></div>
               )}
+              {trip.status !== "completed" && Number(trip.estimated_km) > 0 && (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Trajeto previsto</span>
+                  <span className="font-mono">~{trip.estimated_km} km{Number(trip.estimated_cost) > 0 ? ` · R$ ${Number(trip.estimated_cost).toFixed(0)}` : ""}</span>
+                </div>
+              )}
               {trip.status === "completed" && (
                 <>
                   <div className="flex justify-between"><span className="text-muted-foreground">Custo total</span><span className="font-mono text-red-600">R$ {(trip.total_cost || 0).toFixed(2)}</span></div>
@@ -665,7 +736,15 @@ export default function TripDetailPage() {
                   {(() => {
                     const rev = trip.total_revenue || 0;
                     const margin = rev > 0 ? ((trip.net_profit || 0) / rev) * 100 : 0;
-                    const costPerKm = Number(trip.real_km) > 0 ? (trip.total_cost || 0) / trip.real_km : null;
+                    const realKm = Number(trip.real_km) || 0;
+                    const costPerKm = realKm > 0 ? (trip.total_cost || 0) / realKm : null;
+                    const estKm = Number(trip.estimated_km) || 0;
+                    const estCost = Number(trip.estimated_cost) || 0;
+                    const kmDev = estKm > 0 && realKm > 0 ? ((realKm - estKm) / estKm) * 100 : null;
+                    const costDev = estCost > 0 ? (((trip.total_cost || 0) - estCost) / estCost) * 100 : null;
+                    const kmPerL = Number(trip.km_per_liter) || (realKm > 0 && Number(trip.fuel_liters) > 0 ? realKm / trip.fuel_liters : null);
+                    const devColor = (d) => d == null ? "" : d <= 0 ? "text-green-600" : d <= 10 ? "text-amber-600" : "text-red-600";
+                    const devLabel = (d) => d == null ? "" : `${d > 0 ? "+" : ""}${d.toFixed(0)}%`;
                     return (
                       <>
                         <div className="flex justify-between text-xs">
@@ -676,6 +755,29 @@ export default function TripDetailPage() {
                           <span className="text-muted-foreground">Custo por km</span>
                           <span className="font-mono">{costPerKm != null ? `R$ ${costPerKm.toFixed(2)}/km` : "—"}</span>
                         </div>
+                        {kmPerL != null && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Eficiência</span>
+                            <span className="font-mono">{kmPerL.toFixed(2)} km/L</span>
+                          </div>
+                        )}
+                        {(estKm > 0 || estCost > 0) && (
+                          <div className="pt-2 mt-1 border-t border-dashed border-border space-y-1">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Estimado × Real</p>
+                            {estKm > 0 && (
+                              <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Km: {estKm} → {realKm || "—"}</span>
+                                <span className={`font-mono font-semibold ${devColor(kmDev)}`}>{devLabel(kmDev)}</span>
+                              </div>
+                            )}
+                            {estCost > 0 && (
+                              <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">Custo: R$ {estCost.toFixed(0)} → R$ {(trip.total_cost || 0).toFixed(0)}</span>
+                                <span className={`font-mono font-semibold ${devColor(costDev)}`}>{devLabel(costDev)}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </>
                     );
                   })()}
