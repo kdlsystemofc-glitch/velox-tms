@@ -11,9 +11,11 @@ import { todayLocalISO, toLocalISO, formatDateBR } from "@/utils/dateUtils";
 import { planLoads, regionLabel, localityKey } from "@/utils/dispatchPlanner";
 import { truckVolumeM3, orderVolumeM3, fmtM3 } from "@/utils/cargoVolume";
 import { orderWindowConflicts } from "@/utils/deliveryWindow";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { Input } from "@/components/ui/input";
 import {
   Package, Truck, ChevronLeft, ChevronRight, MapPin,
-  CalendarDays, Send, X, ArrowRight, Sparkles
+  CalendarDays, Send, X, ArrowRight, Sparkles, Search
 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import { format, addDays, startOfWeek, isToday } from "date-fns";
@@ -33,6 +35,9 @@ export default function DispatchBoard() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedIds, setSelectedIds] = useState([]);
   const [plan, setPlan] = useState(null); // proposta da separação automática
+  const [queueSearch, setQueueSearch] = useState("");
+  const [onlyUrgent, setOnlyUrgent] = useState(false);
+  const { settings } = useCompanySettings();
 
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list(), select: d => d.filter(t => t.status !== "inactive") });
@@ -46,7 +51,27 @@ export default function DispatchBoard() {
 
   const today = new Date();
   const weekStart = addDays(startOfWeek(today, { weekStartsOn: 1 }), weekOffset * 7);
-  const days = Array.from({ length: 6 }, (_, i) => addDays(weekStart, i)); // seg-sáb
+  // Dias do quadro respeitam os dias úteis da empresa (working_days). Padrão seg–sáb.
+  const workingDays = (settings?.working_days && settings.working_days.length) ? settings.working_days : [1, 2, 3, 4, 5, 6];
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).filter(d => workingDays.includes(d.getDay()));
+
+  // Fila filtrada (busca + urgente)
+  const filteredQueue = unscheduled.filter(o => {
+    if (onlyUrgent && o.freight_type !== "urgent") return false;
+    const q = queueSearch.trim().toLowerCase();
+    if (!q) return true;
+    return o.protocol?.toLowerCase().includes(q) || o.client_name?.toLowerCase().includes(q)
+      || o.origin?.city?.toLowerCase().includes(q)
+      || (o.recipients || []).some(r => (r.city || "").toLowerCase().includes(q) || (r.state || "").toLowerCase().includes(q));
+  });
+
+  // Ocupação da frota por dia (peso programado ÷ capacidade total)
+  const totalFleetKg = trucks.reduce((s, t) => s + (t.capacity_kg || 0), 0);
+  const dayOccupancy = (dateStr) => {
+    if (totalFleetKg <= 0) return 0;
+    const kg = scheduled.filter(o => o.scheduled_date === dateStr).reduce((s, o) => s + (o.total_weight_kg || 0), 0);
+    return Math.round((kg / totalFleetKg) * 100);
+  };
 
   const selectedOrders = orders.filter(o => selectedIds.includes(o.id));
   const selectedKg = selectedOrders.reduce((s, o) => s + (o.total_weight_kg || 0), 0);
@@ -206,13 +231,25 @@ export default function DispatchBoard() {
           <div className="flex items-center justify-between">
             <h2 className="font-heading font-semibold text-sm flex items-center gap-2">
               <Package className="w-4 h-4 text-velox-amber" /> Fila de despacho
-              <span className="text-muted-foreground font-normal">({unscheduled.length})</span>
+              <span className="text-muted-foreground font-normal">({filteredQueue.length}{filteredQueue.length !== unscheduled.length ? `/${unscheduled.length}` : ""})</span>
             </h2>
-            {unscheduled.length > 0 && (
-              selectedIds.length === unscheduled.length
+            {filteredQueue.length > 0 && (
+              filteredQueue.every(o => selectedIds.includes(o.id))
                 ? <button onClick={() => setSelectedIds([])} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"><X className="w-3 h-3" /> Limpar</button>
-                : <button onClick={() => setSelectedIds(unscheduled.map(o => o.id))} className="text-xs text-primary hover:underline">Selecionar todos</button>
+                : <button onClick={() => setSelectedIds(filteredQueue.map(o => o.id))} className="text-xs text-primary hover:underline">Selecionar todos</button>
             )}
+          </div>
+
+          {/* Busca + filtro */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input placeholder="Cliente, cidade, UF..." value={queueSearch} onChange={e => setQueueSearch(e.target.value)} className="pl-8 h-8 text-xs" />
+            </div>
+            <button onClick={() => setOnlyUrgent(v => !v)}
+              className={`text-[11px] font-semibold px-2.5 rounded-md border transition-colors ${onlyUrgent ? "bg-red-500 text-white border-red-500" : "bg-background text-muted-foreground border-border hover:border-red-300"}`}>
+              Urgentes
+            </button>
           </div>
 
           {selectedIds.length > 0 && (
@@ -232,14 +269,11 @@ export default function DispatchBoard() {
           )}
 
           <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-            {unscheduled.length === 0 ? (
+            {filteredQueue.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                Fila vazia.<br />
-                <Link to="/admin/coletas?status=new" className="text-velox-amber hover:underline text-xs">
-                  Ver pedidos aguardando confirmação →
-                </Link>
+                {unscheduled.length === 0 ? <>Fila vazia.<br /><Link to="/admin/coletas?status=new" className="text-velox-amber hover:underline text-xs">Ver pedidos aguardando confirmação →</Link></> : "Nenhum pedido com este filtro."}
               </div>
-            ) : unscheduled.map(o => (
+            ) : filteredQueue.map(o => (
               <label key={o.id}
                 className={`block rounded-xl border p-3 cursor-pointer transition-all ${
                   selectedIds.includes(o.id)
@@ -283,7 +317,7 @@ export default function DispatchBoard() {
               <ChevronLeft className="w-4 h-4" />
             </button>
             <span className="text-sm font-medium">
-              {format(weekStart, "dd/MM", { locale: ptBR })} – {format(addDays(weekStart, 5), "dd/MM/yyyy", { locale: ptBR })}
+              {format(weekStart, "dd/MM", { locale: ptBR })} – {format(days[days.length - 1] || addDays(weekStart, 5), "dd/MM/yyyy", { locale: ptBR })}
             </span>
             <button onClick={() => setWeekOffset(w => w + 1)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
               <ChevronRight className="w-4 h-4" />
@@ -304,16 +338,24 @@ export default function DispatchBoard() {
                 <thead>
                   <tr>
                     <th className="text-left text-xs font-medium text-muted-foreground p-3 w-32 border-b border-r border-border bg-muted/30">Caminhão</th>
-                    {days.map((day, i) => (
-                      <th key={i} className={`text-center text-xs p-2 border-b border-border min-w-[130px] ${isToday(day) ? "bg-velox-amber/10" : "bg-muted/30"}`}>
-                        <span className={`font-medium ${isToday(day) ? "text-velox-amber" : "text-muted-foreground"}`}>
-                          {format(day, "EEE", { locale: ptBR })}
-                        </span>
-                        <span className={`block text-base font-bold font-mono ${isToday(day) ? "text-velox-amber" : "text-foreground"}`}>
-                          {format(day, "dd/MM")}
-                        </span>
-                      </th>
-                    ))}
+                    {days.map((day, i) => {
+                      const occ = dayOccupancy(toLocalISO(day));
+                      return (
+                        <th key={i} className={`text-center text-xs p-2 border-b border-border min-w-[130px] ${isToday(day) ? "bg-velox-amber/10" : "bg-muted/30"}`}>
+                          <span className={`font-medium ${isToday(day) ? "text-velox-amber" : "text-muted-foreground"}`}>
+                            {format(day, "EEE", { locale: ptBR })}
+                          </span>
+                          <span className={`block text-base font-bold font-mono ${isToday(day) ? "text-velox-amber" : "text-foreground"}`}>
+                            {format(day, "dd/MM")}
+                          </span>
+                          {occ > 0 && (
+                            <span className={`block text-[10px] font-semibold ${occ > 95 ? "text-red-600" : occ > 75 ? "text-amber-600" : "text-green-600"}`}>
+                              {occ}% frota
+                            </span>
+                          )}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>
