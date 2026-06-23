@@ -19,6 +19,7 @@
  */
 
 import { truckVolumeM3, orderVolumeM3 } from "./cargoVolume";
+import { slaStatus } from "./sla";
 
 const onlyDigits = (s) => (s || "").replace(/\D/g, "");
 
@@ -49,7 +50,7 @@ export function localityKey(order) {
   return `${city}|${hood}`;
 }
 
-export function planLoads(orders = [], trucks = []) {
+export function planLoads(orders = [], trucks = [], settings = null) {
   const pool = orders.filter((o) => o.status === "confirmed" && !o.trip_id);
   const fleet = trucks
     .filter((t) => t.status === "available" && (t.capacity_kg || 0) > 0)
@@ -84,11 +85,13 @@ export function planLoads(orders = [], trucks = []) {
       region: regionKey(group[0]),
       regionName: regionLabel(group[0]),
       urgent: group.some((o) => o.freight_type === "urgent"),
+      // SLA: pedido atrasado ou em risco de prazo entra junto com os urgentes (B2-C / Des-3)
+      critical: group.some((o) => ["late", "at_risk"].includes(slaStatus(o, settings))),
     }));
 
-    // 3) urgentes primeiro; depois clusteriza por região e peso desc (B2-C)
+    // 3) prioridade (urgente OU SLA crítico) primeiro; depois região e peso desc
     units.sort((a, b) =>
-      Number(b.urgent) - Number(a.urgent) ||
+      (Number(b.urgent || b.critical) - Number(a.urgent || a.critical)) ||
       a.region.localeCompare(b.region) ||
       b.weight - a.weight
     );
@@ -128,7 +131,7 @@ export function planLoads(orders = [], trucks = []) {
       target.regions.add(u.region);
       u.orders.forEach((o) => target.reasons.push({
         protocol: o.protocol,
-        why: `${u.urgent ? "Urgente — alocado primeiro. " : ""}${sameRegion ? `Mesma região (${u.regionName}) já neste caminhão.` : `Caminhão com mais espaço para ${u.regionName}.`}`,
+        why: `${u.urgent ? "Urgente — alocado primeiro. " : u.critical ? "Prazo crítico (SLA) — priorizado. " : ""}${sameRegion ? `Mesma região (${u.regionName}) já neste caminhão.` : `Caminhão com mais espaço para ${u.regionName}.`}`,
       }));
     });
 

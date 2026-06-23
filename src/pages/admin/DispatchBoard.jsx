@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -88,6 +89,12 @@ export default function DispatchBoard() {
   // ── Programar pedidos selecionados numa célula ────────────────
   const assignMutation = useMutation({
     mutationFn: async ({ truckId, dateStr }) => {
+      const ids = selectedOrders.map(o => o.id);
+      try {
+        const { error } = await supabase.rpc("schedule_orders", { p_order_ids: ids, p_truck_id: truckId, p_date: dateStr, p_user: "Admin" });
+        if (!error) return;
+        throw error;
+      } catch { /* fallback cliente */ }
       for (const order of selectedOrders) {
         await base44.entities.Order.update(order.id, {
           scheduled_truck_id: truckId,
@@ -121,6 +128,12 @@ export default function DispatchBoard() {
   // Devolve TODOS os pedidos programados (sem viagem) para a fila — útil para reprogramar do zero
   const unassignAllMutation = useMutation({
     mutationFn: async () => {
+      const ids = scheduled.map(o => o.id);
+      try {
+        const { error } = await supabase.rpc("unschedule_orders", { p_order_ids: ids });
+        if (!error) return;
+        throw error;
+      } catch { /* fallback cliente */ }
       for (const o of scheduled) {
         await base44.entities.Order.update(o.id, { scheduled_truck_id: null, scheduled_date: null });
       }
@@ -134,7 +147,7 @@ export default function DispatchBoard() {
 
   // ── Separação automática (load planning) ──────────────────────
   const runAutoPlan = () => {
-    const result = planLoads(orders, trucks);
+    const result = planLoads(orders, trucks, settings);
     if (!result.loads.length) {
       toast({ title: "Nada para sugerir", description: result.reason || "Sem pedidos/caminhões elegíveis.", variant: "destructive" });
       return;
@@ -144,6 +157,12 @@ export default function DispatchBoard() {
 
   const applyPlanMutation = useMutation({
     mutationFn: async () => {
+      const loads = plan.loads.map(l => ({ truck_id: l.truck.id, date: l.date, order_ids: l.orders.map(o => o.id) }));
+      try {
+        const { error } = await supabase.rpc("apply_dispatch_plan", { p_loads: loads, p_user: "Admin" });
+        if (!error) return;
+        throw error;
+      } catch { /* fallback cliente */ }
       for (const load of plan.loads) {
         for (const o of load.orders) {
           await base44.entities.Order.update(o.id, { scheduled_truck_id: load.truck.id, scheduled_date: load.date });
