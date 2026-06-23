@@ -76,6 +76,7 @@ export default function NewOrder() {
 
   const dup = location.state?.duplicate;
   const fromMessage = location.state?.fromMessage;
+  const fromQuote = location.state?.fromQuote;
 
   const [step, setStep] = useState(1);
 
@@ -94,6 +95,24 @@ export default function NewOrder() {
       driver_id: "", truck_id: "", general_notes: "",
     };
     if (fromMessage) return { ...base, ...fromMessage };
+    if (fromQuote) {
+      const it = fromQuote.item || {};
+      return {
+        ...base,
+        freight_type: fromQuote.freight_type || base.freight_type,
+        freight_value: fromQuote.freight_value != null ? String(fromQuote.freight_value) : "",
+        origin: { ...base.origin, ...(fromQuote.origin || {}) },
+        recipients: [{
+          ...emptyRecipient,
+          ...(fromQuote.recipient || {}),
+          items: [{ ...emptyItem,
+            weight_kg: it.weight_kg ?? "", height_cm: it.height_cm ?? "", width_cm: it.width_cm ?? "",
+            length_cm: it.length_cm ?? "", volumes: it.volumes ?? 1, declared_value: it.declared_value ?? "",
+            description: it.description || "",
+          }],
+        }],
+      };
+    }
     if (!dup) return base;
     return {
       ...base,

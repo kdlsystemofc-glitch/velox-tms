@@ -32,6 +32,7 @@ const QuoteForm = lazy(() => import('@/pages/QuoteForm'));
 const UserManagement = lazy(() => import('@/pages/admin/UserManagement'));
 const OperationsHub = lazy(() => import('@/pages/admin/OperationsHub'));
 const OrdersWorkspace = lazy(() => import('@/pages/admin/OrdersWorkspace'));
+const Cotacao = lazy(() => import('@/pages/admin/Cotacao'));
 const DispatchBoard = lazy(() => import('@/pages/admin/DispatchBoard'));
 const Replanning = lazy(() => import('@/pages/admin/Replanning'));
 const Incidents = lazy(() => import('@/pages/admin/Incidents'));
@@ -105,6 +106,7 @@ const AuthenticatedApp = () => {
             {/* Pedidos (nova rota canônica) */}
             <Route path="/admin/coletas" element={<OrdersWorkspace />} />
             <Route path="/admin/coletas/nova" element={<NewOrder />} />
+            <Route path="/admin/cotacao" element={<Cotacao />} />
             <Route path="/admin/coletas/:id" element={<OrderWorkspace />} />
 
             {/* Despacho (novo quadro) */}

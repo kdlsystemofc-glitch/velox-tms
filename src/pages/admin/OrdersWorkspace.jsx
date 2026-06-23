@@ -17,7 +17,7 @@ import { calculateFreight } from "@/utils/freightCalculator";
 import { todayLocalISO, formatDateBR } from "@/utils/dateUtils";
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
 import { supabase } from "@/api/supabaseClient";
-import { Search, Plus, Package, CheckCircle, XCircle, CalendarDays, Eye, ChevronUp, ChevronDown, ChevronsUpDown, Download } from "lucide-react";
+import { Search, Plus, Package, CheckCircle, XCircle, CalendarDays, Eye, ChevronUp, ChevronDown, ChevronsUpDown, Download, Calculator } from "lucide-react";
 import { downloadCsv, csvMoney, csvDate } from "@/utils/exportCsv";
 import PageHeader from "@/components/shared/PageHeader";
 
@@ -228,6 +228,9 @@ export default function OrdersWorkspace() {
             { key: "created_date", label: "Criado", format: csvDate },
           ])}>
           <Download className="w-4 h-4" /> Exportar
+        </Button>
+        <Button variant="outline" className="gap-2" onClick={() => navigate("/admin/cotacao")}>
+          <Calculator className="w-4 h-4" /> Cotação
         </Button>
         <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => navigate("/admin/coletas/nova")}>
           <Plus className="w-4 h-4" /> Novo Pedido
