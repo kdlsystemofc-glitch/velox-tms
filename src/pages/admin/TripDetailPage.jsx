@@ -23,6 +23,18 @@ import { optimizeStops, optimizeStopsByCoords } from "@/utils/routeOptimizer";
 import { geocodeCeps, haversineKm, googleMapsRouteUrl } from "@/utils/geocode";
 import { format } from "date-fns";
 
+// Categorias de gasto de viagem → categoria de despesa (Financeiro). Vi-3.
+const COST_PRESETS = [
+  { key: "meals", label: "Alimentação", category: "other" },
+  { key: "lodging", label: "Pernoite / Diária", category: "other" },
+  { key: "maintenance", label: "Manutenção em rota", category: "maintenance" },
+  { key: "tires", label: "Pneu / Borracharia", category: "tires" },
+  { key: "parking", label: "Estacionamento", category: "other" },
+  { key: "loading", label: "Chapa / Descarga", category: "other" },
+  { key: "fines", label: "Multas", category: "other" },
+  { key: "other", label: "Outros", category: "other" },
+];
+
 export default function TripDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -368,6 +380,7 @@ export default function TripDetailPage() {
       total_cost: totalCost,
       net_profit: netProfit,
       commission_amount: commission,
+      commission_rows: commissionRows,
       events: [...(trip.events || []), {
         type: "completed",
         description: `Viagem encerrada. Km final: ${closeForm.real_km}`,
@@ -399,10 +412,11 @@ export default function TripDetailPage() {
         trip_id: trip.id,
       });
     }
+    const VALID_EXP_CATS = ["fuel", "maintenance", "tires", "tolls", "salaries", "taxes", "insurance", "rent", "administrative", "marketing", "other"];
     otherCosts.forEach(c => {
       if (Number(c.amount) > 0) {
         expensesToCreate.push({
-          category: "other",
+          category: VALID_EXP_CATS.includes(c.category) ? c.category : "other",
           description: c.description || `Gasto extra — ${trip.truck_plate}`,
           amount: Number(c.amount),
           date: today,
@@ -799,20 +813,39 @@ export default function TripDetailPage() {
             const comm = Number(trip.commission_amount) || 0;
             const adv = Number(trip.advance_amount) || 0;
             const saldo = comm - adv;
+            const rows = Array.isArray(trip.commission_rows) ? trip.commission_rows.filter(r => Number(r.amount) > 0) : [];
+            const isComboio = rows.length > 1;
             return (
               <Card>
                 <CardHeader className="py-3 border-b border-border bg-muted/30">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2"><Truck className="w-4 h-4 text-velox-amber" /> Acerto do motorista</CardTitle>
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2"><Truck className="w-4 h-4 text-velox-amber" /> Acerto {isComboio ? "do comboio" : "do motorista"}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm pt-4">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Motorista</span><span className="font-medium">{trip.driver_name || "—"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Comissão</span><span className="font-mono text-green-600">R$ {comm.toFixed(2)}</span></div>
+                  {isComboio ? (
+                    <>
+                      {rows.map((r, i) => (
+                        <div key={i} className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{r.driver_name || "Motorista"}</p>
+                            <p className="text-[11px] text-muted-foreground font-mono">{r.truck_plate || "—"} · {r.pct}%</p>
+                          </div>
+                          <span className="font-mono text-green-600 flex-shrink-0">R$ {Number(r.amount).toFixed(2)}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between border-t border-border pt-2"><span className="text-muted-foreground">Comissão total</span><span className="font-mono font-semibold text-green-600">R$ {comm.toFixed(2)}</span></div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Motorista</span><span className="font-medium">{trip.driver_name || "—"}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Comissão</span><span className="font-mono text-green-600">R$ {comm.toFixed(2)}</span></div>
+                    </>
+                  )}
                   <div className="flex justify-between"><span className="text-muted-foreground">(−) Adiantamento (vale-frete)</span><span className="font-mono text-amber-600">R$ {adv.toFixed(2)}</span></div>
                   <div className="flex justify-between border-t border-border pt-2 font-semibold">
-                    <span>Saldo a {saldo >= 0 ? "pagar ao" : "receber do"} motorista</span>
+                    <span>Saldo a {saldo >= 0 ? "pagar" : "receber"}{isComboio ? " (comboio)" : saldo >= 0 ? " ao motorista" : " do motorista"}</span>
                     <span className={`font-mono ${saldo >= 0 ? "text-green-600" : "text-red-600"}`}>R$ {Math.abs(saldo).toFixed(2)}</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">A comissão foi lançada como despesa "a pagar" em Financeiro → Despesas.</p>
+                  <p className="text-[11px] text-muted-foreground">{isComboio ? "Cada motorista do comboio teve sua comissão lançada como despesa \"a pagar\"" : "A comissão foi lançada como despesa \"a pagar\""} em Financeiro → Despesas.</p>
                 </CardContent>
               </Card>
             );
@@ -848,16 +881,31 @@ export default function TripDetailPage() {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Outros gastos</label>
-                <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => setCloseForm(f => ({ ...f, other_costs: [...f.other_costs, { description: "", amount: "" }] }))}>
+                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Outros gastos da viagem</label>
+                <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => setCloseForm(f => ({ ...f, other_costs: [...f.other_costs, { type: "meals", category: "other", description: "", amount: "" }] }))}>
                   <Plus className="w-3 h-3" /> Adicionar
                 </Button>
               </div>
+              {closeForm.other_costs.length === 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-1">
+                  {COST_PRESETS.slice(0, 4).map(p => (
+                    <button key={p.key} type="button"
+                      className="text-[11px] px-2 py-1 rounded-full border border-border hover:bg-muted text-muted-foreground"
+                      onClick={() => setCloseForm(f => ({ ...f, other_costs: [...f.other_costs, { type: p.key, category: p.category, description: p.label, amount: "" }] }))}>
+                      + {p.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {closeForm.other_costs.map((c, i) => (
                 <div key={i} className="flex gap-2 mb-2">
-                  <Input placeholder="Descrição" value={c.description} onChange={e => { const oc = [...closeForm.other_costs]; oc[i].description = e.target.value; setCloseForm(f => ({ ...f, other_costs: oc })); }} className="flex-1 h-8 text-xs" />
-                  <Input type="number" step="0.01" placeholder="R$" value={c.amount} onChange={e => { const oc = [...closeForm.other_costs]; oc[i].amount = e.target.value; setCloseForm(f => ({ ...f, other_costs: oc })); }} className="w-24 h-8 text-xs" />
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400" onClick={() => setCloseForm(f => ({ ...f, other_costs: f.other_costs.filter((_, j) => j !== i) }))}>
+                  <select value={c.type || "other"} className="h-8 text-xs border border-border rounded-md px-1.5 bg-background w-32 flex-shrink-0"
+                    onChange={e => { const preset = COST_PRESETS.find(p => p.key === e.target.value); const oc = [...closeForm.other_costs]; oc[i] = { ...oc[i], type: e.target.value, category: preset?.category || "other", description: oc[i].description || preset?.label || "" }; setCloseForm(f => ({ ...f, other_costs: oc })); }}>
+                    {COST_PRESETS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
+                  </select>
+                  <Input placeholder="Descrição" value={c.description} onChange={e => { const oc = [...closeForm.other_costs]; oc[i] = { ...oc[i], description: e.target.value }; setCloseForm(f => ({ ...f, other_costs: oc })); }} className="flex-1 h-8 text-xs" />
+                  <Input type="number" step="0.01" placeholder="R$" value={c.amount} onChange={e => { const oc = [...closeForm.other_costs]; oc[i] = { ...oc[i], amount: e.target.value }; setCloseForm(f => ({ ...f, other_costs: oc })); }} className="w-20 h-8 text-xs" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 flex-shrink-0" onClick={() => setCloseForm(f => ({ ...f, other_costs: f.other_costs.filter((_, j) => j !== i) }))}>
                     <Trash2 className="w-3 h-3" />
                   </Button>
                 </div>
