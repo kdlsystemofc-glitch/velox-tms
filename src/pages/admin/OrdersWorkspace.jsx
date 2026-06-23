@@ -43,24 +43,6 @@ const PIPELINE_TABS = [
   { key: "cancelled",  label: "Cancelados" },
 ];
 
-function suggestTruckForOrder(order, trucks, existingOrders) {
-  const targetDate = order.collection_date;
-  const orderWeight = order.total_weight_kg || 0;
-  return trucks
-    .filter(t => t.status === "available" || t.status === "on_route")
-    .map(truck => {
-      const usedKg = existingOrders
-        .filter(o => o.scheduled_truck_id === truck.id && o.scheduled_date === targetDate && o.status !== "cancelled")
-        .reduce((sum, o) => sum + (o.total_weight_kg || 0), 0);
-      const availableKg = (truck.capacity_kg || 0) - usedKg;
-      const canFit = availableKg >= orderWeight;
-      const usagePercent = ((usedKg + orderWeight) / (truck.capacity_kg || 1)) * 100;
-      return { truck, usedKg, availableKg, canFit, usagePercent };
-    })
-    .filter(t => t.canFit)
-    .sort((a, b) => b.usagePercent - a.usagePercent);
-}
-
 /**
  * PEDIDOS — fila única do pipeline com ações inline.
  * Padrão de grandes TMS: o operador resolve o pedido sem sair da lista.
@@ -75,14 +57,13 @@ export default function OrdersWorkspace() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState(null);
   const [confirmingOrder, setConfirmingOrder] = useState(null);
-  const [confirmForm, setConfirmForm] = useState({ truck_id: "", date: "", freight_value: "", payment_method: "pix" });
+  const [confirmForm, setConfirmForm] = useState({ date: "", freight_value: "", payment_method: "pix" });
   const [rejectingOrder, setRejectingOrder] = useState(null);
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders"],
     queryFn: () => base44.entities.Order.list("-created_date", 1000),
   });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
 
   // Limite de crédito do cliente do pedido em confirmação (exposição em aberto).
