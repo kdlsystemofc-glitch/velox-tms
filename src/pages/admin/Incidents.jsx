@@ -12,8 +12,9 @@ import { useToast } from "@/components/ui/use-toast";
 import PageHeader from "@/components/shared/PageHeader";
 import FileUploadButton from "@/components/shared/FileUploadButton";
 import { NumericInput } from "@/components/shared/NumericInput";
+import { downloadCsv, csvMoney, csvDate } from "@/utils/exportCsv";
 import {
-  AlertTriangle, CheckCircle2, Shield, BellRing, UserCheck, Clock, FileText, ExternalLink, DollarSign,
+  AlertTriangle, CheckCircle2, Shield, BellRing, UserCheck, Clock, FileText, ExternalLink, DollarSign, Download,
 } from "lucide-react";
 import {
   sortByGravity, incidentSeverity, incidentTypeLabel, SEVERITY_META,
@@ -56,6 +57,31 @@ export default function Incidents() {
     overdue: incidents.filter(i => incidentOverdue(i)).length,
     resolved: incidents.filter(i => i.status === "resolved").length,
   };
+
+  // ── Analytics (Oc-3) ────────────────────────────────────────
+  const resolvedList = incidents.filter(i => i.status === "resolved");
+  const avgHours = resolvedList.length ? Math.round(resolvedList.reduce((s, i) => s + (resolutionHours(i) || 0), 0) / resolvedList.length) : null;
+  const withDue = resolvedList.filter(i => i.due_date && i.resolved_at);
+  const onTime = withDue.filter(i => (i.resolved_at || "").slice(0, 10) <= i.due_date).length;
+  const otPct = withDue.length ? Math.round((onTime / withDue.length) * 100) : null;
+  const totalImpact = incidents.reduce((s, i) => s + (Number(i.financial_impact) || 0), 0);
+  const byType = Object.entries(incidents.reduce((acc, i) => { acc[i.type] = (acc[i.type] || 0) + 1; return acc; }, {}))
+    .sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  const exportIncidents = () => downloadCsv(`ocorrencias-${new Date().toISOString().slice(0, 10)}`, filtered, [
+    { key: "type", label: "Tipo", format: (v) => incidentTypeLabel(v) },
+    { key: "id", label: "Gravidade", format: (_, i) => SEVERITY_META[incidentSeverity(i)]?.label || "" },
+    { key: "order_id", label: "Pedido", format: (v) => orderById[v]?.protocol || "" },
+    { key: "status", label: "Status" },
+    { key: "assigned_to", label: "Responsável" },
+    { key: "due_date", label: "Prazo", format: csvDate },
+    { key: "created_date", label: "Aberta em", format: csvDate },
+    { key: "resolved_at", label: "Resolvida em", format: csvDate },
+    { key: "id", label: "Horas p/ resolver", format: (_, i) => resolutionHours(i) ?? "" },
+    { key: "financial_impact", label: "Impacto (R$)", format: csvMoney },
+    { key: "root_cause", label: "Causa-raiz" },
+    { key: "reported_by_name", label: "Registrada por" },
+  ]);
 
   const reopen = async (inc) => {
     const newTl = tl(inc, "Ocorrência reaberta", "reopen");
@@ -142,7 +168,11 @@ export default function Incidents() {
 
   return (
     <div className="space-y-4">
-      <PageHeader icon={AlertTriangle} title="Ocorrências" subtitle="Central de tratativa — por gravidade, com plano de ação e linha do tempo" />
+      <PageHeader icon={AlertTriangle} title="Ocorrências" subtitle="Central de tratativa — por gravidade, com plano de ação e linha do tempo">
+        <Button variant="outline" className="gap-2" disabled={filtered.length === 0} onClick={exportIncidents}>
+          <Download className="w-4 h-4" /> Exportar
+        </Button>
+      </PageHeader>
 
       {/* Resumo */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -150,6 +180,21 @@ export default function Incidents() {
         <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Críticas</p><p className="text-lg font-bold font-mono text-red-600">{counts.critical}</p></Card>
         <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Atrasadas (prazo)</p><p className={`text-lg font-bold font-mono ${counts.overdue > 0 ? "text-red-600" : "text-muted-foreground"}`}>{counts.overdue}</p></Card>
         <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Resolvidas</p><p className="text-lg font-bold font-mono text-green-600">{counts.resolved}</p></Card>
+      </div>
+
+      {/* Indicadores (Oc-3) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Tempo médio resolução</p><p className="text-lg font-bold font-mono">{avgHours != null ? formatDuration(avgHours) : "—"}</p></Card>
+        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Resolvidas no prazo</p><p className={`text-lg font-bold font-mono ${otPct != null && otPct < 80 ? "text-amber-600" : "text-green-600"}`}>{otPct != null ? `${otPct}%` : "—"}</p></Card>
+        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Impacto financeiro</p><p className={`text-lg font-bold font-mono ${totalImpact > 0 ? "text-red-600" : "text-muted-foreground"}`}>R$ {totalImpact.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></Card>
+        <Card className="p-3">
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Tipos mais frequentes</p>
+          {byType.length === 0 ? <p className="text-sm text-muted-foreground">—</p> : (
+            <div className="mt-1 space-y-0.5">
+              {byType.map(([t, n]) => <p key={t} className="text-[11px] flex justify-between"><span className="truncate">{incidentTypeLabel(t)}</span><span className="font-mono font-semibold ml-2">{n}</span></p>)}
+            </div>
+          )}
+        </Card>
       </div>
 
       {/* Filtros */}
