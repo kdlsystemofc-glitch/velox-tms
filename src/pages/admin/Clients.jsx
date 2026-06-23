@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Building2, Eye, MessageCircle, DollarSign } from "lucide-react";
+import { Plus, Building2, Eye, MessageCircle, DollarSign, Download } from "lucide-react";
+import { downloadCsv, csvDate } from "@/utils/exportCsv";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
 import DataTable from "@/components/shared/DataTable";
@@ -46,6 +47,20 @@ export default function Clients({ hideTitle = false }) {
     queryKey: ["clients"],
     queryFn: () => base44.entities.Client.list("-created_date"),
   });
+  const { data: orders = [] } = useQuery({
+    queryKey: ["orders"],
+    queryFn: () => base44.entities.Order.list("-created_date", 1000),
+  });
+
+  // Uso por cliente: nº de pedidos + data do último (Cad-3).
+  const usageByClient = {};
+  for (const o of orders) {
+    if (!o.client_id) continue;
+    const u = (usageByClient[o.client_id] ||= { count: 0, last: null });
+    u.count++;
+    const d = o.created_date || o.created_at;
+    if (d && (!u.last || d > u.last)) u.last = d;
+  }
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
@@ -78,6 +93,23 @@ export default function Clients({ hideTitle = false }) {
             <p className="text-muted-foreground text-sm mt-1">{clients.length} cliente(s) cadastrado(s)</p>
           </div>
         )}
+        <div className="flex items-center gap-2 ml-auto">
+        <Button variant="outline" className="gap-2" disabled={clients.length === 0}
+          onClick={() => downloadCsv(`clientes-${new Date().toISOString().slice(0,10)}`, clients, [
+            { key: "code", label: "Código" },
+            { key: "company_name", label: "Razão Social / Nome" },
+            { key: "trade_name", label: "Nome fantasia" },
+            { key: "cpf_cnpj", label: "CPF/CNPJ" },
+            { key: "type", label: "Tipo", format: v => v === "pj" ? "PJ" : "PF" },
+            { key: "client_type", label: "Perfil" },
+            { key: "phone", label: "Telefone" },
+            { key: "email", label: "E-mail" },
+            { key: "billing_type", label: "Cobrança", format: v => v === "monthly" ? "Mensal" : "Por viagem" },
+            { key: "status", label: "Status" },
+            { key: "id", label: "Pedidos", format: (_v, c) => usageByClient[c.id]?.count || 0 },
+          ])}>
+          <Download className="w-4 h-4" /> Exportar
+        </Button>
         <Dialog open={showAdd} onOpenChange={(v) => { setShowAdd(v); if (!v) setForm(EMPTY_CLIENT); }}>
           <DialogTrigger asChild>
             <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
@@ -202,6 +234,7 @@ export default function Clients({ hideTitle = false }) {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <DataTable
@@ -229,7 +262,7 @@ export default function Clients({ hideTitle = false }) {
               {!c.phone && !c.email && "—"}
             </div>
           )},
-          { key: "billing_type", label: "Cobrança", sortable: true, render: c => c.billing_type === "monthly" ? "Mensal" : "Por viagem" },
+          { key: "orders", label: "Pedidos", sortable: true, align: "right", className: "font-mono text-xs", value: c => usageByClient[c.id]?.count || 0, render: c => usageByClient[c.id]?.count || 0 },
           { key: "status", label: "Status", sortable: true, value: c => c.status, render: c => (
             <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded border ${
               c.status === "active" ? "text-green-700 bg-green-50 border-green-200" : "text-gray-600 bg-gray-50 border-gray-200"
@@ -264,6 +297,8 @@ export default function Clients({ hideTitle = false }) {
                   ["Perfil", viewingClient.client_type === "recorrente" ? "Recorrente" : "Eventual"],
                   ["Status", viewingClient.status === "active" ? "Ativo" : "Inativo"],
                   ["Cobrança", viewingClient.billing_type === "monthly" ? "Mensal" : "Por viagem"],
+                  ["Pedidos", String(usageByClient[viewingClient.id]?.count || 0)],
+                  ["Último pedido", usageByClient[viewingClient.id]?.last ? new Date(usageByClient[viewingClient.id].last).toLocaleDateString("pt-BR") : "—"],
                 ].map(([label, val]) => (
                   <div key={label}>
                     <p className="text-xs text-muted-foreground">{label}</p>

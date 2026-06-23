@@ -9,7 +9,8 @@ import { useToast } from "@/components/ui/use-toast";
 import DataTable from "@/components/shared/DataTable";
 import { FormSection, Field } from "@/components/shared/FormSection";
 import { AddressFields } from "@/components/shared/AddressFields";
-import { Plus, Warehouse, Pencil, Trash2 } from "lucide-react";
+import { Plus, Warehouse, Pencil, Trash2, Download } from "lucide-react";
+import { downloadCsv } from "@/utils/exportCsv";
 
 const EMPTY = { name: "", type: "filial", code: "", phone: "", status: "active", address: { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "" } };
 const TYPES = { filial: "Filial", cd: "Centro de Distribuição", base: "Base" };
@@ -49,9 +50,21 @@ export default function Branches({ hideTitle = false }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         {!hideTitle ? <div><h1 className="font-display text-xl font-bold">Filiais & CDs</h1><p className="text-muted-foreground text-xs">Pontos de origem, hubs e centros de distribuição</p></div> : <div />}
-        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => { setEditingId(null); setForm(EMPTY); setShowForm(true); }}>
-          <Plus className="w-4 h-4" /> Nova filial / CD
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" disabled={branches.length === 0}
+            onClick={() => downloadCsv(`filiais-${new Date().toISOString().slice(0,10)}`, branches, [
+              { key: "code", label: "Código" },
+              { key: "name", label: "Nome" },
+              { key: "type", label: "Tipo", format: v => TYPES[v] || v },
+              { key: "address", label: "Cidade", format: a => a?.city ? `${a.city}/${a.state}` : "" },
+              { key: "phone", label: "Telefone" },
+            ])}>
+            <Download className="w-4 h-4" /> Exportar
+          </Button>
+          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => { setEditingId(null); setForm(EMPTY); setShowForm(true); }}>
+            <Plus className="w-4 h-4" /> Nova filial / CD
+          </Button>
+        </div>
       </div>
 
       <DataTable

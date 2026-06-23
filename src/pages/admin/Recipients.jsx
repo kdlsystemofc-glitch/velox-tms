@@ -11,8 +11,9 @@ import DataTable from "@/components/shared/DataTable";
 import { FormSection, Field } from "@/components/shared/FormSection";
 import { AddressFields } from "@/components/shared/AddressFields";
 import DeliveryWindowEditor from "@/components/shared/DeliveryWindowEditor";
-import { Plus, MapPin, Pencil, Trash2, Building2 } from "lucide-react";
+import { Plus, MapPin, Pencil, Trash2, Building2, Download } from "lucide-react";
 import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
+import { downloadCsv } from "@/utils/exportCsv";
 
 function generateRecipientCode(recipients) {
   const max = recipients.reduce((m, r) => {
@@ -68,9 +69,23 @@ export default function Recipients({ hideTitle = false }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         {!hideTitle ? <div><h1 className="font-display text-xl font-bold">Destinatários</h1><p className="text-muted-foreground text-xs">Cadastro independente dos clientes</p></div> : <div />}
-        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={openNew}>
-          <Plus className="w-4 h-4" /> Novo destinatário
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" disabled={recipients.length === 0}
+            onClick={() => downloadCsv(`destinatarios-${new Date().toISOString().slice(0,10)}`, recipients, [
+              { key: "code", label: "Código" },
+              { key: "name", label: "Nome" },
+              { key: "cpf_cnpj", label: "CNPJ/CPF" },
+              { key: "type", label: "Tipo", format: v => v === "fixo" ? "Fixo" : "Eventual" },
+              { key: "address", label: "Cidade", format: a => a?.city ? `${a.city}/${a.state}` : "" },
+              { key: "phone", label: "Telefone" },
+              { key: "email", label: "E-mail" },
+            ])}>
+            <Download className="w-4 h-4" /> Exportar
+          </Button>
+          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={openNew}>
+            <Plus className="w-4 h-4" /> Novo destinatário
+          </Button>
+        </div>
       </div>
 
       <DataTable

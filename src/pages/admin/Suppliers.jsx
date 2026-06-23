@@ -14,6 +14,8 @@ import { FormSection, Field } from "@/components/shared/FormSection";
 import { AddressFields } from "@/components/shared/AddressFields";
 import ContactsEditor from "@/components/shared/ContactsEditor";
 import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
+import { downloadCsv } from "@/utils/exportCsv";
+import { Download } from "lucide-react";
 
 const CATEGORIES = [
   { value: "fuel",        label: "Combustível" },
@@ -159,6 +161,20 @@ export default function Suppliers({ hideTitle = false }) {
             <p className="text-muted-foreground text-sm mt-1">{suppliers.length} fornecedor(es) cadastrado(s)</p>
           </div>
         )}
+        <div className="flex items-center gap-2 ml-auto">
+        <Button variant="outline" className="gap-2" disabled={suppliers.length === 0}
+          onClick={() => downloadCsv(`fornecedores-${new Date().toISOString().slice(0,10)}`, suppliers, [
+            { key: "code", label: "Código" },
+            { key: "name", label: "Nome" },
+            { key: "cnpj_cpf", label: "CNPJ/CPF" },
+            { key: "category", label: "Categoria", format: v => catLabel(v) },
+            { key: "contact_name", label: "Contato" },
+            { key: "phone", label: "Telefone" },
+            { key: "email", label: "E-mail" },
+            { key: "payment_terms", label: "Pagamento" },
+          ])}>
+          <Download className="w-4 h-4" /> Exportar
+        </Button>
         <Dialog open={showAdd} onOpenChange={(v) => { setShowAdd(v); if (!v) setForm(EMPTY); }}>
           <DialogTrigger asChild>
             <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
@@ -178,6 +194,7 @@ export default function Suppliers({ hideTitle = false }) {
             </Button>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <DataTable
