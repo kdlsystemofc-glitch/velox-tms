@@ -470,8 +470,14 @@ Aprofundamento das três telas (fila, workspace, assistente) rumo ao nível TMS 
 - **Pe-3 — Produtividade na fila:** **ações em lote** (selecionar, exportar selecionados,
   criar viagem com os confirmados sem viagem).
 
-**Teto (grátis, maior esforço):** coleta consolidada **multi-origem** e **cotação→pedido**.
-**Pago:** vínculo fiscal **CT-e** (SEFAZ).
+- **Pe-4a — Coleta consolidada (multi-origem):** `orders.origins` (vários pontos de coleta
+  numa OS); seção "Pontos de coleta adicionais" no NewOrder; o `buildStops` cria **uma parada
+  de coleta por ponto** (roteirizada); exibição no pedido.
+- **Pe-4b — Cotação→pedido interna:** página **Cotação** (`/admin/cotacao`) simula o frete
+  (rota/peso/cubagem/taxas) com breakdown e prazo, e **"Criar pedido com esta cotação"**
+  pré-preenche o NewOrder.
+
+**Pago (único restante):** vínculo fiscal **CT-e** (SEFAZ).
 
 ---
 
@@ -490,3 +496,4 @@ Aprofundamento das três telas (fila, workspace, assistente) rumo ao nível TMS 
 12. `20260623_audit_fixes.sql`  ← correções da auditoria (recria close_trip/confirm_order)
 13. `20260624_cadastros.sql`    ← campos profissionais de veículo/motorista
 14. `20260625_pedidos.sql`      ← agendamento desejado/confirmado + anexos do pedido
+15. `20260626_multiorigem.sql`  ← coleta consolidada (vários pontos de coleta na OS)
