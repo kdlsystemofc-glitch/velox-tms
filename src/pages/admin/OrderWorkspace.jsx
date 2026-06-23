@@ -1144,8 +1144,10 @@ export default function OrderWorkspace() {
                       status: "resolved",
                       resolution_notes: resolutionNotes.trim(),
                       resolved_at: new Date().toISOString(),
+                      timeline: [...(resolvingIncident.timeline || []), { at: new Date().toISOString(), by: "Gestão", text: `Resolvida: ${resolutionNotes.trim()}`, kind: "resolved" }],
                     });
                     queryClient.invalidateQueries({ queryKey: ["incidents", id] });
+                    queryClient.invalidateQueries({ queryKey: ["incidents-all"] });
                     setResolvingIncident(null);
                     toast({ title: "Ocorrência resolvida!" });
                   }}>

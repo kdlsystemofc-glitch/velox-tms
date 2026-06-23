@@ -60,6 +60,12 @@ export function resolutionHours(inc) {
   return Math.max(0, Math.round((new Date(inc.resolved_at) - new Date(start)) / 3600000));
 }
 
+/** Ocorrência em aberto com prazo de resolução vencido? */
+export function incidentOverdue(inc) {
+  if (!inc || inc.status === "resolved" || !inc.due_date) return false;
+  return inc.due_date < new Date().toISOString().slice(0, 10);
+}
+
 export function formatDuration(hours) {
   if (hours == null) return "—";
   if (hours < 24) return `${hours}h`;

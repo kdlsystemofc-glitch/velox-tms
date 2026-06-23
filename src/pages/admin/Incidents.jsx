@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import {
   sortByGravity, incidentSeverity, incidentTypeLabel, SEVERITY_META,
-  buildTimeline, resolutionHours, formatDuration,
+  buildTimeline, resolutionHours, formatDuration, incidentOverdue, INCIDENT_TYPES,
 } from "@/utils/incidents";
 
 /**
@@ -27,6 +27,8 @@ export default function Incidents() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("open");
   const [sevFilter, setSevFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [assignedFilter, setAssignedFilter] = useState("");
   const [selected, setSelected] = useState(null);
   const [form, setForm] = useState({ assigned_to: "", action_plan: "", due_date: "", note: "", resolution: "" });
 
@@ -37,12 +39,27 @@ export default function Incidents() {
   const openOnly = statusFilter === "open" ? incidents.filter(i => i.status !== "resolved")
     : statusFilter === "resolved" ? incidents.filter(i => i.status === "resolved")
     : incidents;
-  const filtered = sortByGravity(openOnly.filter(i => sevFilter === "all" || incidentSeverity(i) === sevFilter));
+  const aq = assignedFilter.trim().toLowerCase();
+  const filteredBase = openOnly.filter(i =>
+    (sevFilter === "all" || incidentSeverity(i) === sevFilter) &&
+    (typeFilter === "all" || i.type === typeFilter) &&
+    (!aq || (i.assigned_to || "").toLowerCase().includes(aq))
+  );
+  // Ordena por gravidade; atrasadas sobem para o topo.
+  const filtered = sortByGravity(filteredBase).sort((a, b) => Number(incidentOverdue(b)) - Number(incidentOverdue(a)));
 
   const counts = {
     open: incidents.filter(i => i.status !== "resolved").length,
     critical: incidents.filter(i => i.status !== "resolved" && incidentSeverity(i) === "critical").length,
+    overdue: incidents.filter(i => incidentOverdue(i)).length,
     resolved: incidents.filter(i => i.status === "resolved").length,
+  };
+
+  const reopen = async (inc) => {
+    const newTl = tl(inc, "Ocorrência reaberta", "reopen");
+    await update.mutateAsync({ id: inc.id, patch: { status: "in_progress", resolved_at: null, timeline: newTl } });
+    setSelected(s => ({ ...s, status: "in_progress", resolved_at: null, timeline: newTl }));
+    toast({ title: "Ocorrência reaberta" });
   };
 
   const update = useMutation({
@@ -115,9 +132,10 @@ export default function Incidents() {
       <PageHeader icon={AlertTriangle} title="Ocorrências" subtitle="Central de tratativa — por gravidade, com plano de ação e linha do tempo" />
 
       {/* Resumo */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Em aberto</p><p className="text-lg font-bold font-mono text-amber-600">{counts.open}</p></Card>
         <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Críticas</p><p className="text-lg font-bold font-mono text-red-600">{counts.critical}</p></Card>
+        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Atrasadas (prazo)</p><p className={`text-lg font-bold font-mono ${counts.overdue > 0 ? "text-red-600" : "text-muted-foreground"}`}>{counts.overdue}</p></Card>
         <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Resolvidas</p><p className="text-lg font-bold font-mono text-green-600">{counts.resolved}</p></Card>
       </div>
 
@@ -141,6 +159,14 @@ export default function Incidents() {
             <SelectItem value="low">Baixa</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Tipo" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todo tipo</SelectItem>
+            {Object.keys(INCIDENT_TYPES).map(t => <SelectItem key={t} value={t}>{incidentTypeLabel(t)}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Input placeholder="Responsável..." value={assignedFilter} onChange={e => setAssignedFilter(e.target.value)} className="w-40" />
       </div>
 
       {/* Lista */}
@@ -167,6 +193,7 @@ export default function Incidents() {
                         inc.status === "resolved" ? "bg-green-100 text-green-700" :
                         inc.status === "in_progress" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
                       }`}>{inc.status === "resolved" ? "Resolvida" : inc.status === "in_progress" ? "Em tratativa" : "Aberta"}</span>
+                      {incidentOverdue(inc) && <span className="text-[10px] bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Clock className="w-3 h-3" /> Prazo vencido</span>}
                       {inc.client_notified && <span className="text-[10px] text-green-600 flex items-center gap-0.5"><BellRing className="w-3 h-3" /> cliente avisado</span>}
                       {inc.insurance_triggered && <span className="text-[10px] text-blue-600 flex items-center gap-0.5"><Shield className="w-3 h-3" /> seguro</span>}
                     </div>
@@ -264,9 +291,12 @@ export default function Incidents() {
                   )}
 
                   {selected.status === "resolved" && (
-                    <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm">
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm space-y-2">
                       <p className="font-semibold text-green-800">Resolvida em {formatDuration(resolutionHours(selected))}</p>
-                      {selected.resolution_notes && <p className="text-green-700 mt-0.5">{selected.resolution_notes}</p>}
+                      {selected.resolution_notes && <p className="text-green-700">{selected.resolution_notes}</p>}
+                      <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => reopen(selected)}>
+                        <AlertTriangle className="w-3.5 h-3.5" /> Reabrir ocorrência
+                      </Button>
                     </div>
                   )}
                 </div>
