@@ -570,6 +570,32 @@ era `undefined` e o polling ficava **silenciosamente desligado**. Corrigido para
 
 ---
 
+## MÓDULO A MÓDULO — Transferências (malha de filiais / cross-docking)
+
+**Auditoria:** núcleo funcional (fluxo `planned → in_transit → received` com RPC atômico
+`receive_transfer`), mas com lacunas de consistência: sem cancelar/estornar (pedidos
+travavam em "Em transferência"), caminhão/motorista não mudavam de status (mesmo veículo
+podia estar em viagem **e** transferência), e o filtro de elegíveis permitia **double-booking**
+do mesmo pedido. Nenhum crash — problemas de fluxo, resolvidos no Tr-1.
+
+- **Tr-1 — Operação robusta & segura:** **estornar** transferência (devolve cada pedido ao
+  status anterior + libera o caminhão, via RPC atômico `cancel_transfer`); **caminhão vai a
+  on_route ao sair e volta a available ao receber/estornar**; seleção só mostra **caminhão
+  disponível / motorista livre** e esconde **pedidos já em transferência ativa** (fim do
+  double-booking). (migration `20260632_transfer_ops.sql`)
+- **Tr-2 — Visão & manifesto:** lista profissional (**busca + filtro por status**, **KPIs**:
+  em trânsito, planejadas, pedidos na malha, **peso na malha**), **peso por transferência** e
+  **peso × capacidade do caminhão** com alerta de excesso, **manifesto PDF** da transferência,
+  e **"Em transferência" no pipeline da torre de controle**.
+- **Tr-3 — Cross-dock & malha:** **conferência de recebimento** (divergência por pedido vira
+  **ocorrência de avaria** automática); **custo + km do trecho** lançados no recebimento →
+  **despesa no Financeiro**; **`branch_history`** registra cada hop do pedido pela malha de
+  filiais/CDs. (migration `20260633_transfer_mesh.sql`)
+
+**Teto pago:** roteirização real entre CDs, EDI entre filiais, leitor físico de código de barras.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -591,3 +617,5 @@ era `undefined` e o polling ficava **silenciosamente desligado**. Corrigido para
 18. `20260629_incidents_impact.sql` ← ocorrências: impacto financeiro + causa-raiz
 19. `20260630_trip_efficiency.sql` ← viagens: custo estimado + histórico de consumo (km/L)
 20. `20260631_trip_settlement.sql` ← viagens: rateio de comissão por veículo + custo categorizado (recria close_trip)
+21. `20260632_transfer_ops.sql` ← transferências: estorno (cancel_transfer) + sincronização de frota (recria receive_transfer)
+22. `20260633_transfer_mesh.sql` ← transferências: malha de filiais (branch_history) + custo/km do trecho
