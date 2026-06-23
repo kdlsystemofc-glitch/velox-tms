@@ -29,6 +29,7 @@ export default function DRE({ hideTitle = false }) {
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
   const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => base44.entities.Expense.list("-date", 500) });
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
+  const { data: revenues = [] } = useQuery({ queryKey: ["revenues"], queryFn: () => base44.entities.Revenue.list("-due_date", 500) });
 
   const month = parseInt(selectedMonth);
   const year = parseInt(selectedYear);
@@ -56,6 +57,27 @@ export default function DRE({ hideTitle = false }) {
   const ebitda = netRevenue - varTotal - fixTotal - otherExp;
   const netProfit = ebitda - depreciation;
   const margin = grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
+
+  // ── Comparativo, YTD e conciliação (Fin-3) ──
+  const computeNet = (m, y) => {
+    const po = orders.filter(o => { const d = new Date(o.created_date); return d.getMonth() === m && d.getFullYear() === y; });
+    const pe = expenses.filter(e => { if (!e.date) return false; const d = new Date(e.date); return d.getMonth() === m && d.getFullYear() === y; });
+    const gr = po.reduce((s, o) => s + (o.freight_value || 0), 0);
+    const nr = gr - gr * taxRate;
+    const vt = variableCosts.reduce((s, c) => s + pe.filter(e => e.category === c).reduce((ss, e) => ss + (e.amount || 0), 0), 0);
+    const ft = fixedCosts.reduce((s, c) => s + pe.filter(e => e.category === c).reduce((ss, e) => ss + (e.amount || 0), 0), 0);
+    const oe = pe.filter(e => !variableCosts.includes(e.category) && !fixedCosts.includes(e.category)).reduce((s, e) => s + (e.amount || 0), 0);
+    const eb = nr - vt - ft - oe;
+    const np = eb - depreciation;
+    return { grossRevenue: gr, ebitda: eb, netProfit: np, margin: gr > 0 ? (np / gr) * 100 : 0 };
+  };
+  const prevM = month === 0 ? 11 : month - 1;
+  const prevY = month === 0 ? year - 1 : year;
+  const prev = computeNet(prevM, prevY);
+  const ytd = Array.from({ length: month + 1 }, (_, m) => computeNet(m, year)).reduce((a, n) => ({ grossRevenue: a.grossRevenue + n.grossRevenue, netProfit: a.netProfit + n.netProfit }), { grossRevenue: 0, netProfit: 0 });
+  const delta = (cur, old) => old === 0 ? null : ((cur - old) / Math.abs(old)) * 100;
+  // Conciliação competência (DRE) × caixa (recebido no mês)
+  const caixaRecebido = revenues.filter(r => r.status === "received" && r.received_date && new Date(r.received_date).getMonth() === month && new Date(r.received_date).getFullYear() === year).reduce((s, r) => s + (r.amount || 0), 0);
 
   const costsByCategory = Object.entries(categoryLabels).map(([k, label]) => ({
     name: label,
@@ -323,6 +345,46 @@ export default function DRE({ hideTitle = false }) {
               <p className="text-sm text-muted-foreground text-center">Margem líquida: {margin.toFixed(1)}%</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Comparativo + YTD */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Card>
+          <CardContent className="pt-5">
+            <h3 className="font-semibold text-sm mb-3">Comparativo com {MONTH_NAMES[prevM]}/{prevY}</h3>
+            {[["Receita bruta", grossRevenue, prev.grossRevenue], ["EBITDA", ebitda, prev.ebitda], ["Lucro líquido", netProfit, prev.netProfit]].map(([label, cur, old]) => {
+              const d = delta(cur, old);
+              return (
+                <div key={label} className="flex items-center justify-between py-1.5 border-b border-border/30 text-sm">
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="font-mono">R$ {cur.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                    {d != null && <span className={`text-[11px] font-semibold ${d >= 0 ? "text-green-600" : "text-red-600"}`}>{d >= 0 ? "▲" : "▼"} {Math.abs(d).toFixed(0)}%</span>}
+                  </span>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-5">
+            <h3 className="font-semibold text-sm mb-3">Acumulado do ano ({year})</h3>
+            <div className="flex items-center justify-between py-1.5 border-b border-border/30 text-sm"><span className="text-muted-foreground">Receita bruta (YTD)</span><span className="font-mono">R$ {ytd.grossRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+            <div className="flex items-center justify-between py-1.5 border-b border-border/30 text-sm"><span className="text-muted-foreground">Lucro líquido (YTD)</span><span className={`font-mono font-semibold ${ytd.netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>R$ {ytd.netProfit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+            <div className="flex items-center justify-between py-1.5 text-sm"><span className="text-muted-foreground">Margem acumulada</span><span className="font-mono">{ytd.grossRevenue > 0 ? ((ytd.netProfit / ytd.grossRevenue) * 100).toFixed(1) : "0.0"}%</span></div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Conciliação competência × caixa */}
+      <Card>
+        <CardContent className="pt-5">
+          <h3 className="font-semibold text-sm mb-1">Conciliação: competência × caixa</h3>
+          <p className="text-xs text-muted-foreground mb-3">Receita reconhecida na DRE (fretes do mês) vs efetivamente recebida (baixas no mês). A diferença é o que ficou a receber ou veio de meses anteriores.</p>
+          <div className="flex items-center justify-between py-1.5 border-b border-border/30 text-sm"><span className="text-muted-foreground">Receita por competência (DRE)</span><span className="font-mono">R$ {grossRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex items-center justify-between py-1.5 border-b border-border/30 text-sm"><span className="text-muted-foreground">Receita por caixa (recebido)</span><span className="font-mono text-green-600">R$ {caixaRecebido.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex items-center justify-between py-1.5 text-sm font-semibold"><span>Diferença (competência − caixa)</span><span className={`font-mono ${grossRevenue - caixaRecebido >= 0 ? "text-amber-600" : "text-blue-600"}`}>R$ {(grossRevenue - caixaRecebido).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
         </CardContent>
       </Card>
 
