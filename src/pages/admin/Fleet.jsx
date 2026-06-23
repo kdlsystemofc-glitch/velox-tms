@@ -2,12 +2,11 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link, useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Truck, Search, AlertTriangle, Eye } from "lucide-react";
+import { Plus, Truck, AlertTriangle, Eye } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { differenceInDays, parseISO } from "date-fns";
 import DataTable from "@/components/shared/DataTable";
@@ -16,6 +15,8 @@ import { FormSection, Field } from "@/components/shared/FormSection";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { Textarea } from "@/components/ui/textarea";
 import { IdCard, Ruler, FileCheck2, Gauge } from "lucide-react";
+import { normalizePlate, formatPlate, isValidPlate } from "@/utils/validators";
+import { truckVolumeM3, fmtM3 } from "@/utils/cargoVolume";
 
 const statusConfig = {
   available: { label: "Disponível", color: "bg-green-100 text-green-700" },
@@ -42,7 +43,6 @@ export default function Fleet({ hideTitle = false }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const EMPTY_FORM = { plate: "", model: "", manufacturer: "", year: "", truck_type: "truck", capacity_kg: "", status: "available", color: "", renavam: "", chassis: "", dimensions: { length_m: "", width_m: "", height_m: "" }, axles: "", tare_weight: "", body_type: "", ownership: "proprio", owner_name: "", tracker_provider: "", tracker_id: "", crlv_expiry: "", insurance_expiry: "", tachograph_last: "", tachograph_next: "", total_km: "", km_alert_oil: "", km_alert_review: "", km_alert_tires: "", notes: "" };
   const [form, setForm] = useState(EMPTY_FORM);
@@ -58,9 +58,17 @@ export default function Fleet({ hideTitle = false }) {
       toast({ title: "Caminhão cadastrado!" });
       navigate(`/admin/frota/${truck.id}`);
     },
+    onError: (e) => {
+      const dup = /duplicate|unique/i.test(e?.message || "");
+      toast({ title: dup ? "Placa já cadastrada" : "Erro ao cadastrar", description: dup ? "Já existe um veículo com essa placa." : e?.message, variant: "destructive" });
+    },
   });
 
-  const filtered = trucks.filter(t => !search || t.plate?.toLowerCase().includes(search.toLowerCase()) || t.model?.toLowerCase().includes(search.toLowerCase()));
+  // Validação de placa (formato + duplicidade) antes de salvar.
+  const plateNorm = normalizePlate(form.plate);
+  const plateDuplicate = plateNorm.length > 0 && trucks.some(t => normalizePlate(t.plate) === plateNorm);
+  const plateInvalid = plateNorm.length > 0 && !isValidPlate(plateNorm);
+  const formVolumeM3 = truckVolumeM3({ dimensions: form.dimensions });
 
   return (
     <div className="space-y-4">
@@ -84,8 +92,14 @@ export default function Fleet({ hideTitle = false }) {
 
             <div className="space-y-4 p-5">
               <FormSection title="Identificação" description="Dados do veículo e documento" icon={IdCard} cols={2}>
-                <Field label="Placa" required>
-                  <Input placeholder="ABC-1234" value={form.plate} onChange={e => setForm(f => ({ ...f, plate: e.target.value.toUpperCase() }))} />
+                <Field label="Placa" required hint={plateDuplicate ? "⚠ Placa já cadastrada" : plateInvalid ? "⚠ Formato inválido (ABC-1234 ou ABC1D23)" : "Antiga ou Mercosul"}>
+                  <Input
+                    placeholder="ABC-1234"
+                    value={form.plate}
+                    onChange={e => setForm(f => ({ ...f, plate: normalizePlate(e.target.value) }))}
+                    onBlur={() => setForm(f => ({ ...f, plate: formatPlate(f.plate) }))}
+                    className={plateDuplicate || plateInvalid ? "border-red-400 focus-visible:ring-red-400" : ""}
+                  />
                 </Field>
                 <Field label="Tipo">
                   <Select value={form.truck_type} onValueChange={v => setForm(f => ({ ...f, truck_type: v }))}>
@@ -121,7 +135,7 @@ export default function Fleet({ hideTitle = false }) {
                 <Field label="Capacidade (kg)">
                   <NumericInput integer value={form.capacity_kg} onChange={v => setForm(f => ({ ...f, capacity_kg: v }))} placeholder="Ex: 25000" />
                 </Field>
-                <Field label="Dimensões do baú (m)" hint="Comprimento · Largura · Altura — aceita vírgula ou ponto" colSpan={2}>
+                <Field label="Dimensões do baú (m)" hint={formVolumeM3 > 0 ? `Volume útil: ${fmtM3(formVolumeM3)}` : "Comprimento · Largura · Altura — aceita vírgula ou ponto"} colSpan={2}>
                   <div className="grid grid-cols-3 gap-2">
                     <NumericInput value={form.dimensions?.length_m ?? ""} onChange={v => setForm(f => ({ ...f, dimensions: { ...f.dimensions, length_m: v } }))} placeholder="Comp." />
                     <NumericInput value={form.dimensions?.width_m ?? ""} onChange={v => setForm(f => ({ ...f, dimensions: { ...f.dimensions, width_m: v } }))} placeholder="Larg." />
@@ -210,6 +224,7 @@ export default function Fleet({ hideTitle = false }) {
               <Button
                 onClick={() => createMutation.mutate({
                   ...form,
+                  plate: formatPlate(form.plate),
                   year: Number(form.year) || undefined,
                   capacity_kg: Number(form.capacity_kg) || undefined,
                   axles: Number(form.axles) || undefined,
@@ -228,7 +243,7 @@ export default function Fleet({ hideTitle = false }) {
                     height_m: Number(form.dimensions?.height_m) || undefined,
                   }
                 })}
-                disabled={!form.plate || createMutation.isPending}
+                disabled={!form.plate || plateInvalid || plateDuplicate || createMutation.isPending}
                 className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
               >
                 <Plus className="w-4 h-4" /> {createMutation.isPending ? "Salvando..." : "Cadastrar caminhão"}
@@ -257,6 +272,7 @@ export default function Fleet({ hideTitle = false }) {
           )},
           { key: "truck_type", label: "Tipo", sortable: true, className: "text-xs", render: t => truckTypeLabel[t.truck_type] || t.truck_type || "—" },
           { key: "capacity_kg", label: "Capacidade", sortable: true, align: "right", className: "font-mono text-xs", render: t => t.capacity_kg ? `${t.capacity_kg.toLocaleString("pt-BR")} kg` : "—" },
+          { key: "volume_m3", label: "Volume útil", align: "right", className: "font-mono text-xs", value: t => truckVolumeM3(t), render: t => { const v = truckVolumeM3(t); return v > 0 ? fmtM3(v) : "—"; } },
           { key: "docs", label: "Documentos", render: t => hasDocAlert(t)
             ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded"><AlertTriangle className="w-3 h-3" /> Vencendo</span>
             : <span className="text-[11px] text-green-700">Em dia</span>

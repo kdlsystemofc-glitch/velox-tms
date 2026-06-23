@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Link, useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Users, Search, AlertTriangle, Eye, User, IdCard, Briefcase, MapPin, Landmark } from "lucide-react";
+import { Plus, Users, AlertTriangle, Eye, User, IdCard, Briefcase, Landmark } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { differenceInDays, parseISO } from "date-fns";
 import DataTable from "@/components/shared/DataTable";
@@ -16,6 +16,7 @@ import StatusBadge from "@/components/admin/StatusBadge";
 import { FormSection, Field } from "@/components/shared/FormSection";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { AddressFields } from "@/components/shared/AddressFields";
+import { formatCPF, isValidCPF, onlyDigits } from "@/utils/validators";
 
 const driverStatusConfig = {
   active:     { label: "Ativo",     dot: "bg-green-600", cls: "text-green-700 bg-green-50 border-green-200" },
@@ -33,9 +34,8 @@ export default function Drivers({ hideTitle = false }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  const EMPTY_DRIVER = { name: "", cpf: "", phone: "", email: "", birth_date: "", hire_date: "", cnh_number: "", cnh_category: "C", cnh_expiry: "", exam_aso_expiry: "", exam_toxic_expiry: "", default_truck_id: "", role: "motorista", contract_type: "clt", base_salary: "", commission_percent: "", status: "active", address: { street: "", number: "", neighborhood: "", city: "", state: "", cep: "" }, bank_info: { bank: "", agency: "", account: "", pix_key: "" }, notes: "" };
+  const EMPTY_DRIVER = { name: "", cpf: "", phone: "", email: "", birth_date: "", hire_date: "", cnh_number: "", cnh_category: "C", cnh_expiry: "", ear: true, cnh_points: "", exam_aso_expiry: "", exam_toxic_expiry: "", default_truck_id: "", role: "motorista", contract_type: "clt", base_salary: "", commission_percent: "", status: "active", address: { street: "", number: "", neighborhood: "", city: "", state: "", cep: "" }, bank_info: { bank: "", agency: "", account: "", pix_key: "" }, notes: "" };
   const [form, setForm] = useState(EMPTY_DRIVER);
 
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
@@ -50,13 +50,20 @@ export default function Drivers({ hideTitle = false }) {
       toast({ title: "Motorista cadastrado!" });
       navigate(`/admin/motoristas/${driver.id}`);
     },
+    onError: (e) => toast({ title: "Erro ao cadastrar", description: e?.message, variant: "destructive" }),
   });
 
-  const filtered = drivers.filter(d => !search || d.name?.toLowerCase().includes(search.toLowerCase()) || d.cpf?.includes(search));
+  // Validação de CPF (formato + duplicidade).
+  const cpfDigits = onlyDigits(form.cpf);
+  const cpfDuplicate = cpfDigits.length === 11 && drivers.some(d => onlyDigits(d.cpf) === cpfDigits);
+  const cpfInvalid = cpfDigits.length > 0 && !isValidCPF(cpfDigits);
 
-  const cnhAlert = (driver) => {
-    if (!driver.cnh_expiry) return false;
-    return differenceInDays(parseISO(driver.cnh_expiry), new Date()) <= 60;
+  // Pendências de documentos (CNH / ASO / toxicológico) vencidas ou a vencer em 60 dias.
+  const docPendencies = (driver) => {
+    const labels = [["cnh_expiry", "CNH"], ["exam_aso_expiry", "ASO"], ["exam_toxic_expiry", "Toxicológico"]];
+    return labels
+      .filter(([k]) => driver[k] && differenceInDays(parseISO(driver[k]), new Date()) <= 60)
+      .map(([k, l]) => ({ label: l, expired: differenceInDays(parseISO(driver[k]), new Date()) < 0 }));
   };
 
   return (
@@ -84,8 +91,13 @@ export default function Drivers({ hideTitle = false }) {
                 <Field label="Nome completo" required colSpan={2}>
                   <Input placeholder="Ex: João da Silva" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
                 </Field>
-                <Field label="CPF" required>
-                  <Input placeholder="000.000.000-00" value={form.cpf} onChange={e => setForm(f => ({ ...f, cpf: e.target.value }))} />
+                <Field label="CPF" required hint={cpfDuplicate ? "⚠ CPF já cadastrado" : cpfInvalid ? "⚠ CPF inválido" : undefined}>
+                  <Input
+                    placeholder="000.000.000-00"
+                    value={form.cpf}
+                    onChange={e => setForm(f => ({ ...f, cpf: formatCPF(e.target.value) }))}
+                    className={cpfDuplicate || cpfInvalid ? "border-red-400 focus-visible:ring-red-400" : ""}
+                  />
                 </Field>
                 <Field label="Data de nascimento">
                   <Input type="date" value={form.birth_date} onChange={e => setForm(f => ({ ...f, birth_date: e.target.value }))} />
@@ -110,6 +122,15 @@ export default function Drivers({ hideTitle = false }) {
                 </Field>
                 <Field label="Vencimento" hint="Gera alerta automático">
                   <Input type="date" value={form.cnh_expiry} onChange={e => setForm(f => ({ ...f, cnh_expiry: e.target.value }))} />
+                </Field>
+                <Field label="Pontos na CNH" hint="0 a 40">
+                  <NumericInput integer value={form.cnh_points} onChange={v => setForm(f => ({ ...f, cnh_points: v }))} placeholder="Ex: 0" />
+                </Field>
+                <Field label="EAR" hint="Exerce atividade remunerada" colSpan={2}>
+                  <label className="flex items-center gap-2 h-9 cursor-pointer text-sm">
+                    <Checkbox checked={!!form.ear} onCheckedChange={v => setForm(f => ({ ...f, ear: !!v }))} />
+                    CNH habilitada para atividade remunerada (EAR)
+                  </label>
                 </Field>
               </FormSection>
 
@@ -204,8 +225,8 @@ export default function Drivers({ hideTitle = false }) {
             <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border sticky bottom-0 bg-background z-10">
               <Button variant="outline" onClick={() => { setShowAdd(false); setForm(EMPTY_DRIVER); }}>Cancelar</Button>
               <Button
-                onClick={() => createMutation.mutate({ ...form, base_salary: Number(form.base_salary) || undefined })}
-                disabled={!form.name || !form.cpf || createMutation.isPending}
+                onClick={() => createMutation.mutate({ ...form, base_salary: Number(form.base_salary) || undefined, cnh_points: form.cnh_points === "" ? undefined : Number(form.cnh_points) })}
+                disabled={!form.name || !form.cpf || cpfInvalid || cpfDuplicate || createMutation.isPending}
                 className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
               >
                 <Plus className="w-4 h-4" /> {createMutation.isPending ? "Salvando..." : "Cadastrar motorista"}
@@ -230,12 +251,17 @@ export default function Drivers({ hideTitle = false }) {
               </span>
               <span className="min-w-0">
                 <span className="block truncate">{d.name}</span>
-                {cnhAlert(d) && <span className="text-[11px] text-red-600 flex items-center gap-0.5"><AlertTriangle className="w-3 h-3" /> CNH vencendo</span>}
+                {(() => {
+                  const p = docPendencies(d);
+                  if (p.length === 0) return null;
+                  const expired = p.some(x => x.expired);
+                  return <span className={`text-[11px] flex items-center gap-0.5 ${expired ? "text-red-600" : "text-amber-600"}`}><AlertTriangle className="w-3 h-3" /> {expired ? "Pendência: " : "A vencer: "}{p.map(x => x.label).join(", ")}</span>;
+                })()}
               </span>
             </div>
           )},
           { key: "cpf", label: "CPF", sortable: true, className: "font-mono text-xs text-muted-foreground", render: d => d.cpf || "—" },
-          { key: "cnh", label: "CNH", value: d => d.cnh_category || "", className: "text-xs text-muted-foreground", render: d => `Cat. ${d.cnh_category || "—"} · ${d.cnh_expiry || "—"}` },
+          { key: "cnh", label: "CNH", value: d => d.cnh_category || "", className: "text-xs text-muted-foreground", render: d => <span>Cat. {d.cnh_category || "—"} · {d.cnh_expiry || "—"}{d.ear ? " · EAR" : ""}{Number(d.cnh_points) > 0 ? ` · ${d.cnh_points} pts` : ""}</span> },
           { key: "role", label: "Função", sortable: true, className: "text-xs", render: d => ({ motorista: "Motorista", ajudante: "Ajudante", administrativo: "Administrativo" }[d.role] || d.role || "—") },
           { key: "phone", label: "Telefone", className: "text-xs text-muted-foreground", render: d => d.phone || "—" },
           { key: "status", label: "Status", sortable: true, value: d => d.status, render: d => <StatusBadge status={d.status} config={driverStatusConfig} /> },
