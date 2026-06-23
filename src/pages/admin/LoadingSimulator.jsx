@@ -1,65 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Package, Truck, Plus, RotateCcw, AlertTriangle } from "lucide-react";
+import { Package, Truck, Plus, RotateCcw, AlertTriangle, Box } from "lucide-react";
+import { packLoad } from "@/utils/loadPacker";
 
-const TRUCK_L = 13.6;
-const TRUCK_W = 2.4;
-const TRUCK_H = 2.7;
-const SCALE = 28;
+// three.js é pesado → carrega só quando o baú 3D aparece.
+const Truck3D = lazy(() => import("@/components/admin/Truck3D"));
+import { itemVolumeM3, truckVolumeM3, fmtM3 } from "@/utils/cargoVolume";
 
-const PKG_COLORS = {
-  caixa:     "#3B82F6",
-  palete:    "#8B5CF6",
-  tambor:    "#F59E0B",
-  bobina:    "#10B981",
-  fardo:     "#EF4444",
-  saco:      "#6366F1",
-  outro:     "#64748B",
-};
+// Baú padrão (carreta) quando o veículo não tem dimensões cadastradas.
+const DEF_L = 13.6, DEF_W = 2.4, DEF_H = 2.7;
 
-function TruckVisualization({ items, truckL, truckW, truckH, view, scale }) {
-  const W = view === "front" ? Math.round(truckW * scale) : Math.round(truckL * scale);
-  const H = view === "top"   ? Math.round(truckW * scale) : Math.round(truckH * scale);
+// Cor distinta por PEDIDO (não por tipo) — facilita ler a separação no 3D.
+const ORDER_COLORS = ["#3B82F6", "#8B5CF6", "#F59E0B", "#10B981", "#EF4444", "#6366F1", "#EC4899", "#14B8A6", "#F97316", "#0EA5E9"];
 
-  let xOffset = 0;
-  let yBase = H;
-  const rendered = [];
-
-  for (const item of items) {
-    const vols = item.volumes || 1;
-    const il = ((item.length_cm || 60) / 100) * scale;
-    const ih = ((item.height_cm || 40) / 100) * scale;
-
-    for (let v = 0; v < Math.min(vols, 20); v++) {
-      const x = xOffset % W;
-      const y = yBase - ih;
-      rendered.push({ x, y: Math.max(0, y), w: Math.min(il, W - x), h: ih, color: item.color || "#64748B", key: `${item.orderId}-${v}` });
-      xOffset += il;
-      if (xOffset >= W) { xOffset = 0; yBase -= ih; if (yBase < 0) break; }
-    }
-  }
-
+function Bar({ label, used, total, unit, pct, warn }) {
+  const color = warn ? "bg-red-500" : pct > 90 ? "bg-amber-500" : "bg-green-500";
   return (
-    <div className="overflow-x-auto">
-      <svg width={W} height={H} className="border-2 border-slate-300 rounded bg-slate-50" style={{ display: "block", maxWidth: "100%" }}>
-        <rect x={0} y={H - 4} width={W} height={4} fill="#94A3B8" />
-        {rendered.map(item => (
-          <rect key={item.key} x={item.x + 1} y={item.y} width={Math.max(item.w - 2, 2)} height={Math.max(item.h - 1, 2)} fill={item.color} fillOpacity={0.8} stroke={item.color} strokeWidth={1} rx={2} />
-        ))}
-        <rect x={1} y={1} width={W - 2} height={H - 2} fill="none" stroke="#475569" strokeWidth={2} rx={4} />
-        <text x={8} y={16} fontSize={10} fill="#94A3B8">
-          {view === "side" ? `${truckL}m × ${truckH}m` : view === "top" ? `${truckL}m × ${truckW}m` : `${truckW}m × ${truckH}m`}
-        </text>
-        {rendered.length === 0 && (
-          <text x={W / 2} y={H / 2} textAnchor="middle" dominantBaseline="middle" fontSize={13} fill="#94A3B8">
-            Baú vazio — adicione pedidos →
-          </text>
-        )}
-      </svg>
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={`font-mono ${warn ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>{used} / {total} {unit} · {pct.toFixed(0)}%</span>
+      </div>
+      <div className="h-3 bg-muted rounded-full overflow-hidden">
+        <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${Math.min(pct, 100)}%` }} />
+      </div>
     </div>
   );
 }
@@ -74,29 +41,41 @@ export default function LoadingSimulator() {
 
   const [selectedTruck, setSelectedTruck] = useState(null);
   const [loadedItems, setLoadedItems] = useState([]);
-  const [view, setView] = useState("side");
 
   const truck = trucks.find(t => t.id === selectedTruck) || trucks[0];
-  const truckL = truck?.dimensions?.length_m || TRUCK_L;
-  const truckW = truck?.dimensions?.width_m  || TRUCK_W;
-  const truckH = truck?.dimensions?.height_m || TRUCK_H;
-  const truckCapKg = truck?.capacity_kg || 27000;
+  const truckL = Number(truck?.dimensions?.length_m) || DEF_L;
+  const truckW = Number(truck?.dimensions?.width_m) || DEF_W;
+  const truckH = Number(truck?.dimensions?.height_m) || DEF_H;
+  const truckCapKg = Number(truck?.capacity_kg) || 27000;
+  const truckVol = truckVolumeM3(truck) || (truckL * truckW * truckH);
 
-  const totalKg  = loadedItems.reduce((s, i) => s + (i.weight_kg || 0), 0);
-  const totalVol = loadedItems.reduce((s, i) => s + (i.volumes || 0), 0);
-  const weightPct = Math.min((totalKg / truckCapKg) * 100, 100);
+  // Pesos e volumes.
+  const totalKg = loadedItems.reduce((s, i) => s + (i.weight_kg || 0), 0);
+  const totalVolM3 = loadedItems.reduce((s, i) => s + itemVolumeM3(i), 0);
+  const weightPct = truckCapKg > 0 ? (totalKg / truckCapKg) * 100 : 0;
+  const volPct = truckVol > 0 ? (totalVolM3 / truckVol) * 100 : 0;
   const isOverweight = totalKg > truckCapKg;
-  const barColor = weightPct > 90 ? "bg-red-500" : weightPct > 70 ? "bg-amber-500" : "bg-green-500";
+  const isOvervolume = totalVolM3 > truckVol;
+
+  // Cor por pedido + empacotamento 3D.
+  const orderIds = [...new Set(loadedItems.map(i => i.orderId))];
+  const colorOf = (orderId) => ORDER_COLORS[orderIds.indexOf(orderId) % ORDER_COLORS.length];
+  const itemsForPack = loadedItems.map(i => ({ ...i, color: colorOf(i.orderId) }));
+  const pack = packLoad({ length_m: truckL, width_m: truckW, height_m: truckH }, itemsForPack);
 
   const addOrder = (order) => {
-    const items = order.recipients?.flatMap(r =>
-      r.items?.map(item => ({
+    const items = (order.recipients || []).flatMap(r =>
+      (r.items || []).map(item => ({
         ...item,
         orderId: order.id,
         protocol: order.protocol,
-        color: PKG_COLORS[item.package_type || "caixa"] || "#64748B",
-      })) || []
-    ) || [];
+      }))
+    );
+    // Sem dimensões nos itens? cria 1 caixa estimada com o peso total do pedido.
+    if (items.length === 0 || items.every(i => !i.length_cm && !i.width_cm && !i.height_cm)) {
+      items.length = 0;
+      items.push({ orderId: order.id, protocol: order.protocol, volumes: order.total_volumes || 1, weight_kg: order.total_weight_kg || 0, length_cm: 80, width_cm: 60, height_cm: 60 });
+    }
     setLoadedItems(prev => [...prev, ...items]);
   };
 
@@ -111,13 +90,14 @@ export default function LoadingSimulator() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="font-display text-2xl font-extrabold text-foreground flex items-center gap-2">
-            <Truck className="w-6 h-6 text-velox-amber" /> Simulador de Carregamento
+            <Truck className="w-6 h-6 text-velox-amber" /> Simulador de Carregamento 3D
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Visualize como os pedidos preenchem o baú da carreta</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Veja como os pedidos preenchem o baú — em peso e em espaço. Arraste para girar, role para dar zoom.</p>
         </div>
         <div className="flex gap-2">
-          <select className="rounded-lg border border-border bg-background px-3 py-2 text-sm" value={selectedTruck || ""} onChange={e => { setSelectedTruck(e.target.value); reset(); }}>
-            {trucks.map(t => <option key={t.id} value={t.id}>{t.plate} — {t.model} ({(t.capacity_kg||0).toLocaleString("pt-BR")} kg)</option>)}
+          <select className="rounded-lg border border-border bg-background px-3 py-2 text-sm" value={truck?.id || ""} onChange={e => { setSelectedTruck(e.target.value); reset(); }}>
+            {trucks.length === 0 && <option value="">Nenhuma carreta cadastrada</option>}
+            {trucks.map(t => <option key={t.id} value={t.id}>{t.plate} — {t.model} ({(t.capacity_kg || 0).toLocaleString("pt-BR")} kg)</option>)}
           </select>
           <Button variant="outline" size="sm" onClick={reset}><RotateCcw className="w-4 h-4 mr-1" /> Limpar</Button>
         </div>
@@ -126,33 +106,28 @@ export default function LoadingSimulator() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <div className="xl:col-span-2 space-y-4">
           <Card>
-            <CardContent className="pt-4 pb-3">
-              <div className="grid grid-cols-3 gap-4 mb-3">
+            <CardContent className="pt-4 pb-3 space-y-3">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
-                  <p className="text-2xl font-bold font-mono">{totalKg.toLocaleString("pt-BR")} <span className="text-sm font-normal text-muted-foreground">kg</span></p>
-                  <p className="text-xs text-muted-foreground">Peso carregado</p>
+                  <p className={`text-2xl font-bold font-mono ${isOverweight ? "text-red-500" : ""}`}>{totalKg.toLocaleString("pt-BR")} <span className="text-sm font-normal text-muted-foreground">kg</span></p>
+                  <p className="text-xs text-muted-foreground">Peso ({weightPct.toFixed(0)}%)</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold font-mono">{totalVol} <span className="text-sm font-normal text-muted-foreground">vol</span></p>
-                  <p className="text-xs text-muted-foreground">Volumes</p>
+                  <p className={`text-2xl font-bold font-mono ${isOvervolume ? "text-red-500" : ""}`}>{totalVolM3.toFixed(1)} <span className="text-sm font-normal text-muted-foreground">m³</span></p>
+                  <p className="text-xs text-muted-foreground">Volume ({volPct.toFixed(0)}%)</p>
                 </div>
                 <div className="text-center">
-                  <p className={`text-2xl font-bold font-mono ${isOverweight ? "text-red-500" : ""}`}>{weightPct.toFixed(0)} <span className="text-sm font-normal text-muted-foreground">%</span></p>
-                  <p className="text-xs text-muted-foreground">Capacidade usada</p>
+                  <p className="text-2xl font-bold font-mono">{pack.placed}<span className="text-sm font-normal text-muted-foreground">/{pack.total}</span></p>
+                  <p className="text-xs text-muted-foreground">Volumes acomodados</p>
                 </div>
               </div>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Peso: {totalKg.toLocaleString("pt-BR")} / {truckCapKg.toLocaleString("pt-BR")} kg</span>
-                  <span>{weightPct.toFixed(1)}%</span>
-                </div>
-                <div className="h-4 bg-muted rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${weightPct}%` }} />
-                </div>
-              </div>
-              {isOverweight && (
-                <div className="mt-2 flex items-center gap-2 text-red-600 text-sm font-medium">
-                  <AlertTriangle className="w-4 h-4" /> Peso excedido! Excesso: {(totalKg - truckCapKg).toLocaleString("pt-BR")} kg
+              <Bar label="Peso" used={totalKg.toLocaleString("pt-BR")} total={truckCapKg.toLocaleString("pt-BR")} unit="kg" pct={weightPct} warn={isOverweight} />
+              <Bar label="Espaço (m³)" used={totalVolM3.toFixed(1)} total={truckVol.toFixed(1)} unit="m³" pct={volPct} warn={isOvervolume} />
+              {(isOverweight || isOvervolume || pack.unplaced > 0) && (
+                <div className="space-y-1 pt-1">
+                  {isOverweight && <div className="flex items-center gap-2 text-red-600 text-sm font-medium"><AlertTriangle className="w-4 h-4" /> Peso excedido em {(totalKg - truckCapKg).toLocaleString("pt-BR")} kg</div>}
+                  {isOvervolume && <div className="flex items-center gap-2 text-red-600 text-sm font-medium"><AlertTriangle className="w-4 h-4" /> Volume excedido em {(totalVolM3 - truckVol).toFixed(1)} m³</div>}
+                  {pack.unplaced > 0 && <div className="flex items-center gap-2 text-amber-600 text-sm font-medium"><AlertTriangle className="w-4 h-4" /> {pack.unplaced} volume(s) não couberam fisicamente no baú</div>}
                 </div>
               )}
             </CardContent>
@@ -160,19 +135,25 @@ export default function LoadingSimulator() {
 
           <Card>
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm">Visualização do Baú</CardTitle>
-                <div className="flex gap-1">
-                  {["side", "top", "front"].map(v => (
-                    <button key={v} onClick={() => setView(v)} className={`px-2 py-1 text-xs rounded ${view === v ? "bg-velox-amber text-white font-semibold" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
-                      {v === "side" ? "Lateral" : v === "top" ? "Topo" : "Frontal"}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <CardTitle className="text-sm flex items-center gap-2"><Box className="w-4 h-4 text-velox-amber" /> Baú 3D — {truck?.plate || "carreta padrão"} ({truckL}m × {truckW}m × {truckH}m)</CardTitle>
             </CardHeader>
             <CardContent>
-              <TruckVisualization items={loadedItems} truckL={truckL} truckW={truckW} truckH={truckH} view={view} scale={SCALE} />
+              <Suspense fallback={<div className="h-[380px] flex items-center justify-center text-sm text-muted-foreground border-2 border-slate-200 rounded-lg">Carregando visualização 3D…</div>}>
+                <Truck3D boxes={pack.boxes} truckL={truckL} truckW={truckW} truckH={truckH} />
+              </Suspense>
+              {orderIds.length > 0 && (
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
+                  {orderIds.map(oid => {
+                    const oi = loadedItems.find(i => i.orderId === oid);
+                    return (
+                      <div key={oid} className="flex items-center gap-1.5 text-xs">
+                        <span className="w-3 h-3 rounded-sm" style={{ background: colorOf(oid) }} />
+                        <span className="font-mono text-muted-foreground">{oi?.protocol || oid.slice(0, 8)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -181,19 +162,23 @@ export default function LoadingSimulator() {
           {loadedItems.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">No Caminhão ({[...new Set(loadedItems.map(i => i.orderId))].length} pedidos)</CardTitle>
+                <CardTitle className="text-sm">No caminhão ({orderIds.length} pedido{orderIds.length > 1 ? "s" : ""})</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {[...new Set(loadedItems.map(i => i.orderId))].map(orderId => {
+                {orderIds.map(orderId => {
                   const oi = loadedItems.filter(i => i.orderId === orderId);
                   const kg = oi.reduce((s, i) => s + (i.weight_kg || 0), 0);
+                  const vol = oi.reduce((s, i) => s + itemVolumeM3(i), 0);
                   return (
                     <div key={orderId} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                      <div>
-                        <p className="font-mono text-xs text-muted-foreground">{oi[0]?.protocol || orderId}</p>
-                        <p className="text-sm font-medium">{kg.toLocaleString("pt-BR")} kg · {oi.reduce((s,i)=>s+(i.volumes||0),0)} vol</p>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: colorOf(orderId) }} />
+                        <div className="min-w-0">
+                          <p className="font-mono text-xs text-muted-foreground truncate">{oi[0]?.protocol || orderId}</p>
+                          <p className="text-sm font-medium">{kg.toLocaleString("pt-BR")} kg · {oi.reduce((s, i) => s + (i.volumes || 0), 0)} vol · {fmtM3(vol)}</p>
+                        </div>
                       </div>
-                      <button onClick={() => removeOrder(orderId)} className="text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded">Remover</button>
+                      <button onClick={() => removeOrder(orderId)} className="text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded flex-shrink-0">Remover</button>
                     </div>
                   );
                 })}
@@ -203,7 +188,7 @@ export default function LoadingSimulator() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Adicionar Pedidos</CardTitle>
+              <CardTitle className="text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Adicionar pedidos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {availableOrders.length === 0 ? (
