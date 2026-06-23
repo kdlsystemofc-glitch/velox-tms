@@ -9,12 +9,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/lib/AuthContext";
 import PageHeader from "@/components/shared/PageHeader";
-import { ArrowLeftRight, Plus, Truck, Warehouse, ArrowRight, PackageCheck, Send } from "lucide-react";
+import { ArrowLeftRight, Plus, Truck, Warehouse, ArrowRight, PackageCheck, Send, Ban } from "lucide-react";
 
 export default function Transfers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const userName = user?.full_name || "Admin";
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ from_branch_id: "", to_branch_id: "", truck_id: "", driver_id: "", order_ids: [], start: false });
 
@@ -25,8 +28,27 @@ export default function Transfers() {
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
 
   const branchName = (id) => branches.find(b => b.id === id)?.name || "—";
-  // Pedidos elegíveis para transferência: em rota/coleta/já em transferência.
-  const eligible = orders.filter(o => ["collecting", "in_transit", "in_transfer"].includes(o.status));
+
+  // Alocação ativa (planned/in_transit) — base para evitar double-booking (Tr-1).
+  const activeTransfers = transfers.filter(t => ["planned", "in_transit"].includes(t.status));
+  const activeOrderIds = new Set(activeTransfers.flatMap(t => t.order_ids || []));
+  const busyTruckIds = new Set(activeTransfers.map(t => t.truck_id).filter(Boolean));
+  const busyDriverIds = new Set(activeTransfers.map(t => t.driver_id).filter(Boolean));
+
+  // Pedidos elegíveis: em rota/coleta/transferência e NÃO já em outra transferência ativa.
+  const eligible = orders.filter(o => ["collecting", "in_transit", "in_transfer"].includes(o.status) && !activeOrderIds.has(o.id));
+  // Frota disponível para transferência (não em rota nem já alocada).
+  const availableTrucks = trucks.filter(t => (t.status === "available" && !busyTruckIds.has(t.id)) || t.id === form.truck_id);
+  const availableDrivers = drivers.filter(d => (d.status === "active" && !busyDriverIds.has(d.id)) || d.id === form.driver_id);
+
+  // Status anterior do pedido (antes de entrar em transferência) — para o estorno.
+  const priorStatus = (o) => {
+    const hist = o?.status_history || [];
+    for (let i = hist.length - 1; i >= 0; i--) {
+      if (hist[i]?.status && hist[i].status !== "in_transfer") return hist[i].status;
+    }
+    return "confirmed";
+  };
 
   const create = useMutation({
     mutationFn: async () => {
@@ -48,14 +70,17 @@ export default function Transfers() {
         const o = orders.find(x => x.id === oid);
         await base44.entities.Order.update(oid, {
           status: "in_transfer",
-          status_history: [...(o?.status_history || []), { status: "in_transfer", timestamp: new Date().toISOString(), user: "Admin", note: `Em transferência: ${from?.name || "?"} → ${to?.name || "?"}` }],
+          status_history: [...(o?.status_history || []), { status: "in_transfer", timestamp: new Date().toISOString(), user: userName, note: `Em transferência: ${from?.name || "?"} → ${to?.name || "?"}` }],
         });
       }
+      // Se já sai em trânsito, o caminhão fica on_route (evita double-booking com viagens).
+      if (form.start && form.truck_id) await base44.entities.Truck.update(form.truck_id, { status: "on_route" });
       return transfer;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transfers"] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["trucks"] });
       setShowForm(false);
       setForm({ from_branch_id: "", to_branch_id: "", truck_id: "", driver_id: "", order_ids: [], start: false });
       toast({ title: "Transferência criada!" });
@@ -64,8 +89,37 @@ export default function Transfers() {
   });
 
   const dispatch = useMutation({
-    mutationFn: (t) => base44.entities.Transfer.update(t.id, { status: "in_transit", departure_date: new Date().toISOString(), events: [...(t.events || []), { type: "departed", description: "Saiu da origem", timestamp: new Date().toISOString() }] }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["transfers"] }); toast({ title: "Transferência em trânsito" }); },
+    mutationFn: async (t) => {
+      await base44.entities.Transfer.update(t.id, { status: "in_transit", departure_date: new Date().toISOString(), events: [...(t.events || []), { type: "departed", description: "Saiu da origem", timestamp: new Date().toISOString(), user: userName }] });
+      if (t.truck_id) await base44.entities.Truck.update(t.truck_id, { status: "on_route" });
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["transfers"] }); queryClient.invalidateQueries({ queryKey: ["trucks"] }); toast({ title: "Transferência em trânsito" }); },
+    onError: (e) => toast({ title: "Erro", description: e?.message, variant: "destructive" }),
+  });
+
+  // Estornar transferência: devolve pedidos ao status anterior e libera o caminhão (atômico).
+  const cancelTransfer = useMutation({
+    mutationFn: async (t) => {
+      const orderStatus = (t.order_ids || []).map(oid => ({ id: oid, status: priorStatus(orders.find(x => x.id === oid)) }));
+      try {
+        const { error } = await supabase.rpc("cancel_transfer", { p_transfer_id: t.id, p_order_status: orderStatus, p_user: userName });
+        if (!error) return;
+        throw error;
+      } catch { /* fallback cliente abaixo */ }
+      await base44.entities.Transfer.update(t.id, { status: "cancelled", events: [...(t.events || []), { type: "cancelled", description: "Transferência estornada", timestamp: new Date().toISOString(), user: userName }] });
+      for (const os of orderStatus) {
+        const o = orders.find(x => x.id === os.id);
+        if (o?.status === "in_transfer") {
+          await base44.entities.Order.update(os.id, { status: os.status, status_history: [...(o.status_history || []), { status: os.status, timestamp: new Date().toISOString(), user: userName, note: "Transferência estornada — pedido devolvido" }] });
+        }
+      }
+      if (t.truck_id) {
+        const truck = trucks.find(x => x.id === t.truck_id);
+        if (truck?.status === "on_route") await base44.entities.Truck.update(t.truck_id, { status: "available" });
+      }
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["transfers"] }); queryClient.invalidateQueries({ queryKey: ["orders"] }); queryClient.invalidateQueries({ queryKey: ["trucks"] }); toast({ title: "Transferência estornada", description: "Pedidos devolvidos ao status anterior." }); },
+    onError: (e) => toast({ title: "Erro ao estornar", description: e?.message, variant: "destructive" }),
   });
 
   // Receber no destino: cross-dock → pedidos voltam para a fila com origem no CD (nova rota)
@@ -78,7 +132,7 @@ export default function Transfers() {
         throw error;
       } catch { /* fallback cliente abaixo */ }
       const to = branches.find(b => b.id === t.to_branch_id);
-      await base44.entities.Transfer.update(t.id, { status: "received", arrival_date: new Date().toISOString(), events: [...(t.events || []), { type: "received", description: `Recebido em ${to?.name || "destino"}`, timestamp: new Date().toISOString() }] });
+      await base44.entities.Transfer.update(t.id, { status: "received", arrival_date: new Date().toISOString(), events: [...(t.events || []), { type: "received", description: `Recebido em ${to?.name || "destino"}`, timestamp: new Date().toISOString(), user: userName }] });
       for (const oid of t.order_ids || []) {
         const o = orders.find(x => x.id === oid);
         const branchOrigin = to?.address ? { ...to.address } : (o?.origin || {});
@@ -86,11 +140,15 @@ export default function Transfers() {
           current_branch_id: t.to_branch_id, status: "confirmed",
           trip_id: null, scheduled_truck_id: null, scheduled_date: null,
           origin: branchOrigin,
-          status_history: [...(o?.status_history || []), { status: "confirmed", timestamp: new Date().toISOString(), user: "Admin", note: `Recebido em ${to?.name || "destino"} — disponível para nova rota (cross-docking)` }],
+          status_history: [...(o?.status_history || []), { status: "confirmed", timestamp: new Date().toISOString(), user: userName, note: `Recebido em ${to?.name || "destino"} — disponível para nova rota (cross-docking)` }],
         });
       }
+      if (t.truck_id) {
+        const truck = trucks.find(x => x.id === t.truck_id);
+        if (truck?.status === "on_route") await base44.entities.Truck.update(t.truck_id, { status: "available" });
+      }
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["transfers"] }); queryClient.invalidateQueries({ queryKey: ["orders"] }); toast({ title: "Recebido! Pedidos liberados para nova rota." }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["transfers"] }); queryClient.invalidateQueries({ queryKey: ["orders"] }); queryClient.invalidateQueries({ queryKey: ["trucks"] }); toast({ title: "Recebido! Pedidos liberados para nova rota." }); },
     onError: (e) => toast({ title: "Erro", description: e?.message, variant: "destructive" }),
   });
 
@@ -131,6 +189,13 @@ export default function Transfers() {
                   <div className="ml-auto flex gap-2">
                     {t.status === "planned" && <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => dispatch.mutate(t)}><Send className="w-3.5 h-3.5" /> Despachar</Button>}
                     {t.status === "in_transit" && <Button size="sm" className="text-xs gap-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => receive.mutate(t)}><PackageCheck className="w-3.5 h-3.5" /> Receber no destino</Button>}
+                    {(t.status === "planned" || t.status === "in_transit") && (
+                      <Button size="sm" variant="outline" className="text-xs gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        disabled={cancelTransfer.isPending}
+                        onClick={() => { if (window.confirm(`Estornar a transferência ${t.protocol}? Os ${(t.order_ids || []).length} pedido(s) voltam ao status anterior.`)) cancelTransfer.mutate(t); }}>
+                        <Ban className="w-3.5 h-3.5" /> Estornar
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -159,14 +224,14 @@ export default function Transfers() {
               </div>
               <div><label className="text-xs text-muted-foreground">Caminhão</label>
                 <Select value={form.truck_id} onValueChange={v => setForm(f => ({ ...f, truck_id: v }))}>
-                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Veículo (troca)" /></SelectTrigger>
-                  <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.plate} — {t.model}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Veículo disponível" /></SelectTrigger>
+                  <SelectContent>{availableTrucks.length === 0 ? <div className="px-2 py-1.5 text-xs text-muted-foreground">Nenhum caminhão disponível</div> : availableTrucks.map(t => <SelectItem key={t.id} value={t.id}>{t.plate} — {t.model}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div><label className="text-xs text-muted-foreground">Motorista</label>
                 <Select value={form.driver_id} onValueChange={v => setForm(f => ({ ...f, driver_id: v }))}>
-                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Motorista" /></SelectTrigger>
-                  <SelectContent>{drivers.filter(d => d.status === "active").map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Motorista livre" /></SelectTrigger>
+                  <SelectContent>{availableDrivers.length === 0 ? <div className="px-2 py-1.5 text-xs text-muted-foreground">Nenhum motorista livre</div> : availableDrivers.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
