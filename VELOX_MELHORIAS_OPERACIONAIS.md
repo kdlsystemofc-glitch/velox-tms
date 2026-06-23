@@ -622,6 +622,29 @@ ingênuo, só peso (ignorava volume m³, mesmo com o util pronto).
 
 ---
 
+## MÓDULO A MÓDULO — Cadastros (Clientes · Destinatários · Fornecedores · Filiais)
+
+**Auditoria:** o módulo que mais incomodava — e o problema não era crash, era **inconsistência
+e dado ruim**. Cada sub-módulo era construído diferente (3 UIs de lista: DataTable, tabela HTML
+manual e grade de cards), **contatos** implementados de 2 formas, `FormField` duplicado em 3
+lugares, **CPF/CNPJ sem máscara/validação** (aceitava qualquer coisa e duplicava), **`onError`
+ausente** em Clientes/Fornecedores (falha silenciosa) e **excluir filial em uso** quebrava sem
+aviso. Sem migration (estrutura já existia).
+
+- **Cad-1 — Integridade de dados:** `validators.js` ganha **CNPJ** + combinada; **máscara +
+  validação de dígitos + bloqueio de duplicado** de CPF/CNPJ nos 3 cadastros com documento;
+  **`onError`** amigável em Clientes/Fornecedores e na exclusão de Filial (FK → "filial em uso");
+  WhatsApp no contato do cliente; limpeza de código morto.
+- **Cad-2 — Consistência & visão:** **KPIs** no topo; **as 4 listas na mesma `DataTable`**
+  (Destinatários e Filiais migrados) com **código para todos** (DEST/FIL); **contatos unificados**
+  num único `ContactsEditor` reutilizável (fim do `SupplierContactsSection`/`FormField` duplicados).
+- **Cad-3 — Profundidade & uso:** **indicador de uso do cliente** (nº de pedidos + último,
+  cruzando com `orders`) na tabela e no detalhe; **exportar CSV** nos 4 sub-módulos.
+
+**Teto pago:** consulta automática de CNPJ na Receita/Serpro, enriquecimento e deduplicação por IA.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
