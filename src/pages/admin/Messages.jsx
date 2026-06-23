@@ -80,6 +80,10 @@ export default function Messages() {
   const tratados = messages.filter(m => statusOf(m) !== "arquivado").length;
   const convRate = tratados > 0 ? (counts.convertido / tratados) * 100 : 0;
   const unreadCount = messages.filter(m => !m.read).length;
+  // Tempo médio até a 1ª resposta (Msg-3).
+  const responded = messages.filter(m => m.last_contact_at && m.created_date);
+  const avgRespH = responded.length ? responded.reduce((s, m) => s + (new Date(m.last_contact_at) - new Date(m.created_date)) / 3.6e6, 0) / responded.length : null;
+  const fmtDur = (h) => h == null ? "—" : h < 1 ? "<1h" : h < 24 ? `${h.toFixed(0)}h` : `${(h / 24).toFixed(1)}d`;
 
   // ── Filtro + busca ──
   const q = search.trim().toLowerCase();
@@ -126,7 +130,7 @@ export default function Messages() {
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Novos</p><p className="text-2xl font-bold text-blue-600">{counts.novo}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Em contato</p><p className="text-2xl font-bold text-amber-600">{counts.em_contato}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Convertidos</p><p className="text-2xl font-bold text-green-600">{counts.convertido}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Taxa de conversão</p><p className="text-2xl font-bold">{convRate.toFixed(0)}%</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Taxa de conversão</p><p className="text-2xl font-bold">{convRate.toFixed(0)}%</p><p className="text-[11px] text-muted-foreground mt-0.5">1ª resposta: {fmtDur(avgRespH)}</p></CardContent></Card>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">
@@ -165,7 +169,10 @@ export default function Messages() {
                         </div>
                         <p className="text-xs text-muted-foreground mt-1 truncate">{msg.message}</p>
                       </div>
-                      <span className="text-xs text-muted-foreground flex-shrink-0">{msg.created_date ? new Date(msg.created_date).toLocaleDateString("pt-BR") : "—"}</span>
+                      <span className="text-xs text-muted-foreground flex-shrink-0 text-right">
+                        <span className="block">{msg.created_date ? new Date(msg.created_date).toLocaleDateString("pt-BR") : "—"}</span>
+                        <span className="text-[10px] opacity-70">via site</span>
+                      </span>
                     </button>
                     {expandedMsg === msg.id && (
                       <div className="border-t border-border px-3.5 pb-3.5 pt-3 space-y-3">
