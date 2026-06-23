@@ -23,23 +23,44 @@ function docBadge(expiry) {
   return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">OK</span>;
 }
 
-function DocRow({ label, expiry, url }) {
+function DocRow({ label, expiry, url, onUpload, onExpiry }) {
+  const { toast } = useToast();
+  const [uploading, setUploading] = useState(false);
+  const handleFile = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { file_url } = await storage.uploadFile(file);
+      await onUpload(file_url);
+      toast({ title: `${label} anexado!` });
+    } catch {
+      toast({ title: `Erro ao anexar ${label}`, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
   return (
-    <div className="flex items-center justify-between py-2 border-b border-border/40 last:border-0">
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-medium w-32">{label}</span>
-        <span className="text-xs text-muted-foreground">
-          {expiry ? format(parseISO(expiry), "dd/MM/yyyy") : "—"}
-        </span>
+    <div className="flex items-center justify-between gap-2 py-2 border-b border-border/40 last:border-0">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <span className="text-sm font-medium w-32 flex-shrink-0">{label}</span>
+        {onExpiry ? (
+          <Input type="date" value={expiry ? expiry.slice(0, 10) : ""} onChange={e => onExpiry(e.target.value || null)} className="h-8 w-36 text-xs" />
+        ) : (
+          <span className="text-xs text-muted-foreground">{expiry ? format(parseISO(expiry), "dd/MM/yyyy") : "—"}</span>
+        )}
         {expiry && docBadge(expiry)}
       </div>
-      {url ? (
-        <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => window.open(url, "_blank")}>
-          <ExternalLink className="w-3 h-3" /> Ver
-        </Button>
-      ) : (
-        <span className="text-xs text-muted-foreground/50">Sem arquivo</span>
-      )}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {url && (
+          <Button variant="ghost" size="sm" className="gap-1 text-xs h-7" onClick={() => window.open(url, "_blank")}>
+            <ExternalLink className="w-3 h-3" /> Ver
+          </Button>
+        )}
+        <label className={`inline-flex items-center gap-1 h-7 px-2 rounded-md border border-border text-xs cursor-pointer hover:bg-muted ${uploading ? "opacity-60 pointer-events-none" : ""}`}>
+          <Upload className="w-3 h-3" /> {uploading ? "..." : url ? "Trocar" : "Anexar"}
+          <input type="file" accept="image/*,application/pdf" className="hidden" onChange={e => { handleFile(e.target.files?.[0]); e.target.value = ""; }} />
+        </label>
+      </div>
     </div>
   );
 }
@@ -57,6 +78,19 @@ export default function Documents() {
   const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
   const { data: settings = {} } = useQuery({ queryKey: ["settings"], queryFn: () => base44.entities.CompanySettings.list(), select: d => d[0] || {} });
   const companyDocs = settings.documents || [];
+
+  const updateTruck = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Truck.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["trucks"] }),
+    onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),
+  });
+  const updateDriver = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Driver.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["drivers"] }),
+    onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),
+  });
+  const setTruck = (id, data) => updateTruck.mutate({ id, data });
+  const setDriver = (id, data) => updateDriver.mutate({ id, data });
 
   const saveCompanyDocs = async (docs) => {
     if (!settings.id) { toast({ title: "Configure a empresa primeiro", variant: "destructive" }); return; }
@@ -202,9 +236,12 @@ export default function Documents() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <DocRow label="CRLV" expiry={truck.crlv_expiry} url={truck.crlv_url} />
-                  <DocRow label="Seguro" expiry={truck.insurance_expiry} url={truck.insurance_url} />
-                  <DocRow label="Tacógrafo" expiry={truck.tachograph_next} url={null} />
+                  <DocRow label="CRLV" expiry={truck.crlv_expiry} url={truck.crlv_url}
+                    onUpload={url => setTruck(truck.id, { crlv_url: url })} onExpiry={d => setTruck(truck.id, { crlv_expiry: d })} />
+                  <DocRow label="Seguro" expiry={truck.insurance_expiry} url={truck.insurance_url}
+                    onUpload={url => setTruck(truck.id, { insurance_url: url })} onExpiry={d => setTruck(truck.id, { insurance_expiry: d })} />
+                  <DocRow label="Tacógrafo" expiry={truck.tachograph_next} url={truck.tachograph_url}
+                    onUpload={url => setTruck(truck.id, { tachograph_url: url })} onExpiry={d => setTruck(truck.id, { tachograph_next: d })} />
                 </CardContent>
               </Card>
             ))}
@@ -227,7 +264,12 @@ export default function Documents() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <DocRow label={`CNH (Cat. ${driver.cnh_category || "—"})`} expiry={driver.cnh_expiry} url={null} />
+                  <DocRow label={`CNH (Cat. ${driver.cnh_category || "—"})`} expiry={driver.cnh_expiry} url={driver.cnh_url}
+                    onUpload={url => setDriver(driver.id, { cnh_url: url })} onExpiry={d => setDriver(driver.id, { cnh_expiry: d })} />
+                  <DocRow label="ASO" expiry={driver.exam_aso_expiry} url={driver.aso_url}
+                    onUpload={url => setDriver(driver.id, { aso_url: url })} onExpiry={d => setDriver(driver.id, { exam_aso_expiry: d })} />
+                  <DocRow label="Toxicológico" expiry={driver.exam_toxic_expiry} url={driver.toxic_url}
+                    onUpload={url => setDriver(driver.id, { toxic_url: url })} onExpiry={d => setDriver(driver.id, { exam_toxic_expiry: d })} />
                 </CardContent>
               </Card>
             ))}
