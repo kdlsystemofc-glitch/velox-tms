@@ -453,6 +453,28 @@ Aprofundamento do `OperationsHub` rumo ao nível TMS global.
 
 ---
 
+---
+
+## MÓDULO A MÓDULO — Pedidos
+
+Aprofundamento das três telas (fila, workspace, assistente) rumo ao nível TMS global.
+
+**Limpeza:** removido código morto na fila (`suggestTruckForOrder` + query `trucks` ociosa
++ campo `truck_id` não usado).
+
+- **Pe-1 — Robustez na criação:** **aviso de cobertura** (destinos/origem fora da área),
+  **detecção de duplicado** (mesmo cliente/origem/data), **revalidação dos destinatários no
+  envio**, e **data desejada × confirmada** (`collection_date_desired`).
+- **Pe-2 — Documentação:** **anexos do pedido** (foto da carga/documentos, com compressão) e
+  **etiquetas de volume em PDF** (1 por volume: protocolo, destinatário, cidade, X/N).
+- **Pe-3 — Produtividade na fila:** **ações em lote** (selecionar, exportar selecionados,
+  criar viagem com os confirmados sem viagem).
+
+**Teto (grátis, maior esforço):** coleta consolidada **multi-origem** e **cotação→pedido**.
+**Pago:** vínculo fiscal **CT-e** (SEFAZ).
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -467,3 +489,4 @@ Aprofundamento do `OperationsHub` rumo ao nível TMS global.
 11. `20260622_user_roles.sql`
 12. `20260623_audit_fixes.sql`  ← correções da auditoria (recria close_trip/confirm_order)
 13. `20260624_cadastros.sql`    ← campos profissionais de veículo/motorista
+14. `20260625_pedidos.sql`      ← agendamento desejado/confirmado + anexos do pedido
