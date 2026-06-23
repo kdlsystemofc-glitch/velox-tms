@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { storage } from "@/api/supabaseClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, ExternalLink, Truck, Users, Search, Building2, Trash2, Upload } from "lucide-react";
+import { FileText, ExternalLink, Truck, Users, Search, Building2, Trash2, Upload, AlertTriangle, Download, ShieldCheck } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import PageHeader from "@/components/shared/PageHeader";
+import { downloadCsv, csvDate } from "@/utils/exportCsv";
 import { differenceInDays, parseISO, format } from "date-fns";
 
 const COMPANY_DOC_CATEGORIES = ["Contrato social", "Alvará", "Licença ANTT/RNTRC", "Apólice de seguro", "Certidão", "Outro"];
@@ -72,6 +73,7 @@ export default function Documents() {
   const [uploading, setUploading] = useState(false);
   const [newDocCategory, setNewDocCategory] = useState("Contrato social");
   const [newDocExpiry, setNewDocExpiry] = useState("");
+  const [expFilter, setExpFilter] = useState("60");
 
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 300) });
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
@@ -152,6 +154,34 @@ export default function Documents() {
     !search || d.name?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // ── Central de vencimentos (Doc-2): consolida frota + motoristas + empresa ──
+  const today = new Date();
+  const expiryItems = [];
+  const pushExp = (group, entity, doc, expiry, url, link) => {
+    if (!expiry) return;
+    expiryItems.push({ group, entity, doc, expiry, url, link, days: differenceInDays(parseISO(expiry), today) });
+  };
+  trucks.forEach(t => {
+    pushExp("Frota", t.plate, "CRLV", t.crlv_expiry, t.crlv_url, "/admin/documentos");
+    pushExp("Frota", t.plate, "Seguro", t.insurance_expiry, t.insurance_url);
+    pushExp("Frota", t.plate, "Tacógrafo", t.tachograph_next, t.tachograph_url);
+  });
+  drivers.forEach(d => {
+    pushExp("Motorista", d.name, "CNH", d.cnh_expiry, d.cnh_url);
+    pushExp("Motorista", d.name, "ASO", d.exam_aso_expiry, d.aso_url);
+    pushExp("Motorista", d.name, "Toxicológico", d.exam_toxic_expiry, d.toxic_url);
+  });
+  companyDocs.forEach(d => pushExp("Empresa", d.category, d.name, d.expiry, d.url));
+  expiryItems.sort((a, b) => a.days - b.days);
+
+  const expByStatus = { expired: expiryItems.filter(i => i.days < 0), soon: expiryItems.filter(i => i.days >= 0 && i.days <= 30), watch: expiryItems.filter(i => i.days > 30 && i.days <= 60) };
+  const expWindow = (() => {
+    if (expFilter === "expired") return expiryItems.filter(i => i.days < 0);
+    if (expFilter === "30") return expiryItems.filter(i => i.days <= 30);
+    if (expFilter === "60") return expiryItems.filter(i => i.days <= 60);
+    return expiryItems;
+  })().filter(i => !search || `${i.entity} ${i.doc} ${i.group}`.toLowerCase().includes(search.toLowerCase()));
+
   return (
     <div className="space-y-4">
       <PageHeader icon={FileText} title="Documentos" subtitle="NFs assinadas, CRLV, CNH e seguros">
@@ -166,13 +196,85 @@ export default function Documents() {
         </div>
       </PageHeader>
 
-      <Tabs defaultValue="orders">
+      <Tabs defaultValue="vencimentos">
         <TabsList>
+          <TabsTrigger value="vencimentos" className="gap-2">
+            <AlertTriangle className="w-4 h-4" /> Vencimentos
+            {expByStatus.expired.length + expByStatus.soon.length > 0 && <span className="ml-1 bg-red-500 text-white text-[10px] rounded-full px-1.5">{expByStatus.expired.length + expByStatus.soon.length}</span>}
+          </TabsTrigger>
           <TabsTrigger value="orders" className="gap-2"><FileText className="w-4 h-4" /> Pedidos e Viagens</TabsTrigger>
           <TabsTrigger value="fleet" className="gap-2"><Truck className="w-4 h-4" /> Frota</TabsTrigger>
           <TabsTrigger value="drivers" className="gap-2"><Users className="w-4 h-4" /> Motoristas</TabsTrigger>
           <TabsTrigger value="company" className="gap-2"><Building2 className="w-4 h-4" /> Empresa</TabsTrigger>
         </TabsList>
+
+        {/* Tab 0: Central de vencimentos */}
+        <TabsContent value="vencimentos" className="mt-4 space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Vencidos</p><p className="text-2xl font-bold text-red-600">{expByStatus.expired.length}</p></CardContent></Card>
+            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Vencem em 30 dias</p><p className="text-2xl font-bold text-amber-600">{expByStatus.soon.length}</p></CardContent></Card>
+            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Vencem em 60 dias</p><p className="text-2xl font-bold text-blue-600">{expByStatus.watch.length}</p></CardContent></Card>
+          </div>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex gap-1.5">
+              {[["expired", "Vencidos"], ["30", "≤ 30 dias"], ["60", "≤ 60 dias"], ["all", "Todos"]].map(([v, l]) => (
+                <Button key={v} size="sm" variant={expFilter === v ? "default" : "outline"} className={expFilter === v ? "bg-velox-dark text-white" : ""} onClick={() => setExpFilter(v)}>{l}</Button>
+              ))}
+            </div>
+            <Button variant="outline" size="sm" className="gap-2" disabled={expWindow.length === 0}
+              onClick={() => downloadCsv(`vencimentos-${new Date().toISOString().slice(0,10)}`, expWindow, [
+                { key: "group", label: "Grupo" },
+                { key: "entity", label: "Item" },
+                { key: "doc", label: "Documento" },
+                { key: "expiry", label: "Vencimento", format: csvDate },
+                { key: "days", label: "Dias restantes" },
+                { key: "url", label: "Arquivo", format: v => v ? "Sim" : "Não" },
+              ])}>
+              <Download className="w-4 h-4" /> Exportar
+            </Button>
+          </div>
+          <Card>
+            <CardContent className="pt-4">
+              {expWindow.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <ShieldCheck className="w-10 h-10 mx-auto mb-2 opacity-30 text-green-600" />
+                  <p className="text-sm">Nenhum documento {expFilter === "expired" ? "vencido" : "vencendo nesse período"}.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-muted-foreground text-xs">
+                        <th className="text-left py-2 font-medium">Grupo</th>
+                        <th className="text-left py-2 font-medium">Item</th>
+                        <th className="text-left py-2 font-medium">Documento</th>
+                        <th className="text-left py-2 font-medium">Vencimento</th>
+                        <th className="text-left py-2 font-medium">Situação</th>
+                        <th className="text-right py-2 font-medium">Arquivo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {expWindow.map((i, idx) => (
+                        <tr key={idx} className="border-b border-border/40 hover:bg-muted/20">
+                          <td className="py-2 text-xs text-muted-foreground">{i.group}</td>
+                          <td className="py-2 font-medium">{i.entity}</td>
+                          <td className="py-2">{i.doc}</td>
+                          <td className="py-2 text-xs">{format(parseISO(i.expiry), "dd/MM/yyyy")}</td>
+                          <td className="py-2">{docBadge(i.expiry)}</td>
+                          <td className="py-2 text-right">
+                            {i.url
+                              ? <Button variant="ghost" size="sm" className="gap-1 text-xs h-7" onClick={() => window.open(i.url, "_blank")}><ExternalLink className="w-3 h-3" /> Ver</Button>
+                              : <span className="text-xs text-amber-500 inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> sem arquivo</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Tab 1: Orders / NFs */}
         <TabsContent value="orders" className="mt-4">
