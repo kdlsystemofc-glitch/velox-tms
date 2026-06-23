@@ -544,6 +544,32 @@ entradas da linha do tempo** (gravavam sobre uma cópia local desatualizada). Ag
 
 ---
 
+## MÓDULO A MÓDULO — Viagens
+
+**Bug corrigido:** o auto-refresh da viagem em andamento usava a assinatura do React Query v4
+(`refetchInterval: (data) => ...`); no v5 o callback recebe o objeto **Query**, então `data.status`
+era `undefined` e o polling ficava **silenciosamente desligado**. Corrigido para ler
+`query.state.data[0].status` — a tela volta a atualizar sozinha a cada 30s.
+
+- **Vi-1 — Lista profissional:** **busca** por motorista/placa + **filtro de período**
+  (7d/30d/mês), **KPIs** no topo (em rota, planejadas, concluídas no mês, **lucro do mês**),
+  **lucro e margem** nos cards concluídos e **selo de comboio** (N veículos) + alerta de
+  viagem sem motorista.
+- **Vi-2 — Detalhe mais rico:** **estimado × real** de **km e custo** com **desvio %**
+  (a estimativa de trajeto é captada na otimização de rota — haversine dos CEPs
+  geocodificados — e o custo previsto usa o **custo/km médio da frota**); **eficiência km/L**
+  apurada no encerramento e **gravada no histórico de consumo do veículo**; **romaneio PDF
+  por veículo** do comboio. (migration `20260630_trip_efficiency.sql`)
+- **Vi-3 — Custos & acerto completos:** **gastos categorizados** no encerramento
+  (alimentação, pernoite, manutenção, pneu, estacionamento, chapa/descarga, multas) que
+  viram **despesa na categoria certa**; **acerto do comboio com rateio por motorista/veículo**
+  (cada comissão é uma despesa "a pagar"), com total e saldo. (migration
+  `20260631_trip_settlement.sql`)
+
+**Teto pago:** roteirização/pedágio com API real, telemetria/GPS ao vivo.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -563,3 +589,5 @@ entradas da linha do tempo** (gravavam sobre uma cópia local desatualizada). Ag
 16. `20260627_dispatch_tx.sql`  ← despacho atômico (programar/separar/devolver)
 17. `20260628_replan_comboio.sql` ← replanejamento ciente de comboio
 18. `20260629_incidents_impact.sql` ← ocorrências: impacto financeiro + causa-raiz
+19. `20260630_trip_efficiency.sql` ← viagens: custo estimado + histórico de consumo (km/L)
+20. `20260631_trip_settlement.sql` ← viagens: rateio de comissão por veículo + custo categorizado (recria close_trip)
