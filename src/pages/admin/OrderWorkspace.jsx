@@ -17,6 +17,7 @@ import { FreightBreakdown } from "@/components/shared/FreightBreakdown";
 import CollapsibleSection from "@/components/shared/CollapsibleSection";
 import { generateDeliveryReceipt } from "@/utils/generateDeliveryReceipt";
 import { generateShipmentDoc } from "@/utils/generateShipmentDoc";
+import { generateVolumeLabels } from "@/utils/generateVolumeLabels";
 import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO, formatDateBR, toLocalISO } from "@/utils/dateUtils";
@@ -364,6 +365,29 @@ export default function OrderWorkspace() {
     }
   };
 
+  const downloadLabels = () => {
+    try {
+      const blob = generateVolumeLabels(order, settings);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Etiquetas-${order.protocol}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast({ title: "Erro ao gerar etiquetas", variant: "destructive" });
+    }
+  };
+
+  // Anexos gerais do pedido (Pe-2)
+  const addAttachment = (url, name) => {
+    if (!url) return;
+    updateMutation.mutate({ attachments: [...(order.attachments || []), { url, name: name || "Anexo", at: new Date().toISOString() }] });
+  };
+  const removeAttachment = (idx) => {
+    updateMutation.mutate({ attachments: (order.attachments || []).filter((_, i) => i !== idx) });
+  };
+
   const activeRevenue = orderRevenues.find(r => r.status !== "cancelled");
 
   // Limite de crédito do cliente: exposição = fretes em aberto (não pagos/não cancelados).
@@ -426,6 +450,10 @@ export default function OrderWorkspace() {
                 <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/40 text-left"
                   onClick={() => { setMenuOpen(false); downloadShipmentDoc(); }}>
                   <FileText className="w-4 h-4 text-muted-foreground" /> Doc. de transporte (PDF)
+                </button>
+                <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/40 text-left"
+                  onClick={() => { setMenuOpen(false); downloadLabels(); }}>
+                  <FileDown className="w-4 h-4 text-muted-foreground" /> Etiquetas de volumes (PDF)
                 </button>
                 {order.status === "delivered" && (
                   <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/40 text-left"
@@ -836,6 +864,30 @@ export default function OrderWorkspace() {
                 </div>
               ))}
             </div>
+          </CollapsibleSection>
+
+          {/* SEÇÃO ANEXOS */}
+          <CollapsibleSection title="Anexos" icon={FileText} count={(order.attachments || []).length} defaultOpen={(order.attachments || []).length > 0}>
+            <Card>
+              <CardContent className="pt-4 space-y-3">
+                <FileUploadButton label="Adicionar anexo (foto da carga, documento)" accept="image/*,application/pdf"
+                  onUpload={(url) => addAttachment(url, "Anexo do pedido")} />
+                {(order.attachments || []).length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nenhum anexo. Use para fotos da carga, comprovantes ou documentos do pedido.</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {(order.attachments || []).map((a, i) => (
+                      <div key={i} className="flex items-center justify-between gap-2 text-sm bg-muted/30 rounded-lg px-3 py-2">
+                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 hover:underline min-w-0">
+                          <FileText className="w-4 h-4 flex-shrink-0" /> <span className="truncate">{a.name || "Anexo"}</span>
+                        </a>
+                        <button onClick={() => removeAttachment(i)} className="text-red-400 hover:text-red-600 flex-shrink-0"><XCircle className="w-4 h-4" /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </CollapsibleSection>
 
           {/* SEÇÃO HISTÓRICO */}
