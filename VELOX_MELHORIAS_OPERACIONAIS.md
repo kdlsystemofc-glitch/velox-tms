@@ -686,6 +686,31 @@ funil comercial.
 
 ---
 
+## MÓDULO A MÓDULO — Financeiro
+
+**Auditoria:** já era o módulo mais forte (aging receber/pagar, baixa com comprovante, DRE com
+EBITDA/depreciação/**resultado por caminhão**, PDF, projeção de fluxo). Sem crash. Mas com
+**inconsistências reais**: (1) o **fluxo projetava do zero** (sem saldo inicial → alerta de
+negativo não valia); (2) a projeção **engolia os vencidos** (atrasados nunca caíam num dia);
+(3) **duas fontes de receita** que não batem — Resumo/Fluxo por caixa (`Revenue` por vencimento)
+× DRE por competência (`orders.freight_value`), sem explicação; (4) `onError` faltando em
+algumas baixas.
+
+- **Fin-1 — Caixa real & consistência:** **saldo inicial de caixa** (editável inline, salvo em
+  `company_settings`) → o fluxo projeta o **saldo real** e o alerta de negativo passa a valer;
+  projeção **inclui vencidos**; KPIs de caixa; `onError` nas baixas. (migration
+  `20260637_cash_balance.sql`)
+- **Fin-2 — Painel executivo:** o **Resumo** virou dashboard — KPIs (saldo em caixa, resultado
+  do mês por caixa, **runway/dias de caixa**, a receber, a pagar, **inadimplência %**), gráfico
+  recebido×pago×resultado, **top 5 clientes**, **custos por categoria** e **contas que vencem
+  em 7 dias** (receber e pagar).
+- **Fin-3 — Profundidade contábil:** DRE **comparativa** (mês vs anterior, variação %),
+  **acumulado do ano (YTD)** e **conciliação competência × caixa**.
+
+**Teto pago:** conciliação bancária por OFX/Open Finance, boleto/PIX com gateway, SPED contábil.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -712,3 +737,4 @@ funil comercial.
 23. `20260634_fleet_pro.sql` ← frota: EAR + pontos na CNH do motorista
 24. `20260635_document_files.sql` ← documentos: arquivos de frota (tacógrafo) e motorista (CNH/ASO/toxicológico)
 25. `20260636_message_pipeline.sql` ← mensagens: funil de leads (status, conversão, contato, notas)
+26. `20260637_cash_balance.sql` ← financeiro: saldo inicial de caixa (fluxo a partir do saldo real)
