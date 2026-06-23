@@ -15,8 +15,9 @@ import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { Input } from "@/components/ui/input";
 import {
   Package, Truck, ChevronLeft, ChevronRight, MapPin,
-  CalendarDays, Send, X, ArrowRight, Sparkles, Search
+  CalendarDays, Send, X, ArrowRight, Sparkles, Search, GripVertical
 } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import PageHeader from "@/components/shared/PageHeader";
 import { format, addDays, startOfWeek, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -198,6 +199,56 @@ export default function DispatchBoard() {
     assignMutation.mutate({ truckId: truck.id, dateStr });
   };
 
+  // ── Validação de capacidade (compartilhada clique/arrastar) ───
+  const assignError = (ordersToAssign, truck, dateStr) => {
+    const cellOrders = scheduled.filter(o => o.scheduled_truck_id === truck.id && o.scheduled_date === dateStr);
+    const usedKg = cellOrders.reduce((s, o) => s + (o.total_weight_kg || 0), 0);
+    const addKg = ordersToAssign.reduce((s, o) => s + (o.total_weight_kg || 0), 0);
+    if (truck.capacity_kg > 0 && usedKg + addKg > truck.capacity_kg) {
+      return `${truck.plate}: ${(usedKg + addKg).toLocaleString("pt-BR")} kg > ${truck.capacity_kg.toLocaleString("pt-BR")} kg (peso).`;
+    }
+    const capVol = truckVolumeM3(truck);
+    const usedVol = cellOrders.reduce((s, o) => s + orderVolumeM3(o), 0);
+    const addVol = ordersToAssign.reduce((s, o) => s + orderVolumeM3(o), 0);
+    if (capVol > 0 && usedVol + addVol > capVol) {
+      return `${truck.plate}: ${fmtM3(usedVol + addVol)} > ${fmtM3(capVol)} de baú (volume).`;
+    }
+    return null;
+  };
+
+  // ── Drag-and-drop: arrastar pedido → célula (ou de volta à fila) ──
+  const assignOne = useMutation({
+    mutationFn: ({ order, truckId, dateStr }) => base44.entities.Order.update(order.id, {
+      scheduled_truck_id: truckId, scheduled_date: dateStr,
+      status_history: [...(order.status_history || []), { status: order.status, timestamp: new Date().toISOString(), user: "Admin", note: `Programado (arrastar) para ${formatDateBR(dateStr)}` }],
+    }),
+    onSuccess: (_, { dateStr }) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast({ title: `Programado para ${formatDateBR(dateStr)}` });
+    },
+    onError: (e) => toast({ title: "Erro ao programar", description: e?.message, variant: "destructive" }),
+  });
+
+  const onDragEnd = (result) => {
+    const { destination, draggableId } = result;
+    if (!destination) return;
+    const order = orders.find(o => o.id === draggableId);
+    if (!order) return;
+    if (destination.droppableId.startsWith("cell:")) {
+      const [, truckId, dateStr] = destination.droppableId.split(":");
+      const truck = trucks.find(t => t.id === truckId);
+      if (!truck) return;
+      if (order.scheduled_truck_id === truckId && order.scheduled_date === dateStr) return; // sem mudança
+      const err = assignError([order], truck, dateStr);
+      if (err) { toast({ title: "Não cabe", description: err, variant: "destructive" }); return; }
+      const conflicts = orderWindowConflicts(order, dateStr);
+      if (conflicts.length) toast({ title: "Fora da janela", description: conflicts.map(c => `${c.recipient} (${c.window})`).join("; ") });
+      assignOne.mutate({ order, truckId, dateStr });
+    } else if (destination.droppableId === "queue" && order.scheduled_truck_id) {
+      unassignMutation.mutate(order);
+    }
+  };
+
   // ── Criar viagem a partir de uma célula ───────────────────────
   const createTripFromCell = (truck, dateStr, cellOrders) => {
     navigate("/admin/viagens/nova", {
@@ -225,6 +276,7 @@ export default function DispatchBoard() {
         )}
       </PageHeader>
 
+      <DragDropContext onDragEnd={onDragEnd}>
       <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-5">
         {/* ── FILA (esquerda) ── */}
         <div className="space-y-3">
@@ -268,19 +320,24 @@ export default function DispatchBoard() {
             </div>
           )}
 
-          <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+          <Droppable droppableId="queue">
+          {(dpQueue) => (
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1" ref={dpQueue.innerRef} {...dpQueue.droppableProps}>
             {filteredQueue.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
                 {unscheduled.length === 0 ? <>Fila vazia.<br /><Link to="/admin/coletas?status=new" className="text-velox-amber hover:underline text-xs">Ver pedidos aguardando confirmação →</Link></> : "Nenhum pedido com este filtro."}
               </div>
-            ) : filteredQueue.map(o => (
-              <label key={o.id}
+            ) : filteredQueue.map((o, qi) => (
+              <Draggable key={o.id} draggableId={o.id} index={qi}>
+              {(d) => (
+              <label ref={d.innerRef} {...d.draggableProps}
                 className={`block rounded-xl border p-3 cursor-pointer transition-all ${
                   selectedIds.includes(o.id)
                     ? "border-velox-amber bg-velox-amber/5 shadow-sm"
                     : "border-border hover:border-velox-amber/40"
                 }`}>
                 <div className="flex items-start gap-2.5">
+                  <span {...d.dragHandleProps} className="text-muted-foreground/40 hover:text-foreground cursor-grab active:cursor-grabbing pt-0.5" title="Arraste para o quadro"><GripVertical className="w-4 h-4" /></span>
                   <Checkbox checked={selectedIds.includes(o.id)} onCheckedChange={() => toggleSelect(o.id)} className="mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
@@ -306,8 +363,13 @@ export default function DispatchBoard() {
                   </div>
                 </div>
               </label>
+              )}
+              </Draggable>
             ))}
+            {dpQueue.placeholder}
           </div>
+          )}
+          </Droppable>
         </div>
 
         {/* ── QUADRO (direita) ── */}
@@ -387,6 +449,10 @@ export default function DispatchBoard() {
                             className={`p-1.5 align-top transition-colors ${isToday(day) ? "bg-velox-amber/5" : ""} ${
                               clickable ? "cursor-pointer hover:bg-velox-amber/15 hover:ring-2 hover:ring-inset hover:ring-velox-amber/40" : ""
                             }`}>
+                            <Droppable droppableId={`cell:${truck.id}:${dateStr}`}>
+                            {(dpCell) => (
+                            <div ref={dpCell.innerRef} {...dpCell.droppableProps}
+                              className={`min-h-[2.5rem] rounded-lg transition-colors ${dpCell.isDraggingOver ? "ring-2 ring-velox-amber/60 bg-velox-amber/10" : ""}`}>
                             {cellOrders.length === 0 ? (
                               <div className={`text-[11px] py-4 text-center rounded-lg ${
                                 clickable ? "text-velox-amber/60 border border-dashed border-velox-amber/30" : "text-muted-foreground/30"
@@ -432,6 +498,10 @@ export default function DispatchBoard() {
                                 </div>
                               </div>
                             )}
+                            {dpCell.placeholder}
+                            </div>
+                            )}
+                            </Droppable>
                           </td>
                         );
                       })}
@@ -469,6 +539,7 @@ export default function DispatchBoard() {
           )}
         </div>
       </div>
+      </DragDropContext>
 
       {/* Diálogo: proposta de separação automática */}
       <Dialog open={!!plan} onOpenChange={(o) => !o && setPlan(null)}>
