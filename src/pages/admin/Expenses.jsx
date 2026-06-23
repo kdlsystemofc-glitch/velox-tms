@@ -104,15 +104,19 @@ export default function Expenses({ hideTitle = false }) {
   };
 
   const confirmPayment = async () => {
-    await base44.entities.Expense.update(payingExpense.id, {
-      status: "paid",
-      paid_date: payForm.paid_date,
-      payment_method: payForm.payment_method,
-      ...(payForm.receipt_url ? { receipt_url: payForm.receipt_url } : {}),
-    });
-    queryClient.invalidateQueries({ queryKey: ["expenses"] });
-    setPayingExpense(null);
-    toast({ title: "Despesa baixada com sucesso!" });
+    try {
+      await base44.entities.Expense.update(payingExpense.id, {
+        status: "paid",
+        paid_date: payForm.paid_date,
+        payment_method: payForm.payment_method,
+        ...(payForm.receipt_url ? { receipt_url: payForm.receipt_url } : {}),
+      });
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      setPayingExpense(null);
+      toast({ title: "Despesa baixada com sucesso!" });
+    } catch (e) {
+      toast({ title: "Erro ao dar baixa", description: e?.message, variant: "destructive" });
+    }
   };
 
   return (

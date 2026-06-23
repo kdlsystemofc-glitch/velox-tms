@@ -65,11 +65,13 @@ export default function Revenues({ hideTitle = false }) {
       setForm({ description: "", amount: "", due_date: "", payment_method: "pix", order_id: "" });
       toast({ title: "Receita cadastrada!" });
     },
+    onError: (e) => toast({ title: "Erro ao cadastrar receita", description: e?.message, variant: "destructive" }),
   });
 
   const markReceivedMutation = useMutation({
     mutationFn: ({ id, date }) => base44.entities.Revenue.update(id, { status: "received", received_date: date }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["revenues"] }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["revenues"] }); toast({ title: "Recebimento confirmado!" }); },
+    onError: (e) => toast({ title: "Erro ao confirmar", description: e?.message, variant: "destructive" }),
   });
 
   // Contas em aberto (a receber/atrasadas) para o aging
