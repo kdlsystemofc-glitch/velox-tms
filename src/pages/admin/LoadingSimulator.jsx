@@ -3,8 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, Truck, Plus, RotateCcw, AlertTriangle, Box } from "lucide-react";
+import { Package, Truck, Plus, RotateCcw, AlertTriangle, Box, Scale, ShieldAlert, FileDown } from "lucide-react";
 import { packLoad } from "@/utils/loadPacker";
+import { downloadCsv } from "@/utils/exportCsv";
 
 // three.js é pesado → carrega só quando o baú 3D aparece.
 const Truck3D = lazy(() => import("@/components/admin/Truck3D"));
@@ -62,6 +63,45 @@ export default function LoadingSimulator() {
   const colorOf = (orderId) => ORDER_COLORS[orderIds.indexOf(orderId) % ORDER_COLORS.length];
   const itemsForPack = loadedItems.map(i => ({ ...i, color: colorOf(i.orderId) }));
   const pack = packLoad({ length_m: truckL, width_m: truckW, height_m: truckH }, itemsForPack);
+
+  // ── Inteligência de carga (Fr-3) ──
+  // Centro de gravidade longitudinal (% do comprimento, a partir da frente/cabine).
+  const cgWeight = pack.boxes.reduce((s, b) => s + (b.kg || 0), 0);
+  const cg = cgWeight > 0 ? pack.boxes.reduce((s, b) => s + (b.kg || 0) * (b.x + b.l / 2), 0) / cgWeight / truckL : null;
+  const cgImbalance = cg != null && (cg < 0.35 || cg > 0.65); // ideal: centrado (eixo)
+  // Zona do baú onde cada pedido ficou (frente/meio/fundo).
+  const zoneOf = (orderId) => {
+    const bs = pack.boxes.filter(b => b.orderId === orderId);
+    if (!bs.length) return "—";
+    const avg = bs.reduce((s, b) => s + (b.x + b.l / 2), 0) / bs.length / truckL;
+    return avg < 0.34 ? "Frente" : avg > 0.66 ? "Fundo" : "Meio";
+  };
+  // Restrições a partir das flags dos itens.
+  const hasFragile = loadedItems.some(i => i.fragile);
+  const hasDangerous = loadedItems.some(i => i.dangerous);
+
+  // Plano de carga (LIFO: primeira entrega = última a carregar) → CSV.
+  const exportLoadPlan = () => {
+    const rows = orderIds.map((oid, idx) => {
+      const oi = loadedItems.filter(i => i.orderId === oid);
+      return {
+        seq: idx + 1,
+        protocol: oi[0]?.protocol || oid,
+        volumes: oi.reduce((s, i) => s + (i.volumes || 0), 0),
+        kg: oi.reduce((s, i) => s + (i.weight_kg || 0), 0),
+        m3: oi.reduce((s, i) => s + itemVolumeM3(i), 0).toFixed(2).replace(".", ","),
+        zona: zoneOf(oid),
+      };
+    });
+    downloadCsv(`plano-carga-${truck?.plate || "carreta"}`, rows, [
+      { key: "seq", label: "Ordem de carregamento" },
+      { key: "protocol", label: "Pedido" },
+      { key: "volumes", label: "Volumes" },
+      { key: "kg", label: "Peso (kg)" },
+      { key: "m3", label: "Volume (m³)" },
+      { key: "zona", label: "Zona do baú" },
+    ]);
+  };
 
   const addOrder = (order) => {
     const items = (order.recipients || []).flatMap(r =>
@@ -156,6 +196,39 @@ export default function LoadingSimulator() {
               )}
             </CardContent>
           </Card>
+
+          {loadedItems.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm flex items-center gap-2"><Scale className="w-4 h-4 text-velox-amber" /> Inteligência de carga</CardTitle>
+                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={exportLoadPlan}><FileDown className="w-3.5 h-3.5" /> Plano de carga</Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {cg != null && (
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Centro de gravidade (frente → fundo)</span>
+                      <span className={`font-mono ${cgImbalance ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>{(cg * 100).toFixed(0)}%</span>
+                    </div>
+                    <div className="relative h-3 bg-muted rounded-full">
+                      {/* faixa ideal 35–65% */}
+                      <div className="absolute top-0 bottom-0 bg-green-200/70 rounded" style={{ left: "35%", right: "35%" }} />
+                      <div className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-white ${cgImbalance ? "bg-red-500" : "bg-green-600"}`} style={{ left: `${Math.min(Math.max(cg * 100, 2), 98)}%` }} />
+                    </div>
+                    {cgImbalance && <p className="text-[11px] text-red-600 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Carga desbalanceada — redistribua para aproximar o CG do centro (eixos).</p>}
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <span className="text-[11px] px-2 py-1 rounded-full bg-muted text-muted-foreground">Aproveitamento: <b className="text-foreground">{Math.max(weightPct, volPct).toFixed(0)}%</b> ({weightPct >= volPct ? "peso" : "volume"})</span>
+                  {hasFragile && <span className="text-[11px] px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1"><Package className="w-3 h-3" /> Frágil — acomodar por cima</span>}
+                  {hasDangerous && <span className="text-[11px] px-2 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 flex items-center gap-1"><ShieldAlert className="w-3 h-3" /> Carga perigosa — isolar e sinalizar</span>}
+                </div>
+                <p className="text-[11px] text-muted-foreground">O plano de carga segue a lógica LIFO: o último pedido a carregar é o primeiro a entregar. Cada pedido recebe a zona do baú (frente/meio/fundo).</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="space-y-4">
