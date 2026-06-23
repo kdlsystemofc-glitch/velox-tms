@@ -645,6 +645,27 @@ aviso. Sem migration (estrutura já existia).
 
 ---
 
+## MÓDULO A MÓDULO — Documentos
+
+**Auditoria:** sem crash, mas com um **furo funcional central** — o módulo era um agregador
+read-only e os documentos de **frota e motorista nunca podiam ter arquivo**: o link "Ver"
+dependia de `crlv_url`/`insurance_url`, campos **nunca gravados** em lugar nenhum, e o
+motorista nem tinha colunas de URL (CNH/ASO/toxicológico). ASO e toxicológico nem apareciam.
+Faltava também a **central de vencimentos** (recurso nº 1 de um módulo de documentos).
+
+- **Doc-1 — Anexos reais (corrige o furo):** `DocRow` passa a **anexar o arquivo** e **editar
+  o vencimento inline**; Frota (CRLV/Seguro/Tacógrafo) e Motorista (CNH/ASO/Toxicológico)
+  anexáveis e exibidos. (migration `20260635_document_files.sql`)
+- **Doc-2 — Central de vencimentos:** aba **default** que consolida frota + motoristas +
+  empresa num só painel por urgência, com **KPIs** (vencidos, ≤30d, ≤60d), **filtro** e
+  **export CSV**; badge de pendência na aba.
+- **Doc-3 — Profundidade & organização:** **completude documental** por veículo/motorista
+  (x/3 anexados); **mais categorias + filtro** nos docs da empresa; **export** das NFs assinadas.
+
+**Teto pago:** CT-e/MDF-e/SEFAZ, OCR de documentos, assinatura digital com validade jurídica.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -669,3 +690,4 @@ aviso. Sem migration (estrutura já existia).
 21. `20260632_transfer_ops.sql` ← transferências: estorno (cancel_transfer) + sincronização de frota (recria receive_transfer)
 22. `20260633_transfer_mesh.sql` ← transferências: malha de filiais (branch_history) + custo/km do trecho
 23. `20260634_fleet_pro.sql` ← frota: EAR + pontos na CNH do motorista
+24. `20260635_document_files.sql` ← documentos: arquivos de frota (tacógrafo) e motorista (CNH/ASO/toxicológico)
