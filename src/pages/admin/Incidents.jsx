@@ -63,28 +63,31 @@ export default function Incidents() {
 
   const saveTratativa = async () => {
     const inc = selected;
+    const newTl = tl(inc, `Tratativa: ${form.assigned_to ? `responsável ${form.assigned_to}. ` : ""}${form.action_plan ? `Plano: ${form.action_plan}.` : ""}${form.due_date ? ` Prazo ${form.due_date}.` : ""}`, "plan");
+    const newStatus = inc.status === "open" ? "in_progress" : inc.status;
     await update.mutateAsync({ id: inc.id, patch: {
       assigned_to: form.assigned_to || null, action_plan: form.action_plan || null,
-      due_date: form.due_date || null, status: inc.status === "open" ? "in_progress" : inc.status,
-      timeline: tl(inc, `Tratativa: ${form.assigned_to ? `responsável ${form.assigned_to}. ` : ""}${form.action_plan ? `Plano: ${form.action_plan}.` : ""}${form.due_date ? ` Prazo ${form.due_date}.` : ""}`, "plan"),
+      due_date: form.due_date || null, status: newStatus, timeline: newTl,
     }});
-    setSelected(s => ({ ...s, assigned_to: form.assigned_to, action_plan: form.action_plan, due_date: form.due_date, status: s.status === "open" ? "in_progress" : s.status }));
+    setSelected(s => ({ ...s, assigned_to: form.assigned_to, action_plan: form.action_plan, due_date: form.due_date, status: newStatus, timeline: newTl }));
     toast({ title: "Tratativa salva" });
   };
 
   const markNotified = async () => {
     const inc = selected;
     const now = new Date().toISOString();
-    await update.mutateAsync({ id: inc.id, patch: { client_notified: true, client_notified_at: now, timeline: tl(inc, "Cliente notificado", "notify") } });
-    setSelected(s => ({ ...s, client_notified: true, client_notified_at: now }));
+    const newTl = tl(inc, "Cliente notificado", "notify");
+    await update.mutateAsync({ id: inc.id, patch: { client_notified: true, client_notified_at: now, timeline: newTl } });
+    setSelected(s => ({ ...s, client_notified: true, client_notified_at: now, timeline: newTl }));
     toast({ title: "Cliente marcado como notificado" });
   };
 
   const toggleInsurance = async () => {
     const inc = selected;
     const val = !inc.insurance_triggered;
-    await update.mutateAsync({ id: inc.id, patch: { insurance_triggered: val, timeline: tl(inc, val ? "Seguro acionado" : "Acionamento de seguro cancelado", "insurance") } });
-    setSelected(s => ({ ...s, insurance_triggered: val }));
+    const newTl = tl(inc, val ? "Seguro acionado" : "Acionamento de seguro cancelado", "insurance");
+    await update.mutateAsync({ id: inc.id, patch: { insurance_triggered: val, timeline: newTl } });
+    setSelected(s => ({ ...s, insurance_triggered: val, timeline: newTl }));
   };
 
   const addNote = async () => {
