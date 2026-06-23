@@ -514,6 +514,9 @@ export default function OrderWorkspace() {
                     <div className="flex-1 space-y-3">
                       <div>
                         <p className="text-[11px] font-bold text-velox-amber uppercase tracking-wide">Coleta — {formatDateBR(order.scheduled_date || order.collection_date)} ({order.collection_time === "morning" ? "Manhã" : order.collection_time === "afternoon" ? "Tarde" : "A combinar"})</p>
+                        {order.collection_date_desired && order.collection_date_desired !== (order.scheduled_date || order.collection_date) && (
+                          <p className="text-[10px] text-muted-foreground">Desejada pelo cliente: {formatDateBR(order.collection_date_desired)}</p>
+                        )}
                         <p className="text-sm font-medium">
                           {[order.origin?.street, order.origin?.number, order.origin?.city, order.origin?.state].filter(Boolean).join(", ") || "—"}
                         </p>

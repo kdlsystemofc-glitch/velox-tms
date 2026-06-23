@@ -16,6 +16,7 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { calculateFreightFull, calculateFreight, getDeliveryDaysByState } from "@/utils/freightCalculator";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO } from "@/utils/dateUtils";
+import { isAddressInCoverage } from "@/utils/coverageChecker";
 import { validateNFeKey, nfNumberFromKey } from "@/utils/nfeUtils";
 import { parseNFeXML } from "@/utils/nfeXml";
 
@@ -427,6 +428,33 @@ export default function NewOrder() {
   const taxableKg = freightBreakdown?.taxableKg || totals.weight;
   const capacityPct = selectedTruck?.capacity_kg ? Math.round((taxableKg / selectedTruck.capacity_kg) * 100) : null;
 
+  // Cobertura: destinos (e origem) fora da área atendida (Pe-1)
+  const coverageWarnings = useMemo(() => {
+    if (!settings?.coverage_type) return [];
+    const out = [];
+    if (form.origin?.cep && !isAddressInCoverage(form.origin.cep, form.origin.state, form.origin.city, settings)) {
+      out.push(`Origem (${form.origin.city || form.origin.cep})`);
+    }
+    form.recipients.forEach(r => {
+      if (r.cep && !isAddressInCoverage(r.cep, r.state, r.city, settings)) {
+        out.push(`${r.name || "Destino"} (${r.city || r.cep})`);
+      }
+    });
+    return out;
+  }, [settings, form.origin?.cep, form.origin?.state, form.origin?.city, form.recipients]);
+
+  // Possível duplicado: mesmo cliente, mesma origem e mesma data de coleta (Pe-1)
+  const duplicateOf = useMemo(() => {
+    if (!form.client_id || !form.collection_date) return null;
+    const originCep = (form.origin?.cep || "").replace(/\D/g, "");
+    const dup = (clientPastOrders || []).find(o =>
+      o.status !== "cancelled" &&
+      o.collection_date === form.collection_date &&
+      (o.origin?.cep || "").replace(/\D/g, "") === originCep && originCep
+    );
+    return dup?.protocol || null;
+  }, [form.client_id, form.collection_date, form.origin?.cep, clientPastOrders]);
+
   // ───────── Submit ─────────
   const handleSubmit = async () => {
     if (submittingRef.current) return;
@@ -445,6 +473,15 @@ export default function NewOrder() {
     if (!isValid) {
       submittingRef.current = false;
       toast({ title: "Revise os campos obrigatórios", variant: "destructive" });
+      return;
+    }
+    // Revalida destinatários/cargas no envio (não só na navegação por etapas)
+    const recipientsOk = isSimple
+      ? (parseNum(form.simple?.weight_kg) > 0 && (parseInt(form.simple?.volumes) || 0) > 0 && form.recipients.length > 0 && form.recipients.every(r => r.name.trim()))
+      : (form.recipients.length > 0 && form.recipients.every(r => r.name.trim() && (r.items || []).some(it => String(it.weight_kg).trim() || Number(it.volumes))));
+    if (!recipientsOk) {
+      submittingRef.current = false;
+      toast({ title: "Cargas/destinatários incompletos", description: "Cada destinatário precisa de nome e carga (peso/volumes).", variant: "destructive" });
       return;
     }
     let protocol;
@@ -481,6 +518,7 @@ export default function NewOrder() {
       client_cpf_cnpj: form.client_cpf_cnpj || undefined, client_phone: form.client_phone || undefined,
       client_email: form.client_email || undefined, preferred_contact: form.preferred_contact || "whatsapp",
       freight_type: form.freight_type, origin: form.origin, collection_date: form.collection_date,
+      collection_date_desired: form.collection_date,
       collection_time: form.collection_time, collection_notes: form.collection_notes || undefined,
       recipients: cleanedRecipients, total_volumes: totVol, total_weight_kg: totKg, total_declared_value: totVal,
       freight_value: parseNum(form.freight_value), freight_payer: form.freight_payer || "cif",
@@ -577,6 +615,24 @@ export default function NewOrder() {
           ))}
         </div>
       </div>
+
+      {/* Avisos: cobertura e duplicado (Pe-1) */}
+      {(coverageWarnings.length > 0 || duplicateOf) && (
+        <div className="mt-3 space-y-2">
+          {coverageWarnings.length > 0 && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span><strong>Fora da área de cobertura:</strong> {coverageWarnings.join(", ")}. Confirme se a operação atende esta(s) região(ões).</span>
+            </div>
+          )}
+          {duplicateOf && (
+            <div className="rounded-lg border border-orange-300 bg-orange-50 p-3 text-xs text-orange-800 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span><strong>Possível duplicado:</strong> já existe o pedido <span className="font-mono font-semibold">{duplicateOf}</span> para este cliente, mesma origem e data. Verifique antes de criar.</span>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-5 mt-5 items-start">
         {/* ===== Coluna do passo ===== */}
