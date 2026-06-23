@@ -172,7 +172,15 @@ export default function Replanning() {
                 </div>
                 <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
                   disabled={!replacementId || redistTruck.isPending}
-                  onClick={() => redistTruck.mutate({ brokenTruckId: truck.id, replacementId, affectedOrders, affectedTrips })}>
+                  onClick={() => {
+                    const chosen = options.find((x) => x.truck.id === replacementId);
+                    const affectedKg = affectedOrders.reduce((s, o) => s + (o.total_weight_kg || 0), 0);
+                    if (chosen && chosen.truck.capacity_kg > 0 && affectedKg > chosen.free) {
+                      toast({ title: "Capacidade insuficiente", description: `${chosen.truck.plate} tem ${chosen.free.toLocaleString("pt-BR")} kg livres, mas a carga afetada soma ${affectedKg.toLocaleString("pt-BR")} kg. Escolha outro caminhão ou divida a carga.`, variant: "destructive" });
+                      return;
+                    }
+                    redistTruck.mutate({ brokenTruckId: truck.id, replacementId, affectedOrders, affectedTrips });
+                  }}>
                   Redistribuir tudo <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
