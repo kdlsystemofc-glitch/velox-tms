@@ -4,15 +4,23 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
+import DataTable from "@/components/shared/DataTable";
 import { FormSection, Field } from "@/components/shared/FormSection";
 import { AddressFields } from "@/components/shared/AddressFields";
 import DeliveryWindowEditor from "@/components/shared/DeliveryWindowEditor";
-import { Plus, Search, MapPin, Pencil, Trash2, Building2 } from "lucide-react";
+import { Plus, MapPin, Pencil, Trash2, Building2 } from "lucide-react";
 import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
+
+function generateRecipientCode(recipients) {
+  const max = recipients.reduce((m, r) => {
+    const match = r.code?.match(/DEST(\d+)/);
+    return match ? Math.max(m, parseInt(match[1])) : m;
+  }, 0);
+  return `DEST${String(max + 1).padStart(5, "0")}`;
+}
 
 const EMPTY = {
   name: "", trade_name: "", cpf_cnpj: "", type: "eventual", phone: "", email: "",
@@ -24,7 +32,6 @@ const EMPTY = {
 export default function Recipients({ hideTitle = false }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY);
@@ -33,7 +40,10 @@ export default function Recipients({ hideTitle = false }) {
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
 
   const save = useMutation({
-    mutationFn: (data) => editingId ? base44.entities.Recipient.update(editingId, data) : base44.entities.Recipient.create(data),
+    mutationFn: (data) => {
+      if (editingId) return base44.entities.Recipient.update(editingId, data);
+      return base44.entities.Recipient.create({ ...data, code: data.code || generateRecipientCode(recipients) });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["recipients"] });
       setShowForm(false); setEditingId(null); setForm(EMPTY);
@@ -49,9 +59,6 @@ export default function Recipients({ hideTitle = false }) {
   const openEdit = (r) => { setEditingId(r.id); setForm({ ...EMPTY, ...r, address: r.address || EMPTY.address, delivery_window: r.delivery_window || EMPTY.delivery_window }); setShowForm(true); };
   const openNew = () => { setEditingId(null); setForm(EMPTY); setShowForm(true); };
 
-  const filtered = recipients.filter(r => !search ||
-    [r.name, r.trade_name, r.cpf_cnpj, r.address?.city].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase()));
-
   // Validação de CPF/CNPJ (formato + duplicidade, ignorando o próprio em edição).
   const docDigits = onlyDigits(form.cpf_cnpj);
   const docDuplicate = (docDigits.length === 11 || docDigits.length === 14) && recipients.some(r => r.id !== editingId && onlyDigits(r.cpf_cnpj) === docDigits);
@@ -66,43 +73,32 @@ export default function Recipients({ hideTitle = false }) {
         </Button>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Buscar por nome, CNPJ ou cidade..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-      </div>
-
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/30 text-muted-foreground">
-                  <th className="text-left py-3 px-4 font-medium">Nome</th>
-                  <th className="text-left py-3 px-4 font-medium">CNPJ/CPF</th>
-                  <th className="text-left py-3 px-4 font-medium hidden md:table-cell">Cidade</th>
-                  <th className="text-left py-3 px-4 font-medium">Tipo</th>
-                  <th className="text-right py-3 px-4 font-medium">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 && <tr><td colSpan={5} className="py-10 text-center text-muted-foreground">Nenhum destinatário cadastrado.</td></tr>}
-                {filtered.map(r => (
-                  <tr key={r.id} className="border-b border-border/50 hover:bg-muted/20">
-                    <td className="py-3 px-4 font-medium">{r.name}{r.trade_name && <span className="text-xs text-muted-foreground"> · {r.trade_name}</span>}</td>
-                    <td className="py-3 px-4 font-mono text-xs text-muted-foreground">{r.cpf_cnpj || "—"}</td>
-                    <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">{r.address?.city ? `${r.address.city}/${r.address.state}` : "—"}</td>
-                    <td className="py-3 px-4"><span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.type === "fixo" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>{r.type === "fixo" ? "Fixo" : "Eventual"}</span></td>
-                    <td className="py-3 px-4 text-right">
-                      <button onClick={() => openEdit(r)} className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => { if (window.confirm(`Remover ${r.name}?`)) remove.mutate(r.id); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <DataTable
+        data={recipients}
+        searchKeys={["name", "trade_name", "cpf_cnpj", "code"]}
+        searchPlaceholder="Buscar por nome, CNPJ, código ou cidade..."
+        initialSort={{ key: "name", dir: "asc" }}
+        onRowClick={(r) => openEdit(r)}
+        emptyMessage="Nenhum destinatário cadastrado."
+        columns={[
+          { key: "code", label: "Código", sortable: true, width: 90, className: "font-mono text-xs text-muted-foreground", render: r => r.code || "—" },
+          { key: "name", label: "Nome", sortable: true, className: "font-medium", render: r => (
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-7 h-7 rounded bg-primary/10 flex items-center justify-center flex-shrink-0"><MapPin className="w-3.5 h-3.5 text-primary" /></span>
+              <span className="truncate">{r.name}{r.trade_name && <span className="text-xs text-muted-foreground"> · {r.trade_name}</span>}</span>
+            </div>
+          )},
+          { key: "cpf_cnpj", label: "CNPJ / CPF", sortable: true, className: "font-mono text-xs text-muted-foreground", render: r => r.cpf_cnpj || "—" },
+          { key: "city", label: "Cidade", value: r => r.address?.city || "", className: "text-xs text-muted-foreground", render: r => r.address?.city ? `${r.address.city}/${r.address.state}` : "—" },
+          { key: "type", label: "Tipo", sortable: true, value: r => r.type, render: r => <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.type === "fixo" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>{r.type === "fixo" ? "Fixo" : "Eventual"}</span> },
+          { key: "actions", label: "", align: "right", stopPropagation: true, width: 80, render: r => (
+            <div className="flex justify-end">
+              <button onClick={() => openEdit(r)} className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
+              <button onClick={() => { if (window.confirm(`Remover ${r.name}?`)) remove.mutate(r.id); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
+            </div>
+          )},
+        ]}
+      />
 
       <Dialog open={showForm} onOpenChange={(v) => { setShowForm(v); if (!v) { setEditingId(null); setForm(EMPTY); } }}>
         <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-0 gap-0">

@@ -7,13 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Building2, Eye, X, MessageCircle, DollarSign } from "lucide-react";
+import { Plus, Building2, Eye, MessageCircle, DollarSign } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/components/ui/use-toast";
 import DataTable from "@/components/shared/DataTable";
 import { FormSection, Field } from "@/components/shared/FormSection";
 import { AddressFields } from "@/components/shared/AddressFields";
 import DeliveryWindowEditor from "@/components/shared/DeliveryWindowEditor";
+import ContactsEditor from "@/components/shared/ContactsEditor";
 import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
 
 const EMPTY_CLIENT = {
@@ -167,52 +168,7 @@ export default function Clients({ hideTitle = false }) {
               </FormSection>
 
               <FormSection title="Contatos" cols={1}>
-                <Field>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-muted-foreground">Pessoas de contato no cliente</span>
-                    <button type="button"
-                      onClick={() => setForm(f => ({ ...f, contacts: [...(f.contacts || []), { name: "", role: "", phone: "", whatsapp: "", email: "", is_primary: (f.contacts || []).length === 0 }] }))}
-                      className="text-xs text-primary hover:underline flex items-center gap-1 font-medium">
-                      <Plus className="w-3 h-3" /> Adicionar contato
-                    </button>
-                  </div>
-                  {(form.contacts || []).length === 0 ? (
-                    <p className="text-xs text-muted-foreground py-2">Nenhum contato adicionado.</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {form.contacts.map((c, i) => (
-                        <div key={i} className="border border-border rounded-md p-3 space-y-2 bg-muted/20">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-muted-foreground">Contato {i + 1}</span>
-                            <div className="flex items-center gap-3">
-                              <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-                                <input type="checkbox" checked={c.is_primary}
-                                  onChange={() => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => ({ ...ct, is_primary: idx === i })) }))}
-                                  className="w-3.5 h-3.5 accent-primary" />
-                                Principal
-                              </label>
-                              <button type="button" onClick={() => setForm(f => ({ ...f, contacts: f.contacts.filter((_, idx) => idx !== i) }))} className="text-red-400 hover:text-red-600">
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <Input placeholder="Nome *" value={c.name} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, name: e.target.value } : ct) }))} />
-                            <Select value={c.role || ""} onValueChange={v => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, role: v } : ct) }))}>
-                              <SelectTrigger><SelectValue placeholder="Função" /></SelectTrigger>
-                              <SelectContent>
-                                {["Financeiro","Logística","Compras","Diretor","Gerente","Outro"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                            <Input placeholder="Telefone" value={c.phone || ""} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, phone: e.target.value } : ct) }))} />
-                            <Input placeholder="WhatsApp" value={c.whatsapp || ""} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, whatsapp: e.target.value } : ct) }))} />
-                            <Input placeholder="E-mail" value={c.email || ""} onChange={e => setForm(f => ({ ...f, contacts: f.contacts.map((ct, idx) => idx === i ? { ...ct, email: e.target.value } : ct) }))} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Field>
+                <ContactsEditor value={form.contacts} onChange={contacts => setForm(f => ({ ...f, contacts }))} />
               </FormSection>
 
               <AddressFields

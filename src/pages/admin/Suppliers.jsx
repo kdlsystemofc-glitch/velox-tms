@@ -7,11 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Building2, Pencil, Phone, Mail, Trash2, MessageCircle, DollarSign } from "lucide-react";
+import { Plus, Building2, Pencil, Phone, Mail, DollarSign } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import DataTable from "@/components/shared/DataTable";
 import { FormSection, Field } from "@/components/shared/FormSection";
 import { AddressFields } from "@/components/shared/AddressFields";
+import ContactsEditor from "@/components/shared/ContactsEditor";
 import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
 
 const CATEGORIES = [
@@ -41,15 +42,6 @@ async function generateSupplierCode(suppliers) {
     return match ? Math.max(max, parseInt(match[1])) : max;
   }, 0);
   return `FOR${String(maxNum + 1).padStart(5, "0")}`;
-}
-
-function FormField({ label, children }) {
-  return (
-    <div>
-      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</label>
-      <div className="mt-1">{children}</div>
-    </div>
-  );
 }
 
 function SupplierForm({ form, setForm, duplicate = false }) {
@@ -108,104 +100,6 @@ function SupplierForm({ form, setForm, duplicate = false }) {
           <Textarea placeholder="Condições comerciais, observações..." rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="resize-none" />
         </Field>
       </FormSection>
-    </div>
-  );
-}
-
-function SupplierContactsSection({ contacts, onChange }) {
-  const [showModal, setShowModal] = useState(false);
-  const [editIdx, setEditIdx] = useState(null);
-  const [contactForm, setContactForm] = useState({ name: "", role: "", phone: "", whatsapp: "", email: "", is_primary: false });
-  const EMPTY_C = { name: "", role: "", phone: "", whatsapp: "", email: "", is_primary: false };
-
-  const handleSave = () => {
-    if (!contactForm.name.trim()) return;
-    const updated = [...(contacts || [])];
-    if (contactForm.is_primary) updated.forEach(c => { c.is_primary = false; });
-    if (editIdx !== null) { updated[editIdx] = contactForm; } else { updated.push({ ...contactForm }); }
-    onChange(updated);
-    setShowModal(false);
-    setEditIdx(null);
-    setContactForm(EMPTY_C);
-  };
-
-  const handleRemove = (i) => {
-    onChange((contacts || []).filter((_, idx) => idx !== i));
-  };
-
-  return (
-    <div className="border-t border-border/40 pt-3 mt-1">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Contatos</p>
-        <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={() => { setEditIdx(null); setContactForm(EMPTY_C); setShowModal(true); }}>
-          <Plus className="w-3 h-3" /> Adicionar
-        </Button>
-      </div>
-      {(contacts || []).length === 0 ? (
-        <p className="text-xs text-muted-foreground">Nenhum contato adicionado.</p>
-      ) : (
-        <div className="space-y-2">
-          {(contacts || []).map((c, i) => (
-            <div key={i} className={`flex items-start justify-between p-2.5 rounded-lg border text-xs ${c.is_primary ? "bg-velox-amber/5 border-velox-amber/30" : "border-border"}`}>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <p className="font-medium">{c.name}</p>
-                  {c.is_primary && <span className="text-[9px] bg-velox-amber/20 text-white font-bold px-1.5 py-0.5 rounded-full">Principal</span>}
-                </div>
-                {c.role && <p className="text-muted-foreground">{c.role}</p>}
-                <div className="flex gap-2 mt-0.5">
-                  {c.phone && <p>{c.phone}</p>}
-                  {c.email && <p className="text-blue-600">{c.email}</p>}
-                </div>
-              </div>
-              <div className="flex gap-1">
-                {c.whatsapp && (
-                  <a href={`https://wa.me/55${c.whatsapp.replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer" className="p-1 text-green-600 hover:bg-green-50 rounded">
-                    <MessageCircle className="w-3 h-3" />
-                  </a>
-                )}
-                <button onClick={() => { setEditIdx(i); setContactForm({ ...c }); setShowModal(true); }} className="p-1 text-blue-400 hover:bg-blue-50 rounded">
-                  <Pencil className="w-3 h-3" />
-                </button>
-                <button onClick={() => handleRemove(i)} className="p-1 text-red-400 hover:bg-red-50 rounded">
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      {showModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-background rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-3">
-            <h3 className="font-semibold text-sm">{editIdx !== null ? "Editar Contato" : "Adicionar Contato"}</h3>
-            <div className="space-y-2">
-              <FormField label="Nome *"><Input placeholder="Nome completo" value={contactForm.name} onChange={e => setContactForm(f => ({ ...f, name: e.target.value }))} /></FormField>
-              <FormField label="Função">
-                <Select value={contactForm.role || ""} onValueChange={v => setContactForm(f => ({ ...f, role: v }))}>
-                  <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
-                  <SelectContent>
-                    {["Financeiro","Comercial","Técnico","Gerente","Diretor","Outro"].map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </FormField>
-              <div className="grid grid-cols-2 gap-2">
-                <FormField label="Telefone"><Input placeholder="(00) 00000-0000" value={contactForm.phone} onChange={e => setContactForm(f => ({ ...f, phone: e.target.value }))} /></FormField>
-                <FormField label="WhatsApp"><Input placeholder="(00) 00000-0000" value={contactForm.whatsapp} onChange={e => setContactForm(f => ({ ...f, whatsapp: e.target.value }))} /></FormField>
-              </div>
-              <FormField label="E-mail"><Input type="email" placeholder="contato@email.com" value={contactForm.email} onChange={e => setContactForm(f => ({ ...f, email: e.target.value }))} /></FormField>
-              <label className="flex items-center gap-2 cursor-pointer text-sm">
-                <input type="checkbox" checked={contactForm.is_primary} onChange={e => setContactForm(f => ({ ...f, is_primary: e.target.checked }))} className="w-4 h-4 accent-velox-amber" />
-                Contato principal
-              </label>
-            </div>
-            <div className="flex gap-2 justify-end pt-1">
-              <Button variant="outline" size="sm" onClick={() => { setShowModal(false); setEditIdx(null); }}>Cancelar</Button>
-              <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={handleSave} disabled={!contactForm.name.trim()}>Salvar</Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -274,7 +168,7 @@ export default function Suppliers({ hideTitle = false }) {
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Cadastrar Fornecedor</DialogTitle></DialogHeader>
             <SupplierForm form={form} setForm={setForm} duplicate={createDup} />
-            <SupplierContactsSection contacts={form.contacts} onChange={v => setForm(f => ({ ...f, contacts: v }))} />
+            <div className="border-t border-border/40 pt-3 mt-1"><ContactsEditor value={form.contacts} onChange={v => setForm(f => ({ ...f, contacts: v }))} /></div>
             <Button
               onClick={() => createMutation.mutate(form)}
               disabled={!form.name || createDup || !docOk(form.cnpj_cpf) || createMutation.isPending}
@@ -325,7 +219,7 @@ export default function Suppliers({ hideTitle = false }) {
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Editar Fornecedor</DialogTitle></DialogHeader>
         <SupplierForm form={editForm} setForm={setEditForm} duplicate={editDup} />
-        <SupplierContactsSection contacts={editForm.contacts} onChange={v => setEditForm(f => ({ ...f, contacts: v }))} />
+        <div className="border-t border-border/40 pt-3 mt-1"><ContactsEditor value={editForm.contacts} onChange={v => setEditForm(f => ({ ...f, contacts: v }))} /></div>
         <Button
           onClick={() => updateMutation.mutate({ id: editingId, data: editForm })}
             disabled={!editForm.name || editDup || !docOk(editForm.cnpj_cpf) || updateMutation.isPending}

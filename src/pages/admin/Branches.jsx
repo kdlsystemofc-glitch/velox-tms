@@ -3,16 +3,24 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
+import DataTable from "@/components/shared/DataTable";
 import { FormSection, Field } from "@/components/shared/FormSection";
 import { AddressFields } from "@/components/shared/AddressFields";
 import { Plus, Warehouse, Pencil, Trash2 } from "lucide-react";
 
 const EMPTY = { name: "", type: "filial", code: "", phone: "", status: "active", address: { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "" } };
 const TYPES = { filial: "Filial", cd: "Centro de Distribuição", base: "Base" };
+
+function generateBranchCode(branches) {
+  const max = branches.reduce((m, b) => {
+    const match = b.code?.match(/FIL(\d+)/);
+    return match ? Math.max(m, parseInt(match[1])) : m;
+  }, 0);
+  return `FIL${String(max + 1).padStart(4, "0")}`;
+}
 
 export default function Branches({ hideTitle = false }) {
   const { toast } = useToast();
@@ -24,7 +32,7 @@ export default function Branches({ hideTitle = false }) {
   const { data: branches = [] } = useQuery({ queryKey: ["branches"], queryFn: () => base44.entities.Branch.list("-created_date") });
 
   const save = useMutation({
-    mutationFn: (data) => editingId ? base44.entities.Branch.update(editingId, data) : base44.entities.Branch.create(data),
+    mutationFn: (data) => editingId ? base44.entities.Branch.update(editingId, data) : base44.entities.Branch.create({ ...data, code: data.code || generateBranchCode(branches) }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["branches"] }); setShowForm(false); setEditingId(null); setForm(EMPTY); toast({ title: editingId ? "Filial atualizada!" : "Filial cadastrada!" }); },
     onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),
   });
@@ -46,26 +54,32 @@ export default function Branches({ hideTitle = false }) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {branches.length === 0 && <p className="text-sm text-muted-foreground col-span-full text-center py-8">Nenhuma filial/CD cadastrada.</p>}
-        {branches.map(b => (
-          <Card key={b.id}>
-            <CardContent className="pt-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold flex items-center gap-1.5"><Warehouse className="w-4 h-4 text-velox-amber" /> {b.name}</p>
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">{TYPES[b.type] || b.type}</span>
-                </div>
-                <div className="flex gap-1">
-                  <button onClick={() => { setEditingId(b.id); setForm({ ...EMPTY, ...b, address: b.address || EMPTY.address }); setShowForm(true); }} className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => { if (window.confirm(`Remover ${b.name}?`)) remove.mutate(b.id); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">{b.address?.city ? `${b.address.city}/${b.address.state}` : "Sem endereço"}{b.phone && ` · ${b.phone}`}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <DataTable
+        data={branches}
+        searchKeys={["name", "code", "phone"]}
+        searchPlaceholder="Buscar por nome ou código..."
+        initialSort={{ key: "name", dir: "asc" }}
+        onRowClick={(b) => { setEditingId(b.id); setForm({ ...EMPTY, ...b, address: b.address || EMPTY.address }); setShowForm(true); }}
+        emptyMessage="Nenhuma filial/CD cadastrada."
+        columns={[
+          { key: "code", label: "Código", sortable: true, width: 80, className: "font-mono text-xs text-muted-foreground", render: b => b.code || "—" },
+          { key: "name", label: "Nome", sortable: true, className: "font-medium", render: b => (
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-7 h-7 rounded bg-velox-amber/10 flex items-center justify-center flex-shrink-0"><Warehouse className="w-3.5 h-3.5 text-velox-amber" /></span>
+              <span className="truncate">{b.name}</span>
+            </div>
+          )},
+          { key: "type", label: "Tipo", sortable: true, value: b => TYPES[b.type] || b.type, render: b => <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">{TYPES[b.type] || b.type}</span> },
+          { key: "city", label: "Cidade", value: b => b.address?.city || "", className: "text-xs text-muted-foreground", render: b => b.address?.city ? `${b.address.city}/${b.address.state}` : "—" },
+          { key: "phone", label: "Telefone", className: "text-xs text-muted-foreground", render: b => b.phone || "—" },
+          { key: "actions", label: "", align: "right", stopPropagation: true, width: 80, render: b => (
+            <div className="flex justify-end">
+              <button onClick={() => { setEditingId(b.id); setForm({ ...EMPTY, ...b, address: b.address || EMPTY.address }); setShowForm(true); }} className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
+              <button onClick={() => { if (window.confirm(`Remover ${b.name}?`)) remove.mutate(b.id); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
+            </div>
+          )},
+        ]}
+      />
 
       <Dialog open={showForm} onOpenChange={(v) => { setShowForm(v); if (!v) { setEditingId(null); setForm(EMPTY); } }}>
         <DialogContent className="max-w-xl max-h-[92vh] overflow-y-auto p-0 gap-0">

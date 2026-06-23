@@ -7,7 +7,12 @@ import Recipients from "@/pages/admin/Recipients";
 import Branches from "@/pages/admin/Branches";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { Card, CardContent } from "@/components/ui/card";
 import PageHeader, { segmentedTabsClass, segmentedTriggerClass } from "@/components/shared/PageHeader";
+
+function Kpi({ label, value, tone = "" }) {
+  return <Card><CardContent className="p-3.5"><p className="text-[11px] text-muted-foreground">{label}</p><p className={`text-xl font-bold ${tone}`}>{value}</p></CardContent></Card>;
+}
 
 export default function CadastrosPage() {
   const params = new URLSearchParams(window.location.search);
@@ -27,10 +32,21 @@ export default function CadastrosPage() {
     queryKey: ["recipients"],
     queryFn: () => base44.entities.Recipient.list("-created_date"),
   });
+  const { data: branches = [] } = useQuery({
+    queryKey: ["branches"],
+    queryFn: () => base44.entities.Branch.list("-created_date"),
+  });
 
   return (
     <div className="space-y-4">
-      <PageHeader icon={BookUser} title="Cadastros" subtitle="Clientes e fornecedores da empresa" />
+      <PageHeader icon={BookUser} title="Cadastros" subtitle="Clientes, destinatários, fornecedores e filiais" />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Kpi label="Clientes ativos" value={clients.filter(c => c.status !== "inactive").length} tone="text-green-600" />
+        <Kpi label="Destinatários" value={recipients.length} />
+        <Kpi label="Fornecedores" value={suppliers.length} />
+        <Kpi label="Filiais & CDs" value={branches.length} />
+      </div>
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className={segmentedTabsClass}>
