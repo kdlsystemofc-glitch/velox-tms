@@ -120,7 +120,11 @@ export default function NewTrip() {
   const buildStops = () => {
     const stops = [];
     selectedOrderData.forEach(o => {
-      stops.push({ type: "collection", order_id: o.id, cep: o.origin?.cep || "", address: `${o.origin?.street || ""}, ${o.origin?.number || ""}, ${o.origin?.city || ""} - ${o.origin?.state || ""}`, city: o.origin?.city, state: o.origin?.state, status: "pending" });
+      // Coleta consolidada: uma parada por ponto de coleta (origins) ou a origem única.
+      const pickups = (o.origins && o.origins.length) ? o.origins : [o.origin || {}];
+      pickups.forEach((p, pi) => {
+        stops.push({ type: "collection", order_id: o.id, origin_index: pi, cep: p?.cep || "", address: `${p?.street || ""}, ${p?.number || ""}, ${p?.city || ""} - ${p?.state || ""}`, city: p?.city, state: p?.state, status: "pending" });
+      });
       (o.recipients || []).forEach(r => {
         stops.push({ type: "delivery", order_id: o.id, cep: r.cep || "", recipient_name: r.name, address: `${r.street || ""}, ${r.number || ""}, ${r.city || ""} - ${r.state || ""}`, city: r.city, state: r.state, status: "pending" });
       });

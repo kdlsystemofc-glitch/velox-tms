@@ -549,6 +549,16 @@ export default function OrderWorkspace() {
                           {[order.origin?.street, order.origin?.number, order.origin?.city, order.origin?.state].filter(Boolean).join(", ") || "—"}
                         </p>
                         {order.collection_notes && <p className="text-xs text-muted-foreground mt-0.5">Obs: {order.collection_notes}</p>}
+                        {(order.origins || []).length > 1 && (
+                          <div className="mt-1.5 space-y-1">
+                            <p className="text-[10px] font-bold text-velox-amber uppercase tracking-wide">Coleta consolidada — {order.origins.length} pontos</p>
+                            {order.origins.slice(1).map((p, i) => (
+                              <p key={i} className="text-xs text-muted-foreground">
+                                {i + 2}. {[p.street, p.number, p.city, p.state].filter(Boolean).join(", ")}{p.contact_name ? ` · ${p.contact_name}` : ""}{p.collection_notes ? ` — ${p.collection_notes}` : ""}
+                              </p>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       {(order.recipients || []).map((r, i) => (
                         <div key={i}>

@@ -86,6 +86,7 @@ export default function NewOrder() {
       requester_name: "", requester_role: "", preferred_contact: "whatsapp",
       freight_type: "shared",
       origin: { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "" },
+      extra_origins: [], // coleta consolidada: pontos de coleta adicionais
       collection_date: "", collection_time: "morning", collection_notes: "",
       recipients: [{ ...emptyRecipient, items: [{ ...emptyItem }] }],
       simple: { volumes: "", weight_kg: "", declared_value: "" },
@@ -201,6 +202,11 @@ export default function NewOrder() {
 
   // ───────── Setters ─────────
   const setOrigin = (addr) => setForm(f => ({ ...f, origin: { ...f.origin, ...addr } }));
+  // Coleta consolidada — pontos de coleta adicionais
+  const emptyOrigin = { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "", contact_name: "", collection_notes: "" };
+  const addExtraOrigin = () => setForm(f => ({ ...f, extra_origins: [...(f.extra_origins || []), { ...emptyOrigin }] }));
+  const setExtraOrigin = (i, addr) => setForm(f => ({ ...f, extra_origins: (f.extra_origins || []).map((o, j) => j === i ? { ...o, ...addr } : o) }));
+  const removeExtraOrigin = (i) => setForm(f => ({ ...f, extra_origins: (f.extra_origins || []).filter((_, j) => j !== i) }));
   const setRecipient = (ri, field, value) =>
     setForm(prev => ({ ...prev, recipients: prev.recipients.map((r, i) => i === ri ? { ...r, [field]: value } : r) }));
   const setRecipientAddress = (ri, addr) =>
@@ -519,6 +525,10 @@ export default function NewOrder() {
       client_email: form.client_email || undefined, preferred_contact: form.preferred_contact || "whatsapp",
       freight_type: form.freight_type, origin: form.origin, collection_date: form.collection_date,
       collection_date_desired: form.collection_date,
+      ...(() => {
+        const validExtra = (form.extra_origins || []).filter(o => (o.cep || "").replace(/\D/g, "").length === 8 || (o.street || "").trim());
+        return validExtra.length ? { origins: [{ ...form.origin, collection_notes: form.collection_notes || undefined }, ...validExtra] } : {};
+      })(),
       collection_time: form.collection_time, collection_notes: form.collection_notes || undefined,
       recipients: cleanedRecipients, total_volumes: totVol, total_weight_kg: totKg, total_declared_value: totVal,
       freight_value: parseNum(form.freight_value), freight_payer: form.freight_payer || "cif",
@@ -753,6 +763,26 @@ export default function NewOrder() {
                     <Textarea placeholder="ex: Portaria fecha às 18h, acesso pela rua lateral" rows={2} value={form.collection_notes} onChange={e => setForm(f => ({ ...f, collection_notes: e.target.value }))} className="resize-none" />
                   </FL>
                 </>
+              )}
+
+              {sectionCard(MapPin, "Pontos de coleta adicionais (coleta consolidada)",
+                <div className="space-y-4">
+                  <p className="text-[11px] text-muted-foreground">Opcional. Use quando a mesma OS recolhe carga em mais de um remetente. O motorista fará uma parada de coleta em cada ponto.</p>
+                  {(form.extra_origins || []).map((o, i) => (
+                    <div key={i} className="border border-border rounded-lg p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold">Ponto de coleta {i + 2}</span>
+                        <button type="button" onClick={() => removeExtraOrigin(i)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                      <AddressFields value={o} onChange={(addr) => setExtraOrigin(i, addr)} />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <FL label="Contato no local"><Input placeholder="Nome / responsável" value={o.contact_name || ""} onChange={e => setExtraOrigin(i, { contact_name: e.target.value })} /></FL>
+                        <FL label="Observações deste ponto"><Input placeholder="ex: coletar 10 caixas no setor B" value={o.collection_notes || ""} onChange={e => setExtraOrigin(i, { collection_notes: e.target.value })} /></FL>
+                      </div>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={addExtraOrigin} className="gap-1"><Plus className="w-3.5 h-3.5" /> Adicionar ponto de coleta</Button>
+                </div>
               )}
             </>
           )}
