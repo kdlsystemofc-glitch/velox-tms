@@ -10,8 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import PageHeader from "@/components/shared/PageHeader";
+import FileUploadButton from "@/components/shared/FileUploadButton";
+import { NumericInput } from "@/components/shared/NumericInput";
 import {
-  AlertTriangle, CheckCircle2, Shield, BellRing, UserCheck, Clock, FileText, ExternalLink,
+  AlertTriangle, CheckCircle2, Shield, BellRing, UserCheck, Clock, FileText, ExternalLink, DollarSign,
 } from "lucide-react";
 import {
   sortByGravity, incidentSeverity, incidentTypeLabel, SEVERITY_META,
@@ -30,7 +32,7 @@ export default function Incidents() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [assignedFilter, setAssignedFilter] = useState("");
   const [selected, setSelected] = useState(null);
-  const [form, setForm] = useState({ assigned_to: "", action_plan: "", due_date: "", note: "", resolution: "" });
+  const [form, setForm] = useState({ assigned_to: "", action_plan: "", due_date: "", financial_impact: "", root_cause: "", note: "", resolution: "" });
 
   const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => base44.entities.Incident.list("-created_date", 300) });
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
@@ -73,7 +75,16 @@ export default function Incidents() {
 
   const openManage = (inc) => {
     setSelected(inc);
-    setForm({ assigned_to: inc.assigned_to || "", action_plan: inc.action_plan || "", due_date: inc.due_date || "", note: "", resolution: "" });
+    setForm({ assigned_to: inc.assigned_to || "", action_plan: inc.action_plan || "", due_date: inc.due_date || "", financial_impact: inc.financial_impact ?? "", root_cause: inc.root_cause || "", note: "", resolution: "" });
+  };
+
+  const addPhoto = async (url) => {
+    if (!url) return;
+    const inc = selected;
+    const photos = [...(inc.photo_urls || []), url];
+    await update.mutateAsync({ id: inc.id, patch: { photo_urls: photos } });
+    setSelected(s => ({ ...s, photo_urls: photos }));
+    toast({ title: "Anexo adicionado" });
   };
 
   const tl = (inc, text, kind = "note") => ([...(inc.timeline || []), { at: new Date().toISOString(), by: "Gestão", text, kind }]);
@@ -82,11 +93,13 @@ export default function Incidents() {
     const inc = selected;
     const newTl = tl(inc, `Tratativa: ${form.assigned_to ? `responsável ${form.assigned_to}. ` : ""}${form.action_plan ? `Plano: ${form.action_plan}.` : ""}${form.due_date ? ` Prazo ${form.due_date}.` : ""}`, "plan");
     const newStatus = inc.status === "open" ? "in_progress" : inc.status;
+    const fi = form.financial_impact === "" ? null : Number(form.financial_impact);
     await update.mutateAsync({ id: inc.id, patch: {
       assigned_to: form.assigned_to || null, action_plan: form.action_plan || null,
-      due_date: form.due_date || null, status: newStatus, timeline: newTl,
+      due_date: form.due_date || null, financial_impact: fi, root_cause: form.root_cause || null,
+      status: newStatus, timeline: newTl,
     }});
-    setSelected(s => ({ ...s, assigned_to: form.assigned_to, action_plan: form.action_plan, due_date: form.due_date, status: newStatus, timeline: newTl }));
+    setSelected(s => ({ ...s, assigned_to: form.assigned_to, action_plan: form.action_plan, due_date: form.due_date, financial_impact: fi, root_cause: form.root_cause, status: newStatus, timeline: newTl }));
     toast({ title: "Tratativa salva" });
   };
 
@@ -227,11 +240,22 @@ export default function Incidents() {
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <div className="p-3 bg-muted/30 rounded-lg text-sm">
+                  <div className="p-3 bg-muted/30 rounded-lg text-sm space-y-2">
                     <p>{selected.description}</p>
-                    {selected.photo_urls?.length > 0 && (
-                      <a href={selected.photo_urls[0]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"><FileText className="w-3 h-3" /> Ver foto</a>
+                    {(selected.financial_impact > 0 || selected.root_cause) && (
+                      <div className="flex items-center gap-3 text-xs">
+                        {selected.financial_impact > 0 && <span className="flex items-center gap-1 text-red-700 font-semibold"><DollarSign className="w-3.5 h-3.5" /> R$ {Number(selected.financial_impact).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>}
+                        {selected.root_cause && <span className="text-muted-foreground">Causa: {selected.root_cause}</span>}
+                      </div>
                     )}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {(selected.photo_urls || []).map((u, i) => (
+                        <a key={i} href={u} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"><FileText className="w-3 h-3" /> Anexo {i + 1}</a>
+                      ))}
+                      {selected.status !== "resolved" && (
+                        <FileUploadButton label="Anexar foto/doc" accept="image/*,application/pdf" onUpload={addPhoto} />
+                      )}
+                    </div>
                   </div>
 
                   {selected.status !== "resolved" && (
@@ -244,6 +268,16 @@ export default function Incidents() {
                           <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} className="h-9 text-sm" title="Prazo de resolução" />
                         </div>
                         <Textarea placeholder="Plano de ação — o que vai ser feito" rows={2} value={form.action_plan} onChange={e => setForm(f => ({ ...f, action_plan: e.target.value }))} className="resize-none text-sm" />
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[11px] text-muted-foreground">Impacto financeiro (R$)</label>
+                            <NumericInput currency value={form.financial_impact} onChange={v => setForm(f => ({ ...f, financial_impact: v }))} placeholder="custo da avaria/roubo" />
+                          </div>
+                          <div>
+                            <label className="text-[11px] text-muted-foreground">Causa-raiz</label>
+                            <Input value={form.root_cause} onChange={e => setForm(f => ({ ...f, root_cause: e.target.value }))} placeholder="ex: manuseio, embalagem, terceiro" className="h-9 text-sm" />
+                          </div>
+                        </div>
                         <div className="flex gap-2 flex-wrap">
                           <Button size="sm" variant="outline" className="text-xs gap-1" onClick={saveTratativa}><UserCheck className="w-3.5 h-3.5" /> Salvar tratativa</Button>
                           <Button size="sm" variant="outline" className={`text-xs gap-1 ${selected.client_notified ? "text-green-600 border-green-200" : ""}`} onClick={markNotified} disabled={selected.client_notified}>
