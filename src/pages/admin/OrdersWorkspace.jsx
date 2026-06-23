@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { TableSkeleton } from "@/components/shared/TableSkeleton";
@@ -59,6 +60,7 @@ export default function OrdersWorkspace() {
   const [confirmingOrder, setConfirmingOrder] = useState(null);
   const [confirmForm, setConfirmForm] = useState({ date: "", freight_value: "", payment_method: "pix" });
   const [rejectingOrder, setRejectingOrder] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders"],
@@ -131,6 +133,20 @@ export default function OrdersWorkspace() {
   const toggleSort = (key) => setSort(prev =>
     !prev || prev.key !== key ? { key, dir: "asc" } : prev.dir === "asc" ? { key, dir: "desc" } : null
   );
+
+  // ── Seleção / ações em lote (Pe-3) ──────────────────────────
+  const selectedOrders = filtered.filter(o => selectedIds.includes(o.id));
+  const toggleSelect = (id) => setSelectedIds(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+  const allVisibleSelected = filtered.length > 0 && filtered.every(o => selectedIds.includes(o.id));
+  const toggleSelectAll = () => setSelectedIds(allVisibleSelected ? [] : filtered.map(o => o.id));
+  const selectedConfirmedNoTrip = selectedOrders.filter(o => o.status === "confirmed" && !o.trip_id);
+  const exportSelected = () => downloadCsv(`pedidos-selecionados-${todayLocalISO()}`, selectedOrders, [
+    { key: "protocol", label: "Protocolo" }, { key: "client_name", label: "Cliente" }, { key: "status", label: "Status" },
+    { key: "origin", label: "Origem", format: (o) => o?.city || "" },
+    { key: "recipients", label: "Destinos", format: (rs) => (rs || []).map(r => r.city).filter(Boolean).join(", ") },
+    { key: "total_weight_kg", label: "Peso (kg)" }, { key: "freight_value", label: "Frete", format: csvMoney },
+    { key: "collection_date", label: "Coleta", format: csvDate },
+  ]);
 
   // ── Confirmar (mesma lógica da antiga Agenda) ─────────────────
   const openConfirm = (order) => {
@@ -243,6 +259,23 @@ export default function OrdersWorkspace() {
         <Input placeholder="Protocolo, cliente ou cidade..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
       </div>
 
+      {/* Barra de ações em lote */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-3 flex-wrap rounded-lg border border-velox-amber/40 bg-velox-amber/10 px-4 py-2.5">
+          <span className="text-sm font-medium text-velox-dark">{selectedIds.length} selecionado(s)</span>
+          <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={exportSelected}>
+            <Download className="w-3.5 h-3.5" /> Exportar selecionados
+          </Button>
+          {selectedConfirmedNoTrip.length > 0 && (
+            <Button size="sm" className="h-8 text-xs gap-1.5 bg-velox-amber text-white font-bold"
+              onClick={() => navigate("/admin/viagens/nova", { state: { preselectedOrderIds: selectedConfirmedNoTrip.map(o => o.id) } })}>
+              <CalendarDays className="w-3.5 h-3.5" /> Criar viagem ({selectedConfirmedNoTrip.length})
+            </Button>
+          )}
+          <button onClick={() => setSelectedIds([])} className="text-xs text-muted-foreground hover:text-foreground ml-auto">Limpar</button>
+        </div>
+      )}
+
       {/* Table */}
       <Card>
         <CardContent className="p-0">
@@ -250,6 +283,7 @@ export default function OrdersWorkspace() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <th className="py-2 px-3 w-10"><Checkbox checked={allVisibleSelected} onCheckedChange={toggleSelectAll} aria-label="Selecionar todos" /></th>
                   <SortTh label="Protocolo" k="protocol" sort={sort} onSort={toggleSort} />
                   <SortTh label="Cliente" k="client_name" sort={sort} onSort={toggleSort} />
                   <th className="text-left py-2 px-4 hidden lg:table-cell">Rota</th>
@@ -261,17 +295,20 @@ export default function OrdersWorkspace() {
                 </tr>
               </thead>
               <tbody>
-                {isLoading && <TableSkeleton rows={8} cols={8} />}
+                {isLoading && <TableSkeleton rows={8} cols={9} />}
                 {!isLoading && filtered.length === 0 && (
-                  <tr><td colSpan={8} className="py-12 text-center text-muted-foreground">
+                  <tr><td colSpan={9} className="py-12 text-center text-muted-foreground">
                     <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
                     Nenhum pedido {tab !== "all" ? "nesta etapa" : ""}.
                   </td></tr>
                 )}
                 {filtered.map(order => (
                   <tr key={order.id}
-                    className="border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer"
+                    className={`border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer ${selectedIds.includes(order.id) ? "bg-velox-amber/5" : ""}`}
                     onClick={() => navigate(`/admin/coletas/${order.id}`)}>
+                    <td className="py-2.5 px-3" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox checked={selectedIds.includes(order.id)} onCheckedChange={() => toggleSelect(order.id)} aria-label="Selecionar pedido" />
+                    </td>
                     <td className="py-2.5 px-4">
                       <span className="font-mono font-semibold text-xs">{order.protocol}</span>
                       {order.freight_type === "urgent" && (
