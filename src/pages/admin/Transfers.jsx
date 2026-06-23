@@ -26,6 +26,8 @@ export default function Transfers() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [generatingId, setGeneratingId] = useState(null);
+  const [receiveModal, setReceiveModal] = useState(null); // transferência em conferência
+  const [receiveForm, setReceiveForm] = useState({ km: "", cost: "", divergences: {} });
   const [form, setForm] = useState({ from_branch_id: "", to_branch_id: "", truck_id: "", driver_id: "", order_ids: [], start: false });
 
   const { data: transfers = [] } = useQuery({ queryKey: ["transfers"], queryFn: () => base44.entities.Transfer.list("-created_date", 100) });
@@ -177,33 +179,79 @@ export default function Transfers() {
     onError: (e) => toast({ title: "Erro ao estornar", description: e?.message, variant: "destructive" }),
   });
 
-  // Receber no destino: cross-dock → pedidos voltam para a fila com origem no CD (nova rota)
+  // Receber no destino: cross-dock → pedidos voltam para a fila com origem no CD (nova rota).
+  // Tr-3: conferência (divergências), custo da transferência e rastreio pela malha.
   const receive = useMutation({
-    mutationFn: async (t) => {
-      // Caminho ATÔMICO no servidor
+    mutationFn: async ({ t, km = "", cost = "", divergences = {} }) => {
+      const to = branches.find(b => b.id === t.to_branch_id);
+      const now = new Date().toISOString();
+      // ── Núcleo: receber (atômico no servidor; fallback cliente) ──
+      let viaRpc = false;
       try {
         const { error } = await supabase.rpc("receive_transfer", { p_transfer_id: t.id, p_user: userName });
-        if (!error) return;
-        throw error;
+        if (!error) viaRpc = true; else throw error;
       } catch { /* fallback cliente abaixo */ }
-      const to = branches.find(b => b.id === t.to_branch_id);
-      await base44.entities.Transfer.update(t.id, { status: "received", arrival_date: new Date().toISOString(), events: [...(t.events || []), { type: "received", description: `Recebido em ${to?.name || "destino"}`, timestamp: new Date().toISOString(), user: userName }] });
+      if (!viaRpc) {
+        await base44.entities.Transfer.update(t.id, { status: "received", arrival_date: now, events: [...(t.events || []), { type: "received", description: `Recebido em ${to?.name || "destino"}`, timestamp: now, user: userName }] });
+        for (const oid of t.order_ids || []) {
+          const o = orders.find(x => x.id === oid);
+          const branchOrigin = to?.address ? { ...to.address } : (o?.origin || {});
+          await base44.entities.Order.update(oid, {
+            current_branch_id: t.to_branch_id, status: "confirmed",
+            trip_id: null, scheduled_truck_id: null, scheduled_date: null,
+            origin: branchOrigin,
+            status_history: [...(o?.status_history || []), { status: "confirmed", timestamp: now, user: userName, note: `Recebido em ${to?.name || "destino"} — disponível para nova rota (cross-docking)` }],
+          });
+        }
+        if (t.truck_id) {
+          const truck = trucks.find(x => x.id === t.truck_id);
+          if (truck?.status === "on_route") await base44.entities.Truck.update(t.truck_id, { status: "available" });
+        }
+      }
+
+      // ── Malha: registra o hop de cada pedido (branch_history) ──
       for (const oid of t.order_ids || []) {
         const o = orders.find(x => x.id === oid);
-        const branchOrigin = to?.address ? { ...to.address } : (o?.origin || {});
         await base44.entities.Order.update(oid, {
-          current_branch_id: t.to_branch_id, status: "confirmed",
-          trip_id: null, scheduled_truck_id: null, scheduled_date: null,
-          origin: branchOrigin,
-          status_history: [...(o?.status_history || []), { status: "confirmed", timestamp: new Date().toISOString(), user: userName, note: `Recebido em ${to?.name || "destino"} — disponível para nova rota (cross-docking)` }],
+          branch_history: [...(o?.branch_history || []), { branch_id: t.to_branch_id, branch_name: to?.name, from_branch_name: t.from_branch_name, at: now }],
         });
       }
-      if (t.truck_id) {
-        const truck = trucks.find(x => x.id === t.truck_id);
-        if (truck?.status === "on_route") await base44.entities.Truck.update(t.truck_id, { status: "available" });
+
+      // ── Custo da transferência → Financeiro ──
+      const costNum = Number(cost) || 0;
+      if (costNum > 0 || Number(km) > 0) {
+        await base44.entities.Transfer.update(t.id, { distance_km: Number(km) || null, cost: costNum || null });
       }
+      if (costNum > 0) {
+        await base44.entities.Expense.create({
+          category: "other",
+          description: `Transferência ${t.protocol} — ${t.from_branch_name || "?"} → ${t.to_branch_name || "?"}${Number(km) > 0 ? ` (${km} km)` : ""}`,
+          amount: costNum, date: todayLocalISO(), status: "paid", truck_id: t.truck_id || undefined,
+        });
+      }
+
+      // ── Conferência: divergências viram ocorrências (avaria) ──
+      const divEntries = Object.entries(divergences).filter(([, note]) => (note || "").trim());
+      for (const [oid, note] of divEntries) {
+        try {
+          await base44.entities.Incident.create({
+            order_id: oid, type: "avaria", status: "open",
+            description: `Divergência no recebimento (${t.protocol}): ${note.trim()}`,
+          });
+        } catch { /* não bloqueia o recebimento */ }
+      }
+      return divEntries.length;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["transfers"] }); queryClient.invalidateQueries({ queryKey: ["orders"] }); queryClient.invalidateQueries({ queryKey: ["trucks"] }); toast({ title: "Recebido! Pedidos liberados para nova rota." }); },
+    onSuccess: (divCount) => {
+      queryClient.invalidateQueries({ queryKey: ["transfers"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["trucks"] });
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      if (divCount > 0) queryClient.invalidateQueries({ queryKey: ["incidents-all"] });
+      setReceiveModal(null);
+      setReceiveForm({ km: "", cost: "", divergences: {} });
+      toast({ title: "Recebido! Pedidos liberados para nova rota.", description: divCount > 0 ? `${divCount} divergência(s) registrada(s) como ocorrência.` : undefined });
+    },
     onError: (e) => toast({ title: "Erro", description: e?.message, variant: "destructive" }),
   });
 
@@ -267,13 +315,14 @@ export default function Transfers() {
                   <span className="text-xs text-muted-foreground">{(t.order_ids || []).length} pedido(s)</span>
                   {tWeight > 0 && <span className="text-xs text-muted-foreground flex items-center gap-1"><Weight className="w-3.5 h-3.5" /> {tWeight.toLocaleString("pt-BR")} kg</span>}
                   {t.truck_plate && <span className="text-xs text-muted-foreground flex items-center gap-1"><Truck className="w-3.5 h-3.5" /> {t.truck_plate}{t.driver_name ? ` · ${t.driver_name}` : ""}</span>}
+                  {Number(t.cost) > 0 && <span className="text-xs text-muted-foreground">R$ {Number(t.cost).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}{Number(t.distance_km) > 0 ? ` · ${t.distance_km} km` : ""}</span>}
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${meta[1]}`}>{meta[0]}</span>
                   <div className="ml-auto flex gap-2">
                     <Button size="sm" variant="ghost" className="text-xs gap-1 text-muted-foreground" disabled={generatingId === t.id || (t.order_ids || []).length === 0} onClick={() => generateManifest(t)}>
                       <FileDown className="w-3.5 h-3.5" /> {generatingId === t.id ? "..." : "Manifesto"}
                     </Button>
                     {t.status === "planned" && <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => dispatch.mutate(t)}><Send className="w-3.5 h-3.5" /> Despachar</Button>}
-                    {t.status === "in_transit" && <Button size="sm" className="text-xs gap-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => receive.mutate(t)}><PackageCheck className="w-3.5 h-3.5" /> Receber no destino</Button>}
+                    {t.status === "in_transit" && <Button size="sm" className="text-xs gap-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => { setReceiveForm({ km: "", cost: "", divergences: {} }); setReceiveModal(t); }}><PackageCheck className="w-3.5 h-3.5" /> Receber no destino</Button>}
                     {(t.status === "planned" || t.status === "in_transit") && (
                       <Button size="sm" variant="outline" className="text-xs gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
                         disabled={cancelTransfer.isPending}
@@ -356,6 +405,61 @@ export default function Transfers() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Conferência de recebimento (Tr-3) */}
+      <Dialog open={!!receiveModal} onOpenChange={(v) => { if (!v) setReceiveModal(null); }}>
+        <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><PackageCheck className="w-4 h-4 text-green-600" /> Conferência de recebimento</DialogTitle></DialogHeader>
+          {receiveModal && (
+            <div className="space-y-3">
+              <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <span className="font-mono font-semibold text-foreground">{receiveModal.protocol}</span>
+                <Warehouse className="w-3.5 h-3.5" /> {receiveModal.from_branch_name || "?"} <ArrowRight className="w-3 h-3 text-velox-amber" /> {receiveModal.to_branch_name || "?"}
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground">Conferência dos pedidos ({(receiveModal.order_ids || []).length})</label>
+                <div className="max-h-56 overflow-y-auto space-y-1.5 mt-1 border border-border rounded-lg p-2">
+                  {(receiveModal.order_ids || []).map(oid => {
+                    const o = orders.find(x => x.id === oid);
+                    const hasDiv = !!(receiveForm.divergences[oid] || "").trim();
+                    return (
+                      <div key={oid} className="text-xs border-b border-border/50 last:border-0 pb-1.5 last:pb-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono">{o?.protocol || oid.slice(0, 8)}</span>
+                          <span className="flex-1 truncate">{o?.client_name || "—"}</span>
+                          {Number(o?.total_weight_kg) > 0 && <span className="text-muted-foreground">{Number(o.total_weight_kg).toLocaleString("pt-BR")} kg</span>}
+                        </div>
+                        <Input
+                          placeholder="Divergência? (avaria, falta de volume…) — opcional"
+                          value={receiveForm.divergences[oid] || ""}
+                          onChange={e => setReceiveForm(f => ({ ...f, divergences: { ...f.divergences, [oid]: e.target.value } }))}
+                          className={`h-7 text-xs mt-1 ${hasDiv ? "border-amber-300 bg-amber-50" : ""}`}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">Pedidos com divergência preenchida geram uma ocorrência de avaria automaticamente.</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs text-muted-foreground">Distância (km)</label><Input type="number" step="0.1" value={receiveForm.km} onChange={e => setReceiveForm(f => ({ ...f, km: e.target.value }))} className="h-9 text-sm" /></div>
+                <div><label className="text-xs text-muted-foreground">Custo do trecho (R$)</label><Input type="number" step="0.01" value={receiveForm.cost} onChange={e => setReceiveForm(f => ({ ...f, cost: e.target.value }))} className="h-9 text-sm" /></div>
+              </div>
+              {Number(receiveForm.cost) > 0 && <p className="text-[11px] text-muted-foreground">O custo será lançado como despesa em Financeiro → Despesas.</p>}
+
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setReceiveModal(null)}>Cancelar</Button>
+                <Button className="bg-green-600 hover:bg-green-700 text-white font-bold" disabled={receive.isPending}
+                  onClick={() => receive.mutate({ t: receiveModal, km: receiveForm.km, cost: receiveForm.cost, divergences: receiveForm.divergences })}>
+                  {receive.isPending ? "Recebendo..." : "Confirmar recebimento"}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
