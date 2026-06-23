@@ -62,6 +62,7 @@ export default function OperationsHub() {
     { key: "confirmed",  label: "Confirmados", count: active.filter(o => o.status === "confirmed").length,  to: "/admin/coletas?status=confirmed",  color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
     { key: "collecting", label: "Em coleta",   count: active.filter(o => o.status === "collecting").length, to: "/admin/coletas?status=collecting", color: "text-amber-600 bg-amber-50 border-amber-200" },
     { key: "in_transit", label: "Em trânsito", count: active.filter(o => o.status === "in_transit").length, to: "/admin/coletas?status=in_transit", color: "text-purple-600 bg-purple-50 border-purple-200" },
+    ...(active.some(o => o.status === "in_transfer") ? [{ key: "in_transfer", label: "Em transferência", count: active.filter(o => o.status === "in_transfer").length, to: "/admin/transferencias", color: "text-cyan-600 bg-cyan-50 border-cyan-200" }] : []),
     { key: "delivered",  label: "Entregues",   count: active.filter(o => o.status === "delivered").length,  to: "/admin/coletas?status=delivered",  color: "text-green-600 bg-green-50 border-green-200" },
   ];
 

@@ -5,20 +5,27 @@ import { supabase } from "@/api/supabaseClient";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
 import PageHeader from "@/components/shared/PageHeader";
-import { ArrowLeftRight, Plus, Truck, Warehouse, ArrowRight, PackageCheck, Send, Ban } from "lucide-react";
+import { ArrowLeftRight, Plus, Truck, Warehouse, ArrowRight, PackageCheck, Send, Ban, Search, FileDown, Weight, AlertTriangle } from "lucide-react";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { todayLocalISO } from "@/utils/dateUtils";
 
 export default function Transfers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { settings } = useCompanySettings();
   const userName = user?.full_name || "Admin";
   const [showForm, setShowForm] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [generatingId, setGeneratingId] = useState(null);
   const [form, setForm] = useState({ from_branch_id: "", to_branch_id: "", truck_id: "", driver_id: "", order_ids: [], start: false });
 
   const { data: transfers = [] } = useQuery({ queryKey: ["transfers"], queryFn: () => base44.entities.Transfer.list("-created_date", 100) });
@@ -48,6 +55,54 @@ export default function Transfers() {
       if (hist[i]?.status && hist[i].status !== "in_transfer") return hist[i].status;
     }
     return "confirmed";
+  };
+
+  // Peso/volume agregados de um conjunto de pedidos (Tr-2).
+  const sumWeight = (ids) => (ids || []).reduce((s, oid) => s + (Number(orders.find(x => x.id === oid)?.total_weight_kg) || 0), 0);
+  const sumVolumes = (ids) => (ids || []).reduce((s, oid) => s + (Number(orders.find(x => x.id === oid)?.total_volumes) || 0), 0);
+
+  // Peso selecionado x capacidade do caminhão escolhido (alerta no formulário).
+  const selectedWeight = sumWeight(form.order_ids);
+  const selectedTruck = trucks.find(t => t.id === form.truck_id);
+  const truckCapacity = Number(selectedTruck?.capacity_kg) || 0;
+  const overCapacity = truckCapacity > 0 && selectedWeight > truckCapacity;
+
+  // KPIs da malha.
+  const inTransitCount = transfers.filter(t => t.status === "in_transit").length;
+  const plannedCount = transfers.filter(t => t.status === "planned").length;
+  const ordersInMesh = activeOrderIds.size;
+  const weightInMesh = sumWeight([...activeOrderIds]);
+
+  // Lista filtrada (busca + status).
+  const q = search.trim().toLowerCase();
+  const filteredTransfers = transfers.filter(t => {
+    if (statusFilter !== "all" && t.status !== statusFilter) return false;
+    if (q && !`${t.protocol || ""} ${t.from_branch_name || ""} ${t.to_branch_name || ""} ${t.truck_plate || ""} ${t.driver_name || ""}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  // Manifesto PDF da transferência.
+  const generateManifest = async (t) => {
+    setGeneratingId(t.id);
+    try {
+      const list = [];
+      for (const oid of t.order_ids || []) {
+        const o = orders.find(x => x.id === oid) || (await base44.entities.Order.filter({ id: oid }))[0];
+        if (o) list.push(o);
+      }
+      const { generateTransferManifest } = await import("@/utils/generateTransferManifest");
+      const blob = generateTransferManifest(t, list, settings);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Manifesto-${t.protocol || "transferencia"}-${todayLocalISO()}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast({ title: "Erro ao gerar manifesto", description: e?.message, variant: "destructive" });
+    } finally {
+      setGeneratingId(null);
+    }
   };
 
   const create = useMutation({
@@ -127,7 +182,7 @@ export default function Transfers() {
     mutationFn: async (t) => {
       // Caminho ATÔMICO no servidor
       try {
-        const { error } = await supabase.rpc("receive_transfer", { p_transfer_id: t.id, p_user: "Admin" });
+        const { error } = await supabase.rpc("receive_transfer", { p_transfer_id: t.id, p_user: userName });
         if (!error) return;
         throw error;
       } catch { /* fallback cliente abaixo */ }
@@ -169,12 +224,38 @@ export default function Transfers() {
         </div>
       )}
 
+      {transfers.length > 0 && (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Em trânsito</p><p className="text-2xl font-bold text-amber-600">{inTransitCount}</p></CardContent></Card>
+            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Planejadas</p><p className="text-2xl font-bold text-blue-600">{plannedCount}</p></CardContent></Card>
+            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Pedidos na malha</p><p className="text-2xl font-bold">{ordersInMesh}</p></CardContent></Card>
+            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Peso na malha</p><p className="text-2xl font-bold">{weightInMesh.toLocaleString("pt-BR")} <span className="text-sm font-normal text-muted-foreground">kg</span></p></CardContent></Card>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar protocolo, filial, placa, motorista…" className="pl-9" />
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {[["all", "Todas"], ["planned", "Planejadas"], ["in_transit", "Em trânsito"], ["received", "Recebidas"], ["cancelled", "Canceladas"]].map(([val, lbl]) => (
+                <Button key={val} variant={statusFilter === val ? "default" : "outline"} size="sm"
+                  className={statusFilter === val ? "bg-velox-dark text-white" : ""} onClick={() => setStatusFilter(val)}>{lbl}</Button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
       {transfers.length === 0 ? (
         <Card><CardContent className="py-12 text-center text-sm text-muted-foreground"><ArrowLeftRight className="w-8 h-8 mx-auto mb-2 opacity-30" /> Nenhuma transferência.</CardContent></Card>
+      ) : filteredTransfers.length === 0 ? (
+        <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">Nenhuma transferência para o filtro atual.</CardContent></Card>
       ) : (
         <div className="space-y-2">
-          {transfers.map(t => {
+          {filteredTransfers.map(t => {
             const meta = statusMeta[t.status] || statusMeta.planned;
+            const tWeight = sumWeight(t.order_ids);
             return (
               <Card key={t.id}>
                 <CardContent className="pt-4 flex items-center gap-3 flex-wrap">
@@ -184,9 +265,13 @@ export default function Transfers() {
                     <ArrowRight className="w-3.5 h-3.5 text-velox-amber" /> {t.to_branch_name || "?"}
                   </span>
                   <span className="text-xs text-muted-foreground">{(t.order_ids || []).length} pedido(s)</span>
+                  {tWeight > 0 && <span className="text-xs text-muted-foreground flex items-center gap-1"><Weight className="w-3.5 h-3.5" /> {tWeight.toLocaleString("pt-BR")} kg</span>}
                   {t.truck_plate && <span className="text-xs text-muted-foreground flex items-center gap-1"><Truck className="w-3.5 h-3.5" /> {t.truck_plate}{t.driver_name ? ` · ${t.driver_name}` : ""}</span>}
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${meta[1]}`}>{meta[0]}</span>
                   <div className="ml-auto flex gap-2">
+                    <Button size="sm" variant="ghost" className="text-xs gap-1 text-muted-foreground" disabled={generatingId === t.id || (t.order_ids || []).length === 0} onClick={() => generateManifest(t)}>
+                      <FileDown className="w-3.5 h-3.5" /> {generatingId === t.id ? "..." : "Manifesto"}
+                    </Button>
                     {t.status === "planned" && <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => dispatch.mutate(t)}><Send className="w-3.5 h-3.5" /> Despachar</Button>}
                     {t.status === "in_transit" && <Button size="sm" className="text-xs gap-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => receive.mutate(t)}><PackageCheck className="w-3.5 h-3.5" /> Receber no destino</Button>}
                     {(t.status === "planned" || t.status === "in_transit") && (
@@ -236,7 +321,14 @@ export default function Transfers() {
               </div>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground">Pedidos a transferir ({form.order_ids.length})</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs text-muted-foreground">Pedidos a transferir ({form.order_ids.length})</label>
+                {selectedWeight > 0 && (
+                  <span className={`text-xs font-medium ${overCapacity ? "text-red-600" : "text-muted-foreground"}`}>
+                    {selectedWeight.toLocaleString("pt-BR")} kg{truckCapacity > 0 ? ` / ${truckCapacity.toLocaleString("pt-BR")} kg` : ""}
+                  </span>
+                )}
+              </div>
               <div className="max-h-48 overflow-y-auto space-y-1 mt-1 border border-border rounded-lg p-2">
                 {eligible.length === 0 ? <p className="text-xs text-muted-foreground py-2 text-center">Nenhum pedido em rota/coleta para transferir.</p> :
                   eligible.map(o => (
@@ -244,11 +336,18 @@ export default function Transfers() {
                       <Checkbox checked={form.order_ids.includes(o.id)} onCheckedChange={() => toggleOrder(o.id)} />
                       <span className="font-mono">{o.protocol}</span>
                       <span className="flex-1 truncate">{o.client_name}</span>
-                      <span className="text-muted-foreground">{(o.recipients || []).map(r => r.city).filter(Boolean).join(", ")}</span>
+                      {Number(o.total_weight_kg) > 0 && <span className="text-muted-foreground whitespace-nowrap">{Number(o.total_weight_kg).toLocaleString("pt-BR")} kg</span>}
+                      <span className="text-muted-foreground truncate max-w-[90px]">{(o.recipients || []).map(r => r.city).filter(Boolean).join(", ")}</span>
                     </label>
                   ))}
               </div>
             </div>
+            {overCapacity && (
+              <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                Peso selecionado ({selectedWeight.toLocaleString("pt-BR")} kg) excede a capacidade do caminhão ({truckCapacity.toLocaleString("pt-BR")} kg).
+              </div>
+            )}
             <label className="flex items-center gap-2 cursor-pointer text-sm"><Checkbox checked={form.start} onCheckedChange={v => setForm(f => ({ ...f, start: v }))} /> Iniciar em trânsito agora</label>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
