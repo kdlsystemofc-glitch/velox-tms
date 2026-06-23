@@ -502,6 +502,28 @@ Aprofundamento do `DispatchBoard` rumo ao nível TMS global. Sem bugs de quebra 
 
 ---
 
+---
+
+## MÓDULO A MÓDULO — Replanejamento
+
+Transformou a tela numa **central de gestão de disrupções**. Sem bugs de quebra.
+
+**Correção:** redistribuição agora **bloqueia se o caminhão substituto não tem capacidade**.
+
+- **Rep-1 — Precisão:** detecção/troca **ciente de comboio** (líder OU veículo secundário);
+  substituto entra **"em rota"** se herda viagem ativa; substituição de motorista checa
+  **CNH (categoria + validade)** e avisa **conflito** (já em viagem).
+- **Rep-2 — Central única de disrupções:** detecta também **excesso de carga** (célula
+  programada acima da capacidade), **viagens sem recurso** (sem motorista/caminhão) e
+  **urgentes sem recurso**, com link para resolver.
+- **Rep-3 — Inteligência + preview:** **melhor substituto pré-selecionado**; botão **"Resolver
+  automaticamente"** aplica em todos os casos; **preview de impacto** (pedidos com prazo
+  crítico/SLA) por caso.
+
+**Teto pago:** reotimização por **distância real de estrada** (API).
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -519,3 +541,4 @@ Aprofundamento do `DispatchBoard` rumo ao nível TMS global. Sem bugs de quebra 
 14. `20260625_pedidos.sql`      ← agendamento desejado/confirmado + anexos do pedido
 15. `20260626_multiorigem.sql`  ← coleta consolidada (vários pontos de coleta na OS)
 16. `20260627_dispatch_tx.sql`  ← despacho atômico (programar/separar/devolver)
+17. `20260628_replan_comboio.sql` ← replanejamento ciente de comboio
