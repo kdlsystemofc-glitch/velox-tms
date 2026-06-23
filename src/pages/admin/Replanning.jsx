@@ -11,6 +11,9 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { Wrench, UserX, Truck, AlertTriangle, CheckCircle2, ArrowRight, Package, Scale, Zap, HelpCircle } from "lucide-react";
 import { formatDateBR } from "@/utils/dateUtils";
+import { slaStatus } from "@/utils/sla";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { Sparkles } from "lucide-react";
 import {
   trucksNeedingReplan, driversNeedingReplan, suggestTrucks, suggestDrivers,
   overloadedCells, tripsMissingResource, urgentWithoutResource,
@@ -26,6 +29,8 @@ export default function Replanning() {
   const queryClient = useQueryClient();
   const [pickTruck, setPickTruck] = useState({});   // { brokenTruckId: replacementTruckId }
   const [pickDriver, setPickDriver] = useState({}); // { absentDriverId: replacementDriverId }
+  const { settings } = useCompanySettings();
+  const slaRisk = (list) => list.filter((o) => ["late", "at_risk"].includes(slaStatus(o, settings))).length;
 
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
@@ -113,12 +118,40 @@ export default function Replanning() {
     onError: (e) => toast({ title: "Erro ao reatribuir", description: e?.message, variant: "destructive" }),
   });
 
+  // ── Sugestão automática do melhor substituto ──────────────────
+  const bestTruckFor = (c) => {
+    const date = c.orders[0]?.scheduled_date || null;
+    const affKg = c.orders.reduce((s, o) => s + (o.total_weight_kg || 0), 0);
+    return suggestTrucks(trucks, orders, c.truck.id, date).find((x) => !(x.truck.capacity_kg > 0) || affKg <= x.free) || null;
+  };
+  const bestDriverFor = (c) => {
+    const opts = suggestDrivers(drivers, trips, c.driver.id);
+    return opts.find((x) => x.cnhOk && !x.busy) || opts.find((x) => x.cnhOk) || null;
+  };
+  const tripOrders = (tripsList) => tripsList.flatMap((t) => (t.order_ids || []).map((id) => orders.find((o) => o.id === id)).filter(Boolean));
+  const autoResolvable = truckCases.filter(bestTruckFor).length + driverCases.filter(bestDriverFor).length;
+
+  const resolveAll = async () => {
+    let n = 0;
+    for (const c of truckCases) { const b = bestTruckFor(c); if (b) { await redistTruck.mutateAsync({ brokenTruckId: c.truck.id, replacementId: b.truck.id, affectedOrders: c.orders, affectedTrips: c.trips }); n++; } }
+    for (const c of driverCases) { const b = bestDriverFor(c); if (b) { await reassignDriver.mutateAsync({ replacementId: b.driver.id, affectedTrips: c.trips }); n++; } }
+    toast({ title: n ? `${n} caso(s) resolvido(s) automaticamente` : "Nada pôde ser resolvido", description: n ? "Aplicado o melhor substituto disponível." : "Sem substitutos válidos." });
+  };
+
   const nothing = truckCases.length === 0 && driverCases.length === 0
     && overloaded.length === 0 && missingResource.length === 0 && urgentNoResource.length === 0;
 
   return (
     <div className="space-y-5">
-      <PageHeader icon={AlertTriangle} title="Replanejamento" subtitle="Caminhão quebrou ou motorista faltou? Redistribua tudo de uma vez." />
+      <PageHeader icon={AlertTriangle} title="Replanejamento" subtitle="Central de disrupções — redistribua recursos com 1 clique.">
+        {autoResolvable > 0 && (
+          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
+            disabled={redistTruck.isPending || reassignDriver.isPending}
+            onClick={resolveAll}>
+            <Sparkles className="w-4 h-4" /> Resolver automaticamente ({autoResolvable})
+          </Button>
+        )}
+      </PageHeader>
 
       {nothing && (
         <div className="rounded-xl border border-green-200 bg-green-50 p-5 flex items-center gap-3">
@@ -131,7 +164,9 @@ export default function Replanning() {
       {truckCases.map(({ truck, orders: affectedOrders, trips: affectedTrips }) => {
         const date = affectedOrders[0]?.scheduled_date || null;
         const options = suggestTrucks(trucks, orders, truck.id, date);
-        const replacementId = pickTruck[truck.id] || "";
+        const best = bestTruckFor({ truck, orders: affectedOrders, trips: affectedTrips });
+        const replacementId = pickTruck[truck.id] || best?.truck.id || "";
+        const riskCount = slaRisk(affectedOrders) + slaRisk(tripOrders(affectedTrips));
         return (
           <Card key={truck.id} className="border-amber-200">
             <CardContent className="pt-5 space-y-4">
@@ -146,6 +181,9 @@ export default function Replanning() {
                   {affectedOrders.length} pedido(s) · {affectedTrips.length} viagem(ns) afetada(s)
                 </span>
               </div>
+              {riskCount > 0 && (
+                <p className="text-[11px] text-red-600 font-medium flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Impacto: {riskCount} pedido(s) com prazo crítico se não redistribuir.</p>
+              )}
 
               {/* Afetados */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -208,7 +246,9 @@ export default function Replanning() {
       {/* ── Motoristas indisponíveis ── */}
       {driverCases.map(({ driver, trips: affectedTrips }) => {
         const options = suggestDrivers(drivers, trips, driver.id);
-        const replacementId = pickDriver[driver.id] || "";
+        const best = bestDriverFor({ driver, trips: affectedTrips });
+        const replacementId = pickDriver[driver.id] || best?.driver.id || "";
+        const riskCount = slaRisk(tripOrders(affectedTrips));
         return (
           <Card key={driver.id} className="border-orange-200">
             <CardContent className="pt-5 space-y-4">
@@ -220,6 +260,9 @@ export default function Replanning() {
                 </span>
                 <span className="text-xs text-muted-foreground ml-auto">{affectedTrips.length} viagem(ns) sem motorista</span>
               </div>
+              {riskCount > 0 && (
+                <p className="text-[11px] text-red-600 font-medium flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Impacto: {riskCount} pedido(s) com prazo crítico.</p>
+              )}
               <div className="space-y-1.5">
                 {affectedTrips.map((t) => (
                   <Link key={t.id} to={`/admin/viagens/${t.id}`} className="flex items-center justify-between text-xs rounded-lg border border-border p-2 hover:border-velox-amber/40">
