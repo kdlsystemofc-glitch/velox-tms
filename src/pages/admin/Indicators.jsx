@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/shared/PageHeader";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { slaStatus } from "@/utils/sla";
+import { ComposedChart, Bar, Line, BarChart, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
 import {
-  BarChart3, Package, CheckCircle2, Clock, Truck, AlertTriangle, DollarSign, TrendingUp, Percent,
+  BarChart3, Package, CheckCircle2, Clock, Truck, AlertTriangle, DollarSign, TrendingUp, Percent, Activity,
 } from "lucide-react";
+
+const MONTHS_SHORT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 const PERIODS = [
   ["this_month", "Mês atual"], ["last_month", "Mês anterior"], ["3m", "3 meses"], ["6m", "6 meses"], ["12m", "12 meses"], ["ytd", "Ano"],
@@ -65,6 +68,15 @@ export default function Indicators() {
 
   const cur = computeKpis(start, end);
   const prev = computeKpis(prevStart, start);
+
+  // Série dos últimos 12 meses (tendências, Ind-2)
+  const series = Array.from({ length: 12 }, (_, idx) => {
+    const i = 11 - idx;
+    const s = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const e = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+    const k = computeKpis(s, e);
+    return { name: MONTHS_SHORT[s.getMonth()], entregas: k.delivered, otd: Number(k.otd.toFixed(0)), receita: k.faturamento, despesa: k.despesa, resultado: k.resultado, ocorrencias: k.incidentsCreated };
+  });
 
   // Frota agora (snapshot) — ocupação por caminhão (on_route inclui viagens E transferências)
   const activeTrucks = trucks.filter(t => t.status !== "inactive");
@@ -136,6 +148,60 @@ export default function Indicators() {
           <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Percent className="w-4 h-4 text-indigo-600" /><span className="text-[11px] text-muted-foreground uppercase">Ocupação</span></div><p className="text-2xl font-bold font-mono text-indigo-600">{occupancy.toFixed(0)}%</p></CardContent></Card>
           <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><AlertTriangle className="w-4 h-4 text-orange-600" /><span className="text-[11px] text-muted-foreground uppercase">Ocorrências abertas</span></div><p className="text-2xl font-bold font-mono text-orange-600">{openIncidents}</p></CardContent></Card>
         </div>
+      </div>
+
+      {/* Tendências — últimos 12 meses */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-velox-amber" /> Entregas e OTD (12 meses)</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <ComposedChart data={series}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                <YAxis yAxisId="l" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                <YAxis yAxisId="r" orientation="right" domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} tickFormatter={v => `${v}%`} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} />
+                <Legend />
+                <Bar yAxisId="l" dataKey="entregas" fill="#10B981" radius={[4, 4, 0, 0]} name="Entregas" />
+                <Line yAxisId="r" type="monotone" dataKey="otd" stroke="#1E3A5F" strokeWidth={2} name="OTD %" dot={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold flex items-center gap-2"><DollarSign className="w-4 h-4 text-velox-amber" /> Receita × Despesa × Resultado (12 meses)</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={series}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} tickFormatter={v => `R$${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} formatter={v => fmt(v)} />
+                <Legend />
+                <Bar dataKey="receita" fill="#10B981" radius={[4, 4, 0, 0]} name="Receita" />
+                <Bar dataKey="despesa" fill="#EF4444" radius={[4, 4, 0, 0]} name="Despesa" />
+                <Bar dataKey="resultado" fill="#1E3A5F" radius={[4, 4, 0, 0]} name="Resultado" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold flex items-center gap-2"><Activity className="w-4 h-4 text-velox-amber" /> Ocorrências por mês (12 meses)</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={series}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} allowDecimals={false} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} />
+                <Bar dataKey="ocorrencias" fill="#F97316" radius={[4, 4, 0, 0]} name="Ocorrências" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </div>
 
       <p className="text-xs text-muted-foreground">
