@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { storage } from "@/api/supabaseClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, ExternalLink, Truck, Users, Search, Building2, Trash2, Upload, AlertTriangle, Download, ShieldCheck } from "lucide-react";
+import { FileText, ExternalLink, Truck, Users, Search, Building2, Trash2, Upload, AlertTriangle, Download, ShieldCheck, Clock } from "lucide-react";
+import StatCard from "@/components/shared/StatCard";
 import { useToast } from "@/components/ui/use-toast";
 import PageHeader from "@/components/shared/PageHeader";
 import { downloadCsv, csvDate } from "@/utils/exportCsv";
@@ -212,9 +213,9 @@ export default function Documents() {
         {/* Tab 0: Central de vencimentos */}
         <TabsContent value="vencimentos" className="mt-4 space-y-4">
           <div className="grid grid-cols-3 gap-3">
-            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Vencidos</p><p className="text-2xl font-bold text-red-600">{expByStatus.expired.length}</p></CardContent></Card>
-            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Vencem em 30 dias</p><p className="text-2xl font-bold text-amber-600">{expByStatus.soon.length}</p></CardContent></Card>
-            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Vencem em 60 dias</p><p className="text-2xl font-bold text-blue-600">{expByStatus.watch.length}</p></CardContent></Card>
+            <StatCard icon={AlertTriangle} label="Vencidos" value={expByStatus.expired.length} tone="danger" />
+            <StatCard icon={Clock} label="Vencem em 30 dias" value={expByStatus.soon.length} tone="warning" />
+            <StatCard icon={ShieldCheck} label="Vencem em 60 dias" value={expByStatus.watch.length} tone="primary" />
           </div>
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex gap-1.5">

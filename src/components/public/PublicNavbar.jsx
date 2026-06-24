@@ -32,8 +32,8 @@ export default function PublicNavbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-10 h-10 bg-velox-amber rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Truck className="w-6 h-6 text-velox-dark" />
+          <div className="w-10 h-10 bg-brand-gradient rounded-xl flex items-center justify-center shadow-soft group-hover:scale-110 transition-transform">
+            <Truck className="w-6 h-6 text-white" />
           </div>
           <div>
             <span className="font-display text-2xl font-extrabold text-white tracking-tight">
