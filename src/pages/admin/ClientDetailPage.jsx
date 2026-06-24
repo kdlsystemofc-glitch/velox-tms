@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Building2, TrendingUp, Plus, Trash2, MessageCircle, FileText, Receipt, Pencil, DollarSign } from "lucide-react";
+import { ArrowLeft, Building2, TrendingUp, Plus, Trash2, MessageCircle, FileText, Receipt, Pencil, DollarSign, Package } from "lucide-react";
+import StatCard from "@/components/shared/StatCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { toLocalISO } from "@/utils/dateUtils";
@@ -96,8 +97,8 @@ export default function ClientDetailPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin/clientes")}><ArrowLeft className="w-5 h-5" /></Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-velox-blue/10 rounded-full flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-velox-blue" />
+            <div className="w-10 h-10 bg-brand-gradient rounded-xl flex items-center justify-center shadow-soft">
+              <Building2 className="w-5 h-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -121,16 +122,9 @@ export default function ClientDetailPage() {
 
       {/* Metrics */}
       <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: "Fretes Realizados", value: orders.length },
-          { label: "Total Faturado", value: `R$ ${totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` },
-          { label: "Ticket Médio", value: `R$ ${avgTicket.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` },
-        ].map(item => (
-          <Card key={item.label} className="p-4 text-center">
-            <p className="text-xs text-muted-foreground">{item.label}</p>
-            <p className="font-bold text-lg mt-1">{item.value}</p>
-          </Card>
-        ))}
+        <StatCard icon={Package} label="Fretes Realizados" value={orders.length} tone="primary" />
+        <StatCard icon={DollarSign} label="Total Faturado" value={`R$ ${totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} tone="success" />
+        <StatCard icon={TrendingUp} label="Ticket Médio" value={`R$ ${avgTicket.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} tone="primary" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

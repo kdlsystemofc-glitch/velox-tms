@@ -97,8 +97,8 @@ export default function DriverDetailPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin/motoristas")}><ArrowLeft className="w-5 h-5" /></Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-velox-dark rounded-full flex items-center justify-center">
-              <span className="text-white font-bold">{driver.name?.charAt(0)}</span>
+            <div className="w-10 h-10 bg-brand-gradient rounded-full flex items-center justify-center shadow-soft ring-2 ring-card">
+              <span className="text-white font-bold">{(driver.name?.charAt(0) || "?").toUpperCase()}</span>
             </div>
             <div>
               <h1 className="font-display text-xl font-bold">{driver.name}</h1>
