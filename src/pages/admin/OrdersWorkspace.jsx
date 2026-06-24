@@ -232,7 +232,7 @@ export default function OrdersWorkspace() {
         <Button variant="outline" className="gap-2" onClick={() => navigate("/admin/cotacao")}>
           <Calculator className="w-4 h-4" /> Cotação
         </Button>
-        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => navigate("/admin/coletas/nova")}>
+        <Button className="font-bold gap-2" onClick={() => navigate("/admin/coletas/nova")}>
           <Plus className="w-4 h-4" /> Novo Pedido
         </Button>
       </PageHeader>
@@ -270,7 +270,7 @@ export default function OrdersWorkspace() {
             <Download className="w-3.5 h-3.5" /> Exportar selecionados
           </Button>
           {selectedConfirmedNoTrip.length > 0 && (
-            <Button size="sm" className="h-8 text-xs gap-1.5 bg-velox-amber text-white font-bold"
+            <Button size="sm" className="h-8 text-xs gap-1.5 font-bold"
               onClick={() => navigate("/admin/viagens/nova", { state: { preselectedOrderIds: selectedConfirmedNoTrip.map(o => o.id) } })}>
               <CalendarDays className="w-3.5 h-3.5" /> Criar viagem ({selectedConfirmedNoTrip.length})
             </Button>
@@ -336,7 +336,7 @@ export default function OrdersWorkspace() {
                       <div className="flex items-center justify-end gap-1.5">
                         {order.status === "new" && (
                           <>
-                            <Button size="sm" className="h-7 text-xs bg-velox-amber text-white font-bold hover:bg-velox-amber/90"
+                            <Button size="sm" className="h-7 text-xs font-bold"
                               onClick={() => openConfirm(order)}>
                               <CheckCircle className="w-3 h-3 mr-1" /> Confirmar
                             </Button>
@@ -430,7 +430,7 @@ export default function OrdersWorkspace() {
                 </p>
                 <div className="pt-2 flex gap-3">
                   <Button variant="outline" className="flex-1" onClick={() => setConfirmingOrder(null)}>Cancelar</Button>
-                  <Button className="flex-1 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
+                  <Button className="flex-1 font-bold"
                     disabled={confirmMutation.isPending}
                     onClick={() => confirmMutation.mutate({ order: confirmingOrder, form: confirmForm })}>
                     {confirmMutation.isPending ? "Confirmando..." : "Confirmar Pedido"}
