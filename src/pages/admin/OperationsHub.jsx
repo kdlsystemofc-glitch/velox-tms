@@ -4,7 +4,14 @@ import { base44 } from "@/api/base44Client";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import StatCard from "@/components/shared/StatCard";
 import StatusBadge from "@/components/admin/StatusBadge";
+
+const TONE_FROM_COLOR = {
+  "text-blue-600": "primary", "text-green-600": "success", "text-indigo-600": "primary",
+  "text-amber-600": "warning", "text-violet-600": "primary", "text-red-600": "danger",
+  "text-muted-foreground": "muted",
+};
 import { useAuth } from "@/lib/AuthContext";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
@@ -240,7 +247,7 @@ export default function OperationsHub() {
           <Button variant="outline" className="gap-2" onClick={() => navigate("/admin/despacho")}>
             <CalendarDays className="w-4 h-4" /> Despacho
           </Button>
-          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => navigate("/admin/coletas/nova")}>
+          <Button className="font-bold gap-2" onClick={() => navigate("/admin/coletas/nova")}>
             <Plus className="w-4 h-4" /> Novo Pedido
           </Button>
         </div>
@@ -249,15 +256,7 @@ export default function OperationsHub() {
       {/* Faixa de métricas de comando */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {metrics.map((m, i) => (
-          <div key={i} className="bg-card border border-border rounded-md px-4 py-3 flex items-center gap-3">
-            <span className="w-9 h-9 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-              <m.icon className={`w-4.5 h-4.5 ${m.color}`} />
-            </span>
-            <div>
-              <p className="text-xl font-bold font-mono leading-none">{m.value}</p>
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wide mt-1">{m.label}</p>
-            </div>
-          </div>
+          <StatCard key={i} icon={m.icon} label={m.label} value={m.value} tone={TONE_FROM_COLOR[m.color] || "primary"} />
         ))}
       </div>
 
@@ -266,7 +265,7 @@ export default function OperationsHub() {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
           {actionQueue.map((item, i) => (
             <Link key={i} to={item.action.to}
-              className={`rounded-xl border-2 p-4 flex flex-col gap-1 transition-all hover:shadow-md ${item.color}`}>
+              className={`card-interactive rounded-xl border-2 p-4 flex flex-col gap-1 ${item.color}`}>
               <div className="flex items-center justify-between">
                 <item.icon className={`w-5 h-5 ${item.iconColor}`} />
                 <span className={`text-xs font-bold flex items-center gap-1 ${item.iconColor}`}>
@@ -292,7 +291,7 @@ export default function OperationsHub() {
             {pipeline.map((stage, i) => (
               <React.Fragment key={stage.key}>
                 <Link to={stage.to}
-                  className={`flex-1 min-w-[110px] rounded-lg border px-3 py-2.5 text-center transition-all hover:shadow-sm ${stage.color}`}>
+                  className={`card-interactive flex-1 min-w-[110px] rounded-lg border px-3 py-2.5 text-center ${stage.color}`}>
                   <p className="text-2xl font-bold font-mono leading-none">{stage.count}</p>
                   <p className="text-[11px] font-semibold uppercase tracking-wide mt-1">{stage.label}</p>
                 </Link>
@@ -508,7 +507,7 @@ export default function OperationsHub() {
       {isAdmin && (
         <div className="grid grid-cols-2 gap-4">
           <Link to="/admin/financeiro?aba=receitas"
-            className="rounded-xl border border-border p-4 flex items-center justify-between hover:border-green-300 hover:shadow-sm transition-all">
+            className="card-interactive rounded-xl border border-border p-4 flex items-center justify-between hover:border-green-300">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">A receber</p>
               <p className="text-xl font-bold font-mono text-green-600">R$ {toReceive.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
@@ -516,7 +515,7 @@ export default function OperationsHub() {
             <DollarSign className="w-6 h-6 text-green-300" />
           </Link>
           <Link to="/admin/financeiro?aba=despesas"
-            className="rounded-xl border border-border p-4 flex items-center justify-between hover:border-red-300 hover:shadow-sm transition-all">
+            className="card-interactive rounded-xl border border-border p-4 flex items-center justify-between hover:border-red-300">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">A pagar</p>
               <p className="text-xl font-bold font-mono text-red-600">R$ {toPay.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
