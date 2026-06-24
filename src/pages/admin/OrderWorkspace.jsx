@@ -430,7 +430,7 @@ export default function OrderWorkspace() {
         {/* Ação primária + menu */}
         <div className="flex items-center gap-2 relative">
           {nextAction && !isCancelled && (
-            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
+            <Button className="font-bold gap-2"
               onClick={() => handleStatusChange(nextAction.next)}
               disabled={updateMutation.isPending}>
               {nextAction.label} <ArrowRight className="w-4 h-4" />
@@ -815,7 +815,7 @@ export default function OrderWorkspace() {
                       )}
                     </div>
                     <Button size="sm" onClick={saveFinancial} disabled={updateMutation.isPending}
-                      className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold text-xs">
+                      className="font-bold text-xs">
                       Salvar
                     </Button>
                   </div>
@@ -1111,7 +1111,7 @@ export default function OrderWorkspace() {
             <AddressFields value={addrForm} onChange={(addr) => setAddrForm(a => ({ ...a, ...addr }))} />
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => setEditAddr(null)}>Cancelar</Button>
-              <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={saveAddress} disabled={updateMutation.isPending}>
+              <Button size="sm" className="font-bold" onClick={saveAddress} disabled={updateMutation.isPending}>
                 Salvar endereço
               </Button>
             </div>

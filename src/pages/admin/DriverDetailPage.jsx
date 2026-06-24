@@ -207,7 +207,7 @@ export default function DriverDetailPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button className="col-span-2 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={() => updateMutation.mutate(form)} disabled={updateMutation.isPending}>
+                  <Button className="col-span-2 font-bold" onClick={() => updateMutation.mutate(form)} disabled={updateMutation.isPending}>
                     {updateMutation.isPending ? "Salvando..." : "Salvar alterações"}
                   </Button>
                 </div>
@@ -256,7 +256,7 @@ export default function DriverDetailPage() {
                     <Input placeholder="E-mail de acesso" value={accessEmail} onChange={e => setAccessEmail(e.target.value)} />
                     <Input type="text" placeholder="Senha inicial (mín. 6)" value={accessPwd} onChange={e => setAccessPwd(e.target.value)} />
                   </div>
-                  <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-1.5" disabled={accessBusy} onClick={createLogin}>
+                  <Button size="sm" className="font-bold gap-1.5" disabled={accessBusy} onClick={createLogin}>
                     <KeyRound className="w-3.5 h-3.5" /> Criar acesso
                   </Button>
                 </div>

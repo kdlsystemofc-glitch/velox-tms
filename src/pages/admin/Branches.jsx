@@ -61,7 +61,7 @@ export default function Branches({ hideTitle = false }) {
             ])}>
             <Download className="w-4 h-4" /> Exportar
           </Button>
-          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => { setEditingId(null); setForm(EMPTY); setShowForm(true); }}>
+          <Button className="font-bold gap-2" onClick={() => { setEditingId(null); setForm(EMPTY); setShowForm(true); }}>
             <Plus className="w-4 h-4" /> Nova filial / CD
           </Button>
         </div>
@@ -111,7 +111,7 @@ export default function Branches({ hideTitle = false }) {
             <AddressFields title="Endereço" value={form.address || {}} onChange={addr => setForm(f => ({ ...f, address: addr }))} />
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-              <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" disabled={!form.name.trim() || save.isPending} onClick={() => save.mutate(form)}>{save.isPending ? "Salvando..." : "Salvar"}</Button>
+              <Button className="font-bold" disabled={!form.name.trim() || save.isPending} onClick={() => save.mutate(form)}>{save.isPending ? "Salvando..." : "Salvar"}</Button>
             </div>
           </div>
         </DialogContent>

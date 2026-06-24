@@ -77,7 +77,7 @@ export default function Drivers({ hideTitle = false }) {
         ) : <p className="text-xs text-muted-foreground">{drivers.length} motorista(s) cadastrado(s)</p>}
         <Dialog open={showAdd} onOpenChange={(v) => { setShowAdd(v); if (!v) setForm(EMPTY_DRIVER); }}>
           <DialogTrigger asChild>
-            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
+            <Button className="font-bold gap-2">
               <Plus className="w-4 h-4" /> Novo Motorista
             </Button>
           </DialogTrigger>
@@ -227,7 +227,7 @@ export default function Drivers({ hideTitle = false }) {
               <Button
                 onClick={() => createMutation.mutate({ ...form, base_salary: Number(form.base_salary) || undefined, cnh_points: form.cnh_points === "" ? undefined : Number(form.cnh_points) })}
                 disabled={!form.name || !form.cpf || cpfInvalid || cpfDuplicate || createMutation.isPending}
-                className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
+                className="font-bold gap-2"
               >
                 <Plus className="w-4 h-4" /> {createMutation.isPending ? "Salvando..." : "Cadastrar motorista"}
               </Button>

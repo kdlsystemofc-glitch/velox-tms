@@ -544,7 +544,7 @@ export default function TripDetailPage() {
           {generatingManifest ? "Gerando..." : crew.length > 1 ? "Romaneio (todos)" : "Romaneio PDF"}
         </Button>
         {trip.status === "planned" && (
-          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={startTrip}>
+          <Button className="font-bold gap-2" onClick={startTrip}>
             <Play className="w-4 h-4" /> Iniciar
           </Button>
         )}

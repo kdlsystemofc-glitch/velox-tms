@@ -145,7 +145,7 @@ export default function Replanning() {
     <div className="space-y-5">
       <PageHeader icon={AlertTriangle} title="Replanejamento" subtitle="Central de disrupções — redistribua recursos com 1 clique.">
         {autoResolvable > 0 && (
-          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
+          <Button className="font-bold gap-2"
             disabled={redistTruck.isPending || reassignDriver.isPending}
             onClick={resolveAll}>
             <Sparkles className="w-4 h-4" /> Resolver automaticamente ({autoResolvable})
@@ -224,7 +224,7 @@ export default function Replanning() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
+                <Button className="font-bold gap-2"
                   disabled={!replacementId || redistTruck.isPending}
                   onClick={() => {
                     const chosen = options.find((x) => x.truck.id === replacementId);
@@ -284,7 +284,7 @@ export default function Replanning() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
+                <Button className="font-bold gap-2"
                   disabled={!replacementId || reassignDriver.isPending}
                   onClick={() => {
                     const chosen = options.find((x) => x.driver.id === replacementId);

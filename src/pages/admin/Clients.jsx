@@ -112,7 +112,7 @@ export default function Clients({ hideTitle = false }) {
         </Button>
         <Dialog open={showAdd} onOpenChange={(v) => { setShowAdd(v); if (!v) setForm(EMPTY_CLIENT); }}>
           <DialogTrigger asChild>
-            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
+            <Button className="font-bold gap-2">
               <Plus className="w-4 h-4" /> Novo Cliente
             </Button>
           </DialogTrigger>
@@ -227,7 +227,7 @@ export default function Clients({ hideTitle = false }) {
               <Button
                 onClick={() => createMutation.mutate(form)}
                 disabled={!form.company_name || !form.cpf_cnpj || docInvalid || docDuplicate || createMutation.isPending}
-                className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
+                className="font-bold gap-2"
               >
                 <Plus className="w-4 h-4" /> {createMutation.isPending ? "Salvando..." : "Cadastrar cliente"}
               </Button>
@@ -350,7 +350,7 @@ export default function Clients({ hideTitle = false }) {
               )}
               <div className="flex gap-2 pt-2 border-t border-border/40">
                 <Link to={`/admin/clientes/${viewingClient.id}`} className="flex-1" onClick={() => setViewingClient(null)}>
-                  <Button className="w-full bg-velox-amber text-white font-bold">Ver cadastro completo</Button>
+                  <Button className="w-full font-bold">Ver cadastro completo</Button>
                 </Link>
                 <Button variant="outline" onClick={() => setViewingClient(null)} className="flex-1">Fechar</Button>
               </div>

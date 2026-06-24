@@ -279,7 +279,7 @@ export default function DispatchBoard() {
     <div className="space-y-4">
       <PageHeader icon={CalendarDays} title="Despacho" subtitle="Selecione pedidos na fila e clique no dia/caminhão para programar">
         {unscheduled.length > 0 && (
-          <Button size="sm" className="text-xs gap-1 bg-velox-amber text-white font-bold hover:bg-velox-amber/90" onClick={runAutoPlan}>
+          <Button size="sm" className="text-xs gap-1 font-bold" onClick={runAutoPlan}>
             <Sparkles className="w-3.5 h-3.5" /> Separação automática
           </Button>
         )}
@@ -330,7 +330,7 @@ export default function DispatchBoard() {
               </p>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" className="h-7 text-xs flex-1" onClick={() => setSelectedIds([])}>Limpar</Button>
-                <Button size="sm" className="h-7 text-xs flex-1 bg-velox-amber text-white font-bold gap-1"
+                <Button size="sm" className="h-7 text-xs flex-1 font-bold gap-1"
                   onClick={() => navigate("/admin/viagens/nova", { state: { preselectedOrderIds: selectedIds } })}>
                   <Send className="w-3 h-3" /> Criar viagem
                 </Button>
@@ -624,7 +624,7 @@ export default function DispatchBoard() {
           )}
           <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border sticky bottom-0 bg-background">
             <Button variant="outline" onClick={() => setPlan(null)}>Cancelar</Button>
-            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" disabled={applyPlanMutation.isPending} onClick={() => applyPlanMutation.mutate()}>
+            <Button className="font-bold gap-2" disabled={applyPlanMutation.isPending} onClick={() => applyPlanMutation.mutate()}>
               <Sparkles className="w-4 h-4" /> {applyPlanMutation.isPending ? "Aplicando..." : "Aplicar separação"}
             </Button>
           </div>

@@ -122,7 +122,7 @@ export default function Cotacao() {
                   {prazo && <p className="text-xs text-blue-600 mt-1">Prazo: {prazo} dia(s) úteis</p>}
                 </div>
                 <FreightBreakdown breakdown={breakdown} compact />
-                <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={toOrder}>
+                <Button className="w-full font-bold gap-2" onClick={toOrder}>
                   Criar pedido com esta cotação <ArrowRight className="w-4 h-4" />
                 </Button>
               </>

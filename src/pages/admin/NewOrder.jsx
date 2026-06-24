@@ -1104,11 +1104,11 @@ export default function NewOrder() {
               <ArrowLeft className="w-4 h-4" /> {step === 1 ? "Cancelar" : "Voltar"}
             </Button>
             {step < 4 ? (
-              <Button onClick={goNext} className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
+              <Button onClick={goNext} className="font-bold gap-2">
                 Próximo <ArrowRight className="w-4 h-4" />
               </Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={createMutation.isPending} className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
+              <Button onClick={handleSubmit} disabled={createMutation.isPending} className="font-bold gap-2">
                 <Package className="w-4 h-4" /> {createMutation.isPending ? "Criando..." : "Criar Coleta"}
               </Button>
             )}
@@ -1179,7 +1179,7 @@ export default function NewOrder() {
             </div>
             {step === 4 && (
               <div className="p-4 border-t border-border bg-muted/20">
-                <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={handleSubmit} disabled={createMutation.isPending}>
+                <Button className="w-full font-bold gap-2" onClick={handleSubmit} disabled={createMutation.isPending}>
                   <Package className="w-4 h-4" /> {createMutation.isPending ? "Criando..." : "Criar Coleta"}
                 </Button>
               </div>
@@ -1196,7 +1196,7 @@ export default function NewOrder() {
           <p className="text-sm text-muted-foreground"><strong>"{form.client_name}"</strong> não está na base de clientes. Deseja criar o cadastro automaticamente com os dados informados?</p>
           <div className="flex gap-2 justify-end pt-2">
             <Button variant="outline" size="sm" onClick={() => { const p = createClientPrompt?.protocol; setCreateClientPrompt(null); finishAndNavigate(p); }}>Não, só o pedido</Button>
-            <Button size="sm" className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={async () => {
+            <Button size="sm" className="font-bold" onClick={async () => {
               const p = createClientPrompt?.protocol;
               try {
                 await base44.entities.Client.create({ company_name: form.client_name, cpf_cnpj: form.client_cpf_cnpj || "", phone: form.client_phone || "", email: form.client_email || "", client_type: "eventual", status: "active" });

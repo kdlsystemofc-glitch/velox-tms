@@ -261,7 +261,7 @@ export default function Transfers() {
   return (
     <div className="space-y-4">
       <PageHeader icon={ArrowLeftRight} title="Transferências" subtitle="Movimentação entre filiais / centros de distribuição (cross-docking)">
-        <Button size="sm" className="bg-velox-amber text-white font-bold gap-1" onClick={() => setShowForm(true)} disabled={branches.length < 2}>
+        <Button size="sm" className="font-bold gap-1" onClick={() => setShowForm(true)} disabled={branches.length < 2}>
           <Plus className="w-4 h-4" /> Nova transferência
         </Button>
       </PageHeader>
@@ -400,7 +400,7 @@ export default function Transfers() {
             <label className="flex items-center gap-2 cursor-pointer text-sm"><Checkbox checked={form.start} onCheckedChange={v => setForm(f => ({ ...f, start: v }))} /> Iniciar em trânsito agora</label>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-              <Button className="bg-velox-amber text-white font-bold" disabled={!form.from_branch_id || !form.to_branch_id || form.order_ids.length === 0 || create.isPending} onClick={() => create.mutate()}>
+              <Button className="font-bold" disabled={!form.from_branch_id || !form.to_branch_id || form.order_ids.length === 0 || create.isPending} onClick={() => create.mutate()}>
                 {create.isPending ? "Criando..." : "Criar transferência"}
               </Button>
             </div>

@@ -142,7 +142,7 @@ export default function Expenses({ hideTitle = false }) {
             ])}>
             <Download className="w-4 h-4" /> Exportar
           </Button>
-          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => setShowModal(true)}>
+          <Button className="font-bold gap-2" onClick={() => setShowModal(true)}>
             <Plus className="w-4 h-4" /> Nova Despesa
           </Button>
         </div>
@@ -357,7 +357,7 @@ export default function Expenses({ hideTitle = false }) {
 
           <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-border sticky bottom-0 bg-background z-10">
             <Button variant="outline" onClick={() => { setShowModal(false); setForm(EMPTY_FORM); }}>Cancelar</Button>
-            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
+            <Button className="font-bold gap-2"
               onClick={() => createMutation.mutate({
                 ...form,
                 amount: Number(form.amount),

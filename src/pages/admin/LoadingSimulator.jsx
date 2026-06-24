@@ -278,7 +278,7 @@ export default function LoadingSimulator() {
                         <p className="text-xs text-muted-foreground">{kg.toLocaleString("pt-BR")} kg · {order.total_volumes || "?"} vol</p>
                         {wouldExceed && <p className="text-xs text-red-500 mt-0.5">⚠ Excede em {((totalKg + kg) - truckCapKg).toLocaleString("pt-BR")} kg</p>}
                       </div>
-                      <Button size="sm" variant={wouldExceed ? "outline" : "default"} className={wouldExceed ? "border-red-300 text-red-500 hover:bg-red-50" : "bg-velox-amber text-white hover:bg-velox-amber/90"} onClick={() => addOrder(order)}>
+                      <Button size="sm" variant={wouldExceed ? "outline" : "default"} className={wouldExceed ? "border-red-300 text-red-500 hover:bg-red-50" : ""} onClick={() => addOrder(order)}>
                         <Plus className="w-3 h-3" />
                       </Button>
                     </div>

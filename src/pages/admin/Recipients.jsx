@@ -82,7 +82,7 @@ export default function Recipients({ hideTitle = false }) {
             ])}>
             <Download className="w-4 h-4" /> Exportar
           </Button>
-          <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={openNew}>
+          <Button className="font-bold gap-2" onClick={openNew}>
             <Plus className="w-4 h-4" /> Novo destinatário
           </Button>
         </div>
@@ -167,7 +167,7 @@ export default function Recipients({ hideTitle = false }) {
 
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-              <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" disabled={!form.name.trim() || docInvalid || docDuplicate || save.isPending} onClick={() => save.mutate(form)}>
+              <Button className="font-bold" disabled={!form.name.trim() || docInvalid || docDuplicate || save.isPending} onClick={() => save.mutate(form)}>
                 {save.isPending ? "Salvando..." : "Salvar"}
               </Button>
             </div>

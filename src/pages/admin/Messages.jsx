@@ -197,7 +197,7 @@ export default function Messages() {
                         </div>
 
                         <div className="flex gap-2 flex-wrap">
-                          <Button size="sm" className="text-xs gap-1 bg-velox-amber hover:bg-velox-amber/90 text-white font-bold" onClick={() => createOrderFromMessage(msg)}>
+                          <Button size="sm" className="text-xs gap-1 font-bold" onClick={() => createOrderFromMessage(msg)}>
                             <FilePlus className="w-3 h-3" /> Criar pedido
                           </Button>
                           {msg.email && (

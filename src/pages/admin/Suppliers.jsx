@@ -177,7 +177,7 @@ export default function Suppliers({ hideTitle = false }) {
         </Button>
         <Dialog open={showAdd} onOpenChange={(v) => { setShowAdd(v); if (!v) setForm(EMPTY); }}>
           <DialogTrigger asChild>
-            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
+            <Button className="font-bold gap-2">
               <Plus className="w-4 h-4" /> Novo Fornecedor
             </Button>
           </DialogTrigger>
@@ -188,7 +188,7 @@ export default function Suppliers({ hideTitle = false }) {
             <Button
               onClick={() => createMutation.mutate(form)}
               disabled={!form.name || createDup || !docOk(form.cnpj_cpf) || createMutation.isPending}
-              className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold mt-2"
+              className="w-full font-bold mt-2"
             >
               {createMutation.isPending ? "Salvando..." : "Cadastrar"}
             </Button>
@@ -240,7 +240,7 @@ export default function Suppliers({ hideTitle = false }) {
         <Button
           onClick={() => updateMutation.mutate({ id: editingId, data: editForm })}
             disabled={!editForm.name || editDup || !docOk(editForm.cnpj_cpf) || updateMutation.isPending}
-            className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold mt-2"
+            className="w-full font-bold mt-2"
           >
             {updateMutation.isPending ? "Salvando..." : "Salvar"}
           </Button>

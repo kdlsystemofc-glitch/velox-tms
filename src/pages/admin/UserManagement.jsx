@@ -108,7 +108,7 @@ export default function UserManagement() {
   return (
     <div className="space-y-4">
       <PageHeader icon={Users} title="Usuários & Acessos" subtitle="Crie usuários e defina quem é administrador, operador ou motorista">
-        <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2" onClick={() => { setCreateForm(EMPTY_CREATE); setShowCreate(true); }}>
+        <Button className="font-bold gap-2" onClick={() => { setCreateForm(EMPTY_CREATE); setShowCreate(true); }}>
           <Plus className="w-4 h-4" /> Novo usuário
         </Button>
       </PageHeader>
@@ -217,7 +217,7 @@ export default function UserManagement() {
               <div><label className="text-xs font-medium text-muted-foreground">Senha temporária <span className="text-red-500">*</span></label><Input type="text" value={createForm.password} onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))} placeholder="mín. 6 caracteres" /></div>
             </div>
             <p className="text-[11px] text-muted-foreground">O usuário entra com este e-mail e senha. Oriente-o a trocar a senha depois.</p>
-            <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
+            <Button className="w-full font-bold"
               disabled={!createForm.email.trim() || createForm.password.length < 6 || createUser.isPending}
               onClick={() => createUser.mutate(createForm)}>
               {createUser.isPending ? "Criando..." : "Criar usuário"}
@@ -234,7 +234,7 @@ export default function UserManagement() {
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">Nova senha para <strong className="text-foreground">{resetUser.email}</strong></p>
               <Input type="text" value={resetPass} onChange={e => setResetPass(e.target.value)} placeholder="mín. 6 caracteres" autoFocus />
-              <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
+              <Button className="w-full font-bold"
                 disabled={resetPass.length < 6 || resetPassword.isPending}
                 onClick={() => resetPassword.mutate({ id: resetUser.id, password: resetPass, email: resetUser.email })}>
                 {resetPassword.isPending ? "Salvando..." : "Redefinir senha"}

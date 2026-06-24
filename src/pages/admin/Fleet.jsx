@@ -81,7 +81,7 @@ export default function Fleet({ hideTitle = false }) {
         ) : <p className="text-xs text-muted-foreground">{trucks.length} veículo(s) cadastrado(s)</p>}
         <Dialog open={showAdd} onOpenChange={(v) => { setShowAdd(v); if (!v) setForm(EMPTY_FORM); }}>
           <DialogTrigger asChild>
-            <Button className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2">
+            <Button className="font-bold gap-2">
               <Plus className="w-4 h-4" /> Novo Caminhão
             </Button>
           </DialogTrigger>
@@ -244,7 +244,7 @@ export default function Fleet({ hideTitle = false }) {
                   }
                 })}
                 disabled={!form.plate || plateInvalid || plateDuplicate || createMutation.isPending}
-                className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2"
+                className="font-bold gap-2"
               >
                 <Plus className="w-4 h-4" /> {createMutation.isPending ? "Salvando..." : "Cadastrar caminhão"}
               </Button>
