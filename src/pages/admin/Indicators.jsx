@@ -8,8 +8,9 @@ import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { slaStatus } from "@/utils/sla";
 import { ComposedChart, Bar, Line, BarChart, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
 import {
-  BarChart3, Package, CheckCircle2, Clock, Truck, AlertTriangle, DollarSign, TrendingUp, Percent, Activity,
+  BarChart3, Package, CheckCircle2, Clock, Truck, AlertTriangle, DollarSign, TrendingUp, Percent, Activity, Users, MapPin, Download, Gauge,
 } from "lucide-react";
+import { downloadCsv } from "@/utils/exportCsv";
 
 const MONTHS_SHORT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -78,6 +79,51 @@ export default function Indicators() {
     return { name: MONTHS_SHORT[s.getMonth()], entregas: k.delivered, otd: Number(k.otd.toFixed(0)), receita: k.faturamento, despesa: k.despesa, resultado: k.resultado, ocorrencias: k.incidentsCreated };
   });
 
+  // ── Rankings e indicadores avançados do período (Ind-3) ──
+  const inSel = (ts) => { if (!ts) return false; const d = new Date(ts); return d >= start && d < end; };
+  const deliveredInPeriod = orders.filter(o => (o.status_history || []).some(h => h.status === "delivered" && inSel(h.timestamp)));
+  const byClient = {};
+  deliveredInPeriod.forEach(o => { const k = o.client_name || "—"; (byClient[k] ||= { name: k, entregas: 0, receita: 0 }); byClient[k].entregas++; byClient[k].receita += o.freight_value || 0; });
+  const topClientes = Object.values(byClient).sort((a, b) => b.receita - a.receita).slice(0, 5);
+  const byCity = {};
+  deliveredInPeriod.forEach(o => (o.recipients || []).forEach(r => { const c = r.city || "—"; (byCity[c] ||= { city: c, entregas: 0 }); byCity[c].entregas++; }));
+  const topDestinos = Object.values(byCity).sort((a, b) => b.entregas - a.entregas).slice(0, 5);
+  const tripsInPeriod = trips.filter(t => t.status === "completed" && inSel(t.arrival_date || t.departure_date));
+  const byDriver = {};
+  tripsInPeriod.forEach(t => { const k = t.driver_name || "—"; (byDriver[k] ||= { name: k, viagens: 0, receita: 0 }); byDriver[k].viagens++; byDriver[k].receita += Number(t.total_revenue) || 0; });
+  const topMotoristas = Object.values(byDriver).sort((a, b) => b.receita - a.receita).slice(0, 5);
+
+  const totKm = tripsInPeriod.reduce((s, t) => s + (Number(t.real_km) || 0), 0);
+  const totCost = tripsInPeriod.reduce((s, t) => s + (Number(t.total_cost) || 0), 0);
+  const totRev = tripsInPeriod.reduce((s, t) => s + (Number(t.total_revenue) || 0), 0);
+  const custoKm = totKm > 0 ? totCost / totKm : 0;
+  const receitaKm = totKm > 0 ? totRev / totKm : 0;
+  const freightDelivered = deliveredInPeriod.reduce((s, o) => s + (o.freight_value || 0), 0);
+  const ticket = deliveredInPeriod.length > 0 ? freightDelivered / deliveredInPeriod.length : 0;
+  const leadTimes = deliveredInPeriod.map(o => {
+    const h = o.status_history || [];
+    const startEv = h.find(x => x.status === "collecting" || x.status === "in_transit");
+    const delEv = [...h].reverse().find(x => x.status === "delivered");
+    if (!startEv || !delEv) return null;
+    const v = (new Date(delEv.timestamp) - new Date(startEv.timestamp)) / 86400000;
+    return v >= 0 ? v : null;
+  }).filter(v => v != null);
+  const leadAvg = leadTimes.length ? leadTimes.reduce((a, b) => a + b, 0) / leadTimes.length : null;
+
+  const exportSummary = () => {
+    const rows = [
+      ["Coletas realizadas", cur.collected], ["Entregas realizadas", cur.delivered], ["OTD (%)", cur.otd.toFixed(0)],
+      ["Entregas atrasadas", cur.late], ["Ocorrências no período", cur.incidentsCreated],
+      ["Faturamento (caixa)", cur.faturamento.toFixed(2)], ["Despesas (caixa)", cur.despesa.toFixed(2)],
+      ["Resultado", cur.resultado.toFixed(2)], ["Margem (%)", cur.margin.toFixed(1)],
+      ["Ticket médio", ticket.toFixed(2)], ["Custo por km", custoKm.toFixed(2)], ["Receita por km", receitaKm.toFixed(2)],
+      ["Lead time médio (dias)", leadAvg != null ? leadAvg.toFixed(1) : ""],
+    ].map(([indicador, valor]) => ({ indicador, valor }));
+    downloadCsv(`indicadores-${period}-${new Date().toISOString().slice(0,10)}`, rows, [
+      { key: "indicador", label: "Indicador" }, { key: "valor", label: "Valor" },
+    ]);
+  };
+
   // Frota agora (snapshot) — ocupação por caminhão (on_route inclui viagens E transferências)
   const activeTrucks = trucks.filter(t => t.status !== "inactive");
   const onRouteTrucks = trucks.filter(t => t.status === "on_route").length;
@@ -112,13 +158,14 @@ export default function Indicators() {
     <div className="space-y-5">
       <PageHeader icon={BarChart3} title="Indicadores" subtitle="KPIs operacionais e financeiros" />
 
-      <div className="flex gap-1.5 flex-wrap">
+      <div className="flex gap-1.5 flex-wrap items-center">
         {PERIODS.map(([v, l]) => (
           <Button key={v} size="sm" variant={period === v ? "default" : "outline"} className={period === v ? "bg-velox-dark text-white" : ""} onClick={() => setPeriod(v)}>{l}</Button>
         ))}
         <span className="text-xs text-muted-foreground self-center ml-2">
           {start.toLocaleDateString("pt-BR")} – {new Date(end - 1).toLocaleDateString("pt-BR")} · vs período anterior
         </span>
+        <Button size="sm" variant="outline" className="gap-2 ml-auto" onClick={exportSummary}><Download className="w-4 h-4" /> Exportar</Button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -138,6 +185,16 @@ export default function Indicators() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Eficiência do período</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><DollarSign className="w-4 h-4 text-green-600" /><span className="text-[11px] text-muted-foreground uppercase">Ticket médio</span></div><p className="text-xl font-bold font-mono text-green-600">{fmt(ticket)}</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Gauge className="w-4 h-4 text-red-600" /><span className="text-[11px] text-muted-foreground uppercase">Custo / km</span></div><p className="text-xl font-bold font-mono text-red-600">{custoKm > 0 ? `${fmt(custoKm)}/km` : "—"}</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><TrendingUp className="w-4 h-4 text-blue-600" /><span className="text-[11px] text-muted-foreground uppercase">Receita / km</span></div><p className="text-xl font-bold font-mono text-blue-600">{receitaKm > 0 ? `${fmt(receitaKm)}/km` : "—"}</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Clock className="w-4 h-4 text-indigo-600" /><span className="text-[11px] text-muted-foreground uppercase">Lead time médio</span></div><p className="text-xl font-bold font-mono text-indigo-600">{leadAvg != null ? `${leadAvg.toFixed(1)} dias` : "—"}</p></CardContent></Card>
+        </div>
       </div>
 
       <div>
@@ -200,6 +257,43 @@ export default function Indicators() {
                 <Bar dataKey="ocorrencias" fill="#F97316" radius={[4, 4, 0, 0]} name="Ocorrências" />
               </BarChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Rankings do período */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold flex items-center gap-2"><Users className="w-4 h-4 text-velox-amber" /> Top clientes</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {topClientes.length === 0 ? <p className="text-xs text-muted-foreground py-3 text-center">Sem entregas no período.</p> : topClientes.map((c, i) => (
+              <div key={i} className="flex items-center justify-between text-sm">
+                <span className="truncate flex items-center gap-2"><span className="text-xs text-muted-foreground w-4">{i + 1}.</span>{c.name}</span>
+                <span className="font-mono font-semibold text-green-600 flex-shrink-0">{fmt(c.receita)}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold flex items-center gap-2"><Truck className="w-4 h-4 text-velox-amber" /> Top motoristas</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {topMotoristas.length === 0 ? <p className="text-xs text-muted-foreground py-3 text-center">Sem viagens concluídas no período.</p> : topMotoristas.map((d, i) => (
+              <div key={i} className="flex items-center justify-between text-sm">
+                <span className="truncate flex items-center gap-2"><span className="text-xs text-muted-foreground w-4">{i + 1}.</span>{d.name} <span className="text-xs text-muted-foreground">· {d.viagens} viag.</span></span>
+                <span className="font-mono font-semibold text-green-600 flex-shrink-0">{fmt(d.receita)}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold flex items-center gap-2"><MapPin className="w-4 h-4 text-velox-amber" /> Top destinos</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {topDestinos.length === 0 ? <p className="text-xs text-muted-foreground py-3 text-center">Sem entregas no período.</p> : topDestinos.map((c, i) => (
+              <div key={i} className="flex items-center justify-between text-sm">
+                <span className="truncate flex items-center gap-2"><span className="text-xs text-muted-foreground w-4">{i + 1}.</span>{c.city}</span>
+                <span className="font-mono font-semibold flex-shrink-0">{c.entregas} entregas</span>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
