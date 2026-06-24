@@ -38,7 +38,7 @@ export default function DriverHome() {
     : "#";
 
   return (
-    <div className="min-h-screen bg-velox-dark flex flex-col items-center py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a2336] via-[#161d2c] to-[#111723] flex flex-col items-center py-8 px-4">
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -52,8 +52,10 @@ export default function DriverHome() {
         </div>
 
         {!trip ? (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-            <Truck className="w-16 h-16 text-velox-amber mx-auto mb-4 opacity-60" />
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center animate-fade-up">
+            <div className="w-20 h-20 rounded-3xl bg-brand-gradient flex items-center justify-center mx-auto mb-5 shadow-elevated">
+              <Truck className="w-10 h-10 text-white" />
+            </div>
             <h2 className="font-display text-xl font-bold text-white mb-2">Nenhuma viagem hoje</h2>
             <p className="text-white/40 text-sm leading-relaxed mb-6">Você será notificado quando uma viagem for atribuída.</p>
             <Link to="/motorista/historico">

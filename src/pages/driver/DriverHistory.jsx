@@ -27,7 +27,7 @@ export default function DriverHistory() {
   const pastTrips = trips.filter(t => t.status === "completed" || t.status === "cancelled").sort((a, b) => new Date(b.departure_date || b.created_date) - new Date(a.departure_date || a.created_date));
 
   return (
-    <div className="min-h-screen bg-velox-dark flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a2336] via-[#161d2c] to-[#111723] flex flex-col">
       <div className="sticky top-0 bg-velox-dark/95 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center gap-3">
         <Link to="/motorista" className="text-white/60 hover:text-white"><ArrowLeft className="w-5 h-5" /></Link>
         <h1 className="font-display font-bold text-white">Histórico</h1>

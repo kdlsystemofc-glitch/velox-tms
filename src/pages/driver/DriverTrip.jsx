@@ -80,7 +80,7 @@ export default function DriverTrip() {
   });
 
   if (isLoading || !trip) return (
-    <div className="min-h-screen bg-velox-dark flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a2336] via-[#161d2c] to-[#111723] flex items-center justify-center">
       <div className="w-8 h-8 border-4 border-velox-amber/20 border-t-velox-amber rounded-full animate-spin" />
     </div>
   );
@@ -304,7 +304,7 @@ export default function DriverTrip() {
   const setStopField = (index, field, value) => setStopActions(prev => ({ ...prev, [index]: { ...(prev[index] || {}), [field]: value } }));
 
   return (
-    <div className="min-h-screen bg-velox-dark flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a2336] via-[#161d2c] to-[#111723] flex flex-col">
       {/* Header */}
       <div className="sticky top-0 bg-velox-dark/95 backdrop-blur border-b border-white/10 px-4 py-3 flex items-center gap-3 z-10">
         <button onClick={() => navigate("/motorista")} className="text-white/60 hover:text-white"><ArrowLeft className="w-5 h-5" /></button>
