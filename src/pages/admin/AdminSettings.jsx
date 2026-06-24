@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Building2, DollarSign, Bell, Globe, MessageSquare, Save, MapPin, CalendarDays, Shield, Clock, Plus, BarChart3, Package, Route, Check } from "lucide-react";
+import { Building2, DollarSign, Bell, Globe, MessageSquare, Save, MapPin, CalendarDays, Shield, Clock, Plus, BarChart3, Package, Route, Check, Download, Upload, History } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -127,6 +128,12 @@ export default function AdminSettings({ only = null }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
       resetSettingsCache(); // invalida o cache do módulo para que o site público leia os novos valores
+      // Histórico (Cfg-3): registra quais grupos de parâmetros mudaram.
+      const changed = Object.keys(form).filter(k => !EXTERNAL_KEYS.includes(k) && k !== "id" && JSON.stringify(form[k]) !== JSON.stringify(settings[k]));
+      if (changed.length > 0) {
+        supabase.rpc("admin_log_action", { p_action: "Alterou configurações", p_target_email: null, p_detail: changed.slice(0, 8).join(", ") })
+          .then(() => queryClient.invalidateQueries({ queryKey: ["settings-audit"] })).catch(() => {});
+      }
       toast({ title: "Configurações salvas!", description: "As alterações já estão valendo." });
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 2200);
@@ -137,6 +144,40 @@ export default function AdminSettings({ only = null }) {
 
   const setF = (field, value) => setForm(f => ({ ...f, [field]: value }));
   const setNested = (parent, field, value) => setForm(f => ({ ...f, [parent]: { ...(f[parent] || {}), [field]: value } }));
+
+  // ── Governança (Cfg-3): histórico + backup ──
+  const fileRef = useRef(null);
+  const { data: history = [] } = useQuery({
+    queryKey: ["settings-audit"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("user_audit_log").select("*").eq("action", "Alterou configurações").order("created_at", { ascending: false }).limit(8);
+      if (error) return [];
+      return data || [];
+    },
+    enabled: allow("company"),
+  });
+
+  const exportJson = () => {
+    const blob = new Blob([JSON.stringify(form, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `velox-config-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const importJson = async (file) => {
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      const { id, ...rest } = parsed; // ignora o id do arquivo
+      EXTERNAL_KEYS.forEach(k => delete rest[k]);
+      setForm(f => ({ ...f, ...rest }));
+      toast({ title: "Configuração importada", description: "Revise os campos e clique em Salvar para aplicar." });
+    } catch {
+      toast({ title: "Arquivo inválido", description: "Selecione um JSON exportado por este sistema.", variant: "destructive" });
+    }
+  };
 
   const SaveBtn = ({ children = "Salvar" }) => (
     <Button
@@ -233,6 +274,32 @@ export default function AdminSettings({ only = null }) {
                 </p>
               </div>
               <div className="flex justify-end"><SaveBtn /></div>
+            </CardContent>
+          </Card>
+
+          {/* Backup & histórico (Cfg-3) */}
+          <Card className="mt-5">
+            <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><History className="w-4 h-4 text-velox-amber" /> Backup & histórico</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" className="gap-2" onClick={exportJson}><Download className="w-4 h-4" /> Exportar config (JSON)</Button>
+                <Button variant="outline" className="gap-2" onClick={() => fileRef.current?.click()}><Upload className="w-4 h-4" /> Importar config</Button>
+                <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={e => { importJson(e.target.files?.[0]); e.target.value = ""; }} />
+              </div>
+              <p className="text-[11px] text-muted-foreground">A importação preenche o formulário; revise e clique em Salvar para aplicar. O backup não inclui saldo de caixa nem documentos (geridos em outros módulos).</p>
+              {history.length > 0 && (
+                <div className="pt-2 border-t border-border/40">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Alterações recentes</p>
+                  <div className="space-y-1.5">
+                    {history.map(h => (
+                      <div key={h.id} className="flex items-center justify-between text-xs gap-2">
+                        <span className="min-w-0 truncate"><strong className="text-foreground">{h.actor_email || "—"}</strong> {h.detail && <span className="text-muted-foreground">· {h.detail}</span>}</span>
+                        <span className="text-muted-foreground flex-shrink-0">{h.created_at ? new Date(h.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : ""}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
