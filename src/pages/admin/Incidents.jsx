@@ -14,8 +14,9 @@ import FileUploadButton from "@/components/shared/FileUploadButton";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { downloadCsv, csvMoney, csvDate } from "@/utils/exportCsv";
 import {
-  AlertTriangle, CheckCircle2, Shield, BellRing, UserCheck, Clock, FileText, ExternalLink, DollarSign, Download,
+  AlertTriangle, CheckCircle2, Shield, ShieldAlert, BellRing, UserCheck, Clock, FileText, ExternalLink, DollarSign, Download,
 } from "lucide-react";
+import StatCard from "@/components/shared/StatCard";
 import {
   sortByGravity, incidentSeverity, incidentTypeLabel, SEVERITY_META,
   buildTimeline, resolutionHours, formatDuration, incidentOverdue, INCIDENT_TYPES,
@@ -176,10 +177,10 @@ export default function Incidents() {
 
       {/* Resumo */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Em aberto</p><p className="text-lg font-bold font-mono text-amber-600">{counts.open}</p></Card>
-        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Críticas</p><p className="text-lg font-bold font-mono text-red-600">{counts.critical}</p></Card>
-        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Atrasadas (prazo)</p><p className={`text-lg font-bold font-mono ${counts.overdue > 0 ? "text-red-600" : "text-muted-foreground"}`}>{counts.overdue}</p></Card>
-        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Resolvidas</p><p className="text-lg font-bold font-mono text-green-600">{counts.resolved}</p></Card>
+        <StatCard icon={ShieldAlert} label="Em aberto" value={counts.open} tone="warning" />
+        <StatCard icon={AlertTriangle} label="Críticas" value={counts.critical} tone="danger" />
+        <StatCard icon={Clock} label="Atrasadas (prazo)" value={counts.overdue} tone={counts.overdue > 0 ? "danger" : "muted"} />
+        <StatCard icon={CheckCircle2} label="Resolvidas" value={counts.resolved} tone="success" />
       </div>
 
       {/* Indicadores (Oc-3) */}

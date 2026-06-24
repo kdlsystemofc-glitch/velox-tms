@@ -18,26 +18,26 @@
     --card-foreground: 218 30% 14%;
     --popover: 0 0% 100%;
     --popover-foreground: 218 30% 14%;
-    --primary: 213 59% 41%;          /* #2B5FA8 azul-aço */
+    --primary: 224 76% 56%;          /* azul-índigo vivo */
     --primary-foreground: 0 0% 100%;
-    --secondary: 213 22% 91%;        /* slate claro */
-    --secondary-foreground: 218 30% 18%;
-    --muted: 210 20% 93%;            /* #E9ECF0 */
-    --muted-foreground: 215 14% 40%; /* #5A6573 */
-    --accent: 213 40% 90%;           /* hover slate-azulado claro */
-    --accent-foreground: 213 59% 35%;
-    --destructive: 4 66% 47%;        /* #C0392B vermelho sóbrio */
+    --secondary: 222 30% 92%;        /* slate claro azulado */
+    --secondary-foreground: 222 40% 20%;
+    --muted: 215 24% 94%;            /* canvas suave */
+    --muted-foreground: 218 14% 42%;
+    --accent: 224 70% 94%;           /* hover azulado claro */
+    --accent-foreground: 224 70% 42%;
+    --destructive: 358 75% 55%;      /* vermelho vivo */
     --destructive-foreground: 0 0% 100%;
-    --success: 142 64% 34%;          /* #1E8E4E verde */
-    --warning: 32 81% 42%;           /* #C27510 âmbar (semântico) */
-    --border: 213 18% 85%;           /* #D2D9E1 */
-    --input: 213 18% 82%;
-    --ring: 213 59% 41%;
-    --chart-1: 213 59% 41%;
-    --chart-2: 218 30% 25%;
-    --chart-3: 142 64% 34%;
-    --chart-4: 32 81% 50%;
-    --chart-5: 4 66% 52%;
+    --success: 150 72% 41%;          /* verde vivo */
+    --warning: 35 95% 52%;           /* âmbar vivo */
+    --border: 216 20% 86%;
+    --input: 216 20% 83%;
+    --ring: 224 76% 56%;
+    --chart-1: 224 76% 56%;
+    --chart-2: 256 80% 62%;
+    --chart-3: 150 72% 41%;
+    --chart-4: 35 95% 55%;
+    --chart-5: 320 70% 55%;
     --radius: 0.625rem;             /* 10px — moderno, cantos suaves */
     --brand-from: 214 84% 50%;      /* gradiente de marca: azul vivo… */
     --brand-to: 256 80% 62%;        /* …→ violeta (CTAs, chips, vida!) */

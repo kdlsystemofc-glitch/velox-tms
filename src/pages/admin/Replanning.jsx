@@ -5,6 +5,7 @@ import { supabase } from "@/api/supabaseClient";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import PageHeader from "@/components/shared/PageHeader";
@@ -154,10 +155,16 @@ export default function Replanning() {
       </PageHeader>
 
       {nothing && (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-5 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-green-600" />
-          <p className="text-sm font-medium text-green-800">Nada para replanejar. Toda a frota indisponível está sem carga pendente.</p>
-        </div>
+        <Card>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={CheckCircle2}
+              tone="success"
+              title="Tudo sob controle 🎉"
+              description="Nenhum caminhão ou motorista indisponível tem carga pendente. Quando algo precisar de replanejamento, aparece aqui automaticamente."
+            />
+          </CardContent>
+        </Card>
       )}
 
       {/* ── Caminhões indisponíveis ── */}
