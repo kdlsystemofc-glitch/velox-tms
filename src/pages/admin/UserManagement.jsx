@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/components/ui/use-toast";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
-import { Users, Power, Trash2, ShieldCheck, Plus, KeyRound } from "lucide-react";
+import StatCard from "@/components/shared/StatCard";
+import { Users, Power, Trash2, ShieldCheck, Plus, KeyRound, UserCog, Truck, Clock } from "lucide-react";
 
 const ROLE_LABEL = { admin: "Administrador", operator: "Operador", motorista: "Motorista", pending: "Pendente" };
 const ROLE_CLS = {
@@ -114,10 +115,10 @@ export default function UserManagement() {
       </PageHeader>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Administradores</p><p className="text-2xl font-bold text-velox-amber">{counts.admin}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Operadores</p><p className="text-2xl font-bold text-blue-600">{counts.operator}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Motoristas</p><p className="text-2xl font-bold text-green-600">{counts.motorista}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Pendentes</p><p className="text-2xl font-bold text-gray-500">{counts.pending}</p></CardContent></Card>
+        <StatCard icon={ShieldCheck} label="Administradores" value={counts.admin} tone="primary" />
+        <StatCard icon={UserCog} label="Operadores" value={counts.operator} tone="primary" />
+        <StatCard icon={Truck} label="Motoristas" value={counts.motorista} tone="success" />
+        <StatCard icon={Clock} label="Pendentes" value={counts.pending} tone="muted" />
       </div>
 
       {pending.length > 0 && (

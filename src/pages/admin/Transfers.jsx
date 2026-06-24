@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
 import PageHeader from "@/components/shared/PageHeader";
+import StatCard from "@/components/shared/StatCard";
 import { ArrowLeftRight, Plus, Truck, Warehouse, ArrowRight, PackageCheck, Send, Ban, Search, FileDown, Weight, AlertTriangle } from "lucide-react";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO } from "@/utils/dateUtils";
@@ -275,10 +276,10 @@ export default function Transfers() {
       {transfers.length > 0 && (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Em trânsito</p><p className="text-2xl font-bold text-amber-600">{inTransitCount}</p></CardContent></Card>
-            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Planejadas</p><p className="text-2xl font-bold text-blue-600">{plannedCount}</p></CardContent></Card>
-            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Pedidos na malha</p><p className="text-2xl font-bold">{ordersInMesh}</p></CardContent></Card>
-            <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Peso na malha</p><p className="text-2xl font-bold">{weightInMesh.toLocaleString("pt-BR")} <span className="text-sm font-normal text-muted-foreground">kg</span></p></CardContent></Card>
+            <StatCard icon={Send} label="Em trânsito" value={inTransitCount} tone="warning" />
+            <StatCard icon={ArrowLeftRight} label="Planejadas" value={plannedCount} tone="primary" />
+            <StatCard icon={PackageCheck} label="Pedidos na malha" value={ordersInMesh} tone="primary" />
+            <StatCard icon={Weight} label="Peso na malha" value={weightInMesh} suffix=" kg" tone="primary" />
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">

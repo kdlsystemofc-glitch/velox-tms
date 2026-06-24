@@ -7,8 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { MessageSquare, Mail, Phone, FilePlus, Search, Download } from "lucide-react";
+import { MessageSquare, Mail, Phone, FilePlus, Search, Download, Inbox, CheckCircle2, Percent } from "lucide-react";
 import { downloadCsv, csvDate } from "@/utils/exportCsv";
+import StatCard from "@/components/shared/StatCard";
 
 /**
  * Mensagens — funil de leads vindos do site público.
@@ -127,10 +128,10 @@ export default function Messages() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Novos</p><p className="text-2xl font-bold text-blue-600">{counts.novo}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Em contato</p><p className="text-2xl font-bold text-amber-600">{counts.em_contato}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Convertidos</p><p className="text-2xl font-bold text-green-600">{counts.convertido}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Taxa de conversão</p><p className="text-2xl font-bold">{convRate.toFixed(0)}%</p><p className="text-[11px] text-muted-foreground mt-0.5">1ª resposta: {fmtDur(avgRespH)}</p></CardContent></Card>
+        <StatCard icon={Inbox} label="Novos" value={counts.novo} tone="primary" />
+        <StatCard icon={Phone} label="Em contato" value={counts.em_contato} tone="warning" />
+        <StatCard icon={CheckCircle2} label="Convertidos" value={counts.convertido} tone="success" />
+        <StatCard icon={Percent} label="Taxa de conversão" value={`${convRate.toFixed(0)}%`} hint={`1ª resposta: ${fmtDur(avgRespH)}`} tone="primary" />
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">
