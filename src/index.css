@@ -39,15 +39,15 @@
     --chart-4: 32 81% 50%;
     --chart-5: 4 66% 52%;
     --radius: 0.625rem;             /* 10px — moderno, cantos suaves */
-    --brand-from: 213 59% 41%;      /* gradiente de marca: azul-aço… */
-    --brand-to: 222 60% 50%;        /* …→ azul-índigo (CTAs, chips) */
+    --brand-from: 214 84% 50%;      /* gradiente de marca: azul vivo… */
+    --brand-to: 256 80% 62%;        /* …→ violeta (CTAs, chips, vida!) */
     --font-heading: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-    --sidebar-background: 215 28% 15%;       /* #1B2430 grafite */
-    --sidebar-foreground: 214 14% 78%;       /* texto claro */
-    --sidebar-primary: 213 70% 55%;          /* acento ativo na sidebar */
+    --sidebar-background: 222 32% 14%;       /* grafite azulado */
+    --sidebar-foreground: 214 16% 80%;       /* texto claro */
+    --sidebar-primary: 217 88% 62%;          /* acento ativo (vivo) */
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 215 22% 21%;           /* hover */
     --sidebar-accent-foreground: 0 0% 100%;

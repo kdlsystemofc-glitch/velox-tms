@@ -266,10 +266,10 @@ export default function AdminSettings({ only = null }) {
                   onChange={e => setF("google_maps_api_key", e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Usada para calcular distância real entre origem e destinos.
+                  Opcional. Quando preenchida, o sistema calcula a distância real entre origem e destino para fretes e rotas.{" "}
                   <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer"
-                     className="text-velox-amber hover:underline ml-1">
-                    Obter chave →
+                     className="text-primary font-medium hover:underline">
+                    Como obter uma chave →
                   </a>
                 </p>
               </div>
@@ -446,7 +446,7 @@ export default function AdminSettings({ only = null }) {
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Velocidade média (km/dia)</label>
                     <NumericInput integer value={form.km_per_day || ""} onChange={v => setF("km_per_day", v)} placeholder="ex: 600" />
-                    <p className="text-[10px] text-muted-foreground">Fallback quando não há tabela por estado. Padrão: 600 km/dia.</p>
+                    <p className="text-[10px] text-muted-foreground">Usado quando o estado de destino não está na tabela abaixo. Padrão: 600 km/dia.</p>
                   </div>
                 </div>
                 {/* Tabela por estado */}

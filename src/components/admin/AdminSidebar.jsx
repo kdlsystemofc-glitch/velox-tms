@@ -67,10 +67,12 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
 
   return (
     <aside
-      className={`fixed left-0 top-0 bottom-0 z-40 bg-sidebar text-sidebar-foreground flex flex-col transition-all duration-300 ${
+      className={`fixed left-0 top-0 bottom-0 z-40 text-sidebar-foreground flex flex-col transition-all duration-300 bg-gradient-to-b from-[#1a2336] via-[#161d2c] to-[#111723] ${
         collapsed ? "w-[64px]" : "w-56"
       }`}
     >
+      {/* Faixa de marca no topo */}
+      <div className="h-1 bg-brand-gradient flex-shrink-0" />
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border flex-shrink-0">
         <Link to="/admin" className="flex items-center gap-2.5 overflow-hidden group">
@@ -108,11 +110,11 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
               className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all mx-0.5 ${
                 active
                   ? "bg-brand-gradient text-white font-semibold shadow-soft"
-                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/[0.06]"
+                  : "text-sidebar-foreground/60 hover:text-white hover:bg-white/[0.07]"
               }`}
             >
               {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-white/90" />}
-              <item.icon className={`w-4 h-4 flex-shrink-0 transition-transform ${active ? "" : "group-hover:scale-110"}`} />
+              <item.icon className={`w-4 h-4 flex-shrink-0 transition-all ${active ? "" : "group-hover:scale-110 group-hover:text-[hsl(var(--sidebar-primary))]"}`} />
               {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
               {count > 0 && !collapsed && (
                 <span className="bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">

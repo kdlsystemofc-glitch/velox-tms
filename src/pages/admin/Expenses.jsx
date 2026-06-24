@@ -302,7 +302,7 @@ export default function Expenses({ hideTitle = false }) {
                   <Input type="date" value={form.paid_date} onChange={e => setForm(f => ({ ...f, paid_date: e.target.value }))} />
                 </Field>
               ) : (
-                <Field label="Vencimento" hint="Alimenta o aging de contas a pagar">
+                <Field label="Vencimento" hint="Data em que a conta precisa ser paga">
                   <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
                 </Field>
               )}
