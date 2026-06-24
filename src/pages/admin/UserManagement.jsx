@@ -44,12 +44,30 @@ export default function UserManagement() {
     },
   });
 
+  const { data: audit = [] } = useQuery({
+    queryKey: ["user-audit"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("user_audit_log").select("*").order("created_at", { ascending: false }).limit(20);
+      if (error) return [];
+      return data || [];
+    },
+  });
+
+  const logAction = (action, target, detail) => {
+    supabase.rpc("admin_log_action", { p_action: action, p_target_email: target || null, p_detail: detail || null })
+      .then(() => queryClient.invalidateQueries({ queryKey: ["user-audit"] })).catch(() => {});
+  };
+
   const run = useMutation({
     mutationFn: async ({ fn, args }) => {
       const { error } = await supabase.rpc(fn, args);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["user-profiles"] }); toast({ title: "Atualizado!" }); },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["user-profiles"] });
+      if (vars.log) logAction(vars.log.action, vars.log.target, vars.log.detail);
+      toast({ title: "Atualizado!" });
+    },
     onError: (e) => toast({ title: "Erro", description: e?.message || "Falhou. A migration de papéis foi aplicada?", variant: "destructive" }),
   });
 
@@ -58,22 +76,22 @@ export default function UserManagement() {
       const { error } = await supabase.rpc("admin_create_user", { p_email: form.email.trim().toLowerCase(), p_password: form.password, p_full_name: form.full_name.trim(), p_role: form.role });
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["user-profiles"] }); setShowCreate(false); setCreateForm(EMPTY_CREATE); toast({ title: "Usuário criado!", description: "Já pode entrar com o e-mail e a senha definidos." }); },
+    onSuccess: (_d, form) => { queryClient.invalidateQueries({ queryKey: ["user-profiles"] }); logAction("Criou usuário", form.email, ROLE_LABEL[form.role]); setShowCreate(false); setCreateForm(EMPTY_CREATE); toast({ title: "Usuário criado!", description: "Já pode entrar com o e-mail e a senha definidos." }); },
     onError: (e) => toast({ title: "Erro ao criar usuário", description: e?.message, variant: "destructive" }),
   });
 
   const resetPassword = useMutation({
-    mutationFn: async ({ id, password }) => {
+    mutationFn: async ({ id, password, email }) => {
       const { error } = await supabase.rpc("admin_reset_user_password", { p_user_id: id, p_password: password });
       if (error) throw error;
     },
-    onSuccess: () => { setResetUser(null); setResetPass(""); toast({ title: "Senha redefinida!" }); },
+    onSuccess: (_d, vars) => { logAction("Redefiniu senha", vars.email); setResetUser(null); setResetPass(""); toast({ title: "Senha redefinida!" }); },
     onError: (e) => toast({ title: "Erro ao redefinir", description: e?.message, variant: "destructive" }),
   });
 
-  const setRole = (p, role) => run.mutate({ fn: "admin_set_user_role", args: { p_user_id: p.id, p_role: role } });
-  const toggleActive = (p) => run.mutate({ fn: "admin_set_user_active", args: { p_user_id: p.id, p_active: p.active === false } });
-  const remove = (p) => { if (window.confirm(`Excluir o usuário ${p.email}?`)) run.mutate({ fn: "admin_delete_user", args: { p_user_id: p.id } }); };
+  const setRole = (p, role) => run.mutate({ fn: "admin_set_user_role", args: { p_user_id: p.id, p_role: role }, log: { action: "Alterou papel", target: p.email, detail: `→ ${ROLE_LABEL[role] || role}` } });
+  const toggleActive = (p) => run.mutate({ fn: "admin_set_user_active", args: { p_user_id: p.id, p_active: p.active === false }, log: { action: p.active === false ? "Reativou" : "Desativou", target: p.email } });
+  const remove = (p) => { if (window.confirm(`Excluir o usuário ${p.email}?`)) run.mutate({ fn: "admin_delete_user", args: { p_user_id: p.id }, log: { action: "Excluiu usuário", target: p.email } }); };
 
   const counts = { admin: 0, operator: 0, motorista: 0, pending: 0 };
   profiles.forEach(p => { counts[p.role] = (counts[p.role] || 0) + 1; });
@@ -155,6 +173,26 @@ export default function UserManagement() {
         ]}
       />
 
+      {audit.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Atividade recente</p>
+            <div className="space-y-1.5">
+              {audit.map(a => (
+                <div key={a.id} className="flex items-center justify-between text-xs gap-2 border-b border-border/30 last:border-0 pb-1.5 last:pb-0">
+                  <span className="min-w-0 truncate">
+                    <strong className="text-foreground">{a.actor_email || "—"}</strong> · {a.action}
+                    {a.target_email && <span className="text-muted-foreground"> → {a.target_email}</span>}
+                    {a.detail && <span className="text-muted-foreground"> ({a.detail})</span>}
+                  </span>
+                  <span className="text-muted-foreground flex-shrink-0">{a.created_at ? new Date(a.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : ""}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
         <ShieldCheck className="w-3.5 h-3.5" /> O sistema impede remover/desativar o último administrador. Motoristas também recebem login no cadastro do motorista.
       </p>
@@ -198,7 +236,7 @@ export default function UserManagement() {
               <Input type="text" value={resetPass} onChange={e => setResetPass(e.target.value)} placeholder="mín. 6 caracteres" autoFocus />
               <Button className="w-full bg-velox-amber hover:bg-velox-amber/90 text-white font-bold"
                 disabled={resetPass.length < 6 || resetPassword.isPending}
-                onClick={() => resetPassword.mutate({ id: resetUser.id, password: resetPass })}>
+                onClick={() => resetPassword.mutate({ id: resetUser.id, password: resetPass, email: resetUser.email })}>
                 {resetPassword.isPending ? "Salvando..." : "Redefinir senha"}
               </Button>
             </div>
