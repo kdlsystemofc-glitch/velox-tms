@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import CoverageSettings from "@/components/admin/CoverageSettings";
 import { useAuth } from "@/lib/AuthContext";
 import { resetSettingsCache } from "@/hooks/useCompanySettings";
+import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
+
+// Campos da config geridos por OUTROS módulos — nunca sobrescrever ao salvar aqui (Cfg-1).
+const EXTERNAL_KEYS = ["opening_cash_balance", "opening_cash_date", "documents"];
 
 export default function AdminSettings({ only = null }) {
   const { toast } = useToast();
@@ -32,18 +36,16 @@ export default function AdminSettings({ only = null }) {
   });
 
   const [form, setForm] = useState({});
+  // Semeia o form UMA vez (Cfg-1): refetches em background (ex.: outro módulo
+  // invalida a config) não apagam mais a edição em andamento.
+  const seeded = useRef(false);
   useEffect(() => {
-    if (settings && settings.id) {
+    if (settings && settings.id && !seeded.current) {
       const cleaned = { ...settings };
-      // Garantir que working_days é array de inteiros
-      if (cleaned.working_days) {
-        cleaned.working_days = cleaned.working_days.map(d => parseInt(d, 10));
-      }
-      // Garantir que min_advance_days é inteiro
-      if (cleaned.min_advance_days != null) {
-        cleaned.min_advance_days = parseInt(cleaned.min_advance_days, 10);
-      }
+      if (cleaned.working_days) cleaned.working_days = cleaned.working_days.map(d => parseInt(d, 10));
+      if (cleaned.min_advance_days != null) cleaned.min_advance_days = parseInt(cleaned.min_advance_days, 10);
       setForm(cleaned);
+      seeded.current = true;
     }
   }, [settings]);
 
@@ -57,6 +59,8 @@ export default function AdminSettings({ only = null }) {
       if (cleanData.min_advance_days != null) {
         cleanData.min_advance_days = parseInt(cleanData.min_advance_days, 10);
       }
+      // Não toca em campos geridos por outros módulos (saldo, documentos) — evita clobber.
+      EXTERNAL_KEYS.forEach(k => delete cleanData[k]);
       return settings?.id
         ? base44.entities.CompanySettings.update(settings.id, cleanData)
         : base44.entities.CompanySettings.create(cleanData);
@@ -118,9 +122,17 @@ export default function AdminSettings({ only = null }) {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Input placeholder="Nome da empresa" value={form.company_name || ""} onChange={e => setF("company_name", e.target.value)} />
-                <Input placeholder="CNPJ" value={form.cnpj || ""} onChange={e => setF("cnpj", e.target.value)} />
+                <div className="space-y-1">
+                  <Input placeholder="CNPJ" value={form.cnpj || ""} onChange={e => setF("cnpj", formatCpfCnpj(e.target.value))}
+                    className={onlyDigits(form.cnpj).length > 0 && !isValidCpfCnpj(form.cnpj) ? "border-red-400 focus-visible:ring-red-400" : ""} />
+                  {onlyDigits(form.cnpj).length > 0 && !isValidCpfCnpj(form.cnpj) && <p className="text-[11px] text-red-500">CNPJ/CPF inválido</p>}
+                </div>
                 <Input placeholder="Telefone" value={form.phone || ""} onChange={e => setF("phone", e.target.value)} />
-                <Input placeholder="E-mail" value={form.email || ""} onChange={e => setF("email", e.target.value)} />
+                <div className="space-y-1">
+                  <Input placeholder="E-mail" value={form.email || ""} onChange={e => setF("email", e.target.value)}
+                    className={form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) ? "border-red-400 focus-visible:ring-red-400" : ""} />
+                  {form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) && <p className="text-[11px] text-red-500">E-mail inválido</p>}
+                </div>
                 <Input placeholder="WhatsApp" value={form.whatsapp || ""} onChange={e => setF("whatsapp", e.target.value)} />
                 <Input placeholder="Região de atuação" value={form.region || ""} onChange={e => setF("region", e.target.value)} />
               </div>
@@ -491,7 +503,6 @@ export default function AdminSettings({ only = null }) {
           </Card>
         </TabsContent>
 
-        {/* Messages */}
         {/* Route Pricing */}
         <TabsContent value="routes" className="mt-6">
           <Card>

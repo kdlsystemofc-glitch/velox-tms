@@ -43,13 +43,17 @@ export function useCompanySettings() {
     queryKey: ['company_settings'],
     queryFn: async () => {
       if (settingsCache) return settingsCache;
+      // Autenticado lê a linha completa (RLS de autenticados); anônimo recebe null
+      // pela RLS e cai no subconjunto seguro via RPC public_settings (Cfg-1).
       const { data, error } = await supabase
         .from('company_settings')
         .select('*')
         .limit(1)
         .maybeSingle();
       if (error && error.code !== 'PGRST116') throw error;
-      settingsCache = data || {};
+      if (data) { settingsCache = data; return settingsCache; }
+      const { data: pub } = await supabase.rpc('public_settings');
+      settingsCache = pub || {};
       return settingsCache;
     },
     staleTime: 1000 * 60 * 5, // 5 minutos
