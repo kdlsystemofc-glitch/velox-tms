@@ -732,6 +732,27 @@ Sem período, comparação, tendência, ranking ou export. Sem migration.
 
 ---
 
+## MÓDULO A MÓDULO — Usuários
+
+**Auditoria:** sem crash, segurança sólida (RPCs admin-only, impede mexer no último admin/em si
+mesmo). A dor central (apontada pelo usuário): **não dava para criar usuário** — só gerenciar
+quem já tinha se auto-registrado (pending → atribuir papel). Faltava também redefinir senha,
+KPIs, busca/filtro, último acesso e auditoria. O codebase já tinha o padrão `admin_create_driver_login`
+(cria login no servidor via `SECURITY DEFINER`, sem service_role no front) para espelhar.
+
+- **Usr-1 — Criar usuário & senha:** **modal "Novo usuário"** (nome, e-mail, papel, senha) via
+  RPC `admin_create_user`; **redefinir senha** por usuário (`admin_reset_user_password`); KPIs
+  (admins/operadores/motoristas/pendentes) + busca. (migration `20260638_user_admin.sql`)
+- **Usr-2 — Consistência & último acesso:** lista em **DataTable**, **filtros** por papel/situação,
+  **último acesso** (RPC `admin_list_users` lendo `auth.users`, com fallback), selo de motorista
+  vinculado. (migration `20260639_user_list.sql`)
+- **Usr-3 — Auditoria:** **log de ações** de admin (criar/alterar papel/ativar/desativar/excluir/
+  redefinir senha) em `user_audit_log` + card "Atividade recente". (migration `20260640_user_audit.sql`)
+
+**Teto pago:** SSO/SAML, 2FA, convite por e-mail com link mágico, permissões granulares por módulo.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -759,3 +780,6 @@ Sem período, comparação, tendência, ranking ou export. Sem migration.
 24. `20260635_document_files.sql` ← documentos: arquivos de frota (tacógrafo) e motorista (CNH/ASO/toxicológico)
 25. `20260636_message_pipeline.sql` ← mensagens: funil de leads (status, conversão, contato, notas)
 26. `20260637_cash_balance.sql` ← financeiro: saldo inicial de caixa (fluxo a partir do saldo real)
+27. `20260638_user_admin.sql` ← usuários: criar usuário + redefinir senha pelo painel
+28. `20260639_user_list.sql` ← usuários: listagem com último acesso (admin_list_users)
+29. `20260640_user_audit.sql` ← usuários: log de auditoria das ações de admin
