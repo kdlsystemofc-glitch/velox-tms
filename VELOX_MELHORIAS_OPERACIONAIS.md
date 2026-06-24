@@ -777,6 +777,28 @@ cada refetch** (risco de clobber e de apagar edição em andamento) e não havia
 
 ---
 
+## REESTRUTURAÇÃO DE UI/UX — "Moderno & Interativo"
+
+**Auditoria:** o design system "Steel & Slate" já era bom (token azul-aço, canvas ardósia,
+semânticos, dark mode, Inter/JetBrains). A sensação de "precário" vinha de **inconsistência**
+(duas formas de dizer "primário": `bg-primary` vs `bg-velox-amber`; cores de status hardcoded;
+raios inconsistentes; KPIs reinventados em cada tela) e da **casca sem polimento**. Sem migration.
+
+- **UI-1 — Fundação visual:** raio 6→10px, **gradiente de marca** (azul-aço→índigo), vocabulário
+  moderno no `index.css` (`bg-brand-gradient`, `shadow-soft/elevated`, `card-interactive`, `glass`,
+  `press`, animações `fade-up`/`scale-in`, scrollbar refinada, `prefers-reduced-motion`). **Button**
+  com CTA em gradiente + press; **Card** com `shadow-soft`/`rounded-xl`. Novo **StatCard** (chip de
+  ícone em gradiente, **contador animado**, delta, hover lift).
+- **UI-2 — Casca:** **Login** em 2 painéis com painel de marca em gradiente; **Sidebar** com item
+  ativo (barra de acento + gradiente) e logo em gradiente; **Topbar** com **glass** (blur) + avatar
+  em gradiente.
+- **UI-3 — Consistência:** **StatCard** adotado em Frota, Cadastros, Financeiro e Indicadores;
+  **animação de entrada** (fade-up) a cada navegação.
+
+**Teto pago:** ilustrações/3D customizados, tokens versionados em Figma, motion design avançado.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
