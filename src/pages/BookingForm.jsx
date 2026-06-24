@@ -292,8 +292,13 @@ export default function BookingForm() {
     return true;
   };
 
+  // Bloqueia avançar do passo 2 quando o CEP de origem está FORA da cobertura
+  // ou é INVÁLIDO (não encontrado). Falha de rede (fetch_error) não bloqueia,
+  // para uma indisponibilidade do ViaCEP não travar todos os agendamentos.
+  const originBlocked = !!originCoverageError && originCoverageError.type !== "fetch_error";
+
   const handleNext = () => {
-    if (step === 2 && originCoverageError?.type === "out_of_coverage") return;
+    if (step === 2 && originBlocked) return;
     if (validateStep(step)) setStep(step + 1);
   };
 
@@ -483,7 +488,7 @@ export default function BookingForm() {
               {step < 5 ? (
                 <Button
                   onClick={handleNext}
-                  disabled={step === 2 && originCoverageError?.type === "out_of_coverage"}
+                  disabled={step === 2 && originBlocked}
                   className="bg-velox-amber hover:bg-velox-amber/90 text-white font-bold gap-2 disabled:opacity-50"
                 >
                   Próximo <ArrowRight className="w-4 h-4" />
