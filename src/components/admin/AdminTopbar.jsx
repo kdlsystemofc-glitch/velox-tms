@@ -207,7 +207,7 @@ export default function AdminTopbar() {
   }, []);
 
   return (
-    <header className="h-16 border-b border-border bg-card flex items-center justify-between px-6 sticky top-0 z-30">
+    <header className="h-16 border-b border-border glass flex items-center justify-between px-6 sticky top-0 z-30">
       {/* Search */}
       <div ref={searchRef} className="relative w-80 hidden sm:block">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -241,8 +241,8 @@ export default function AdminTopbar() {
 
         {/* Avatar */}
         <div className="flex items-center gap-3 pl-3 border-l border-border">
-          <div className="w-8 h-8 bg-velox-dark rounded-full flex items-center justify-center">
-            <span className="text-white text-xs font-bold">{user?.full_name?.charAt(0) || "A"}</span>
+          <div className="w-8 h-8 bg-brand-gradient rounded-full flex items-center justify-center shadow-soft ring-2 ring-card">
+            <span className="text-white text-xs font-bold">{(user?.full_name?.charAt(0) || "A").toUpperCase()}</span>
           </div>
           <div className="hidden sm:block">
             <p className="text-sm font-medium leading-none">{user?.full_name || "Admin"}</p>

@@ -73,9 +73,9 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
     >
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border flex-shrink-0">
-        <Link to="/admin" className="flex items-center gap-2.5 overflow-hidden">
-          <div className="w-9 h-9 bg-sidebar-primary rounded-lg flex items-center justify-center flex-shrink-0">
-            <Truck className="w-5 h-5 text-sidebar-primary-foreground" />
+        <Link to="/admin" className="flex items-center gap-2.5 overflow-hidden group">
+          <div className="w-9 h-9 bg-brand-gradient rounded-xl flex items-center justify-center flex-shrink-0 shadow-soft transition-transform group-hover:scale-105">
+            <Truck className="w-5 h-5 text-white" />
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
@@ -105,13 +105,14 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
               key={item.path}
               to={item.path}
               title={collapsed ? item.label : undefined}
-              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all mx-0.5 ${
+              className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all mx-0.5 ${
                 active
-                  ? "bg-velox-amber text-white font-bold shadow-sm"
-                  : "text-sidebar-foreground/55 hover:text-sidebar-foreground hover:bg-white/5"
+                  ? "bg-brand-gradient text-white font-semibold shadow-soft"
+                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/[0.06]"
               }`}
             >
-              <item.icon className="w-4 h-4 flex-shrink-0" />
+              {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-white/90" />}
+              <item.icon className={`w-4 h-4 flex-shrink-0 transition-transform ${active ? "" : "group-hover:scale-110"}`} />
               {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
               {count > 0 && !collapsed && (
                 <span className="bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">

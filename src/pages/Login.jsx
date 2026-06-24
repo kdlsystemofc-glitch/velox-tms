@@ -103,7 +103,7 @@ export default function Login() {
             />
           </div>
         </div>
-        {error && <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+        {error && <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 px-3 py-2 rounded-lg">{error}</p>}
         <Button type="submit" className="w-full h-12 font-semibold" disabled={loading}>
           {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
           Entrar
