@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import PageHeader from "@/components/shared/PageHeader";
-import { Users, Power, Trash2, ShieldCheck, Plus, KeyRound, Search } from "lucide-react";
+import DataTable from "@/components/shared/DataTable";
+import { Users, Power, Trash2, ShieldCheck, Plus, KeyRound } from "lucide-react";
 
 const ROLE_LABEL = { admin: "Administrador", operator: "Operador", motorista: "Motorista", pending: "Pendente" };
 const ROLE_CLS = {
@@ -24,7 +25,8 @@ export default function UserManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState(EMPTY_CREATE);
   const [resetUser, setResetUser] = useState(null);
@@ -33,9 +35,12 @@ export default function UserManagement() {
   const { data: profiles = [] } = useQuery({
     queryKey: ["user-profiles"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("user_profiles").select("*").order("created_at", { ascending: true });
-      if (error) throw error;
-      return data || [];
+      // Preferimos a RPC (traz o último acesso); cai na tabela direta se a migration ainda não rodou.
+      const { data, error } = await supabase.rpc("admin_list_users");
+      if (!error && data) return data;
+      const r = await supabase.from("user_profiles").select("*").order("created_at", { ascending: true });
+      if (r.error) throw r.error;
+      return r.data || [];
     },
   });
 
@@ -74,8 +79,13 @@ export default function UserManagement() {
   profiles.forEach(p => { counts[p.role] = (counts[p.role] || 0) + 1; });
   const pending = profiles.filter(p => p.role === "pending");
 
-  const q = search.trim().toLowerCase();
-  const visible = profiles.filter(p => !q || `${p.full_name || ""} ${p.email || ""}`.toLowerCase().includes(q));
+  const visible = profiles.filter(p => {
+    if (roleFilter !== "all" && p.role !== roleFilter) return false;
+    if (statusFilter === "active" && p.active === false) return false;
+    if (statusFilter === "inactive" && p.active !== false) return false;
+    return true;
+  });
+  const fmtAccess = (ts) => ts ? new Date(ts).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }) : "nunca";
 
   return (
     <div className="space-y-4">
@@ -98,65 +108,52 @@ export default function UserManagement() {
         </div>
       )}
 
-      <div className="relative">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nome ou e-mail…" className="pl-9" />
+      <div className="flex gap-1.5 flex-wrap">
+        {[["all", "Todos os papéis"], ["admin", "Admins"], ["operator", "Operadores"], ["motorista", "Motoristas"], ["pending", "Pendentes"]].map(([v, l]) => (
+          <Button key={v} size="sm" variant={roleFilter === v ? "default" : "outline"} className={roleFilter === v ? "bg-velox-dark text-white" : ""} onClick={() => setRoleFilter(v)}>{l}</Button>
+        ))}
+        <span className="w-px bg-border mx-1" />
+        {[["all", "Todas"], ["active", "Ativos"], ["inactive", "Desativados"]].map(([v, l]) => (
+          <Button key={v} size="sm" variant={statusFilter === v ? "default" : "outline"} className={statusFilter === v ? "bg-velox-dark text-white" : ""} onClick={() => setStatusFilter(v)}>{l}</Button>
+        ))}
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/30 text-muted-foreground">
-                  <th className="text-left py-3 px-4 font-medium">Usuário</th>
-                  <th className="text-left py-3 px-4 font-medium">Papel</th>
-                  <th className="text-left py-3 px-4 font-medium">Situação</th>
-                  <th className="text-right py-3 px-4 font-medium">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.length === 0 && <tr><td colSpan={4} className="py-10 text-center text-muted-foreground">Nenhum usuário.</td></tr>}
-                {visible.map(p => {
-                  const isSelf = p.id === user?.id;
-                  return (
-                    <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20">
-                      <td className="py-3 px-4">
-                        <p className="font-medium">{p.full_name || "—"} {isSelf && <span className="text-[10px] text-muted-foreground">(você)</span>}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{p.email}</p>
-                      </td>
-                      <td className="py-3 px-4">
-                        <Select value={p.role || "pending"} onValueChange={(v) => setRole(p, v)} disabled={run.isPending}>
-                          <SelectTrigger className={`h-8 w-40 text-xs border ${ROLE_CLS[p.role] || ROLE_CLS.pending}`}><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(ROLE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${p.active === false ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-                          {p.active === false ? "Desativado" : "Ativo"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" disabled={run.isPending} onClick={() => { setResetUser(p); setResetPass(""); }}>
-                          <KeyRound className="w-3.5 h-3.5" /> Senha
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" disabled={run.isPending || isSelf} onClick={() => toggleActive(p)}>
-                          <Power className="w-3.5 h-3.5" /> {p.active === false ? "Ativar" : "Desativar"}
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-red-500" disabled={run.isPending || isSelf} onClick={() => remove(p)}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <DataTable
+        data={visible}
+        searchKeys={["full_name", "email"]}
+        searchPlaceholder="Buscar por nome ou e-mail…"
+        initialSort={{ key: "full_name", dir: "asc" }}
+        emptyMessage="Nenhum usuário."
+        columns={[
+          { key: "full_name", label: "Usuário", sortable: true, className: "font-medium", render: p => (
+            <div>
+              <p className="font-medium flex items-center gap-1.5">{p.full_name || "—"} {p.id === user?.id && <span className="text-[10px] text-muted-foreground">(você)</span>}
+                {p.role === "motorista" && p.driver_id && <span className="text-[9px] bg-green-100 text-green-700 font-bold px-1 rounded">app motorista</span>}</p>
+              <p className="text-xs text-muted-foreground font-mono">{p.email}</p>
+            </div>
+          )},
+          { key: "role", label: "Papel", sortable: true, stopPropagation: true, render: p => (
+            <Select value={p.role || "pending"} onValueChange={(v) => setRole(p, v)} disabled={run.isPending}>
+              <SelectTrigger className={`h-8 w-40 text-xs border ${ROLE_CLS[p.role] || ROLE_CLS.pending}`}><SelectValue /></SelectTrigger>
+              <SelectContent>{Object.entries(ROLE_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+            </Select>
+          )},
+          { key: "last_sign_in_at", label: "Último acesso", sortable: true, className: "text-xs text-muted-foreground", render: p => fmtAccess(p.last_sign_in_at) },
+          { key: "active", label: "Situação", sortable: true, value: p => (p.active === false ? "inactive" : "active"), render: p => (
+            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${p.active === false ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{p.active === false ? "Desativado" : "Ativo"}</span>
+          )},
+          { key: "actions", label: "", align: "right", stopPropagation: true, render: p => {
+            const isSelf = p.id === user?.id;
+            return (
+              <div className="flex justify-end whitespace-nowrap">
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" disabled={run.isPending} onClick={() => { setResetUser(p); setResetPass(""); }}><KeyRound className="w-3.5 h-3.5" /> Senha</Button>
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" disabled={run.isPending || isSelf} onClick={() => toggleActive(p)}><Power className="w-3.5 h-3.5" /> {p.active === false ? "Ativar" : "Desativar"}</Button>
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-red-500" disabled={run.isPending || isSelf} onClick={() => remove(p)}><Trash2 className="w-3.5 h-3.5" /></Button>
+              </div>
+            );
+          }},
+        ]}
+      />
 
       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
         <ShieldCheck className="w-3.5 h-3.5" /> O sistema impede remover/desativar o último administrador. Motoristas também recebem login no cadastro do motorista.
