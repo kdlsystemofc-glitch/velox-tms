@@ -753,6 +753,30 @@ KPIs, busca/filtro, último acesso e auditoria. O codebase já tinha o padrão `
 
 ---
 
+## MÓDULO A MÓDULO — Configurações
+
+**Auditoria:** módulo maduro (empresa, site, preços completos com taxas TMS, tabela de rotas
+com vigência, prazos por UF, cobertura, agendamento, alertas, parâmetros de DRE). Sem crash.
+Mas com o achado **mais grave de toda a auditoria**: **vazamento de dados sensíveis** —
+`company_settings` tinha leitura **pública (anon)** com `SELECT *`, e a linha passou a acumular
+**chave do Google faturável, saldo de caixa, URLs de documentos e parâmetros internos**, todos
+legíveis por qualquer visitante. Além disso: o **form salvava o objeto inteiro e re-semeava a
+cada refetch** (risco de clobber e de apagar edição em andamento) e não havia validação.
+
+- **Cfg-1 — Segurança & integridade:** anon passa a ler só um **subconjunto seguro** via RPC
+  `public_settings` (deny-list dos campos sensíveis); a tabela fica legível apenas por
+  autenticados. Form **semeado uma vez** + save **sem clobber** dos campos de outros módulos;
+  **validação de CNPJ/e-mail**. (migration `20260641_settings_security.sql`)
+- **Cfg-2 — Simulador de frete:** na aba Preços, simula peso/distância/valor/NF/origem/destino/
+  tipo com a **tabela atual** (inclui corredores) e mostra o **breakdown + total ao vivo** —
+  testar reajustes antes de salvar (reusa `calculateFreightFull`).
+- **Cfg-3 — Governança:** **exportar/importar** a config em **JSON** (backup/migração) e
+  **histórico de alterações** (quem mudou quais grupos e quando, via audit log).
+
+**Teto pago:** versionamento com rollback, multiempresa (multi-tenant), aprovação em 2 etapas para preço.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
@@ -783,3 +807,4 @@ KPIs, busca/filtro, último acesso e auditoria. O codebase já tinha o padrão `
 27. `20260638_user_admin.sql` ← usuários: criar usuário + redefinir senha pelo painel
 28. `20260639_user_list.sql` ← usuários: listagem com último acesso (admin_list_users)
 29. `20260640_user_audit.sql` ← usuários: log de auditoria das ações de admin
+30. `20260641_settings_security.sql` ← configurações: estanca vazamento (leitura pública restrita ao subconjunto seguro)
