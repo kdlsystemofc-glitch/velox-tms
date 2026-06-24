@@ -711,6 +711,27 @@ algumas baixas.
 
 ---
 
+## MÓDULO A MÓDULO — Indicadores
+
+**Auditoria:** grade estática de 10 KPIs só do **mês atual** (`now` fixo), sem crash. Achados de
+lógica: **faturamento com base misturada** (recebido OU a vencer), **margem com bases
+divergentes** (receita caixa/previsto × despesa por competência) que podia **divergir do
+Financeiro**, e **ocupação subestimada** (contava viagens, não caminhões; ignorava transferências).
+Sem período, comparação, tendência, ranking ou export. Sem migration.
+
+- **Ind-1 — Período & consistência:** **seletor de período** (mês atual/anterior/3·6·12 meses/ano),
+  cada KPI com **variação vs período anterior** e **semáforo de meta** (OTD 95%, margem 15%);
+  bases **alinhadas ao Financeiro** (faturamento/despesa por **caixa**; **ocupação por caminhão**,
+  on_route já cobre viagens e transferências).
+- **Ind-2 — Tendências:** gráficos de 12 meses — **entregas + linha de OTD** (eixo duplo),
+  **receita × despesa × resultado**, e **ocorrências por mês**.
+- **Ind-3 — Rankings & eficiência:** **ticket médio, custo/km, receita/km, lead time** (coleta→entrega);
+  **top clientes, top motoristas, top destinos**; **export CSV** do resumo do período.
+
+**Teto pago:** BI externo (Power BI/Metabase), previsão por IA, data warehouse.
+
+---
+
 ## Migrations a aplicar (Supabase SQL Editor, em ordem)
 1. `20260619_onda1_operacional.sql`
 2. `20260619_onda2_cubagem_janela.sql`
