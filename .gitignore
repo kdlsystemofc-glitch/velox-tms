@@ -28,3 +28,13 @@ Thumbs.db
 # Build
 /dist
 /build
+
+# Artefatos de QA/automação (Antigravity, scripts de seed/inspeção) — não versionar
+/check_db_full.js
+/debug_*.js
+/inspect_*.js
+/print_*.js
+/seed_*.js
+/sim_*.js
+/smoke_test.js
+/network_errors.json
