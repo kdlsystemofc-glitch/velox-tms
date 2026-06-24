@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopbar from "./AdminTopbar";
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
 
   return (
     <div className="min-h-screen bg-background">
@@ -15,7 +16,8 @@ export default function AdminLayout() {
         }`}
       >
         <AdminTopbar />
-        <main className="px-5 py-5 max-w-[1600px]">
+        {/* key por rota → leve animação de entrada a cada navegação */}
+        <main key={location.pathname} className="px-5 py-5 max-w-[1600px] animate-fade-up">
           <Outlet />
         </main>
       </div>

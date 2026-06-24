@@ -5,21 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, TrendingDown, ArrowUpRight, Wallet, AlertCircle, CalendarClock, Users } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { parseLocalDate, todayLocalISO, formatDateBR } from "@/utils/dateUtils";
+import StatCard from "@/components/shared/StatCard";
 
 const brl = (v) => `R$ ${Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const categoryLabels = { fuel: "Combustível", maintenance: "Manutenção", tires: "Pneus", tolls: "Pedágios", salaries: "Salários", taxes: "Impostos", insurance: "Seguros", rent: "Aluguel", administrative: "Administrativo", marketing: "Marketing", other: "Outros" };
 
+const TONE_MAP = { "text-green-600": "success", "text-red-600": "danger", "text-amber-600": "warning", "text-blue-600": "primary", "": "primary" };
 function Kpi({ label, value, tone = "", icon: Icon, hint }) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <p className="text-xs text-muted-foreground flex items-center gap-1">{Icon && <Icon className="w-3.5 h-3.5" />} {label}</p>
-        <p className={`text-xl font-bold font-mono mt-0.5 ${tone}`}>{value}</p>
-        {hint && <p className="text-[11px] text-muted-foreground mt-0.5">{hint}</p>}
-      </CardContent>
-    </Card>
-  );
+  return <StatCard icon={Icon} label={label} value={value} hint={hint} tone={TONE_MAP[tone] || "primary"} />;
 }
 
 export default function Financial({ hideTitle = false }) {

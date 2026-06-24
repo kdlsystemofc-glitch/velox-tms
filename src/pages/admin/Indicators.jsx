@@ -170,7 +170,7 @@ export default function Indicators() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {periodKpis.map((k, i) => (
-          <Card key={i}>
+          <Card key={i} className="card-interactive">
             <CardContent className="pt-4 pb-3">
               <div className="flex items-center gap-2 mb-1">
                 <k.icon className={`w-4 h-4 ${k.color}`} />
