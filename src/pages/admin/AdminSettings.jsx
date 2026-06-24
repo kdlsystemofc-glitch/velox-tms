@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,68 @@ import CoverageSettings from "@/components/admin/CoverageSettings";
 import { useAuth } from "@/lib/AuthContext";
 import { resetSettingsCache } from "@/hooks/useCompanySettings";
 import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
+import { calculateFreightFull } from "@/utils/freightCalculator";
+import { Calculator } from "lucide-react";
 
 // Campos da config geridos por OUTROS módulos — nunca sobrescrever ao salvar aqui (Cfg-1).
 const EXTERNAL_KEYS = ["opening_cash_balance", "opening_cash_date", "documents"];
+
+const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+const brl = (v) => `R$ ${Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+
+// Simulador de frete: testa a tabela ATUAL (form) antes de salvar (Cfg-2).
+function FreightSim({ form }) {
+  const [w, setW] = useState("1000");
+  const [km, setKm] = useState("400");
+  const [val, setVal] = useState("10000");
+  const [nf, setNf] = useState("1");
+  const [orig, setOrig] = useState("");
+  const [dest, setDest] = useState("");
+  const [type, setType] = useState("shared");
+
+  const r = useMemo(() => {
+    try {
+      return calculateFreightFull({
+        items: [{ weight_kg: Number(w) || 0, declared_value: Number(val) || 0, volumes: 1 }],
+        distanceKm: Number(km) || 0, nfCount: Number(nf) || 1,
+        pricing: form.pricing || {}, settings: form,
+        originState: orig || null, destState: dest || null, freightType: type,
+      });
+    } catch { return null; }
+  }, [w, km, val, nf, orig, dest, type, form]);
+
+  const field = (label, node) => <div className="space-y-1"><label className="text-[11px] text-muted-foreground uppercase tracking-wide">{label}</label>{node}</div>;
+
+  return (
+    <Card className="border-velox-amber/30">
+      <CardHeader><CardTitle className="text-sm font-semibold flex items-center gap-2"><Calculator className="w-4 h-4 text-velox-amber" /> Simulador de frete (testa a tabela atual)</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {field("Peso (kg)", <Input type="number" value={w} onChange={e => setW(e.target.value)} className="h-8 text-sm" />)}
+          {field("Distância (km)", <Input type="number" value={km} onChange={e => setKm(e.target.value)} className="h-8 text-sm" />)}
+          {field("Valor NF (R$)", <Input type="number" value={val} onChange={e => setVal(e.target.value)} className="h-8 text-sm" />)}
+          {field("Qtd. NFs", <Input type="number" value={nf} onChange={e => setNf(e.target.value)} className="h-8 text-sm" />)}
+          {field("Origem UF", <Select value={orig || "none"} onValueChange={v => setOrig(v === "none" ? "" : v)}><SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value="none">—</SelectItem>{UFS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select>)}
+          {field("Destino UF", <Select value={dest || "none"} onValueChange={v => setDest(v === "none" ? "" : v)}><SelectTrigger className="h-8 text-xs"><SelectValue placeholder="—" /></SelectTrigger><SelectContent><SelectItem value="none">—</SelectItem>{UFS.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent></Select>)}
+          {field("Tipo", <Select value={type} onValueChange={setType}><SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="shared">Fracionado</SelectItem><SelectItem value="urgent">Urgente</SelectItem><SelectItem value="dedicated">Dedicado</SelectItem></SelectContent></Select>)}
+        </div>
+        {r ? (
+          <div className="rounded-lg border border-border bg-muted/20 p-3 text-xs space-y-1">
+            <div className="flex justify-between"><span className="text-muted-foreground">Peso taxável {r.usedCubic ? "(cubado)" : "(real)"}</span><span className="font-mono">{r.taxableKg} kg</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Frete por peso</span><span className="font-mono">{brl(r.freightByWeight)}</span></div>
+            {r.freightByDistance > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Frete por distância</span><span className="font-mono">{brl(r.freightByDistance)}</span></div>}
+            {r.grisValue > 0 && <div className="flex justify-between"><span className="text-muted-foreground">GRIS</span><span className="font-mono">{brl(r.grisValue)}</span></div>}
+            {r.adValoremValue > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Ad valorem</span><span className="font-mono">{brl(r.adValoremValue)}</span></div>}
+            {(r.tdeValue + r.tdaValue + r.trtValue + r.tollValue + r.fixedFee + r.pickupFee + r.deliveryFee) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Taxas (TDE/TDA/TRT/pedágio/fixa/coleta/entrega)</span><span className="font-mono">{brl(r.tdeValue + r.tdaValue + r.trtValue + r.tollValue + r.fixedFee + r.pickupFee + r.deliveryFee)}</span></div>}
+            {r.surchargeValue > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Adicional {type === "urgent" ? "urgente" : "dedicado"} ({r.surchargePct}%)</span><span className="font-mono">{brl(r.surchargeValue)}</span></div>}
+            <div className="flex justify-between border-t border-border pt-1.5 mt-1 text-sm font-bold"><span>Total{r.total > r.subtotal ? " (frete mínimo)" : ""}</span><span className="font-mono text-velox-amber">{brl(r.total)}</span></div>
+          </div>
+        ) : <p className="text-xs text-muted-foreground">Preencha a tabela de preços para simular.</p>}
+        <p className="text-[11px] text-muted-foreground">Usa exatamente os valores acima (inclusive corredores da Tabela de Rotas). Salve para valer no sistema.</p>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function AdminSettings({ only = null }) {
   const { toast } = useToast();
@@ -408,6 +467,8 @@ export default function AdminSettings({ only = null }) {
               <div className="flex justify-end"><SaveBtn /></div>
             </CardContent>
           </Card>
+
+          <div className="mt-5"><FreightSim form={form} /></div>
         </TabsContent>
 
         {/* Alerts */}
