@@ -38,7 +38,9 @@
     --chart-3: 142 64% 34%;
     --chart-4: 32 81% 50%;
     --chart-5: 4 66% 52%;
-    --radius: 0.375rem;              /* 6px — cantos retos, profissional */
+    --radius: 0.625rem;             /* 10px — moderno, cantos suaves */
+    --brand-from: 213 59% 41%;      /* gradiente de marca: azul-aço… */
+    --brand-to: 222 60% 50%;        /* …→ azul-índigo (CTAs, chips) */
     --font-heading: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
@@ -119,15 +121,74 @@ html {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 3px;
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+  background: hsl(var(--muted-foreground) / 0.45);
+  background-clip: padding-box;
+}
+
+/* ============================================================
+   VELOX — Camada moderna: gradientes, elevação, micro-interações
+   ============================================================ */
+@layer utilities {
+  /* Gradiente de marca (CTAs, chips de ícone, destaques) */
+  .bg-brand-gradient {
+    background-image: linear-gradient(135deg, hsl(var(--brand-from)), hsl(var(--brand-to)));
+  }
+  .text-brand-gradient {
+    background-image: linear-gradient(135deg, hsl(var(--brand-from)), hsl(var(--brand-to)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  /* Elevação em camadas (sombra suave e moderna) */
+  .shadow-soft { box-shadow: 0 1px 2px -1px hsl(218 30% 14% / 0.08), 0 2px 8px -2px hsl(218 30% 14% / 0.06); }
+  .shadow-elevated { box-shadow: 0 4px 12px -2px hsl(218 30% 14% / 0.10), 0 12px 28px -6px hsl(218 30% 14% / 0.12); }
+  /* Card interativo: sobe e ganha sombra ao passar o mouse */
+  .card-interactive {
+    transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s ease, border-color .18s ease;
+    will-change: transform;
+  }
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px -2px hsl(218 30% 14% / 0.10), 0 12px 28px -6px hsl(218 30% 14% / 0.12);
+    border-color: hsl(var(--primary) / 0.35);
+  }
+  /* Topbar/headers com vidro fosco */
+  .glass {
+    background: hsl(var(--card) / 0.72);
+    backdrop-filter: saturate(180%) blur(12px);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+  }
+  /* Botão com leve "press" ao clicar */
+  .press:active { transform: translateY(1px) scale(0.99); }
+}
+
+/* Transições suaves padrão em elementos interativos */
+button, a, [role="button"], .card-interactive {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-timing-function: cubic-bezier(.22,1,.36,1);
+  transition-duration: .16s;
+}
+
+/* Animações de entrada (aparecer de baixo, escala suave) */
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scale-in { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+.animate-fade-up { animation: fade-up .4s cubic-bezier(.22,1,.36,1) both; }
+.animate-scale-in { animation: scale-in .25s cubic-bezier(.22,1,.36,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
