@@ -20,7 +20,7 @@ import { generateShipmentDoc } from "@/utils/generateShipmentDoc";
 import { generateVolumeLabels } from "@/utils/generateVolumeLabels";
 import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
-import { todayLocalISO, formatDateBR, toLocalISO } from "@/utils/dateUtils";
+import { todayLocalISO, formatDateBR, toLocalISO, formatDateTimeBR } from "@/utils/dateUtils";
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
 import { suggestTrucks } from "@/utils/replanner";
 import { slaStatus, slaDeadline } from "@/utils/sla";
@@ -29,8 +29,6 @@ import {
   ArrowLeft, Package, User, MapPin, Truck, DollarSign, CheckCircle2, Circle,
   FileText, FileDown, AlertTriangle, Copy, MoreHorizontal, XCircle, ArrowRight
 } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 const STATUS_FLOW = ["new", "confirmed", "collecting", "in_transit", "delivered"];
 const STATUS_LABELS = {
@@ -423,7 +421,7 @@ export default function OrderWorkspace() {
             })()}
           </div>
           <p className="text-sm text-muted-foreground truncate">
-            {order.client_name} · criado {order.created_date ? format(new Date(order.created_date), "dd/MM/yy 'às' HH:mm", { locale: ptBR }) : "—"}
+            {order.client_name} · criado {formatDateTimeBR(order.created_date, "—")}
           </p>
         </div>
 
@@ -499,7 +497,7 @@ export default function OrderWorkspace() {
                       {STATUS_LABELS[s]}
                     </span>
                     {hist?.timestamp && (
-                      <span className="text-[9px] text-muted-foreground">{format(new Date(hist.timestamp), "dd/MM HH:mm")}</span>
+                      <span className="text-[9px] text-muted-foreground">{formatDateTimeBR(hist.timestamp)}</span>
                     )}
                   </div>
                   {i < STATUS_FLOW.length - 1 && (
@@ -912,7 +910,7 @@ export default function OrderWorkspace() {
                         <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
                         <div>
                           <p>{h.note}</p>
-                          <p className="text-xs text-muted-foreground">{h.user} • {h.timestamp ? format(new Date(h.timestamp), "dd/MM/yyyy 'às' HH:mm") : ""}</p>
+                          <p className="text-xs text-muted-foreground">{h.user} • {formatDateTimeBR(h.timestamp)}</p>
                         </div>
                       </div>
                     ))}

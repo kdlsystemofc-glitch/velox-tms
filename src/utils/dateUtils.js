@@ -42,3 +42,38 @@ export function formatDateBR(dateStr) {
   const d = parseLocalDate(dateStr);
   return d ? d.toLocaleDateString("pt-BR") : "—";
 }
+
+/**
+ * Formata um timestamp (ISO, Date ou epoch) como "dd/MM HH:mm" de forma
+ * À PROVA DE CRASH: uma data inválida retorna o fallback em vez de lançar
+ * `RangeError: Invalid time value` (que derrubaria a tela inteira via
+ * ErrorBoundary). Use sempre isto para timestamps de eventos/paradas que
+ * podem ter vindo de seeds/integrações com valores malformados.
+ */
+export function formatDateTimeBR(value, fallback = "") {
+  if (value == null || value === "") return fallback;
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d.getTime())) return fallback;
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}/${mm} ${hh}:${mi}`;
+}
+
+/**
+ * Formata qualquer valor de data (ISO completo, "YYYY-MM-DD", Date ou epoch)
+ * como "dd/MM/aaaa" SEM lançar exceção em datas inválidas. Substituto seguro
+ * para `format(parseISO(x), "dd/MM/yyyy")`, que derruba a tela com
+ * "Invalid time value" quando `x` está malformado.
+ */
+export function safeDateBR(value, fallback = "—") {
+  if (value == null || value === "") return fallback;
+  // "YYYY-MM-DD" puro: usa o parser local (imune a shift de fuso).
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return formatDateBR(value);
+  }
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d.getTime())) return fallback;
+  return d.toLocaleDateString("pt-BR");
+}

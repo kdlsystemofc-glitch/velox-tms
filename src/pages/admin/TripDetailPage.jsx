@@ -18,10 +18,9 @@ import {
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import FileUploadButton from "@/components/shared/FileUploadButton";
-import { todayLocalISO } from "@/utils/dateUtils";
+import { todayLocalISO, formatDateTimeBR } from "@/utils/dateUtils";
 import { optimizeStops, optimizeStopsByCoords } from "@/utils/routeOptimizer";
 import { geocodeCeps, haversineKm, googleMapsRouteUrl } from "@/utils/geocode";
-import { format } from "date-fns";
 
 // Categorias de gasto de viagem → categoria de despesa (Financeiro). Vi-3.
 const COST_PRESETS = [
@@ -654,7 +653,7 @@ export default function TripDetailPage() {
                         {crew.length > 1 && trip.status === "completed" && (
                           <span className="text-[11px] text-muted-foreground"> · {crew[stop.vehicle_index || 0]?.truck_plate}</span>
                         )}
-                        {stop.completed_at && <p className="text-xs text-green-600 mt-1">Concluído em {format(new Date(stop.completed_at), "dd/MM HH:mm")}</p>}
+                        {stop.completed_at && <p className="text-xs text-green-600 mt-1">Concluído em {formatDateTimeBR(stop.completed_at)}</p>}
                         {stop.type === "delivery" && (
                           stop.nf_signed_url
                             ? <a href={stop.nf_signed_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"><FileText className="w-3.5 h-3.5" /> Ver NF Assinada</a>
@@ -858,7 +857,7 @@ export default function TripDetailPage() {
                 {trip.events.slice().reverse().map((e, i) => (
                   <div key={i} className="text-xs">
                     <p className="text-foreground">{e.description}</p>
-                    <p className="text-muted-foreground">{e.timestamp ? format(new Date(e.timestamp), "dd/MM HH:mm") : ""}</p>
+                    <p className="text-muted-foreground">{formatDateTimeBR(e.timestamp)}</p>
                   </div>
                 ))}
               </CardContent>

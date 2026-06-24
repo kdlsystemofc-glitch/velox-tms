@@ -8,8 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Truck, User, MapPin, CheckCircle2, Clock, Route, Download, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { downloadCsv, csvMoney, csvDate } from "@/utils/exportCsv";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatDateTimeBR } from "@/utils/dateUtils";
 import PageHeader from "@/components/shared/PageHeader";
 
 const tripStatusConfig = {
@@ -61,10 +60,10 @@ function TripCard({ trip }) {
         )}
 
         <div className="space-y-1 text-xs text-muted-foreground mb-4">
-          {trip.departure_date && (
+          {trip.departure_date && formatDateTimeBR(trip.departure_date) && (
             <div className="flex items-center gap-1.5">
               <Clock className="w-3 h-3" />
-              {format(new Date(trip.departure_date), "dd/MM 'às' HH:mm", { locale: ptBR })}
+              {formatDateTimeBR(trip.departure_date)}
             </div>
           )}
           <div className="flex items-center gap-1.5">

@@ -12,7 +12,8 @@ import StatCard from "@/components/shared/StatCard";
 import { useToast } from "@/components/ui/use-toast";
 import PageHeader from "@/components/shared/PageHeader";
 import { downloadCsv, csvDate } from "@/utils/exportCsv";
-import { differenceInDays, parseISO, format } from "date-fns";
+import { differenceInDays, parseISO } from "date-fns";
+import { safeDateBR } from "@/utils/dateUtils";
 
 const COMPANY_DOC_CATEGORIES = ["Contrato social", "Cartão CNPJ", "Inscrição estadual", "Alvará", "Licença ANTT/RNTRC", "Apólice de seguro", "Certidão negativa", "Procuração", "Contrato comercial", "Outro"];
 
@@ -48,7 +49,7 @@ function DocRow({ label, expiry, url, onUpload, onExpiry }) {
         {onExpiry ? (
           <Input type="date" value={expiry ? expiry.slice(0, 10) : ""} onChange={e => onExpiry(e.target.value || null)} className="h-8 w-36 text-xs" />
         ) : (
-          <span className="text-xs text-muted-foreground">{expiry ? format(parseISO(expiry), "dd/MM/yyyy") : "—"}</span>
+          <span className="text-xs text-muted-foreground">{safeDateBR(expiry)}</span>
         )}
         {expiry && docBadge(expiry)}
       </div>
@@ -261,7 +262,7 @@ export default function Documents() {
                           <td className="py-2 text-xs text-muted-foreground">{i.group}</td>
                           <td className="py-2 font-medium">{i.entity}</td>
                           <td className="py-2">{i.doc}</td>
-                          <td className="py-2 text-xs">{format(parseISO(i.expiry), "dd/MM/yyyy")}</td>
+                          <td className="py-2 text-xs">{safeDateBR(i.expiry)}</td>
                           <td className="py-2">{docBadge(i.expiry)}</td>
                           <td className="py-2 text-right">
                             {i.url
@@ -323,7 +324,7 @@ export default function Documents() {
                           <td className="py-2 hidden md:table-cell text-muted-foreground">{d.recipient}</td>
                           <td className="py-2 hidden sm:table-cell font-mono">{d.nf_number || "—"}</td>
                           <td className="py-2 hidden lg:table-cell text-muted-foreground">
-                            {d.date ? format(new Date(d.date), "dd/MM/yyyy") : "—"}
+                            {safeDateBR(d.date)}
                           </td>
                           <td className="py-2 text-right">
                             <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={() => window.open(d.url, "_blank")}>
@@ -455,8 +456,8 @@ export default function Documents() {
                         <tr key={i} className="border-b border-border/40 hover:bg-muted/20">
                           <td className="py-2 font-medium">{d.name}</td>
                           <td className="py-2">{d.category}{d.expiry && docBadge(d.expiry) ? <span className="ml-2">{docBadge(d.expiry)}</span> : null}</td>
-                          <td className="py-2 hidden sm:table-cell text-muted-foreground">{d.expiry ? format(parseISO(d.expiry), "dd/MM/yyyy") : "—"}</td>
-                          <td className="py-2 hidden md:table-cell text-muted-foreground">{d.uploaded_at ? format(parseISO(d.uploaded_at), "dd/MM/yyyy") : "—"}</td>
+                          <td className="py-2 hidden sm:table-cell text-muted-foreground">{safeDateBR(d.expiry)}</td>
+                          <td className="py-2 hidden md:table-cell text-muted-foreground">{safeDateBR(d.uploaded_at)}</td>
                           <td className="py-2 text-right">
                             <div className="flex items-center justify-end gap-1">
                               <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => window.open(d.url, "_blank")}><ExternalLink className="w-3 h-3" /> Ver</Button>

@@ -13,7 +13,7 @@ const TONE_FROM_COLOR = {
   "text-muted-foreground": "muted",
 };
 import { useAuth } from "@/lib/AuthContext";
-import { todayLocalISO } from "@/utils/dateUtils";
+import { todayLocalISO, formatDateTimeBR } from "@/utils/dateUtils";
 import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
 import { incidentSeverity } from "@/utils/incidents";
 import { slaStatus } from "@/utils/sla";
@@ -493,7 +493,7 @@ export default function OperationsHub() {
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${a.level === "critical" ? "bg-red-500" : a.level === "warning" ? "bg-amber-500" : "bg-blue-500"}`} />
                     <div className="min-w-0">
                       <p className="text-xs leading-snug truncate">{a.message}</p>
-                      <p className="text-[10px] text-muted-foreground">{a.created_date ? format(new Date(a.created_date), "dd/MM HH:mm") : ""}</p>
+                      <p className="text-[10px] text-muted-foreground">{formatDateTimeBR(a.created_date)}</p>
                     </div>
                   </Link>
                 );
