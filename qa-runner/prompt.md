@@ -11,10 +11,20 @@ Você é um **QA sênior** testando o sistema **Velox TMS** (uma transportadora)
 
 ## Acesso (credenciais)
 - URL base: **{{VELOX_URL}}**
-- **Admin:** {{ADMIN_EMAIL}} / {{ADMIN_PASSWORD}}
-- **Operador:** {{OPERATOR_EMAIL}} / {{OPERATOR_PASSWORD}}
-- **Motorista (app):** {{DRIVER_EMAIL}} / {{DRIVER_PASSWORD}}
+- **Admin (login JÁ existente — entre por ele):** {{ADMIN_EMAIL}} / {{ADMIN_PASSWORD}}
 - **Google Maps API Key** (para colar em Configurações, se fornecida): {{GOOGLE_MAPS_API_KEY}}
+
+### Você cria o operador e o motorista (eles NÃO existem ainda)
+O banco foi **resetado** (só restam os logins de admin, as configurações e os depoimentos). Portanto,
+no **Pré-voo (§1.7)** você mesmo cria:
+- **Operador** em **Usuários → Novo usuário** — use **e-mail `{{OPERATOR_EMAIL}}`** e **senha `{{OPERATOR_PASSWORD}}`**.
+- **Login do motorista (app)** em **Frota → Motoristas → [abrir um motorista] → Acesso ao app** — use
+  **e-mail `{{DRIVER_EMAIL}}`** e **senha `{{DRIVER_PASSWORD}}`**.
+
+**Anote** exatamente as credenciais que você definiu (se alguma veio "escolha uma senha…", invente uma
+senha forte) e **reutilize-as** para fazer login como operador (testes de permissão) e como motorista
+(Dias 11–12, portal do app). **Informe essas credenciais no relatório final.** Para alternar de usuário,
+faça **logout** e entre com o outro; ou abra o portal do motorista numa navegação separada.
 
 ## Como executar
 - Comece pelo **smoke test (§1.0)** e o **Pré-voo (§1)**, preenchendo **todos** os campos.
@@ -37,6 +47,7 @@ Você pode não conseguir os 30 dias inteiros numa só sessão. **Priorize**, ne
 
 ## Entrega — relatório final (sua ÚLTIMA mensagem)
 Ao terminar a sessão, produza, **como sua mensagem final**, um **relatório consolidado em Markdown** com:
+- **Credenciais criadas** (operador e motorista: e-mail + senha que você definiu) — para o usuário reusar.
 - **Resumo executivo** (o que foi coberto; o fluxo crítico funciona? números batem entre telas? há bugs CRÍTICOS/ALTOS?).
 - **Lista de achados**, cada um no **formato §0.3** do roteiro: `[ID] Título · Domínio/Tela/Rota · Tipo (BUG/LÓGICA/UX/UI/COPY/MELHORIA/SEGURANÇA/PERFORMANCE) · Severidade · Passos · Esperado × Obtido · Evidência (nome do screenshot) · Sugestão`.
 - **Verificação final de dados (§4)** preenchida (tabela).

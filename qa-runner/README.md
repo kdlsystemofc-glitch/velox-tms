@@ -13,9 +13,19 @@ o plano, tira **screenshots como evidência** e entrega um **relatório consolid
 ## Pré-requisitos
 - **Node.js 18+**
 - Uma **chave da API Anthropic** (`ANTHROPIC_API_KEY`)
-- Credenciais do Velox: **admin** (obrigatório), **operador** e **motorista** (opcionais, para
-  permissões e portal do motorista)
+- Login **admin** do Velox (obrigatório — é por ele que o agente entra)
 - (Opcional) **Google Maps API Key** para testar "Otimizar rota" com distância real
+
+> **Operador e motorista NÃO precisam existir antes.** O agente **cria** esses logins durante o
+> pré-voo (Usuários → Novo usuário; e Frota → Motorista → Acesso ao app). No `.env` você só **define
+> quais credenciais** ele deve usar ao criar (`OPERATOR_*`, `DRIVER_*`) — assim você fica sabendo;
+> se deixar em branco, ele inventa e informa no relatório.
+
+## Antes de rodar: reset do banco (recomendado)
+Para a simulação de "30 dias" ter números críveis, comece com o banco limpo. Abra o **SQL Editor do
+Supabase** e rode **`qa-runner/db-reset.sql`**. Ele **apaga todos os dados operacionais** (pedidos,
+viagens, frota, financeiro, cadastros…) mas **preserva os logins, as configurações e os depoimentos**.
+Há um bloco OPCIONAL (comentado) para também remover logins de motorista antigos.
 
 ## Instalação
 ```bash
@@ -28,8 +38,9 @@ cp .env.example .env   # depois edite o .env com suas credenciais
 ## Configuração
 Edite **`.env`** (nunca versionado):
 - `ANTHROPIC_API_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (mínimo)
-- `OPERATOR_*`, `DRIVER_*`, `GOOGLE_MAPS_API_KEY` (recomendado)
-- `VELOX_URL` (padrão = produção `https://velox-tms.vercel.app`)
+- `OPERATOR_*`, `DRIVER_*` = credenciais que **o agente vai usar ao CRIAR** esses logins (não precisam
+  existir; em branco = ele inventa e reporta)
+- `GOOGLE_MAPS_API_KEY` (recomendado), `VELOX_URL` (padrão = produção)
 
 > **Importante:** rode contra um ambiente onde criar dados de teste seja aceitável. As **migrations**
 > `20260643` e `20260644` precisam estar aplicadas no Supabase, senão as features novas (prioridade,

@@ -31,10 +31,12 @@ const cfg = {
   url: env.VELOX_URL || "https://velox-tms.vercel.app",
   adminEmail: env.ADMIN_EMAIL || "",
   adminPassword: env.ADMIN_PASSWORD || "",
-  operatorEmail: env.OPERATOR_EMAIL || "(não fornecido — pule os testes de operador)",
-  operatorPassword: env.OPERATOR_PASSWORD || "",
-  driverEmail: env.DRIVER_EMAIL || "(não fornecido — pule o portal do motorista)",
-  driverPassword: env.DRIVER_PASSWORD || "",
+  // Operador e motorista são CRIADOS pelo agente. Estas são as credenciais que
+  // ele deve usar ao criar; em branco = o agente inventa e reporta.
+  operatorEmail: env.OPERATOR_EMAIL || "operador.qa@velox.teste",
+  operatorPassword: env.OPERATOR_PASSWORD || "(escolha uma senha forte e informe no relatório)",
+  driverEmail: env.DRIVER_EMAIL || "motorista.qa@velox.teste",
+  driverPassword: env.DRIVER_PASSWORD || "(escolha uma senha forte e informe no relatório)",
   mapsKey: env.GOOGLE_MAPS_API_KEY || "(não fornecida — registre como bloqueio e teste o fallback por CEP)",
   maxTurns: Number(env.MAX_TURNS || 1500),
   model: env.QA_MODEL || "claude-opus-4-8",
