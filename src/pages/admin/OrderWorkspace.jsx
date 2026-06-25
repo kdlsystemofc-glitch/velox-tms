@@ -6,6 +6,8 @@ import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import PriorityBadge from "@/components/shared/PriorityBadge";
+import { normalizePriority, priorityMeta } from "@/utils/priority";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -410,8 +412,24 @@ export default function OrderWorkspace() {
             <h1 className="font-display text-xl font-extrabold font-mono">{order.protocol}</h1>
             <StatusBadge status={order.status} />
             {order.freight_type === "urgent" && (
-              <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full uppercase">Urgente</span>
+              <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full uppercase">Frete urgente</span>
             )}
+            {!isCancelled && order.status !== "delivered" ? (
+              <Select
+                value={normalizePriority(order.priority)}
+                onValueChange={(v) => updateMutation.mutate({
+                  priority: v,
+                  status_history: [...(order.status_history || []), { status: order.status, timestamp: new Date().toISOString(), user: "Admin", note: `Prioridade alterada para ${priorityMeta(v).label}` }],
+                })}
+              >
+                <SelectTrigger className="h-6 w-auto gap-1 px-2 py-0 text-[10px] font-bold uppercase border-dashed"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Prioridade: Normal</SelectItem>
+                  <SelectItem value="high">Prioridade: Urgente</SelectItem>
+                  <SelectItem value="critical">Prioridade: Crítica</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : <PriorityBadge priority={order.priority} />}
             {!isCancelled && (() => {
               const st = slaStatus(order, settings);
               const dl = slaDeadline(order, settings);

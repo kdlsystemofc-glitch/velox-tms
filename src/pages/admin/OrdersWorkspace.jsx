@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { NumericInput } from "@/components/shared/NumericInput";
 import { TableSkeleton } from "@/components/shared/TableSkeleton";
 import StatusBadge from "@/components/admin/StatusBadge";
+import PriorityBadge from "@/components/shared/PriorityBadge";
 import { useToast } from "@/components/ui/use-toast";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { calculateFreight } from "@/utils/freightCalculator";
@@ -314,6 +315,7 @@ export default function OrdersWorkspace() {
                     </td>
                     <td className="py-2.5 px-4">
                       <span className="font-mono font-semibold text-xs">{order.protocol}</span>
+                      <PriorityBadge priority={order.priority} className="ml-1.5" />
                       {order.freight_type === "urgent" && (
                         <span className="ml-1.5 text-[9px] bg-red-100 text-red-700 font-bold px-1 py-0.5 rounded uppercase">Urg</span>
                       )}

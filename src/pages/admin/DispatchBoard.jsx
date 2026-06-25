@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import StatusBadge from "@/components/admin/StatusBadge";
+import PriorityBadge from "@/components/shared/PriorityBadge";
+import { sortByPriority, isElevatedPriority } from "@/utils/priority";
 import { useToast } from "@/components/ui/use-toast";
 import { todayLocalISO, toLocalISO, formatDateBR } from "@/utils/dateUtils";
 import { planLoads, regionLabel, localityKey } from "@/utils/dispatchPlanner";
@@ -57,15 +59,20 @@ export default function DispatchBoard() {
   const workingDays = (settings?.working_days && settings.working_days.length) ? settings.working_days : [1, 2, 3, 4, 5, 6];
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)).filter(d => workingDays.includes(d.getDay()));
 
-  // Fila filtrada (busca + urgente)
-  const filteredQueue = unscheduled.filter(o => {
-    if (onlyUrgent && o.freight_type !== "urgent") return false;
-    const q = queueSearch.trim().toLowerCase();
-    if (!q) return true;
-    return o.protocol?.toLowerCase().includes(q) || o.client_name?.toLowerCase().includes(q)
-      || o.origin?.city?.toLowerCase().includes(q)
-      || (o.recipients || []).some(r => (r.city || "").toLowerCase().includes(q) || (r.state || "").toLowerCase().includes(q));
-  });
+  // Fila filtrada (busca + urgente). "Urgente" agora considera a prioridade
+  // OPERACIONAL (crítica/urgente) além do tipo de frete urgente.
+  const filteredQueue = sortByPriority(
+    unscheduled.filter(o => {
+      if (onlyUrgent && o.freight_type !== "urgent" && !isElevatedPriority(o.priority)) return false;
+      const q = queueSearch.trim().toLowerCase();
+      if (!q) return true;
+      return o.protocol?.toLowerCase().includes(q) || o.client_name?.toLowerCase().includes(q)
+        || o.origin?.city?.toLowerCase().includes(q)
+        || (o.recipients || []).some(r => (r.city || "").toLowerCase().includes(q) || (r.state || "").toLowerCase().includes(q));
+    }),
+    // Empate de prioridade → coleta mais antiga primeiro.
+    (a, b) => String(a.collection_date || "9999").localeCompare(String(b.collection_date || "9999")),
+  );
 
   // Ocupação da frota por dia (peso programado ÷ capacidade total)
   const totalFleetKg = trucks.reduce((s, t) => s + (t.capacity_kg || 0), 0);
@@ -362,7 +369,8 @@ export default function DispatchBoard() {
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-mono text-xs font-semibold flex items-center gap-1">
                         {o.protocol}
-                        {o.freight_type === "urgent" && <span className="text-[9px] bg-red-100 text-red-700 font-bold px-1 rounded uppercase">Urgente</span>}
+                        <PriorityBadge priority={o.priority} />
+                        {o.freight_type === "urgent" && <span className="text-[9px] bg-red-100 text-red-700 font-bold px-1 rounded uppercase">Frete urgente</span>}
                       </span>
                       <span className="text-xs font-mono text-muted-foreground">{(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</span>
                     </div>

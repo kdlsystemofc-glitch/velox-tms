@@ -85,7 +85,7 @@ export default function NewOrder() {
       client_id: undefined,
       client_name: "", client_cpf_cnpj: "", client_phone: "", client_email: "",
       requester_name: "", requester_role: "", preferred_contact: "whatsapp",
-      freight_type: "shared",
+      freight_type: "shared", priority: "normal",
       origin: { cep: "", street: "", number: "", complement: "", neighborhood: "", city: "", state: "" },
       extra_origins: [], // coleta consolidada: pontos de coleta adicionais
       collection_date: "", collection_time: "morning", collection_notes: "",
@@ -548,7 +548,8 @@ export default function NewOrder() {
       requester_name: form.requester_name || undefined, requester_role: form.requester_role || undefined,
       client_cpf_cnpj: form.client_cpf_cnpj || undefined, client_phone: form.client_phone || undefined,
       client_email: form.client_email || undefined, preferred_contact: form.preferred_contact || "whatsapp",
-      freight_type: form.freight_type, origin: form.origin, collection_date: form.collection_date,
+      freight_type: form.freight_type, priority: form.priority || "normal",
+      origin: form.origin, collection_date: form.collection_date,
       collection_date_desired: form.collection_date,
       ...(() => {
         const validExtra = (form.extra_origins || []).filter(o => (o.cep || "").replace(/\D/g, "").length === 8 || (o.street || "").trim());
@@ -769,7 +770,7 @@ export default function NewOrder() {
                   {(errors.origin_cep || errors.origin_street || errors.origin_number) && (
                     <p className="text-[11px] text-destructive flex items-center gap-1"><AlertCircle size={11} />{errors.origin_cep || errors.origin_street || errors.origin_number}</p>
                   )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <FL label="Data de coleta" required error={errors.collection_date}>
                       <Input type="date" value={form.collection_date} onChange={e => setForm(f => ({ ...f, collection_date: e.target.value }))} className={errors.collection_date ? "border-red-500" : ""} />
                     </FL>
@@ -780,6 +781,16 @@ export default function NewOrder() {
                           <SelectItem value="morning">Manhã</SelectItem>
                           <SelectItem value="afternoon">Tarde</SelectItem>
                           <SelectItem value="to_arrange">A combinar</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FL>
+                    <FL label="Prioridade da operação" hint="Define a ordem de atendimento na fila de programação. Não altera o preço do frete.">
+                      <Select value={form.priority || "normal"} onValueChange={v => setForm(f => ({ ...f, priority: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="normal">Normal</SelectItem>
+                          <SelectItem value="high">Urgente</SelectItem>
+                          <SelectItem value="critical">Crítica</SelectItem>
                         </SelectContent>
                       </Select>
                     </FL>

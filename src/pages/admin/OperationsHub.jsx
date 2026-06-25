@@ -17,6 +17,7 @@ import { todayLocalISO, formatDateTimeBR } from "@/utils/dateUtils";
 import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
 import { incidentSeverity } from "@/utils/incidents";
 import { slaStatus } from "@/utils/sla";
+import { findStaleOrders, DEFAULT_STALE_DAYS } from "@/utils/staleOrders";
 import { orderVolumeM3, truckVolumeM3, fmtM3 } from "@/utils/cargoVolume";
 import { incidentTypeLabel } from "@/utils/incidents";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -85,7 +86,19 @@ export default function OperationsHub() {
 
   const criticalIncidents = incidents.filter(i => ["critical", "high"].includes(incidentSeverity(i)));
 
+  // Pedidos parados (item 42 / L-004): criados há mais de N dias e ainda sem
+  // programação. Limite configurável em Configurações (padrão 3 dias).
+  const staleDays = Number(settings?.stale_order_days) || DEFAULT_STALE_DAYS;
+  const staleList = findStaleOrders(orders, staleDays);
+
   const actionQueue = [
+    staleList.length > 0 && {
+      icon: Clock, color: "border-rose-300 bg-rose-50",
+      iconColor: "text-rose-600",
+      title: `${staleList.length} pedido${staleList.length > 1 ? "s" : ""} parado${staleList.length > 1 ? "s" : ""} há +${staleDays} dias`,
+      desc: `Mais antigo: ${staleList[0]?.protocol || "—"} (${staleList[0]?.client_name || "—"}) há ${staleList[0]?.stale_days} dias sem programação`,
+      action: { label: "Resolver", to: "/admin/coletas?status=new" },
+    },
     criticalIncidents.length > 0 && {
       icon: AlertCircle, color: "border-red-300 bg-red-50",
       iconColor: "text-red-600",
