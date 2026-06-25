@@ -1,0 +1,16 @@
+{
+  "name": "velox-qa-runner",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Agente de QA que testa o Velox TMS 100% pela interface (Playwright MCP). Não tem acesso a banco/shell — não consegue trapacear.",
+  "scripts": {
+    "qa": "node run-qa.mjs",
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.0",
+    "@playwright/mcp": "^0.0.30",
+    "playwright": "^1.49.0"
+  }
+}
