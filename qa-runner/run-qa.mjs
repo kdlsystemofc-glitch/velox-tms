@@ -25,6 +25,18 @@ const reportsDir = join(__dirname, "reports");
 const artifactsDir = join(reportsDir, "artifacts");
 mkdirSync(artifactsDir, { recursive: true });
 
+// ── 0) Carrega o .env (sem dependência externa): KEY=VALUE por linha ──
+try {
+  const envFile = readFileSync(join(__dirname, ".env"), "utf8");
+  for (const line of envFile.split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/);
+    if (!m || line.trim().startsWith("#")) continue;
+    const key = m[1];
+    const val = m[2].replace(/^["']|["']$/g, ""); // remove aspas externas
+    if (process.env[key] === undefined || process.env[key] === "") process.env[key] = val;
+  }
+} catch { /* sem .env — usa variáveis já no ambiente */ }
+
 // ── 1) Credenciais e parâmetros (de variáveis de ambiente / .env) ──
 const env = process.env;
 const cfg = {
