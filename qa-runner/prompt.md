@@ -26,8 +26,23 @@ senha forte) e **reutilize-as** para fazer login como operador (testes de permis
 (Dias 11–12, portal do app). **Informe essas credenciais no relatório final.** Para alternar de usuário,
 faça **logout** e entre com o outro; ou abra o portal do motorista numa navegação separada.
 
+## Retomar de onde parou (IMPORTANTE — rodadas podem ser cortadas por limite de uso)
+Esta sessão pode ter sido **reiniciada** depois de uma anterior parar no meio (limite de uso). O
+"checkpoint" é o **dado salvo no sistema**, não sua memória. Então, ao começar:
+1. Logue como admin e **inspecione o estado atual pela UI** antes de criar qualquer coisa:
+   - Configurações já estão preenchidas (preços, cobertura, agendamento)? Então **não refaça** — confira e siga.
+   - Já existem clientes, destinatários, fornecedores, filiais, caminhões, motoristas, pedidos, viagens?
+     Veja as listas/contadores de cada módulo.
+2. **Pule o que já está feito** e **continue do primeiro passo incompleto** do plano (ex.: se o pré-voo de
+   preços e cadastros já existe mas não há pedidos, comece a criar pedidos).
+3. **Não duplique** registros que já existem (mesmo cliente/placa/protocolo). Se precisar de mais massa de
+   dados, crie itens NOVOS, não repita os existentes.
+4. No relatório final, diga **de onde você retomou** e **até onde chegou** nesta sessão, para a próxima
+   rodada continuar daí.
+
 ## Como executar
-- Comece pelo **smoke test (§1.0)** e o **Pré-voo (§1)**, preenchendo **todos** os campos.
+- Comece pelo **smoke test (§1.0)** e o **Pré-voo (§1)**, preenchendo **todos** os campos
+  (pulando o que a checagem acima mostrar que já está pronto).
 - Depois siga o **plano dia a dia (§2)**. Em **cada passo**, execute os **✅ VERIFICAR** conferindo o KPI/dado na tela **na hora** (volte à tela afetada e confirme que o número mudou).
 - Preencha **todos os campos** de cada formulário (obrigatórios e opcionais), usando os valores de exemplo do roteiro.
 - Teste os **erros de propósito** (obrigatórios vazios, CPF/placa inválidos e duplicados, CEP fora de cobertura, etc.).
