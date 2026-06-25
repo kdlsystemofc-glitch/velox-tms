@@ -20,6 +20,7 @@
 
 import { truckVolumeM3, orderVolumeM3 } from "./cargoVolume";
 import { slaStatus } from "./sla";
+import { priorityRank, isElevatedPriority } from "./priority";
 
 const onlyDigits = (s) => (s || "").replace(/\D/g, "");
 
@@ -87,11 +88,20 @@ export function planLoads(orders = [], trucks = [], settings = null) {
       urgent: group.some((o) => o.freight_type === "urgent"),
       // SLA: pedido atrasado ou em risco de prazo entra junto com os urgentes (B2-C / Des-3)
       critical: group.some((o) => ["late", "at_risk"].includes(slaStatus(o, settings))),
+      // Prioridade OPERACIONAL (Onda 1): menor rank = mais urgente (0=crítica, 1=urgente).
+      prioRank: Math.min(...group.map((o) => priorityRank(o.priority))),
+      prioElevated: group.some((o) => isElevatedPriority(o.priority)),
     }));
 
-    // 3) prioridade (urgente OU SLA crítico) primeiro; depois região e peso desc
+    // Rank de urgência unificado (0 = mais urgente):
+    //  prioridade operacional crítica → 0
+    //  prioridade alta OU frete urgente OU SLA crítico → 1
+    //  demais → 2
+    const urgencyRank = (u) => Math.min(u.prioRank, (u.urgent || u.critical) ? 1 : 2);
+
+    // 3) urgência primeiro (operacional/frete/SLA); depois região e peso desc
     units.sort((a, b) =>
-      (Number(b.urgent || b.critical) - Number(a.urgent || a.critical)) ||
+      (urgencyRank(a) - urgencyRank(b)) ||
       a.region.localeCompare(b.region) ||
       b.weight - a.weight
     );
@@ -129,10 +139,16 @@ export function planLoads(orders = [], trucks = [], settings = null) {
       target.weight += u.weight;
       target.volume += u.volume;
       target.regions.add(u.region);
-      u.orders.forEach((o) => target.reasons.push({
-        protocol: o.protocol,
-        why: `${u.urgent ? "Urgente — alocado primeiro. " : u.critical ? "Prazo crítico (SLA) — priorizado. " : ""}${sameRegion ? `Mesma região (${u.regionName}) já neste caminhão.` : `Caminhão com mais espaço para ${u.regionName}.`}`,
-      }));
+      u.orders.forEach((o) => {
+        const prio = priorityRank(o.priority);
+        const prioWhy = prio === 0 ? "Prioridade crítica — alocado primeiro. "
+          : prio === 1 ? "Prioridade urgente — priorizado. " : "";
+        const fallbackWhy = u.urgent ? "Frete urgente — priorizado. " : u.critical ? "Prazo crítico (SLA) — priorizado. " : "";
+        target.reasons.push({
+          protocol: o.protocol,
+          why: `${prioWhy || fallbackWhy}${sameRegion ? `Mesma região (${u.regionName}) já neste caminhão.` : `Caminhão com mais espaço para ${u.regionName}.`}`,
+        });
+      });
     });
 
     truckLoads

@@ -37,6 +37,29 @@ describe("planLoads (separação automática)", () => {
     expect(r.unassigned.map(u => u.order.id)).toContain("N");
   });
 
+  it("prioridade operacional crítica entra antes de urgente e normal", () => {
+    // 3 unidades (origens distintas), caminhão só cabe uma → a crítica vence
+    const t = truck("T1", 1200);
+    const r = planLoads([
+      order("N", 1000, { priority: "normal", origin: { cep: "02000000", state: "SP", city: "São Paulo" } }),
+      order("U", 1000, { priority: "high",   origin: { cep: "03000000", state: "SP", city: "São Paulo" } }),
+      order("C", 1000, { priority: "critical" }),
+    ], [t]);
+    const placed = r.loads.flatMap(l => l.orders.map(o => o.id));
+    expect(placed).toContain("C");
+    expect(placed).not.toContain("N");
+  });
+
+  it("prioridade operacional alta supera frete urgente quando há disputa", () => {
+    const t = truck("T1", 1200);
+    const r = planLoads([
+      order("F", 1000, { freight_type: "urgent", priority: "normal", origin: { cep: "04000000", state: "SP", city: "São Paulo" } }),
+      order("P", 1000, { priority: "critical" }),
+    ], [t]);
+    const placed = r.loads.flatMap(l => l.orders.map(o => o.id));
+    expect(placed).toContain("P");
+  });
+
   it("regionKey combina UF + prefixo de CEP do destino", () => {
     expect(regionKey(order("A", 1))).toBe("PR-800");
   });

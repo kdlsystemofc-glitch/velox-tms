@@ -603,7 +603,7 @@ export default function DispatchBoard() {
                         return (
                           <div key={o.id} className="px-3 py-1.5 text-xs">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="font-mono text-muted-foreground">{o.protocol}{o.freight_type === "urgent" && <span className="ml-1 text-[9px] bg-red-100 text-red-700 font-bold px-1 rounded">URG</span>}</span>
+                              <span className="font-mono text-muted-foreground inline-flex items-center gap-1">{o.protocol}<PriorityBadge priority={o.priority} />{o.freight_type === "urgent" && <span className="text-[9px] bg-red-100 text-red-700 font-bold px-1 rounded">URG</span>}</span>
                               <span className="flex-1 truncate">{o.client_name}</span>
                               <span className="text-muted-foreground">{regionLabel(o)}</span>
                               <span className="font-mono">{(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</span>
