@@ -15,7 +15,7 @@
  * (formato §0.3 do roteiro) em ./reports/qa-report-<timestamp>.md.
  */
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
@@ -36,6 +36,28 @@ try {
     if (process.env[key] === undefined || process.env[key] === "") process.env[key] = val;
   }
 } catch { /* sem .env — usa variáveis já no ambiente */ }
+
+// ── 0.1) Windows: o Claude Code precisa do git-bash. Acha sozinho ──
+// (instalação do Git "por usuário" fica em LOCALAPPDATA e não está no PATH,
+//  então o subprocesso saía com código 1). Respeita o valor já definido.
+if (process.platform === "win32" && !process.env.CLAUDE_CODE_GIT_BASH_PATH) {
+  const la = process.env.LOCALAPPDATA;
+  const pf = process.env["ProgramFiles"];
+  const pfx = process.env["ProgramFiles(x86)"];
+  const candidates = [
+    pf && join(pf, "Git", "bin", "bash.exe"),
+    pfx && join(pfx, "Git", "bin", "bash.exe"),
+    la && join(la, "Programs", "Git", "bin", "bash.exe"),
+  ].filter(Boolean);
+  const found = candidates.find((p) => existsSync(p));
+  if (found) {
+    process.env.CLAUDE_CODE_GIT_BASH_PATH = found;
+    console.log(`• git-bash: ${found}`);
+  } else {
+    console.warn("⚠ git-bash não encontrado. Se a execução falhar, instale o Git for Windows");
+    console.warn("  (https://git-scm.com/download/win) ou defina CLAUDE_CODE_GIT_BASH_PATH no .env.");
+  }
+}
 
 // ── 1) Credenciais e parâmetros (de variáveis de ambiente / .env) ──
 const env = process.env;
