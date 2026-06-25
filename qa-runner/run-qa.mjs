@@ -55,13 +55,22 @@ const cfg = {
 };
 
 const missing = [];
-if (!env.ANTHROPIC_API_KEY) missing.push("ANTHROPIC_API_KEY");
 if (!cfg.adminEmail) missing.push("ADMIN_EMAIL");
 if (!cfg.adminPassword) missing.push("ADMIN_PASSWORD");
 if (missing.length) {
   console.error(`\n✖ Faltam variáveis obrigatórias: ${missing.join(", ")}`);
   console.error("  Copie qa-runner/.env.example para .env e preencha. Veja o README.\n");
   process.exit(1);
+}
+
+// Autenticação: com ANTHROPIC_API_KEY → cobrança por uso (API).
+// Sem ela → usa o login do Claude Code (assinatura Pro/Max). Para isso,
+// rode `claude` uma vez e faça `/login` com a conta da assinatura.
+if (env.ANTHROPIC_API_KEY) {
+  console.log("• Cobrança: API (ANTHROPIC_API_KEY) — pago por uso.");
+} else {
+  console.log("• Cobrança: assinatura do Claude Code (sem chave de API).");
+  console.log("  Pré-requisito: ter rodado `claude` e feito /login com a conta Pro/Max.");
 }
 
 // ── 2) Monta o prompt a partir do template, injetando credenciais ──
