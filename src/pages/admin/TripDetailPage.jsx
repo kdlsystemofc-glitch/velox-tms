@@ -19,6 +19,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import FileUploadButton from "@/components/shared/FileUploadButton";
 import { todayLocalISO, formatDateTimeBR } from "@/utils/dateUtils";
+import { tripEstadiaSummary, stopWaitingMinutes, formatMinutes } from "@/utils/waitingTime";
 import { optimizeStops, optimizeStopsByCoords } from "@/utils/routeOptimizer";
 import { geocodeCeps, haversineKm, googleMapsRouteUrl } from "@/utils/geocode";
 
@@ -95,6 +96,9 @@ export default function TripDetailPage() {
     updateMutation.mutate({ stops });
   };
 
+  // ── Estadia / tempo de espera (item 43) ──
+  const estadia = tripEstadiaSummary(trip, settings?.pricing);
+
   // ── Backhaul (S9): caminhão terminou as entregas e volta vazio ──
   const linkedOrders = allOrders.filter(o => (trip.order_ids || []).includes(o.id));
   const deliveryCities = new Set(
@@ -132,6 +136,35 @@ export default function TripDetailPage() {
       toast({ title: "Coleta de retorno adicionada!", description: "O pedido entrou na viagem para aproveitar o retorno." });
     },
     onError: (e) => toast({ title: "Erro ao adicionar", description: e?.message, variant: "destructive" }),
+  });
+
+  // Lança a estadia pendente como receita a cobrar (uma por parada/pedido).
+  const chargeEstadia = useMutation({
+    mutationFn: async () => {
+      const summary = tripEstadiaSummary(trip, settings?.pricing);
+      const pending = summary.rows.filter(r => !r.already_charged && r.order_id);
+      if (pending.length === 0) throw new Error("Nenhuma estadia pendente com pedido vinculado.");
+      for (const r of pending) {
+        const order = allOrders.find(o => o.id === r.order_id);
+        await base44.entities.Revenue.create({
+          order_id: r.order_id,
+          client_id: order?.client_id || undefined,
+          description: `Estadia (${formatMinutes(r.minutes)} no local, ${r.billableHours}h cobrada) — ${order?.protocol || trip.truck_plate}`,
+          amount: r.fee, due_date: todayLocalISO(), status: "receivable",
+        });
+      }
+      const stops = (trip.stops || []).map((s, i) => pending.some(p => p.index === i) ? { ...s, estadia_charged: true } : s);
+      await base44.entities.Trip.update(id, {
+        stops,
+        events: [...(trip.events || []), { type: "estadia_charged", description: `Estadia lançada: R$ ${summary.pendingFee.toFixed(2)} em ${pending.length} parada(s)`, timestamp: new Date().toISOString(), user: userName }],
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trip", id] });
+      queryClient.invalidateQueries({ queryKey: ["revenues"] });
+      toast({ title: "Estadia lançada!", description: "Cobrança criada em Financeiro → Receitas." });
+    },
+    onError: (e) => toast({ title: "Não foi possível lançar", description: e?.message, variant: "destructive" }),
   });
 
   const updateStop = async (index, newStatus) => {
@@ -654,6 +687,9 @@ export default function TripDetailPage() {
                           <span className="text-[11px] text-muted-foreground"> · {crew[stop.vehicle_index || 0]?.truck_plate}</span>
                         )}
                         {stop.completed_at && <p className="text-xs text-green-600 mt-1">Concluído em {formatDateTimeBR(stop.completed_at)}</p>}
+                        {stopWaitingMinutes(stop) > 0 && (
+                          <p className="text-[11px] text-muted-foreground mt-0.5">⏱ {formatMinutes(stopWaitingMinutes(stop))} no local{stop.estadia_charged ? " · estadia cobrada" : ""}</p>
+                        )}
                         {stop.type === "delivery" && (
                           stop.nf_signed_url
                             ? <a href={stop.nf_signed_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"><FileText className="w-3.5 h-3.5" /> Ver NF Assinada</a>
@@ -849,6 +885,36 @@ export default function TripDetailPage() {
               </Card>
             );
           })()}
+
+          {estadia.rows.length > 0 && (
+            <Card>
+              <CardHeader className="py-3 border-b border-border bg-muted/30">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-velox-amber" /> Estadia / tempo de espera</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm pt-4">
+                {estadia.rows.map((r) => (
+                  <div key={r.index} className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate text-xs">{r.recipient_name}</p>
+                      <p className="text-[11px] text-muted-foreground">{formatMinutes(r.minutes)} no local · {r.billableHours}h cobrável{r.already_charged ? " · já cobrada" : ""}</p>
+                    </div>
+                    <span className={`font-mono flex-shrink-0 ${r.already_charged ? "text-muted-foreground line-through" : "text-green-600"}`}>R$ {r.fee.toFixed(2)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between border-t border-border pt-2 font-semibold text-xs">
+                  <span>Total a cobrar (pendente)</span>
+                  <span className="font-mono text-green-600">R$ {estadia.pendingFee.toFixed(2)}</span>
+                </div>
+                {estadia.hasPending ? (
+                  <Button size="sm" className="w-full mt-1 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" disabled={chargeEstadia.isPending} onClick={() => chargeEstadia.mutate()}>
+                    {chargeEstadia.isPending ? "Lançando..." : "Lançar estadia como receita"}
+                  </Button>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground pt-1">Toda a estadia já foi lançada em Financeiro → Receitas.</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {trip.events && trip.events.length > 0 && (
             <Card>

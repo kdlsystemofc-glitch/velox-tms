@@ -61,6 +61,14 @@ export function formatDateTimeBR(value, fallback = "") {
   return `${dd}/${mm} ${hh}:${mi}`;
 }
 
+/** Formata só a hora ("HH:mm") de um timestamp, à prova de crash. */
+export function formatTimeBR(value, fallback = "") {
+  if (value == null || value === "") return fallback;
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d.getTime())) return fallback;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
 /**
  * Formata qualquer valor de data (ISO completo, "YYYY-MM-DD", Date ou epoch)
  * como "dd/MM/aaaa" SEM lançar exceção em datas inválidas. Substituto seguro

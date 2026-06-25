@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, CheckCircle2, MapPin, AlertTriangle, FileText, ClipboardCheck, PackageX, UserX, Clock } from "lucide-react";
-import { format } from "date-fns";
+import { formatDateTimeBR } from "@/utils/dateUtils";
+import { stopWaitingMinutes, formatMinutes } from "@/utils/waitingTime";
 import FileUploadButton from "@/components/shared/FileUploadButton";
 import SignaturePad from "@/components/shared/SignaturePad";
 import { storage } from "@/api/supabaseClient";
@@ -399,7 +400,8 @@ export default function DriverTrip() {
                   )}
                   {stop.delivery_result === "partial" && <p className="text-xs text-teal-300 mt-1">Entrega parcial: {stop.delivered_volumes} volume(s)</p>}
                   {stop.delivery_result === "failed" && <p className="text-xs text-orange-300 mt-1">Destinatário ausente</p>}
-                  {stop.completed_at && <p className="text-xs text-green-400 mt-1">✓ {format(new Date(stop.completed_at), "dd/MM HH:mm")}</p>}
+                  {stop.completed_at && <p className="text-xs text-green-400 mt-1">✓ {formatDateTimeBR(stop.completed_at)}</p>}
+                  {stopWaitingMinutes(stop) > 0 && <p className="text-[11px] text-white/40 mt-0.5">⏱ {formatMinutes(stopWaitingMinutes(stop))} no local</p>}
 
                   {/* Actions */}
                   {trip.status === "in_progress" && stop.status !== "completed" && (

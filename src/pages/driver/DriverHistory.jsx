@@ -4,8 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { safeDateBR, formatTimeBR } from "@/utils/dateUtils";
 
 export default function DriverHistory() {
   const { user } = useAuth();
@@ -43,7 +42,7 @@ export default function DriverHistory() {
             <button className="w-full p-4 flex items-center justify-between text-left" onClick={() => setExpanded(expanded === i ? null : i)}>
               <div>
                 <p className="font-semibold text-sm text-white">
-                  {trip.departure_date ? format(new Date(trip.departure_date), "dd/MM/yyyy", { locale: ptBR }) : "—"}
+                  {safeDateBR(trip.departure_date)}
                 </p>
                 <p className="text-xs text-white/40 mt-0.5">{(trip.order_ids || []).length} pedidos · {trip.truck_plate}</p>
               </div>
@@ -62,7 +61,7 @@ export default function DriverHistory() {
                     <div key={si} className="text-xs text-white/50 flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.status === "completed" ? "bg-green-500" : "bg-white/20"}`} />
                       {s.recipient_name || s.address}
-                      {s.completed_at && <span className="text-white/30">{format(new Date(s.completed_at), "HH:mm")}</span>}
+                      {s.completed_at && <span className="text-white/30">{formatTimeBR(s.completed_at)}</span>}
                     </div>
                   ))}
                 </div>

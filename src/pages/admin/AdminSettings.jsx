@@ -399,7 +399,12 @@ export default function AdminSettings({ only = null }) {
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Taxa de espera (R$/hora)</label>
                     <NumericInput currency value={form.pricing?.waiting_fee_hour || ""} onChange={v => setNested("pricing", "waiting_fee_hour", v)} placeholder="ex: 60,00" />
-                    <p className="text-[10px] text-muted-foreground">Aplicada por hora parada (estadia)</p>
+                    <p className="text-[10px] text-muted-foreground">Estadia por hora ou fração, após o tempo livre</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Tempo livre de estadia (min)</label>
+                    <NumericInput integer value={form.pricing?.waiting_free_minutes ?? ""} onChange={v => setNested("pricing", "waiting_free_minutes", v)} placeholder="ex: 60" />
+                    <p className="text-[10px] text-muted-foreground">Cortesia no local antes de cobrar estadia (padrão 60)</p>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Taxa de devolução (R$)</label>

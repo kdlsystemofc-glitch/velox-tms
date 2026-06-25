@@ -6,8 +6,7 @@ import { supabase } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { Truck, MapPin, Clock, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { formatDateTimeBR } from "@/utils/dateUtils";
 
 export default function DriverHome() {
   const { user } = useAuth();
@@ -74,7 +73,7 @@ export default function DriverHome() {
               {trip.departure_date && (
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-velox-amber" />
-                  <span>Saída: {format(new Date(trip.departure_date), "dd/MM 'às' HH:mm", { locale: ptBR })}</span>
+                  <span>Saída: {formatDateTimeBR(trip.departure_date, "a definir")}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">
