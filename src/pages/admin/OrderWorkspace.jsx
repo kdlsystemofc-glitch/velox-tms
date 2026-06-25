@@ -34,10 +34,12 @@ import {
 
 const STATUS_FLOW = ["new", "confirmed", "collecting", "in_transit", "delivered"];
 const STATUS_LABELS = {
+  awaiting_approval: "Aguardando aprovação",
   new: "Novo", confirmed: "Confirmado", collecting: "Em Coleta",
   in_transit: "Em Trânsito", delivered: "Entregue", cancelled: "Cancelado",
 };
 const NEXT_ACTION = {
+  awaiting_approval: { label: "Aprovar Pedido", next: "new" },
   new: { label: "Confirmar Pedido", next: "confirmed" },
   confirmed: { label: "Marcar Em Coleta", next: "collecting" },
   collecting: { label: "Marcar Em Trânsito", next: "in_transit" },
@@ -125,7 +127,12 @@ export default function OrderWorkspace() {
   if (isLoading) return <div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-4 border-velox-amber/20 border-t-velox-amber rounded-full" /></div>;
   if (!order) return <div className="text-center py-12 text-muted-foreground">Pedido não encontrado.</div>;
 
-  const currentStep = STATUS_FLOW.indexOf(order.status);
+  // Inclui a etapa "Aguardando aprovação" no fluxo visual apenas para pedidos
+  // que passaram por aprovação (não polui o stepper quando o fluxo está desligado).
+  const wentThroughApproval = order.status === "awaiting_approval"
+    || (order.status_history || []).some(h => h.status === "awaiting_approval");
+  const flow = wentThroughApproval ? ["awaiting_approval", ...STATUS_FLOW] : STATUS_FLOW;
+  const currentStep = flow.indexOf(order.status);
   const nextAction = NEXT_ACTION[order.status];
   const isCancelled = order.status === "cancelled";
 
@@ -447,7 +454,7 @@ export default function OrderWorkspace() {
         <div className="flex items-center gap-2 relative">
           {nextAction && !isCancelled && (
             <Button className="font-bold gap-2"
-              onClick={() => handleStatusChange(nextAction.next)}
+              onClick={() => handleStatusChange(nextAction.next, order.status === "awaiting_approval" ? "Pedido aprovado — liberado para operação" : undefined)}
               disabled={updateMutation.isPending}>
               {nextAction.label} <ArrowRight className="w-4 h-4" />
             </Button>
@@ -499,7 +506,7 @@ export default function OrderWorkspace() {
       <Card>
         <CardContent className="py-4">
           <div className="flex items-center justify-between overflow-x-auto">
-            {STATUS_FLOW.map((s, i) => {
+            {flow.map((s, i) => {
               const done = i <= currentStep && !isCancelled;
               const active = i === currentStep && !isCancelled;
               const hist = (order.status_history || []).find(h => h.status === s);
@@ -518,7 +525,7 @@ export default function OrderWorkspace() {
                       <span className="text-[9px] text-muted-foreground">{formatDateTimeBR(hist.timestamp)}</span>
                     )}
                   </div>
-                  {i < STATUS_FLOW.length - 1 && (
+                  {i < flow.length - 1 && (
                     <div className={`flex-1 h-0.5 mx-1 ${i < currentStep && !isCancelled ? "bg-velox-amber" : "bg-border"}`} />
                   )}
                 </React.Fragment>

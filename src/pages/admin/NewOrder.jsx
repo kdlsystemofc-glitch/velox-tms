@@ -559,8 +559,14 @@ export default function NewOrder() {
       recipients: cleanedRecipients, total_volumes: totVol, total_weight_kg: totKg, total_declared_value: totVal,
       freight_value: parseNum(form.freight_value), freight_payer: form.freight_payer || "cif",
       payment_method: form.payment_method || undefined, payment_terms: form.payment_terms || undefined,
-      payment_status: "pending", general_notes: form.general_notes || undefined, status: "new",
-      status_history: [{ status: "new", timestamp: new Date().toISOString(), user: "Admin", note: "Coleta criada pelo painel" }],
+      payment_status: "pending", general_notes: form.general_notes || undefined,
+      // Fluxo de aprovação (item 46): com o toggle ligado, o pedido aguarda liberação.
+      status: settings?.require_order_approval ? "awaiting_approval" : "new",
+      status_history: [{
+        status: settings?.require_order_approval ? "awaiting_approval" : "new",
+        timestamp: new Date().toISOString(), user: "Admin",
+        note: settings?.require_order_approval ? "Coleta criada — aguardando aprovação" : "Coleta criada pelo painel",
+      }],
       ...(form.client_id ? { client_id: form.client_id } : {}),
       ...(form.driver_id ? { driver_id: form.driver_id } : {}),
       ...(form.truck_id ? { truck_id: form.truck_id } : {}),

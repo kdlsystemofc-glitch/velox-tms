@@ -37,6 +37,7 @@ function SortTh({ label, k, sort, onSort, align = "left", className = "" }) {
 
 const PIPELINE_TABS = [
   { key: "all",        label: "Todos" },
+  { key: "awaiting_approval", label: "Aprovação" },
   { key: "new",        label: "Novos" },
   { key: "confirmed",  label: "Confirmados" },
   { key: "collecting", label: "Em coleta" },

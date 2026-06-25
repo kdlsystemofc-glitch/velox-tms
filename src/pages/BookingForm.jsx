@@ -321,7 +321,7 @@ export default function BookingForm() {
       client_phone: form.phone,
       client_email: form.email,
       preferred_contact: form.preferred_contact,
-      status: "new",
+      status: settings?.require_order_approval ? "awaiting_approval" : "new",
       freight_type: form.freight_type,
       origin: {
         cep: form.origin_cep,
@@ -343,7 +343,7 @@ export default function BookingForm() {
       freight_payer: form.freight_payer || "cif",
       transport_modal: form.transport_modal || "road",
       payment_terms: form.payment_terms || "after_delivery",
-      status_history: [{ status: "new", timestamp: new Date().toISOString(), user: form.client_name, note: "Solicitação via site" }],
+      status_history: [{ status: settings?.require_order_approval ? "awaiting_approval" : "new", timestamp: new Date().toISOString(), user: form.client_name, note: "Solicitação via site" }],
     });
 
     setProtocol(proto);

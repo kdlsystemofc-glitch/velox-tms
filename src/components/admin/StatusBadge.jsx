@@ -5,6 +5,7 @@ import React from "react";
  * dot = cor do ponto · text/bg = tom suave do texto e fundo.
  */
 export const orderStatusConfig = {
+  awaiting_approval: { label: "Aguardando aprovação", dot: "bg-fuchsia-500", cls: "text-fuchsia-700 bg-fuchsia-50 border-fuchsia-200" },
   new:        { label: "Novo",        dot: "bg-blue-500",    cls: "text-blue-700 bg-blue-50 border-blue-200" },
   confirmed:  { label: "Confirmado",  dot: "bg-indigo-500",  cls: "text-indigo-700 bg-indigo-50 border-indigo-200" },
   collecting: { label: "Em coleta",   dot: "bg-amber-500",   cls: "text-amber-700 bg-amber-50 border-amber-200" },

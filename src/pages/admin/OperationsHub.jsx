@@ -65,7 +65,9 @@ export default function OperationsHub() {
 
   // ── Pipeline ────────────────────────────────────────────────
   const active = orders.filter(o => o.status !== "cancelled");
+  const awaitingApproval = active.filter(o => o.status === "awaiting_approval");
   const pipeline = [
+    ...(awaitingApproval.length ? [{ key: "awaiting_approval", label: "Aprovação", count: awaitingApproval.length, to: "/admin/coletas?status=awaiting_approval", color: "text-fuchsia-600 bg-fuchsia-50 border-fuchsia-200" }] : []),
     { key: "new",        label: "Novos",       count: active.filter(o => o.status === "new").length,        to: "/admin/coletas?status=new",        color: "text-blue-600 bg-blue-50 border-blue-200" },
     { key: "confirmed",  label: "Confirmados", count: active.filter(o => o.status === "confirmed").length,  to: "/admin/coletas?status=confirmed",  color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
     { key: "collecting", label: "Em coleta",   count: active.filter(o => o.status === "collecting").length, to: "/admin/coletas?status=collecting", color: "text-amber-600 bg-amber-50 border-amber-200" },
@@ -92,6 +94,13 @@ export default function OperationsHub() {
   const staleList = findStaleOrders(orders, staleDays);
 
   const actionQueue = [
+    awaitingApproval.length > 0 && {
+      icon: ShieldAlert, color: "border-fuchsia-300 bg-fuchsia-50",
+      iconColor: "text-fuchsia-600",
+      title: `${awaitingApproval.length} pedido${awaitingApproval.length > 1 ? "s" : ""} aguardando aprovação`,
+      desc: "Aprove ou recuse para liberar à operação",
+      action: { label: "Aprovar", to: "/admin/coletas?status=awaiting_approval" },
+    },
     staleList.length > 0 && {
       icon: Clock, color: "border-rose-300 bg-rose-50",
       iconColor: "text-rose-600",

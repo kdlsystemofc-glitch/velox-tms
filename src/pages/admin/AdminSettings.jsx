@@ -631,6 +631,23 @@ export default function AdminSettings({ only = null }) {
                 </p>
               </div>
 
+              <div className="border-t border-border pt-5">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Fluxo de aprovação</p>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={!!form.require_order_approval}
+                    onCheckedChange={(v) => setF("require_order_approval", !!v)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm">
+                    Exigir aprovação antes de operar
+                    <span className="block text-xs text-muted-foreground mt-0.5">
+                      Quando ligado, todo pedido novo entra como <strong>“Aguardando aprovação”</strong> e só vai para a fila operacional depois que um admin ou operador liberar. Desligado, o pedido entra direto como “Novo”.
+                    </span>
+                  </span>
+                </label>
+              </div>
+
               <div className="flex justify-end"><SaveBtn /></div>
             </CardContent>
           </Card>
