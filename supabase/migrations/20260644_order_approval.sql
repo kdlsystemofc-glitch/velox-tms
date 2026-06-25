@@ -15,4 +15,8 @@ ALTER TABLE orders ADD CONSTRAINT orders_status_check
 -- 2) Interruptor por empresa (padrão desligado — não muda comportamento atual)
 ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS require_order_approval BOOLEAN DEFAULT false;
 
-SELECT 'Fluxo de aprovação pronto (status awaiting_approval + flag require_order_approval).' AS resultado;
+-- 3) Limite (dias) para alertar "pedido parado" na Central de Operações (Onda 1).
+--    Padrão 3; com 0 sinaliza imediatamente qualquer pedido sem programação.
+ALTER TABLE company_settings ADD COLUMN IF NOT EXISTS stale_order_days INTEGER DEFAULT 3;
+
+SELECT 'Fluxo de aprovação + limite de pedido parado prontos.' AS resultado;

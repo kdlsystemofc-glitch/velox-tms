@@ -34,13 +34,15 @@ export function isScheduled(order) {
 }
 
 /**
- * true se o pedido está "parado" há mais de `limitDays` dias.
- * `now` é injetável para testes.
+ * true se o pedido está "parado" há `limitDays` dias OU MAIS.
+ * Usamos ">=" (e não ">") para que a regra seja configurável e testável:
+ * com o limite em 0, qualquer pedido sem programação já conta como parado
+ * (útil para validar o alerta sem esperar dias reais). `now` é injetável.
  */
 export function isStaleOrder(order, limitDays = DEFAULT_STALE_DAYS, now = new Date()) {
   if (!order || !STUCK_STATUSES.has(order.status)) return false;
   if (isScheduled(order)) return false;
-  return daysSince(order.created_date || order.created_at, now) > limitDays;
+  return daysSince(order.created_date || order.created_at, now) >= limitDays;
 }
 
 /**

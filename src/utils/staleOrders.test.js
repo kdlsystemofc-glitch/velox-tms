@@ -19,9 +19,16 @@ describe("staleOrders", () => {
     expect(isScheduled({})).toBe(false);
   });
 
-  it("pedido 'new' parado há mais que o limite é stale", () => {
+  it("pedido 'new' parado há o limite OU MAIS é stale (>=)", () => {
     expect(isStaleOrder({ status: "new", created_date: daysAgo(4) }, 3, NOW)).toBe(true);
+    expect(isStaleOrder({ status: "new", created_date: daysAgo(3) }, 3, NOW)).toBe(true); // limite exato
     expect(isStaleOrder({ status: "new", created_date: daysAgo(2) }, 3, NOW)).toBe(false);
+  });
+
+  it("com limite 0, qualquer pedido sem programação é stale (testável no mesmo dia)", () => {
+    expect(isStaleOrder({ status: "new", created_date: NOW.toISOString() }, 0, NOW)).toBe(true);
+    // mas programado nunca é stale, mesmo com limite 0
+    expect(isStaleOrder({ status: "confirmed", created_date: NOW.toISOString(), trip_id: "t" }, 0, NOW)).toBe(false);
   });
 
   it("'confirmed' sem programação conta; com programação não conta", () => {

@@ -1,4 +1,4 @@
-# VELOX TMS — SIMULAÇÃO DE 30 DIAS v3 (EXAUSTIVA — testar ABSOLUTAMENTE TUDO)
+# VELOX TMS — SIMULAÇÃO DE 30 DIAS v4 (EXAUSTIVA — testar ABSOLUTAMENTE TUDO)
 
 > **Objetivo:** operar o Velox TMS como uma transportadora real por "30 dias", **clicando e preenchendo
 > TUDO pela interface**, em todos os 3 domínios (Site Público, Portal Admin, Portal do Motorista),
@@ -14,11 +14,23 @@
 
 ## 0. REGRAS CRÍTICAS (LEIA ANTES DE COMEÇAR)
 
+### 0.0 ⛔ PROTOCOLO ANTI-TRAPAÇA (motivo desta versão)
+A rodada anterior reportou **"39/39 — 100% aprovado"** e mesmo assim **uma tela de viagem nem abria**
+(crash). Isso aconteceu porque o agente **testou pelo banco/SQL/scripts**, não pela tela. Um teste que
+nunca clicou em "abrir viagem" **não pode** dizer que Viagens funciona. Portanto, **nesta simulação:**
+- **PROIBIDO** usar SQL, `supabase.*` direto, REST/RPC manual, `curl`, scripts de seed/inserção, ou
+  qualquer caminho que não seja **a interface renderizada no navegador**. Todo registro (cliente, pedido,
+  viagem, despesa…) é criado **preenchendo o formulário e clicando no botão**.
+- **Nenhum teste "passa" sem evidência de UI:** print/descrição da tela após a ação + o KPI conferido.
+  "Passou" sem ter aberto a tela = **inválido** (reporte como não testado).
+- Se algo **não abre, trava, fica em branco ou dá "Algo deu errado"**, isso é **BUG CRÍTICO** — registre e
+  siga; **não** contorne pelo banco.
+- O Console (F12) e a aba **Network** ficam **abertos o tempo todo**; todo erro vermelho / 4xx / 5xx vira item.
+
 ### 0.1 As 6 regras inegociáveis
 1. **EXECUTE PELA INTERFACE (UI), NÃO PELA API.** Clique nos botões, digite nos campos, abra os modais,
    arraste os cards, gere os PDFs. Testar pelo banco/API **pula** bugs de interface, validação, máscara,
-   estado de botão, cálculo no front e UX. (A simulação anterior rodou muito por API e por isso deixou de
-   pegar vários problemas.)
+   estado de botão, cálculo no front e UX. (Ver §0.0 — isto é inegociável.)
 2. **PREENCHA TODOS OS CAMPOS** de cada formulário — obrigatórios **e** opcionais. Nada de "pular o que não
    é obrigatório". Se um formulário tem 20 campos, preencha os 20. Use os valores de exemplo deste roteiro.
 3. **CONFIRA OS KPIs E OS DADOS APÓS CADA AÇÃO.** Toda vez que criar/confirmar/encerrar/dar baixa, **volte
@@ -44,6 +56,24 @@
 - ❌ **Simulador de Carregamento 3D, Documentos (anexos reais), todos os Exports (CSV/PDF), Faturamento
   mensal, Conciliação competência×caixa, Auditoria de Usuários, Backup/Importar Config.** Ver dias 16–29.
 - ❌ **Execução real pelo Portal do Motorista** (checklist, POD com assinatura, exceções). Ver dias 11–12.
+
+### 0.2.1 Funcionalidades NOVAS (jun/2026) — testar OBRIGATORIAMENTE
+Foram lacunas recém-fechadas; a rodada anterior não as conhecia. **Exercite todas:**
+1. **Prioridade operacional** (Normal/Urgente/Crítica) no pedido — criar (Dia 5), editar no detalhe (Dia 7),
+   ver ordenação na fila do **Despacho** e na **Separação automática** (Dia 8). É **independente** do "Tipo
+   de frete".
+2. **Pedido parado** — deixe 1 pedido em "Novo" sem programar e confirme que após o limite (Config
+   `stale_order_days`, padrão 3) ele vira **alerta na fila de exceções** da Central (Dia 21).
+3. **Tempo de espera / estadia** — no app do motorista, deixe um intervalo entre **Confirmar Chegada** e
+   **Concluir**; confira "tempo no local" e a **estadia** lançável como receita no Detalhe da Viagem (Dia 13).
+4. **Planejamento automático ciente de prioridade** — a "Separação automática" deve alocar os **críticos
+   primeiro** (Dia 8).
+5. **Fluxo de aprovação** — ligue o toggle no Pré-voo (§1.4); confirme que o pedido novo nasce **"Aguardando
+   aprovação"** e só anda após **Aprovar** (Dia 6); depois **desligue** e confirme o fluxo direto.
+
+### 0.2.2 Cobertura de mercado (os 57 comportamentos)
+Ao fim, preencha a **§6 — Cenários de mercado**: para cada um dos 57 comportamentos de transportadora
+informados, diga se o sistema **suporta e você testou**, **suporta mas falhou**, ou **não existe (lacuna)**.
 
 ### 0.3 Formato do relatório (use para CADA achado)
 ```
@@ -93,8 +123,9 @@ rota" cai na heurística por CEP; com ela, usa distância geográfica real.) ✅
 **Aba Preços — Frete base:** Preço por kg = **2,50** · Preço por km = **3,20** · Taxa fixa por pedido =
 **25,00** · Frete mínimo = **120,00**. **Taxas adicionais:** GRIS = **0,30**% · Ad valorem = **0,20**% ·
 TDE por NF = **8,00** · TDA por NF = **8,00** · Pedágio R$/kg = **0,05** · Taxa de coleta = **15,00** · Taxa
-de entrega = **12,00** · TRT por NF = **6,00** · Taxa de espera R$/h = **60,00** · Taxa de devolução =
-**80,00** · Taxa de emergência = **20**% · **Fator de cubagem = 6000** · Adicional urgente = **50**% ·
+de entrega = **12,00** · TRT por NF = **6,00** · Taxa de espera R$/h = **60,00** · **Tempo livre de estadia
+(min) = 30** · Taxa de devolução = **80,00** · Taxa de emergência = **20**% · **Fator de cubagem = 6000** ·
+Adicional urgente = **50**% ·
 Adicional dedicado = **20**%. **Prazo de entrega:** Velocidade média = **600** km/dia · **Tabela de prazo
 por estado**: adicione SP=1, RJ=2, MG=2, PR=3, BA=5 (botão **Adicionar estado** para cada). **Parâmetros
 financeiros:** Alíquota fiscal = **6**% · Depreciação mensal = **1.200,00**. **Salvar.**
@@ -110,9 +141,10 @@ VERIFICAR no Simulador: SP→RJ agora usa o preço do corredor (prioridade sobre
 
 ### 1.4 Configurações → Operação e Alertas
 **Área de Atuação:** escolha "Estados" e marque **SP, RJ, MG, PR** (define a cobertura — afeta o
-agendamento público). **Agendamento:** Antecedência mínima = **1** dia útil; Dias de operação = Seg–Sáb.
-**Alertas:** CNH=60, CRLV=60, Seguro=30. **Salvar** cada aba. ✅ VERIFICAR no Dia 3 (CEP fora de SP/RJ/MG/PR
-deve bloquear o agendamento).
+agendamento público). **Agendamento:** Antecedência mínima = **1** dia útil; Dias de operação = Seg–Sáb;
+**Fluxo de aprovação = DESLIGADO** por enquanto (o fluxo principal roda sem aprovação; o teste dedicado do
+toggle é no **Dia 6**). **Alertas:** CNH=60, CRLV=60, Seguro=30. **Salvar** cada aba. ✅ VERIFICAR no Dia 3
+(CEP fora de SP/RJ/MG/PR deve bloquear o agendamento).
 
 ### 1.5 Cadastros (todos os campos)
 - **Filiais & CDs (2):** "Matriz SP" (Tipo=Filial, telefone, endereço completo via CEP) e "CD Guarulhos"
@@ -180,28 +212,44 @@ vincula). Teste **Responder por e-mail** e **WhatsApp** (status→em contato + "
 interna**, **Perdido**, **Arquivar/Reabrir**, **Exportar** (CSV). ✅ VERIFICAR: KPIs **Em contato/
 Convertidos/Taxa de conversão** atualizam; "1ª resposta" aparece; link "✓ Pedido gerado" abre o pedido.
 
-**Dia 5 — Novo Pedido interno (assistente COMPLETO).** Crie **3 pedidos** preenchendo todos os campos: P1
-com **coleta consolidada** (Adicionar ponto de coleta), P2 multi-destinatário com itens via **Adicionar
-chaves**, P3 com **cliente novo** (prompt **Criar cadastro**) e **Usar estimativa**. Defina **Valor do frete
-cobrado** manualmente em cada um. ✅ VERIFICAR: totais (volumes/peso/valor) somam certo; o frete calculado
-aparece; ao criar, o pedido surge na fila e (se houver cliente) no histórico do cliente.
+**Dia 5 — Novo Pedido interno (assistente COMPLETO) + PRIORIDADE.** Crie **3 pedidos** preenchendo todos os
+campos: P1 com **coleta consolidada** (Adicionar ponto de coleta) e **Prioridade = Crítica**, P2
+multi-destinatário com itens via **Adicionar chaves** e **Prioridade = Urgente**, P3 com **cliente novo**
+(prompt **Criar cadastro**), **Usar estimativa** e **Prioridade = Normal**. Defina **Valor do frete cobrado**
+manualmente em cada um. ✅ VERIFICAR: totais (volumes/peso/valor) somam certo; o frete calculado aparece; ao
+criar, o pedido surge na fila **com o selo de prioridade** (Crítica/Urgente; Normal sem selo) e, na lista de
+Pedidos, o selo aparece junto ao protocolo.
 
-**Dia 6 — Confirmação e fila.** Confirme ~5 pedidos (modal: Valor do frete, Forma de pagamento — varie
-PIX/Boleto/Dinheiro, Data de coleta). Recuse 1 (vai p/ Cancelados). Teste abas/contadores, ordenação de
-colunas, busca, **Exportar**, seleção múltipla. ✅ VERIFICAR: cada confirmação **cria uma Receita** em
-**Financeiro → Receitas** (status A Receber, valor = frete); recusar **não** deixa receita ativa; KPI "A
-receber" sobe.
+**Dia 6 — Confirmação e fila + FLUXO DE APROVAÇÃO.** Confirme ~5 pedidos (modal: Valor do frete, Forma de
+pagamento — varie PIX/Boleto/Dinheiro, Data de coleta). Recuse 1 (vai p/ Cancelados). Teste abas/contadores,
+ordenação de colunas, busca, **Exportar**, seleção múltipla. ✅ VERIFICAR: cada confirmação **cria uma
+Receita** em **Financeiro → Receitas** (status A Receber, valor = frete); recusar **não** deixa receita
+ativa; KPI "A receber" sobe.
+**Teste do fluxo de aprovação (dedicado):** (1) Em **Configurações → Agendamento**, **ligue** "Exigir
+aprovação antes de operar" e salve. (2) Crie **1 pedido novo** (Novo Pedido) → ✅ deve nascer **"Aguardando
+aprovação"** (aba **Aprovação** na lista e card de pipeline + item "N aguardando aprovação" na fila de
+exceções da Central). (3) Abra-o → botão **Aprovar Pedido** → vira **"Novo"** e o histórico registra
+"Pedido aprovado". (4) Crie outro e, no detalhe, **recuse** (Cancelar com motivo) → vai p/ Cancelados. (5)
+Faça também um **agendamento público `/agendar`** com o toggle ligado → também deve nascer "Aguardando
+aprovação". (6) **Desligue** o toggle e salve, e confirme que um novo pedido volta a nascer **"Novo"**
+direto. ✅ VERIFICAR: só **admin/operador** conseguem aprovar; o stepper do pedido mostra a etapa
+"Aguardando aprovação" apenas para quem passou por ela.
 
-**Dia 7 — Detalhe do Pedido.** Em 2 pedidos: edite o Financeiro (Cobranças adicionais, Taxa improdutiva,
-Fator de cubagem), registre uma **Ocorrência**, **anexe** um arquivo, gere **CT-e**. **Cancele** 1 pedido
-(motivo obrigatório). ✅ VERIFICAR: histórico de eventos registra tudo; o status aparece em Operações e em
-`/rastrear`; cancelar **estorna** a receita.
+**Dia 7 — Detalhe do Pedido + override de PRIORIDADE.** Em 2 pedidos: **mude a Prioridade** pelo seletor do
+cabeçalho (ex.: Normal→Crítica) e confirme que o **histórico** registra "Prioridade alterada para …" (override
+do operador); edite o Financeiro (Cobranças adicionais, Taxa improdutiva, Fator de cubagem), registre uma
+**Ocorrência**, **anexe** um arquivo, gere **CT-e**. **Cancele** 1 pedido (motivo obrigatório). ✅ VERIFICAR:
+o selo de prioridade muda na lista e no Despacho; histórico de eventos registra tudo; o status aparece em
+Operações e em `/rastrear`; cancelar **estorna** a receita.
 
 ### SEMANA 2 — Programação, viagens e motorista (o coração)
-**Dia 8 — Despacho.** Programe os pedidos confirmados **arrastando** para dia×caminhão; depois teste
-**Planejar automaticamente**; confira **peso·volume** por célula; **Devolver à fila** em 1. Tente
-sobrecarregar 1 caminhão acima da capacidade. ✅ VERIFICAR: pedidos somem de "a despachar" (badge da sidebar
-cai); Operações reflete.
+**Dia 8 — Despacho + PRIORIDADE + SEPARAÇÃO AUTOMÁTICA.** Observe que a **fila vem ordenada por prioridade**
+(crítica no topo) com selo; teste o filtro **"urgentes"**. Programe pedidos confirmados **arrastando** para
+dia×caminhão; **Devolver à fila** em 1. Tente sobrecarregar 1 caminhão acima da capacidade (deve avisar
+peso/volume). Depois teste a **Separação automática**: abra o modal, ✅ confira que os **pedidos críticos são
+alocados primeiro**, que cada pedido tem a **explicação ("↳ por quê", citando a prioridade)**, que os **não
+alocados** trazem motivo, e clique **Aplicar separação**. ✅ VERIFICAR: pedidos somem de "a despachar" (badge
+da sidebar cai); Operações reflete; a alocação respeitou prioridade e capacidade.
 
 **Dia 9 — Viagens (criação).** Crie **2 viagens**: uma via **Pedidos → Criar viagem** (seleção múltipla) e
 uma via **Nova Viagem** com **COMBOIO** (Adicionar veículo — 2 caminhões/2 motoristas) e **Adiantamento ao
@@ -213,11 +261,13 @@ paradas arrastando e com ↑/↓; abra **Google Maps**; gere **Romaneio PDF** e,
 veículo**. **Iniciar** a viagem. ✅ VERIFICAR: aparece "Trajeto previsto: ~X km"; o caminhão vira **on_route**
 em Frota/Operações; pedidos viram **collecting**; PDF abre com os dados certos.
 
-**Dia 11 — Portal do Motorista (execução real).** Logue como **motorista** (janela ≤414px). Abra a viagem:
-**Checklist de saída** → **Confirmar checklist**; em cada parada **Confirmar Chegada** → **Confirmar
-Coleta**; numa entrega anexe **NF (obrigatório)** + **Assinatura** (assine na tela) + **Nome do recebedor**
-→ **Confirmar Entrega**. Veja o **Histórico**. ✅ VERIFICAR: o **Progresso (x/y)** sobe; admin → Detalhe da
-Viagem mostra as paradas concluídas e a NF anexada; pedidos mudam status.
+**Dia 11 — Portal do Motorista (execução real) + TEMPO NO LOCAL.** Logue como **motorista** (janela ≤414px).
+Abra a viagem: **Checklist de saída** → **Confirmar checklist**; em cada parada **Confirmar Chegada** e, numa
+delas, **espere de propósito alguns minutos** (ou registre chegada e só conclua depois) antes de **Confirmar
+Coleta** — para gerar tempo no local/estadia; numa entrega anexe **NF (obrigatório)** + **Assinatura** (assine
+na tela) + **Nome do recebedor** → **Confirmar Entrega**. Veja o **Histórico**. ✅ VERIFICAR: o **Progresso
+(x/y)** sobe; aparece **"⏱ X no local"** na parada onde você esperou; admin → Detalhe da Viagem mostra as
+paradas concluídas, o tempo no local e a NF anexada; pedidos mudam status.
 
 **Dia 12 — Motorista (exceções — testar TODOS os fluxos).** **Registrar Ocorrência** (escolha cada Tipo ao
 menos uma vez, com Descrição e Foto), **Destinatário ausente** (teste as 3 opções), **Carga não estava
@@ -225,13 +275,17 @@ pronta**, **Entrega parcial** (Volumes entregues + Motivo dos demais), **Adicion
 ocorrência existente. ✅ VERIFICAR: cada ocorrência aparece em **Admin → Ocorrências** (KPI "Em aberto" +) e
 em `/rastrear`; entrega parcial reflete no status do pedido.
 
-**Dia 13 — Encerramento da viagem (financeiro).** **Encerrar Viagem:** Km final, Combustível (litros + R$),
-Pedágios, **Outros gastos** (adicione ≥3 categorias diferentes: Alimentação, Pernoite, Manutenção em rota),
-Observações. Confira na hora: **Lucro líquido**, **Margem**, **Custo por km**, **Eficiência km/L**,
-**Estimado × Real (km e custo, desvio %)**, **Acerto/comissão** (no comboio, **rateio por veículo**). ✅
-VERIFICAR (cruzando telas): os gastos viraram **Despesas** (Financeiro → Despesas, status Pago); a comissão
-virou despesa **a pagar** (salaries); o **caminhão voltou available**; o **km** foi gravado no veículo; o
-km/L entrou no histórico de consumo do veículo.
+**Dia 13 — Encerramento da viagem (financeiro) + ESTADIA.** **Antes de encerrar**, no Detalhe da Viagem,
+localize o card **"Estadia / tempo de espera"** (deve listar a parada onde você esperou no Dia 11, com tempo
+no local, horas cobráveis e valor) e clique **Lançar estadia como receita** → ✅ deve criar uma **Receita** em
+Financeiro → Receitas e marcar a parada como "estadia cobrada" (clicar de novo não cobra em dobro). Depois
+**Encerrar Viagem:** Km final, Combustível (litros + R$), Pedágios, **Outros gastos** (adicione ≥3 categorias
+diferentes: Alimentação, Pernoite, Manutenção em rota), Observações. Confira na hora: **Lucro líquido**,
+**Margem**, **Custo por km**, **Eficiência km/L**, **Estimado × Real (km e custo, desvio %)**,
+**Acerto/comissão** (no comboio, **rateio por veículo**). ✅ VERIFICAR (cruzando telas): os gastos viraram
+**Despesas** (Financeiro → Despesas, status Pago); a comissão virou despesa **a pagar** (salaries); o
+**caminhão voltou available**; o **km** foi gravado no veículo; o km/L entrou no histórico de consumo do
+veículo; a **estadia** aparece como receita a receber.
 
 **Dia 14 — Replanejamento (testar a central inteira).** Provoque disrupções: (a) coloque um caminhão **com
 carga/viagem** em **Manutenção** (no Detalhe do Caminhão → Status); (b) coloque um motorista **com viagem**
@@ -279,12 +333,16 @@ Tipos mais frequentes) atualizam; **Exportar** funciona.
 em cada um até a entidade, marque lido/resolvido. ✅ VERIFICAR: o **sino** da topbar e a **Fila de ação** de
 Operações refletem os mesmos alertas; resolver remove da contagem.
 
-**Dia 21 — Torre de Operações (consolidação + cruzamento).** Releia o **Painel de Operações** com toda a
-massa de dados. **Cruze cada métrica** com a tela de origem: "Frota disponível/Em rota/Ocupação" × **Frota**
-× **Indicadores**; "Entregas hoje/OTD" × **Indicadores**; "A receber/A pagar" × **Financeiro**; Pipeline ×
-**Pedidos**; "Ocorrências abertas" × **Ocorrências**. Confira **Fila de ação**, **Exceções**, **Capacidade
-do dia** (Peso/Volume), **Operação (Hoje/Amanhã/Semana)**, **Frota agora**. ✅ VERIFICAR e **listar toda
-divergência numérica entre telas**.
+**Dia 21 — Torre de Operações (consolidação + cruzamento) + PEDIDO PARADO.** Releia o **Painel de Operações**
+com toda a massa de dados. **Cruze cada métrica** com a tela de origem: "Frota disponível/Em rota/Ocupação" ×
+**Frota** × **Indicadores**; "Entregas hoje/OTD" × **Indicadores**; "A receber/A pagar" × **Financeiro**;
+Pipeline × **Pedidos**; "Ocorrências abertas" × **Ocorrências**. Confira **Fila de ação**, **Exceções**,
+**Capacidade do dia** (Peso/Volume), **Operação (Hoje/Amanhã/Semana)**, **Frota agora**.
+**Teste do "pedido parado":** garanta que existe ao menos **1 pedido em "Novo"/"Confirmado" sem
+programação** (não despachado). Em **Configurações → Agendamento**, ponha **"Dias sem programação para
+alertar" = 0** e salve → volte à Central → ✅ deve surgir o item **"N pedido(s) parado(s)"** na fila de
+exceções, citando o mais antigo, com botão **Resolver**. Depois volte o limite para **3**. ✅ VERIFICAR e
+**listar toda divergência numérica entre telas**.
 
 ### SEMANA 4 — Financeiro, indicadores, governança, fechamento
 **Dia 22 — Receitas.** Crie 2 receitas avulsas (todos os campos). Dê **baixa (Recebido)** em algumas
@@ -391,17 +449,96 @@ Para **cada divergência**, abra um item no formato §0.3 (Tipo=LÓGICA).
 O agente lê estes arquivos no projeto: `VELOX_SIMULACAO_30DIAS.md` (este) e `VELOX_MAPA_SIMULACAO.md`
 (mapa). Você só fornece as **credenciais**: **Admin**, **Operador** e **Motorista (app)**, e a URL
 `https://velox-tms.vercel.app`. Instrução inicial sugerida:
-> "Você é um QA sênior. Execute a **Simulação v3 (EXAUSTIVA)** do `VELOX_SIMULACAO_30DIAS.md` **pela
-> interface (clicando/preenchendo), não pela API**, usando o `VELOX_MAPA_SIMULACAO.md` para os nomes
-> exatos. Comece pelo **Pré-voo (§1)** preenchendo **todos** os campos (inclusive a Tabela de Preços e a
-> chave do Google Maps). Faça **um dia por vez**; em cada passo, execute os **✅ VERIFICAR** conferindo os
-> KPIs/dados na hora. Mantenha o Console (F12) e a aba Network abertos e registre todo erro/4xx/5xx. Use o
-> **formato de relatório §0.3**; entregue resumo ao fim de cada dia, a **Verificação final de dados (§4)** e
-> o **relatório consolidado** no fim. Não exclua dados que não sejam de teste. Pergunte se faltar
-> credencial ou a chave do Google Maps."
+> "Você é um QA sênior. Execute a **Simulação v4 (EXAUSTIVA)** do `VELOX_SIMULACAO_30DIAS.md` **100% pela
+> interface (clicando/preenchendo), JAMAIS pela API/SQL/scripts** (leia o **§0.0 — Protocolo anti-trapaça**;
+> nenhum teste 'passa' sem ter aberto a tela). Use o `VELOX_MAPA_SIMULACAO.md` para os nomes exatos. Comece
+> pelo **Pré-voo (§1)** preenchendo **todos** os campos (Tabela de Preços, tempo livre de estadia, chave do
+> Google Maps). Faça **um dia por vez**; em cada passo execute os **✅ VERIFICAR** conferindo os KPIs/dados na
+> hora. Teste **obrigatoriamente** as 5 funcionalidades novas (§0.2.1: prioridade, pedido parado, estadia,
+> separação automática por prioridade, fluxo de aprovação). Mantenha Console (F12) e Network abertos e
+> registre todo erro/4xx/5xx — se uma tela travar/der 'Algo deu errado', é **BUG CRÍTICO**, não contorne
+> pelo banco. Use o **formato §0.3**; entregue resumo por dia, a **Verificação final de dados (§4)**, a
+> **cobertura dos 57 cenários (§6)** e o **relatório consolidado** no fim. Não exclua dados que não sejam de
+> teste. Pergunte se faltar credencial ou a chave do Google Maps."
 
 ### Critérios de "passou/não passou" (resumo executivo esperado)
 Fluxo crítico inteiro funciona? · Números consistentes entre telas? · Bugs CRÍTICOS/ALTOS? · Top 10
 melhorias (impacto × esforço) · Nota por módulo (0–10) e nota geral.
 
-> Fim do roteiro v3. (Fonte da UI: `VELOX_MAPA_SIMULACAO.md`.)
+---
+
+## 6. CENÁRIOS DE MERCADO — OS 57 COMPORTAMENTOS (cobertura obrigatória)
+Para **cada** comportamento abaixo, marque na coluna **Resultado**: **OK** (suportado e testado pela UI),
+**FALHOU** (existe mas deu erro/inconsistência — abra item §0.3) ou **LACUNA** (não existe no sistema).
+Legenda da coluna *Status atual*: ✅ existe (teste de verdade) · ⚠️ parcial (teste e diga o que falta) ·
+❌ lacuna conhecida (confirme que realmente não há na UI).
+
+| # | Comportamento | Onde testar (tela) | Status atual | Resultado |
+|---|---|---|---|---|
+| 1 | Data desejada × confirmada de coleta | Agendar/NewOrder (data desejada) → Confirmar (data efetiva) | ✅ | |
+| 2 | Pedido não vinculado a caminhão na criação | NewOrder cria sem caminhão; vínculo só no Despacho | ✅ | |
+| 3 | Agrupamento de coletas próximas | Despacho (selo "Mesma região") / Separação automática | ✅ | |
+| 4 | Controle de capacidade da operação | Operações → "Capacidade do dia" (Peso/Volume) | ✅ | |
+| 5 | Replanejamento por imprevisto | Replanejamento (Dia 14) | ✅ | |
+| 6 | Prioridade (normal/urgente/crítica) | Pedido (Prioridade) + Despacho (Dia 5/8) | ✅ (novo) | |
+| 7 | Janelas de coleta/entrega | Cadastro de Cliente/Destinatário (DeliveryWindowEditor) | ✅ | |
+| 8 | Peso E volume (cubagem) | Cubagem no pedido/cotação; Simulador 3D; Despacho (volume) | ✅ | |
+| 9 | Aproveitamento de retorno (backhaul) | Detalhe da Viagem → "Aproveitar o retorno?" | ✅ | |
+| 10 | Central de ocorrências | Ocorrências (Dia 19) + app do motorista (Dia 12) | ✅ | |
+| 11 | Consolidação de cargas | NewOrder coleta consolidada / multi-destinatário | ⚠️ | |
+| 12 | Múltiplas NFs por coleta | NewOrder/Agendar → Itens/NFs (várias) | ✅ | |
+| 13 | Rastreamento por evento | `/rastrear` + histórico de status | ✅ | |
+| 14 | Transferências entre unidades | Transferências (Dia 15) | ✅ | |
+| 15 | Confirmação de coleta no local | App motorista: Confirmar Coleta / "carga não pronta" | ⚠️ (ajuste de peso/volume no local: confirmar se há) | |
+| 16 | Coleta parcial | App motorista (carga não pronta / saldo) | ⚠️ | |
+| 17 | Entrega parcial | App motorista → Entrega parcial (Dia 12) | ✅ | |
+| 18 | Programação por região | Despacho (região) | ✅ | |
+| 19 | Programação por tipo de veículo | Despacho valida **peso/volume**; compatibilidade por TIPO | ⚠️/❌ (confirmar se alerta por tipo) | |
+| 20 | Agendamento com horário/janela | Janela no cadastro; aviso de janela no Despacho | ⚠️ | |
+| 21 | Múltiplas coletas na mesma viagem | Viagem com várias paradas de coleta | ✅ | |
+| 22 | Múltiplas entregas na mesma viagem | Viagem com vários destinatários (status individual) | ✅ | |
+| 23 | Consolidação de pedidos | Criar viagem com vários pedidos do mesmo destino | ⚠️ | |
+| 24 | Desconsolidação | Cross-docking / Transferências | ⚠️ | |
+| 25 | Cross docking | Transferências (entrada CD → nova expedição) | ✅ | |
+| 26 | Ocupação da frota | Operações/Indicadores (Ocupação %); Capacidade do dia | ✅ | |
+| 27 | Monitoramento de atrasos | Selo SLA (Atrasado/Risco) em Operações/Pedido | ✅ | |
+| 28 | Devoluções | App motorista → "Devolver ao remetente" | ⚠️ | |
+| 29 | Torre de controle | Painel de Operações (Dia 21) | ✅ | |
+| 30 | Planejamento automático | Despacho → Separação automática (Dia 8) | ✅ (novo) | |
+| 31 | Mudar data após programado | Despacho: Devolver à fila e reprogramar | ⚠️ | |
+| 32 | Antecipar (encaixe urgente) | OrderWorkspace → "Encaixe urgente em [caminhão]" | ⚠️ | |
+| 33 | Pedido em duplicidade | NewOrder → aviso "possível duplicidade" | ✅ | |
+| 34 | NF esquecida (incluir depois) | Editar itens/NFs do pedido após criado | ⚠️ (confirmar edição de itens) | |
+| 35 | Peso errado → recalcula frete | Editar pedido/itens e recalcular | ⚠️ | |
+| 36 | Destinatário mudou de endereço | Cross-docking: "Endereço de entrega ATUALIZADO" | ✅ | |
+| 37 | Caminhão lotou no meio do dia | Despacho/validação de capacidade ao exceder | ⚠️ | |
+| 38 | Cliente acompanha o caminhão | "Próxima parada" (app); `/rastrear` por status | ⚠️ | |
+| 39 | Entregou sem comprovar | App: Confirmar Entrega EXIGE NF + assinatura | ✅ | |
+| 40 | Recebeu com ressalva/avaria | App: entrega parcial / ocorrência de avaria | ⚠️ | |
+| 41 | Dividir uma carga (A/B) | — | ❌ (confirmar; provável lacuna) | |
+| 42 | Pedido esquecido (parado) | Operações → alerta "pedido parado" (Dia 21) | ✅ (novo) | |
+| 43 | Tempo de espera / estadia | Viagem → card Estadia (Dia 11/13) | ✅ (novo) | |
+| 44 | Veículo em manutenção bloqueia | Caminhão→Manutenção dispara Replanejamento | ✅ | |
+| 45 | Prioridade contratual do cliente | Prioridade operacional (crítica) no pedido | ✅ (novo) | |
+| 46 | Aprovação antes de operar | Toggle + "Aguardando aprovação" (Dia 6) | ✅ (novo) | |
+| 47 | Cancelar após a coleta | Cancelar pedido em coleta/trânsito (motivo) | ⚠️ | |
+| 48 | Carga troca de veículo várias vezes | Transferências/cross-dock encadeados | ⚠️ | |
+| 49 | Prazo (SLA), não data | Selo SLA / prazo de entrega por estado | ✅ | |
+| 50 | Operador sobrescreve a sugestão | Despacho manual ignora a Separação automática | ✅ | |
+| 51 | Coleta recorrente automática | "Repetir último pedido" / modelos de pedido | ⚠️/❌ (confirmar se há recorrência automática) | |
+| 52 | Motorista recusou a viagem | — | ❌ (provável lacuna) | |
+| 53 | Níveis de rastreamento (cliente×interno) | `/rastrear` (público) × histórico interno | ⚠️ | |
+| 54 | Dividir entre veículos (comboio) | Viagem em comboio (vários caminhões) | ✅ | |
+| 55 | Volta com devoluções | Devolução + nova tentativa | ⚠️ | |
+| 56 | Por que atrasou (motivo) | Ocorrência com tipo/causa-raiz | ⚠️ | |
+| 57 | Indicadores de saúde da operação | Indicadores (OTD, ocupação, custo/km, ocorrências…) (Dia 27) | ✅ | |
+
+**Importante:** onde marquei ⚠️/❌, **confirme pela UI** se existe de fato — se não existir, registre como
+**LACUNA** (Tipo=MELHORIA/LÓGICA no §0.3); se existir e funcionar, corrija o status para OK. O objetivo é um
+veredito honesto de cobertura de mercado, não um "100%" automático.
+
+---
+
+> Fim do roteiro v4. (Fonte da UI: `VELOX_MAPA_SIMULACAO.md`.) Cobre: pré-voo completo, 30 dias com ✅
+> VERIFICAR por passo, as 5 funcionalidades novas, verificação final de dados (§4) e os 57 cenários de
+> mercado (§6). Execução **100% pela interface** (§0.0) — sem SQL/API.

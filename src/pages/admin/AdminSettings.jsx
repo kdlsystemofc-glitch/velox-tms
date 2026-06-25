@@ -648,6 +648,24 @@ export default function AdminSettings({ only = null }) {
                 </label>
               </div>
 
+              <div className="border-t border-border pt-5">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Pedido parado</p>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={60}
+                    className="w-20 text-center"
+                    value={form.stale_order_days ?? 3}
+                    onChange={e => setF("stale_order_days", Number(e.target.value))}
+                  />
+                  <span className="text-sm text-muted-foreground">dias sem programação para alertar</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Pedidos em “Novo”/“Confirmado” sem caminhão/data há {form.stale_order_days ?? 3} dia(s) ou mais viram alerta na Central de Operações. Use 0 para sinalizar imediatamente.
+                </p>
+              </div>
+
               <div className="flex justify-end"><SaveBtn /></div>
             </CardContent>
           </Card>
