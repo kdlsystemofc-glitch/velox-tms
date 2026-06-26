@@ -83,13 +83,14 @@ export default function TripDetailPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["trip", id] }),
   });
 
-  if (!trip) return <div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-4 border-velox-amber/20 border-t-velox-amber rounded-full" /></div>;
-
-  const completedStops = (trip.stops || []).filter(s => s.status === "completed").length;
-  const totalStops = (trip.stops || []).length;
+  // NÃO retornar antes daqui: todos os hooks (incl. as mutations addBackhaul e
+  // chargeEstadia) precisam rodar SEMPRE, senão o React quebra (#310). O guard
+  // de carregamento fica logo após a última mutation.
+  const completedStops = (trip?.stops || []).filter(s => s.status === "completed").length;
+  const totalStops = (trip?.stops || []).length;
   const userName = user?.full_name || "Sistema";
   // Comboio (Onda 7): lista de veículos da viagem
-  const crew = (trip.vehicles && trip.vehicles.length) ? trip.vehicles : [{ truck_id: trip.truck_id, truck_plate: trip.truck_plate, driver_id: trip.driver_id, driver_name: trip.driver_name }];
+  const crew = (trip?.vehicles && trip.vehicles.length) ? trip.vehicles : [{ truck_id: trip?.truck_id, truck_plate: trip?.truck_plate, driver_id: trip?.driver_id, driver_name: trip?.driver_name }];
   const setStopVehicle = (i, idx) => {
     const stops = [...(trip.stops || [])];
     stops[i] = { ...stops[i], vehicle_index: idx };
@@ -100,13 +101,13 @@ export default function TripDetailPage() {
   const estadia = tripEstadiaSummary(trip, settings?.pricing);
 
   // ── Backhaul (S9): caminhão terminou as entregas e volta vazio ──
-  const linkedOrders = allOrders.filter(o => (trip.order_ids || []).includes(o.id));
+  const linkedOrders = allOrders.filter(o => (trip?.order_ids || []).includes(o.id));
   const deliveryCities = new Set(
     linkedOrders.flatMap(o => (o.recipients || []).map(r => (r.city || "").toLowerCase().trim())).filter(Boolean)
   );
-  const deliveryStops = (trip.stops || []).filter(s => s.type === "delivery");
+  const deliveryStops = (trip?.stops || []).filter(s => s.type === "delivery");
   const allDeliveriesDone = deliveryStops.length > 0 && deliveryStops.every(s => s.status === "completed");
-  const backhaulCandidates = (trip.status === "in_progress" && allDeliveriesDone)
+  const backhaulCandidates = (trip?.status === "in_progress" && allDeliveriesDone)
     ? allOrders.filter(o => o.status === "confirmed" && !o.trip_id && o.origin?.city && deliveryCities.has(o.origin.city.toLowerCase().trim()))
     : [];
 
@@ -166,6 +167,9 @@ export default function TripDetailPage() {
     },
     onError: (e) => toast({ title: "Não foi possível lançar", description: e?.message, variant: "destructive" }),
   });
+
+  // Guard de carregamento — APÓS todos os hooks (ver nota acima).
+  if (!trip) return <div className="flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-4 border-velox-amber/20 border-t-velox-amber rounded-full" /></div>;
 
   const updateStop = async (index, newStatus) => {
     const stops = [...(trip.stops || [])];
