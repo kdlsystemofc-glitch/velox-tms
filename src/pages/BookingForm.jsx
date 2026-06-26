@@ -209,13 +209,21 @@ export default function BookingForm() {
     });
   };
 
+  // Parse de número no formato BR ("28.500,00" → 28500.00). Number() puro
+  // retornava NaN nesses casos e zerava o Valor Declarado (FND-10).
+  const parseBR = (s) => {
+    if (typeof s === "number") return s;
+    if (!s) return 0;
+    const n = parseFloat(String(s).replace(/\./g, "").replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
+  };
   const getTotals = () => {
     let volumes = 0, weight = 0, value = 0;
     form.recipients.forEach((r) => {
       r.items.forEach((item) => {
-        volumes += Number(item.volumes) || 0;
-        weight += Number(item.weight_kg) || 0;
-        value += Number(item.declared_value) || 0;
+        volumes += parseBR(item.volumes);
+        weight += parseBR(item.weight_kg);
+        value += parseBR(item.declared_value);
       });
     });
     return { volumes, weight, value, recipients: form.recipients.length };
@@ -307,6 +315,17 @@ export default function BookingForm() {
     setSubmitError(null);
     const totals = getTotals();
 
+    // Frete estimado (BUG-05): o resumo já mostrava o valor, mas ele não era
+    // gravado no pedido. Calcula igual ao passo 5 e persiste em freight_value.
+    const allItems = form.recipients.flatMap(r => r.items || []);
+    const estimate = calculateFreightFull({
+      items: allItems, distanceKm: null,
+      nfCount: allItems.filter(i => i.nf_number).length || 1,
+      pricing: settings?.pricing, settings,
+      originState: form.origin_state || null,
+      destState: form.recipients[0]?.state || null,
+    });
+
     try {
     const { data } = await base44.functions.invoke("generateProtocol", {});
     const proto = data?.protocol;
@@ -323,6 +342,7 @@ export default function BookingForm() {
       preferred_contact: form.preferred_contact,
       status: settings?.require_order_approval ? "awaiting_approval" : "new",
       freight_type: form.freight_type,
+      freight_value: estimate?.total || undefined,
       origin: {
         cep: form.origin_cep,
         street: form.origin_street,

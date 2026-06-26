@@ -332,6 +332,15 @@ export default function DRE({ hideTitle = false }) {
             })}
             <Row label="(-) Total Fixo" value={-fixTotal} bold />
 
+            {otherExp > 0 && (
+              <>
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider py-2 mt-3">Outros custos</div>
+                {periodExpenses.filter(e => !variableCosts.includes(e.category) && !fixedCosts.includes(e.category) && (e.amount || 0) > 0)
+                  .map((e, i) => <Row key={`oe-${i}`} label={e.description || categoryLabels[e.category] || "Outros"} value={-(e.amount || 0)} indent />)}
+                <Row label="(-) Total Outros" value={-otherExp} bold />
+              </>
+            )}
+
             <div className="mt-4 pt-2 border-t-2 border-border">
               <Row label="(=) Resultado Operacional (EBITDA)" value={ebitda} bold />
               <Row label="(-) Depreciação estimada (frota)" value={-depreciation} indent />

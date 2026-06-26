@@ -90,7 +90,10 @@ export default function OperationsHub() {
 
   // Pedidos parados (item 42 / L-004): criados há mais de N dias e ainda sem
   // programação. Limite configurável em Configurações (padrão 3 dias).
-  const staleDays = Number(settings?.stale_order_days) || DEFAULT_STALE_DAYS;
+  // Atenção: NÃO usar `|| DEFAULT` aqui — 0 é um valor válido (alertar na hora)
+  // e `0 || 3` viraria 3. Só cai no padrão quando é nulo/indefinido/negativo.
+  const staleCfg = Number(settings?.stale_order_days);
+  const staleDays = Number.isFinite(staleCfg) && staleCfg >= 0 ? staleCfg : DEFAULT_STALE_DAYS;
   const staleList = findStaleOrders(orders, staleDays);
 
   const actionQueue = [

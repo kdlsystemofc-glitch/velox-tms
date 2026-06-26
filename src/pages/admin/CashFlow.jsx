@@ -27,13 +27,17 @@ export default function CashFlow({ hideTitle = false }) {
   const { data: revenues = [] } = useQuery({
     queryKey: ["revenues"],
     queryFn: () => base44.entities.Revenue.list("-due_date", 500),
-    select: (d) => d.filter(r => (r.status === "receivable" || r.status === "overdue") && r.due_date),
+    // Sem due_date a conta sumia da projeção (FND-08). Mantém e assume hoje.
+    select: (d) => d.filter(r => r.status === "receivable" || r.status === "overdue")
+      .map(r => ({ ...r, due_date: r.due_date || todayLocalISO() })),
   });
 
   const { data: expenses = [] } = useQuery({
     queryKey: ["expenses"],
     queryFn: () => base44.entities.Expense.list("-due_date", 500),
-    select: (d) => d.filter(e => (e.status === "pending" || e.status === "installment") && e.due_date),
+    // Idem: despesa "a pagar" sem vencimento cai no vencimento = competência (date) ou hoje.
+    select: (d) => d.filter(e => e.status === "pending" || e.status === "installment")
+      .map(e => ({ ...e, due_date: e.due_date || e.date || todayLocalISO() })),
   });
 
   const saveBalance = useMutation({
