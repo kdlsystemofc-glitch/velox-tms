@@ -14,13 +14,31 @@ import FileUploadButton from "@/components/shared/FileUploadButton";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { downloadCsv, csvMoney, csvDate } from "@/utils/exportCsv";
 import {
-  AlertTriangle, CheckCircle2, Shield, ShieldAlert, BellRing, UserCheck, Clock, FileText, ExternalLink, DollarSign, Download,
+  AlertTriangle, CheckCircle2, Shield, ShieldAlert, BellRing, UserCheck, Clock, FileText, ExternalLink, DollarSign, Download, LayoutGrid, List as ListIcon,
 } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import StatCard from "@/components/shared/StatCard";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 import {
   sortByGravity, incidentSeverity, incidentTypeLabel, SEVERITY_META,
   buildTimeline, resolutionHours, formatDuration, incidentOverdue, INCIDENT_TYPES,
 } from "@/utils/incidents";
+import { incidentSlaStatus, SLA_META } from "@/utils/incidentSla";
+
+// Selo de SLA reutilizável (lista e kanban).
+function SlaBadge({ inc, settings }) {
+  const st = incidentSlaStatus(inc, settings);
+  if (!st) return null;
+  const m = SLA_META[st];
+  return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${m.cls}`}>{m.label}</span>;
+}
+
+// Colunas do quadro Kanban (status do fluxo de ocorrência).
+const KANBAN_COLS = [
+  { key: "open", label: "Aberta", match: (i) => i.status !== "in_progress" && i.status !== "resolved" },
+  { key: "in_progress", label: "Em tratativa", match: (i) => i.status === "in_progress" },
+  { key: "resolved", label: "Resolvida", match: (i) => i.status === "resolved" },
+];
 
 /**
  * CENTRAL DE OCORRÊNCIAS (Bloco 3).
@@ -34,7 +52,9 @@ export default function Incidents() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [assignedFilter, setAssignedFilter] = useState("");
   const [selected, setSelected] = useState(null);
+  const [view, setView] = useState("list");
   const [form, setForm] = useState({ assigned_to: "", action_plan: "", due_date: "", financial_impact: "", root_cause: "", note: "", resolution: "" });
+  const { settings } = useCompanySettings();
 
   const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => base44.entities.Incident.list("-created_date", 300) });
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
@@ -51,6 +71,29 @@ export default function Incidents() {
   );
   // Ordena por gravidade; atrasadas sobem para o topo.
   const filtered = sortByGravity(filteredBase).sort((a, b) => Number(incidentOverdue(b)) - Number(incidentOverdue(a)));
+
+  // Kanban: ignora o filtro de status (as colunas SÃO os status), mantém os demais.
+  const kanbanItems = sortByGravity(incidents.filter(i =>
+    (sevFilter === "all" || incidentSeverity(i) === sevFilter) &&
+    (typeFilter === "all" || i.type === typeFilter) &&
+    (!aq || (i.assigned_to || "").toLowerCase().includes(aq))
+  ));
+
+  // Arrastar um card para outra coluna muda o status da ocorrência.
+  const onDragEnd = (result) => {
+    const { destination, draggableId } = result;
+    if (!destination) return;
+    const inc = incidents.find(i => i.id === draggableId);
+    if (!inc) return;
+    const target = destination.droppableId; // open | in_progress | resolved
+    const cur = inc.status === "resolved" ? "resolved" : inc.status === "in_progress" ? "in_progress" : "open";
+    if (target === cur) return;
+    const labelByCol = { open: "Reaberta / em aberto", in_progress: "Em tratativa", resolved: "Resolvida" };
+    const patch = { status: target, timeline: tl(inc, `Movida para "${labelByCol[target]}" no quadro`, target) };
+    if (target === "resolved") patch.resolved_at = new Date().toISOString();
+    if (target !== "resolved") patch.resolved_at = null;
+    update.mutate({ id: inc.id, patch });
+  };
 
   const counts = {
     open: incidents.filter(i => i.status !== "resolved").length,
@@ -226,10 +269,67 @@ export default function Incidents() {
           </SelectContent>
         </Select>
         <Input placeholder="Responsável..." value={assignedFilter} onChange={e => setAssignedFilter(e.target.value)} className="w-40" />
+        <div className="ml-auto inline-flex rounded-lg border border-border overflow-hidden">
+          <button onClick={() => setView("list")} title="Lista"
+            className={`px-2.5 h-9 flex items-center gap-1.5 text-sm ${view === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/60"}`}>
+            <ListIcon className="w-4 h-4" /> Lista
+          </button>
+          <button onClick={() => setView("kanban")} title="Kanban"
+            className={`px-2.5 h-9 flex items-center gap-1.5 text-sm ${view === "kanban" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/60"}`}>
+            <LayoutGrid className="w-4 h-4" /> Kanban
+          </button>
+        </div>
       </div>
 
-      {/* Lista */}
-      {filtered.length === 0 ? (
+      {/* Kanban */}
+      {view === "kanban" ? (
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {KANBAN_COLS.map(col => {
+              const items = kanbanItems.filter(col.match);
+              return (
+                <Droppable droppableId={col.key} key={col.key}>
+                  {(dp) => (
+                    <div ref={dp.innerRef} {...dp.droppableProps}
+                      className="rounded-xl border border-border bg-muted/20 p-2 min-h-[120px]">
+                      <div className="flex items-center justify-between px-2 py-1.5">
+                        <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{col.label}</span>
+                        <span className="text-xs font-mono text-muted-foreground">{items.length}</span>
+                      </div>
+                      <div className="space-y-2">
+                        {items.map((inc, idx) => {
+                          const meta = SEVERITY_META[incidentSeverity(inc)];
+                          const order = orderById[inc.order_id];
+                          return (
+                            <Draggable draggableId={inc.id} index={idx} key={inc.id}>
+                              {(d) => (
+                                <button ref={d.innerRef} {...d.draggableProps} {...d.dragHandleProps}
+                                  onClick={() => openManage(inc)}
+                                  className="w-full text-left rounded-lg border border-border bg-card p-2.5 hover:border-primary/40 transition-all">
+                                  <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${meta.cls}`}>{meta.label}</span>
+                                    <SlaBadge inc={inc} settings={settings} />
+                                  </div>
+                                  <p className="text-sm font-semibold leading-tight">{incidentTypeLabel(inc.type)}</p>
+                                  {order && <p className="font-mono text-[11px] text-muted-foreground">{order.protocol}</p>}
+                                  {inc.assigned_to && <p className="text-[11px] text-muted-foreground mt-0.5">👤 {inc.assigned_to}</p>}
+                                </button>
+                              )}
+                            </Draggable>
+                          );
+                        })}
+                        {dp.placeholder}
+                        {items.length === 0 && <p className="text-[11px] text-muted-foreground/60 text-center py-3">—</p>}
+                      </div>
+                    </div>
+                  )}
+                </Droppable>
+              );
+            })}
+          </div>
+        </DragDropContext>
+      ) : /* Lista */
+      filtered.length === 0 ? (
         <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">
           <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-green-400" /> Nenhuma ocorrência nesta visão.
         </CardContent></Card>
@@ -253,6 +353,7 @@ export default function Incidents() {
                         inc.status === "in_progress" ? "bg-blue-500/15 text-blue-700 dark:text-blue-300" : "bg-amber-500/15 text-amber-700 dark:text-amber-300"
                       }`}>{inc.status === "resolved" ? "Resolvida" : inc.status === "in_progress" ? "Em tratativa" : "Aberta"}</span>
                       {incidentOverdue(inc) && <span className="text-[10px] bg-red-500/15 text-red-700 dark:text-red-300 font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Clock className="w-3 h-3" /> Prazo vencido</span>}
+                      <SlaBadge inc={inc} settings={settings} />
                       {inc.client_notified && <span className="text-[10px] text-green-600 dark:text-green-300 flex items-center gap-0.5"><BellRing className="w-3 h-3" /> cliente avisado</span>}
                       {inc.insurance_triggered && <span className="text-[10px] text-blue-600 dark:text-blue-300 flex items-center gap-0.5"><Shield className="w-3 h-3" /> seguro</span>}
                     </div>
