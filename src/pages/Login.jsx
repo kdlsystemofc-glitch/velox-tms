@@ -35,6 +35,7 @@ export default function Login() {
       const blocked = profile && profile.active === false;
       const dest = blocked ? "/sem-acesso"
         : role === "motorista" ? "/motorista"
+        : role === "client" ? "/portal"
         : (role === "admin" || role === "operator") ? "/admin"
         : "/sem-acesso";
       window.location.href = dest;
@@ -62,6 +63,10 @@ export default function Login() {
           Não tem conta?{" "}
           <Link to="/register" className="text-primary font-medium hover:underline">
             Criar conta
+          </Link>
+          {" · "}
+          <Link to="/portal/cadastro" className="text-primary font-medium hover:underline">
+            Sou cliente
           </Link>
         </>
       }

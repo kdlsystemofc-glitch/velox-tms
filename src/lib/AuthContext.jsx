@@ -59,6 +59,7 @@ export const AuthProvider = ({ children }) => {
         full_name: profile?.full_name || authUser.user_metadata?.full_name || '',
         role: effectiveRole,
         driver_id: profile?.driver_id || null,
+        client_id: profile?.client_id || null,
       };
 
       setUser(userWithRole);

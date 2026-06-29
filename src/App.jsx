@@ -15,6 +15,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import AdminRoute from '@/components/auth/AdminRoute';
 import OperatorRoute from '@/components/auth/OperatorRoute';
 import DriverRoute from '@/components/auth/DriverRoute';
+import ClientRoute from '@/components/auth/ClientRoute';
 
 // Auth pages — primeiro contato, mantidas eager
 import Login from '@/pages/Login';
@@ -53,9 +54,13 @@ const AlertsPage = lazy(() => import('@/pages/admin/AlertsPage'));
 const FrotaPage = lazy(() => import('@/pages/admin/FrotaPage'));
 const FinanceiroPage = lazy(() => import('@/pages/admin/FinanceiroPage'));
 const ConfigPage = lazy(() => import('@/pages/admin/ConfigPage'));
+const ClientAccess = lazy(() => import('@/pages/admin/ClientAccess'));
 const DriverHome = lazy(() => import('@/pages/driver/DriverHome'));
 const DriverTrip = lazy(() => import('@/pages/driver/DriverTrip'));
 const DriverHistory = lazy(() => import('@/pages/driver/DriverHistory'));
+const PortalLayout = lazy(() => import('@/pages/portal/PortalLayout'));
+const ClientOrders = lazy(() => import('@/pages/portal/ClientOrders'));
+const ClientRegister = lazy(() => import('@/pages/portal/ClientRegister'));
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -92,6 +97,7 @@ const AuthenticatedApp = () => {
       {/* Auth routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/portal/cadastro" element={<ClientRegister />} />
       <Route path="/sem-acesso" element={<NoAccess />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
@@ -156,6 +162,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/configuracoes" element={<Navigate to="/admin/config" replace />} />
             <Route path="/admin/usuarios" element={<UserManagement />} />
             <Route path="/admin/indicadores" element={<Indicators />} />
+            <Route path="/admin/portal-clientes" element={<ClientAccess />} />
           </Route>
         </Route>
       </Route>
@@ -165,6 +172,13 @@ const AuthenticatedApp = () => {
         <Route path="/motorista" element={<DriverHome />} />
         <Route path="/motorista/viagem/:id" element={<DriverTrip />} />
         <Route path="/motorista/historico" element={<DriverHistory />} />
+      </Route>
+
+      {/* Portal do Cliente */}
+      <Route element={<ClientRoute />}>
+        <Route path="/portal" element={<PortalLayout />}>
+          <Route index element={<ClientOrders />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<PageNotFound />} />
