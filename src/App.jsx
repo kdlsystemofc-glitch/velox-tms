@@ -60,6 +60,8 @@ const DriverTrip = lazy(() => import('@/pages/driver/DriverTrip'));
 const DriverHistory = lazy(() => import('@/pages/driver/DriverHistory'));
 const PortalLayout = lazy(() => import('@/pages/portal/PortalLayout'));
 const ClientOrders = lazy(() => import('@/pages/portal/ClientOrders'));
+const ClientOrderDetail = lazy(() => import('@/pages/portal/ClientOrderDetail'));
+const ClientNewOrder = lazy(() => import('@/pages/portal/ClientNewOrder'));
 const ClientRegister = lazy(() => import('@/pages/portal/ClientRegister'));
 
 const AuthenticatedApp = () => {
@@ -178,6 +180,8 @@ const AuthenticatedApp = () => {
       <Route element={<ClientRoute />}>
         <Route path="/portal" element={<PortalLayout />}>
           <Route index element={<ClientOrders />} />
+          <Route path="novo" element={<ClientNewOrder />} />
+          <Route path="pedido/:id" element={<ClientOrderDetail />} />
         </Route>
       </Route>
 

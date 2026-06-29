@@ -1,4 +1,5 @@
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/api/supabaseClient";
 import StatusBadge from "@/components/admin/StatusBadge";
@@ -6,6 +7,7 @@ import { Package, Plus } from "lucide-react";
 import { formatDateBR } from "@/utils/dateUtils";
 
 export default function ClientOrders() {
+  const navigate = useNavigate();
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["my-client-orders"],
     queryFn: async () => {
@@ -22,9 +24,9 @@ export default function ClientOrders() {
           <h1 className="font-display text-2xl font-bold text-gray-900">Meus Pedidos</h1>
           <p className="text-sm text-gray-500">Acompanhe suas coletas e entregas.</p>
         </div>
-        <a href="/agendar" className="inline-flex items-center gap-2 bg-brand-gradient text-white font-semibold px-4 py-2 rounded-lg text-sm">
+        <Link to="/portal/novo" className="inline-flex items-center gap-2 bg-brand-gradient text-white font-semibold px-4 py-2 rounded-lg text-sm">
           <Plus className="w-4 h-4" /> Novo pedido
-        </a>
+        </Link>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
@@ -49,7 +51,8 @@ export default function ClientOrders() {
             </thead>
             <tbody>
               {orders.map(o => (
-                <tr key={o.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                <tr key={o.id} onClick={() => navigate(`/portal/pedido/${o.id}`)}
+                  className="border-b border-gray-100 last:border-0 hover:bg-gray-50 cursor-pointer">
                   <td className="py-2.5 px-4 font-mono font-semibold text-xs">{o.protocol}</td>
                   <td className="py-2.5 px-4 text-gray-600 max-w-[220px] truncate">
                     {(o.recipients || []).map(r => r.city).filter(Boolean).join(", ") || "—"}
