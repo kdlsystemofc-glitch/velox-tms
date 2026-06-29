@@ -17,10 +17,10 @@ import { NumericInput } from "@/components/shared/NumericInput";
 function docStatus(expiry) {
   if (!expiry) return null;
   const days = differenceInDays(parseISO(expiry), new Date());
-  if (days < 0) return { label: "Vencido", color: "bg-red-100 text-red-700", icon: AlertCircle, days };
-  if (days <= 30) return { label: `${days}d`, color: "bg-red-100 text-red-700", icon: AlertTriangle, days };
-  if (days <= 60) return { label: `${days}d`, color: "bg-amber-100 text-amber-700", icon: AlertTriangle, days };
-  return { label: "OK", color: "bg-green-100 text-green-700", icon: CheckCircle, days };
+  if (days < 0) return { label: "Vencido", color: "bg-red-500/15 text-red-700 dark:text-red-300", icon: AlertCircle, days };
+  if (days <= 30) return { label: `${days}d`, color: "bg-red-500/15 text-red-700 dark:text-red-300", icon: AlertTriangle, days };
+  if (days <= 60) return { label: `${days}d`, color: "bg-amber-500/15 text-amber-700 dark:text-amber-300", icon: AlertTriangle, days };
+  return { label: "OK", color: "bg-green-500/15 text-green-700 dark:text-green-300", icon: CheckCircle, days };
 }
 
 const EMPTY_MAINT = { type: "preventiva", date: "", km: "", description: "", amount: "", provider: "", provider_id: "", next_date: "", _providerSelected: false, _editIndex: undefined };
@@ -132,9 +132,9 @@ export default function TruckDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="font-display text-xl font-bold font-mono">{truck.plate}</h1>
             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-              truck.status === "available" ? "bg-green-100 text-green-700" :
-              truck.status === "on_route" ? "bg-amber-100 text-amber-700" :
-              truck.status === "maintenance" ? "bg-red-100 text-red-700" : "bg-muted text-muted-foreground"
+              truck.status === "available" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+              truck.status === "on_route" ? "bg-amber-500/15 text-amber-700 dark:text-amber-300" :
+              truck.status === "maintenance" ? "bg-red-500/15 text-red-700 dark:text-red-300" : "bg-muted text-muted-foreground"
             }`}>
               {truck.status === "available" ? "Disponível" : truck.status === "on_route" ? "Em Rota" : truck.status === "maintenance" ? "Manutenção" : "Inativo"}
             </span>
@@ -389,7 +389,7 @@ export default function TruckDetailPage() {
                             <Pencil className="w-3 h-3" /> Editar
                           </Button>
                           <Button size="sm" variant="ghost"
-                            className="text-xs text-red-400 hover:text-red-600 hover:bg-red-50 gap-1"
+                            className="text-xs text-red-400 hover:text-red-600 dark:text-red-300 hover:bg-red-500/10 gap-1"
                             onClick={() => {
                               if (!confirm("Remover esta manutenção?")) return;
                               const updated = [...(truck.maintenance_history || [])];

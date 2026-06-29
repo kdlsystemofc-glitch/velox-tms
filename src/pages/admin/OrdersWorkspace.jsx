@@ -318,7 +318,7 @@ export default function OrdersWorkspace() {
                       <span className="font-mono font-semibold text-xs">{order.protocol}</span>
                       <PriorityBadge priority={order.priority} className="ml-1.5" />
                       {order.freight_type === "urgent" && (
-                        <span className="ml-1.5 text-[9px] bg-red-100 text-red-700 font-bold px-1 py-0.5 rounded uppercase">Urg</span>
+                        <span className="ml-1.5 text-[9px] bg-red-500/15 text-red-700 dark:text-red-300 font-bold px-1 py-0.5 rounded uppercase">Urg</span>
                       )}
                     </td>
                     <td className="py-2.5 px-4 max-w-[180px] truncate">{order.client_name}</td>
@@ -343,7 +343,7 @@ export default function OrdersWorkspace() {
                               onClick={() => openConfirm(order)}>
                               <CheckCircle className="w-3 h-3 mr-1" /> Confirmar
                             </Button>
-                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:bg-red-50"
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:bg-red-500/10"
                               title="Recusar"
                               onClick={() => setRejectingOrder(order)}>
                               <XCircle className="w-3.5 h-3.5" />
@@ -403,7 +403,7 @@ export default function OrdersWorkspace() {
                   </p>
                 </div>
                 {confirmCredit?.over && (
-                  <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-800">
+                  <div className="rounded-lg border border-red-300 bg-red-500/10 p-3 text-xs text-red-800 dark:text-red-300">
                     <p className="font-semibold flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" /> Cliente acima do limite de crédito</p>
                     <p className="mt-1">Em aberto + este frete: <strong>R$ {confirmCredit.projected.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong> · Limite: R$ {confirmCredit.limit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}. Confirme apenas se autorizado.</p>
                   </div>

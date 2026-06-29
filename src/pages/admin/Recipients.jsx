@@ -105,11 +105,11 @@ export default function Recipients({ hideTitle = false }) {
           )},
           { key: "cpf_cnpj", label: "CNPJ / CPF", sortable: true, className: "font-mono text-xs text-muted-foreground", render: r => r.cpf_cnpj || "—" },
           { key: "city", label: "Cidade", value: r => r.address?.city || "", className: "text-xs text-muted-foreground", render: r => r.address?.city ? `${r.address.city}/${r.address.state}` : "—" },
-          { key: "type", label: "Tipo", sortable: true, value: r => r.type, render: r => <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.type === "fixo" ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"}`}>{r.type === "fixo" ? "Fixo" : "Eventual"}</span> },
+          { key: "type", label: "Tipo", sortable: true, value: r => r.type, render: r => <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${r.type === "fixo" ? "bg-blue-500/15 text-blue-700 dark:text-blue-300" : "bg-muted text-muted-foreground"}`}>{r.type === "fixo" ? "Fixo" : "Eventual"}</span> },
           { key: "actions", label: "", align: "right", stopPropagation: true, width: 80, render: r => (
             <div className="flex justify-end">
-              <button onClick={() => openEdit(r)} className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
-              <button onClick={() => { if (window.confirm(`Remover ${r.name}?`)) remove.mutate(r.id); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
+              <button onClick={() => openEdit(r)} className="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
+              <button onClick={() => { if (window.confirm(`Remover ${r.name}?`)) remove.mutate(r.id); }} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
             </div>
           )},
         ]}

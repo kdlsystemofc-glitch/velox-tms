@@ -16,8 +16,8 @@ import { Users, Power, Trash2, ShieldCheck, Plus, KeyRound, UserCog, Truck, Cloc
 const ROLE_LABEL = { admin: "Administrador", operator: "Operador", motorista: "Motorista", pending: "Pendente" };
 const ROLE_CLS = {
   admin: "bg-velox-amber/15 text-velox-amber border-velox-amber/30",
-  operator: "bg-blue-100 text-blue-700 border-blue-200",
-  motorista: "bg-green-100 text-green-700 border-green-200",
+  operator: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30",
+  motorista: "bg-green-500/15 text-green-700 dark:text-green-300 border-green-500/30",
   pending: "bg-muted text-muted-foreground border-border",
 };
 const EMPTY_CREATE = { full_name: "", email: "", role: "operator", password: "" };
@@ -122,7 +122,7 @@ export default function UserManagement() {
       </div>
 
       {pending.length > 0 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
           {pending.length} usuário(s) aguardando liberação de acesso. Defina o papel abaixo.
         </div>
       )}
@@ -147,7 +147,7 @@ export default function UserManagement() {
           { key: "full_name", label: "Usuário", sortable: true, className: "font-medium", render: p => (
             <div>
               <p className="font-medium flex items-center gap-1.5">{p.full_name || "—"} {p.id === user?.id && <span className="text-[10px] text-muted-foreground">(você)</span>}
-                {p.role === "motorista" && p.driver_id && <span className="text-[9px] bg-green-100 text-green-700 font-bold px-1 rounded">app motorista</span>}</p>
+                {p.role === "motorista" && p.driver_id && <span className="text-[9px] bg-green-500/15 text-green-700 dark:text-green-300 font-bold px-1 rounded">app motorista</span>}</p>
               <p className="text-xs text-muted-foreground font-mono">{p.email}</p>
             </div>
           )},
@@ -159,7 +159,7 @@ export default function UserManagement() {
           )},
           { key: "last_sign_in_at", label: "Último acesso", sortable: true, className: "text-xs text-muted-foreground", render: p => fmtAccess(p.last_sign_in_at) },
           { key: "active", label: "Situação", sortable: true, value: p => (p.active === false ? "inactive" : "active"), render: p => (
-            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${p.active === false ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{p.active === false ? "Desativado" : "Ativo"}</span>
+            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${p.active === false ? "bg-red-500/15 text-red-700 dark:text-red-300" : "bg-green-500/15 text-green-700 dark:text-green-300"}`}>{p.active === false ? "Desativado" : "Ativo"}</span>
           )},
           { key: "actions", label: "", align: "right", stopPropagation: true, render: p => {
             const isSelf = p.id === user?.id;

@@ -41,7 +41,7 @@ export default function ContactsEditor({ value = [], onChange }) {
                     <input type="checkbox" checked={!!c.is_primary} onChange={() => setPrimary(i)} className="w-3.5 h-3.5 accent-primary" />
                     Principal
                   </label>
-                  <button type="button" onClick={() => remove(i)} className="text-red-400 hover:text-red-600"><X className="w-3.5 h-3.5" /></button>
+                  <button type="button" onClick={() => remove(i)} className="text-red-400 hover:text-red-600 dark:text-red-300"><X className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">

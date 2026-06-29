@@ -136,7 +136,7 @@ export default function Indicators() {
     const d = deltaPct(c, p);
     if (d == null || Math.abs(d) < 0.5) return null;
     const good = lowerBetter ? d < 0 : d > 0;
-    return <span className={`text-[11px] font-semibold ${good ? "text-green-600" : "text-red-600"}`}>{d > 0 ? "▲" : "▼"} {Math.abs(d).toFixed(0)}%</span>;
+    return <span className={`text-[11px] font-semibold ${good ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>{d > 0 ? "▲" : "▼"} {Math.abs(d).toFixed(0)}%</span>;
   };
   const metaDot = (value, target) => {
     const cls = value >= target ? "bg-green-500" : value >= target - 10 ? "bg-amber-500" : "bg-red-500";
@@ -144,14 +144,14 @@ export default function Indicators() {
   };
 
   const periodKpis = [
-    { icon: Package, label: "Coletas realizadas", value: cur.collected, c: cur.collected, p: prev.collected, color: "text-amber-600" },
-    { icon: CheckCircle2, label: "Entregas realizadas", value: cur.delivered, c: cur.delivered, p: prev.delivered, color: "text-green-600" },
-    { icon: TrendingUp, label: "OTD (no prazo)", value: `${cur.otd.toFixed(0)}%`, c: cur.otd, p: prev.otd, color: "text-green-600", meta: TARGET_OTD, metaVal: cur.otd, sub: `${cur.onTime}/${cur.delivered}` },
-    { icon: Clock, label: "Entregas atrasadas", value: cur.late, c: cur.late, p: prev.late, color: "text-red-600", lowerBetter: true },
-    { icon: AlertTriangle, label: "Ocorrências no período", value: cur.incidentsCreated, c: cur.incidentsCreated, p: prev.incidentsCreated, color: "text-orange-600", lowerBetter: true },
-    { icon: DollarSign, label: "Faturamento (caixa)", value: fmt(cur.faturamento), c: cur.faturamento, p: prev.faturamento, color: "text-green-600" },
-    { icon: DollarSign, label: "Despesas (caixa)", value: fmt(cur.despesa), c: cur.despesa, p: prev.despesa, color: "text-red-600", lowerBetter: true },
-    { icon: BarChart3, label: "Margem", value: `${cur.margin.toFixed(1)}%`, c: cur.margin, p: prev.margin, color: cur.margin >= 0 ? "text-green-600" : "text-red-600", meta: TARGET_MARGIN, metaVal: cur.margin, sub: `${fmt(cur.resultado)} resultado` },
+    { icon: Package, label: "Coletas realizadas", value: cur.collected, c: cur.collected, p: prev.collected, color: "text-amber-600 dark:text-amber-300" },
+    { icon: CheckCircle2, label: "Entregas realizadas", value: cur.delivered, c: cur.delivered, p: prev.delivered, color: "text-green-600 dark:text-green-300" },
+    { icon: TrendingUp, label: "OTD (no prazo)", value: `${cur.otd.toFixed(0)}%`, c: cur.otd, p: prev.otd, color: "text-green-600 dark:text-green-300", meta: TARGET_OTD, metaVal: cur.otd, sub: `${cur.onTime}/${cur.delivered}` },
+    { icon: Clock, label: "Entregas atrasadas", value: cur.late, c: cur.late, p: prev.late, color: "text-red-600 dark:text-red-300", lowerBetter: true },
+    { icon: AlertTriangle, label: "Ocorrências no período", value: cur.incidentsCreated, c: cur.incidentsCreated, p: prev.incidentsCreated, color: "text-orange-600 dark:text-orange-300", lowerBetter: true },
+    { icon: DollarSign, label: "Faturamento (caixa)", value: fmt(cur.faturamento), c: cur.faturamento, p: prev.faturamento, color: "text-green-600 dark:text-green-300" },
+    { icon: DollarSign, label: "Despesas (caixa)", value: fmt(cur.despesa), c: cur.despesa, p: prev.despesa, color: "text-red-600 dark:text-red-300", lowerBetter: true },
+    { icon: BarChart3, label: "Margem", value: `${cur.margin.toFixed(1)}%`, c: cur.margin, p: prev.margin, color: cur.margin >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300", meta: TARGET_MARGIN, metaVal: cur.margin, sub: `${fmt(cur.resultado)} resultado` },
   ];
 
   return (
@@ -190,20 +190,20 @@ export default function Indicators() {
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Eficiência do período</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><DollarSign className="w-4 h-4 text-green-600" /><span className="text-[11px] text-muted-foreground uppercase">Ticket médio</span></div><p className="text-xl font-bold font-mono text-green-600">{fmt(ticket)}</p></CardContent></Card>
-          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Gauge className="w-4 h-4 text-red-600" /><span className="text-[11px] text-muted-foreground uppercase">Custo / km</span></div><p className="text-xl font-bold font-mono text-red-600">{custoKm > 0 ? `${fmt(custoKm)}/km` : "—"}</p></CardContent></Card>
-          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><TrendingUp className="w-4 h-4 text-blue-600" /><span className="text-[11px] text-muted-foreground uppercase">Receita / km</span></div><p className="text-xl font-bold font-mono text-blue-600">{receitaKm > 0 ? `${fmt(receitaKm)}/km` : "—"}</p></CardContent></Card>
-          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Clock className="w-4 h-4 text-indigo-600" /><span className="text-[11px] text-muted-foreground uppercase">Lead time médio</span></div><p className="text-xl font-bold font-mono text-indigo-600">{leadAvg != null ? `${leadAvg.toFixed(1)} dias` : "—"}</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><DollarSign className="w-4 h-4 text-green-600 dark:text-green-300" /><span className="text-[11px] text-muted-foreground uppercase">Ticket médio</span></div><p className="text-xl font-bold font-mono text-green-600 dark:text-green-300">{fmt(ticket)}</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Gauge className="w-4 h-4 text-red-600 dark:text-red-300" /><span className="text-[11px] text-muted-foreground uppercase">Custo / km</span></div><p className="text-xl font-bold font-mono text-red-600 dark:text-red-300">{custoKm > 0 ? `${fmt(custoKm)}/km` : "—"}</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-300" /><span className="text-[11px] text-muted-foreground uppercase">Receita / km</span></div><p className="text-xl font-bold font-mono text-blue-600 dark:text-blue-300">{receitaKm > 0 ? `${fmt(receitaKm)}/km` : "—"}</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-300" /><span className="text-[11px] text-muted-foreground uppercase">Lead time médio</span></div><p className="text-xl font-bold font-mono text-indigo-600 dark:text-indigo-300">{leadAvg != null ? `${leadAvg.toFixed(1)} dias` : "—"}</p></CardContent></Card>
         </div>
       </div>
 
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Frota agora</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Truck className="w-4 h-4 text-blue-600" /><span className="text-[11px] text-muted-foreground uppercase">Disponíveis</span></div><p className="text-2xl font-bold font-mono text-blue-600">{available}/{activeTrucks.length}</p></CardContent></Card>
-          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Truck className="w-4 h-4 text-violet-600" /><span className="text-[11px] text-muted-foreground uppercase">Em rota</span></div><p className="text-2xl font-bold font-mono text-violet-600">{onRouteTrucks}</p></CardContent></Card>
-          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Percent className="w-4 h-4 text-indigo-600" /><span className="text-[11px] text-muted-foreground uppercase">Ocupação</span></div><p className="text-2xl font-bold font-mono text-indigo-600">{occupancy.toFixed(0)}%</p></CardContent></Card>
-          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><AlertTriangle className="w-4 h-4 text-orange-600" /><span className="text-[11px] text-muted-foreground uppercase">Ocorrências abertas</span></div><p className="text-2xl font-bold font-mono text-orange-600">{openIncidents}</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Truck className="w-4 h-4 text-blue-600 dark:text-blue-300" /><span className="text-[11px] text-muted-foreground uppercase">Disponíveis</span></div><p className="text-2xl font-bold font-mono text-blue-600 dark:text-blue-300">{available}/{activeTrucks.length}</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Truck className="w-4 h-4 text-violet-600 dark:text-violet-300" /><span className="text-[11px] text-muted-foreground uppercase">Em rota</span></div><p className="text-2xl font-bold font-mono text-violet-600 dark:text-violet-300">{onRouteTrucks}</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><Percent className="w-4 h-4 text-indigo-600 dark:text-indigo-300" /><span className="text-[11px] text-muted-foreground uppercase">Ocupação</span></div><p className="text-2xl font-bold font-mono text-indigo-600 dark:text-indigo-300">{occupancy.toFixed(0)}%</p></CardContent></Card>
+          <Card><CardContent className="pt-4 pb-3"><div className="flex items-center gap-2 mb-1"><AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-300" /><span className="text-[11px] text-muted-foreground uppercase">Ocorrências abertas</span></div><p className="text-2xl font-bold font-mono text-orange-600 dark:text-orange-300">{openIncidents}</p></CardContent></Card>
         </div>
       </div>
 
@@ -269,7 +269,7 @@ export default function Indicators() {
             {topClientes.length === 0 ? <p className="text-xs text-muted-foreground py-3 text-center">Sem entregas no período.</p> : topClientes.map((c, i) => (
               <div key={i} className="flex items-center justify-between text-sm">
                 <span className="truncate flex items-center gap-2"><span className="text-xs text-muted-foreground w-4">{i + 1}.</span>{c.name}</span>
-                <span className="font-mono font-semibold text-green-600 flex-shrink-0">{fmt(c.receita)}</span>
+                <span className="font-mono font-semibold text-green-600 dark:text-green-300 flex-shrink-0">{fmt(c.receita)}</span>
               </div>
             ))}
           </CardContent>
@@ -280,7 +280,7 @@ export default function Indicators() {
             {topMotoristas.length === 0 ? <p className="text-xs text-muted-foreground py-3 text-center">Sem viagens concluídas no período.</p> : topMotoristas.map((d, i) => (
               <div key={i} className="flex items-center justify-between text-sm">
                 <span className="truncate flex items-center gap-2"><span className="text-xs text-muted-foreground w-4">{i + 1}.</span>{d.name} <span className="text-xs text-muted-foreground">· {d.viagens} viag.</span></span>
-                <span className="font-mono font-semibold text-green-600 flex-shrink-0">{fmt(d.receita)}</span>
+                <span className="font-mono font-semibold text-green-600 dark:text-green-300 flex-shrink-0">{fmt(d.receita)}</span>
               </div>
             ))}
           </CardContent>

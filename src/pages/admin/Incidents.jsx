@@ -186,8 +186,8 @@ export default function Incidents() {
       {/* Indicadores (Oc-3) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Tempo médio resolução</p><p className="text-lg font-bold font-mono">{avgHours != null ? formatDuration(avgHours) : "—"}</p></Card>
-        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Resolvidas no prazo</p><p className={`text-lg font-bold font-mono ${otPct != null && otPct < 80 ? "text-amber-600" : "text-green-600"}`}>{otPct != null ? `${otPct}%` : "—"}</p></Card>
-        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Impacto financeiro</p><p className={`text-lg font-bold font-mono ${totalImpact > 0 ? "text-red-600" : "text-muted-foreground"}`}>R$ {totalImpact.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></Card>
+        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Resolvidas no prazo</p><p className={`text-lg font-bold font-mono ${otPct != null && otPct < 80 ? "text-amber-600 dark:text-amber-300" : "text-green-600 dark:text-green-300"}`}>{otPct != null ? `${otPct}%` : "—"}</p></Card>
+        <Card className="p-3"><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Impacto financeiro</p><p className={`text-lg font-bold font-mono ${totalImpact > 0 ? "text-red-600 dark:text-red-300" : "text-muted-foreground"}`}>R$ {totalImpact.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></Card>
         <Card className="p-3">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Tipos mais frequentes</p>
           {byType.length === 0 ? <p className="text-sm text-muted-foreground">—</p> : (
@@ -249,12 +249,12 @@ export default function Incidents() {
                       <span className="text-sm font-semibold">{incidentTypeLabel(inc.type)}</span>
                       {order && <span className="font-mono text-xs text-muted-foreground">{order.protocol}</span>}
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                        inc.status === "resolved" ? "bg-green-100 text-green-700" :
-                        inc.status === "in_progress" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
+                        inc.status === "resolved" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+                        inc.status === "in_progress" ? "bg-blue-500/15 text-blue-700 dark:text-blue-300" : "bg-amber-500/15 text-amber-700 dark:text-amber-300"
                       }`}>{inc.status === "resolved" ? "Resolvida" : inc.status === "in_progress" ? "Em tratativa" : "Aberta"}</span>
-                      {incidentOverdue(inc) && <span className="text-[10px] bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Clock className="w-3 h-3" /> Prazo vencido</span>}
-                      {inc.client_notified && <span className="text-[10px] text-green-600 flex items-center gap-0.5"><BellRing className="w-3 h-3" /> cliente avisado</span>}
-                      {inc.insurance_triggered && <span className="text-[10px] text-blue-600 flex items-center gap-0.5"><Shield className="w-3 h-3" /> seguro</span>}
+                      {incidentOverdue(inc) && <span className="text-[10px] bg-red-500/15 text-red-700 dark:text-red-300 font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5"><Clock className="w-3 h-3" /> Prazo vencido</span>}
+                      {inc.client_notified && <span className="text-[10px] text-green-600 dark:text-green-300 flex items-center gap-0.5"><BellRing className="w-3 h-3" /> cliente avisado</span>}
+                      {inc.insurance_triggered && <span className="text-[10px] text-blue-600 dark:text-blue-300 flex items-center gap-0.5"><Shield className="w-3 h-3" /> seguro</span>}
                     </div>
                     <p className="text-sm text-muted-foreground truncate mt-0.5">{inc.description}</p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -290,13 +290,13 @@ export default function Incidents() {
                     <p>{selected.description}</p>
                     {(selected.financial_impact > 0 || selected.root_cause) && (
                       <div className="flex items-center gap-3 text-xs">
-                        {selected.financial_impact > 0 && <span className="flex items-center gap-1 text-red-700 font-semibold"><DollarSign className="w-3.5 h-3.5" /> R$ {Number(selected.financial_impact).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>}
+                        {selected.financial_impact > 0 && <span className="flex items-center gap-1 text-red-700 dark:text-red-300 font-semibold"><DollarSign className="w-3.5 h-3.5" /> R$ {Number(selected.financial_impact).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>}
                         {selected.root_cause && <span className="text-muted-foreground">Causa: {selected.root_cause}</span>}
                       </div>
                     )}
                     <div className="flex items-center gap-2 flex-wrap">
                       {(selected.photo_urls || []).map((u, i) => (
-                        <a key={i} href={u} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"><FileText className="w-3 h-3" /> Anexo {i + 1}</a>
+                        <a key={i} href={u} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-300 hover:underline"><FileText className="w-3 h-3" /> Anexo {i + 1}</a>
                       ))}
                       {selected.status !== "resolved" && (
                         <FileUploadButton label="Anexar foto/doc" accept="image/*,application/pdf" onUpload={addPhoto} />
@@ -326,10 +326,10 @@ export default function Incidents() {
                         </div>
                         <div className="flex gap-2 flex-wrap">
                           <Button size="sm" variant="outline" className="text-xs gap-1" onClick={saveTratativa}><UserCheck className="w-3.5 h-3.5" /> Salvar tratativa</Button>
-                          <Button size="sm" variant="outline" className={`text-xs gap-1 ${selected.client_notified ? "text-green-600 border-green-200" : ""}`} onClick={markNotified} disabled={selected.client_notified}>
+                          <Button size="sm" variant="outline" className={`text-xs gap-1 ${selected.client_notified ? "text-green-600 dark:text-green-300 border-green-500/30" : ""}`} onClick={markNotified} disabled={selected.client_notified}>
                             <BellRing className="w-3.5 h-3.5" /> {selected.client_notified ? "Cliente notificado" : "Marcar cliente notificado"}
                           </Button>
-                          <Button size="sm" variant="outline" className={`text-xs gap-1 ${selected.insurance_triggered ? "text-blue-600 border-blue-200" : ""}`} onClick={toggleInsurance}>
+                          <Button size="sm" variant="outline" className={`text-xs gap-1 ${selected.insurance_triggered ? "text-blue-600 dark:text-blue-300 border-blue-500/30" : ""}`} onClick={toggleInsurance}>
                             <Shield className="w-3.5 h-3.5" /> {selected.insurance_triggered ? "Seguro acionado" : "Acionar seguro"}
                           </Button>
                         </div>
@@ -371,9 +371,9 @@ export default function Incidents() {
                   )}
 
                   {selected.status === "resolved" && (
-                    <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm space-y-2">
-                      <p className="font-semibold text-green-800">Resolvida em {formatDuration(resolutionHours(selected))}</p>
-                      {selected.resolution_notes && <p className="text-green-700">{selected.resolution_notes}</p>}
+                    <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm space-y-2">
+                      <p className="font-semibold text-green-800 dark:text-green-300">Resolvida em {formatDuration(resolutionHours(selected))}</p>
+                      {selected.resolution_notes && <p className="text-green-700 dark:text-green-300">{selected.resolution_notes}</p>}
                       <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => reopen(selected)}>
                         <AlertTriangle className="w-3.5 h-3.5" /> Reabrir ocorrência
                       </Button>

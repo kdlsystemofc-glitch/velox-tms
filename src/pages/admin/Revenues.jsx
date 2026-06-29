@@ -14,20 +14,20 @@ import { NumericInput } from "@/components/shared/NumericInput";
 import { parseLocalDate, todayLocalISO as _today, formatDateBR } from "@/utils/dateUtils";
 
 const statusConfig = {
-  receivable: { label: "A Receber", color: "bg-amber-100 text-amber-700" },
-  received: { label: "Recebido", color: "bg-green-100 text-green-700" },
-  overdue: { label: "Atrasado", color: "bg-red-100 text-red-700" },
+  receivable: { label: "A Receber", color: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
+  received: { label: "Recebido", color: "bg-green-500/15 text-green-700 dark:text-green-300" },
+  overdue: { label: "Atrasado", color: "bg-red-500/15 text-red-700 dark:text-red-300" },
   cancelled: { label: "Cancelado", color: "bg-muted text-muted-foreground" },
 };
 
 /** Faixas de aging (contas a receber em aberto) — padrão TMS. */
 const AGING = [
-  { key: "today",        label: "Vence hoje",     cls: "text-amber-800 bg-amber-100 border-amber-300 hover:bg-amber-200" },
-  { key: "d7",           label: "Vence ≤ 7 dias", cls: "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100" },
-  { key: "d30",          label: "8–30 dias",      cls: "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100" },
-  { key: "d60",          label: "31–60 dias",     cls: "text-indigo-700 bg-indigo-50 border-indigo-200 hover:bg-indigo-100" },
-  { key: "overdue30",    label: "Venceu < 30d",   cls: "text-red-700 bg-red-50 border-red-200 hover:bg-red-100" },
-  { key: "overdue30p",   label: "Venceu > 30d",   cls: "text-red-800 bg-red-100 border-red-300 hover:bg-red-200" },
+  { key: "today",        label: "Vence hoje",     cls: "text-amber-800 dark:text-amber-300 bg-amber-500/15 border-amber-300 hover:bg-amber-200" },
+  { key: "d7",           label: "Vence ≤ 7 dias", cls: "text-amber-700 dark:text-amber-300 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/15" },
+  { key: "d30",          label: "8–30 dias",      cls: "text-blue-700 dark:text-blue-300 bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/15" },
+  { key: "d60",          label: "31–60 dias",     cls: "text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 border-indigo-500/30 hover:bg-indigo-500/15" },
+  { key: "overdue30",    label: "Venceu < 30d",   cls: "text-red-700 dark:text-red-300 bg-red-500/10 border-red-500/30 hover:bg-red-500/15" },
+  { key: "overdue30p",   label: "Venceu > 30d",   cls: "text-red-800 dark:text-red-300 bg-red-500/15 border-red-300 hover:bg-red-200" },
 ];
 
 /** Classifica uma conta em aberto pela data de vencimento. */
@@ -122,11 +122,11 @@ export default function Revenues({ hideTitle = false }) {
       <div className="grid grid-cols-2 lg:grid-cols-8 gap-2.5">
         <Card className="p-3 lg:col-span-1">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Total a receber</p>
-          <p className="text-lg font-bold font-mono text-amber-600">R$ {totalReceivable.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+          <p className="text-lg font-bold font-mono text-amber-600 dark:text-amber-300">R$ {totalReceivable.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
         </Card>
         <Card className="p-3 lg:col-span-1">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Recebido</p>
-          <p className="text-lg font-bold font-mono text-green-600">R$ {totalReceived.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+          <p className="text-lg font-bold font-mono text-green-600 dark:text-green-300">R$ {totalReceived.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
         </Card>
         {AGING.map(b => {
           const t = agingTotals[b.key] || { count: 0, total: 0 };
@@ -187,7 +187,7 @@ export default function Revenues({ hideTitle = false }) {
                 {filtered.map(r => (
                   <tr key={r.id} className="border-b border-border/50 hover:bg-muted/20">
                     <td className="py-3 px-4">{r.description || "—"}</td>
-                    <td className="py-3 px-4 text-right font-mono font-semibold text-green-600">R$ {(r.amount || 0).toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right font-mono font-semibold text-green-600 dark:text-green-300">R$ {(r.amount || 0).toFixed(2)}</td>
                     <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">
                       {formatDateBR(r.due_date)}
                       {(r.status === "receivable" || r.status === "overdue") && (() => {
@@ -195,7 +195,7 @@ export default function Revenues({ hideTitle = false }) {
                         if (!d) return null;
                         const days = Math.round((d - parseLocalDate(_today())) / 86400000);
                         return (
-                          <span className={`ml-2 text-[10px] font-semibold ${days < 0 ? "text-red-600" : days <= 7 ? "text-amber-600" : "text-muted-foreground"}`}>
+                          <span className={`ml-2 text-[10px] font-semibold ${days < 0 ? "text-red-600 dark:text-red-300" : days <= 7 ? "text-amber-600 dark:text-amber-300" : "text-muted-foreground"}`}>
                             {days < 0 ? `${Math.abs(days)}d vencida` : days === 0 ? "vence hoje" : `em ${days}d`}
                           </span>
                         );
@@ -208,7 +208,7 @@ export default function Revenues({ hideTitle = false }) {
                     </td>
                     <td className="py-3 px-4 text-right">
                       {r.status === "receivable" && (
-                        <Button variant="ghost" size="sm" onClick={() => markReceivedMutation.mutate({ id: r.id, date: todayLocalISO() })} className="h-7 text-xs gap-1 text-green-600">
+                        <Button variant="ghost" size="sm" onClick={() => markReceivedMutation.mutate({ id: r.id, date: todayLocalISO() })} className="h-7 text-xs gap-1 text-green-600 dark:text-green-300">
                           <CheckCircle2 className="w-3 h-3" /> Recebido
                         </Button>
                       )}
@@ -226,21 +226,21 @@ export default function Revenues({ hideTitle = false }) {
           <DialogHeader><DialogTitle>Nova Receita</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-slate-700 block mb-1">Descrição <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1">Descrição <span className="text-red-500">*</span></label>
               <Input placeholder="ex: Frete VLX-2026-00042" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">Valor <span className="text-red-500">*</span></label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1">Valor <span className="text-red-500">*</span></label>
                 <NumericInput currency value={form.amount} onChange={v => setForm(f => ({ ...f, amount: v }))} />
               </div>
               <div>
-                <label className="text-sm font-medium text-slate-700 block mb-1">Vencimento <span className="text-red-500">*</span></label>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1">Vencimento <span className="text-red-500">*</span></label>
                 <Input type="date" value={form.due_date} onChange={e => setForm(f => ({ ...f, due_date: e.target.value }))} />
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700 block mb-1">Forma de pagamento</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-1">Forma de pagamento</label>
               <Select value={form.payment_method} onValueChange={v => setForm(f => ({ ...f, payment_method: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>

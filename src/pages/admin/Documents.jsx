@@ -20,10 +20,10 @@ const COMPANY_DOC_CATEGORIES = ["Contrato social", "Cartão CNPJ", "Inscrição 
 function docBadge(expiry) {
   if (!expiry) return null;
   const days = differenceInDays(parseISO(expiry), new Date());
-  if (days < 0) return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">Vencido</span>;
-  if (days <= 30) return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">{days}d</span>;
-  if (days <= 60) return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">{days}d</span>;
-  return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">OK</span>;
+  if (days < 0) return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-300">Vencido</span>;
+  if (days <= 30) return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-300">{days}d</span>;
+  if (days <= 60) return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300">{days}d</span>;
+  return <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-500/15 text-green-700 dark:text-green-300">OK</span>;
 }
 
 function DocRow({ label, expiry, url, onUpload, onExpiry }) {
@@ -240,7 +240,7 @@ export default function Documents() {
             <CardContent className="pt-4">
               {expWindow.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
-                  <ShieldCheck className="w-10 h-10 mx-auto mb-2 opacity-30 text-green-600" />
+                  <ShieldCheck className="w-10 h-10 mx-auto mb-2 opacity-30 text-green-600 dark:text-green-300" />
                   <p className="text-sm">Nenhum documento {expFilter === "expired" ? "vencido" : "vencendo nesse período"}.</p>
                 </div>
               ) : (
@@ -352,7 +352,7 @@ export default function Documents() {
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     <span className="font-mono text-velox-amber">{truck.plate}</span>
                     <span className="text-muted-foreground font-normal">{truck.manufacturer} {truck.model}</span>
-                    {(() => { const n = [truck.crlv_url, truck.insurance_url, truck.tachograph_url].filter(Boolean).length; return <span className={`ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full ${n === 3 ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{n}/3 anexados</span>; })()}
+                    {(() => { const n = [truck.crlv_url, truck.insurance_url, truck.tachograph_url].filter(Boolean).length; return <span className={`ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full ${n === 3 ? "bg-green-500/15 text-green-700 dark:text-green-300" : "bg-amber-500/15 text-amber-700 dark:text-amber-300"}`}>{n}/3 anexados</span>; })()}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -378,10 +378,10 @@ export default function Documents() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     <span>{driver.name}</span>
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${driver.status === "active" ? "bg-green-100 text-green-700" : driver.status === "away" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${driver.status === "active" ? "bg-green-500/15 text-green-700 dark:text-green-300" : driver.status === "away" ? "bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-red-500/15 text-red-700 dark:text-red-300"}`}>
                       {driver.status === "active" ? "Ativo" : driver.status === "away" ? "Afastado" : "Desligado"}
                     </span>
-                    {(() => { const n = [driver.cnh_url, driver.aso_url, driver.toxic_url].filter(Boolean).length; return <span className={`ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full ${n === 3 ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>{n}/3 anexados</span>; })()}
+                    {(() => { const n = [driver.cnh_url, driver.aso_url, driver.toxic_url].filter(Boolean).length; return <span className={`ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full ${n === 3 ? "bg-green-500/15 text-green-700 dark:text-green-300" : "bg-amber-500/15 text-amber-700 dark:text-amber-300"}`}>{n}/3 anexados</span>; })()}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

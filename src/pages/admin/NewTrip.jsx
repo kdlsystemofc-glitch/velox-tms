@@ -208,7 +208,7 @@ export default function NewTrip() {
             <div className="mt-3 p-3 bg-muted/30 rounded-lg flex gap-4 text-sm">
               <span><strong>{selectedOrders.length}</strong> pedido(s)</span>
               <span><strong>{totalKg}</strong> kg total</span>
-              <span className="text-green-600"><strong>R$ {totalRevenue.toFixed(2)}</strong> receita</span>
+              <span className="text-green-600 dark:text-green-300"><strong>R$ {totalRevenue.toFixed(2)}</strong> receita</span>
             </div>
           )}
         </CardContent>
@@ -266,15 +266,15 @@ export default function NewTrip() {
             )}
           </div>
           {isOverCapacity && (
-            <div className="md:col-span-2 bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-red-700 font-medium">
+            <div className="md:col-span-2 bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-red-700 dark:text-red-300 font-medium">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 Capacidade excedida — não é possível criar a viagem
               </div>
-              <p className="text-red-600 text-sm mt-1">
+              <p className="text-red-600 dark:text-red-300 text-sm mt-1">
                 Peso total: {totalKg.toLocaleString("pt-BR")} kg · Capacidade do comboio: {totalCapacity.toLocaleString("pt-BR")} kg · Excesso: {excessKg.toLocaleString("pt-BR")} kg
               </p>
-              <p className="text-red-600 text-sm mt-1">
+              <p className="text-red-600 dark:text-red-300 text-sm mt-1">
                 Remova pedidos ou adicione um veículo ao comboio.
               </p>
             </div>

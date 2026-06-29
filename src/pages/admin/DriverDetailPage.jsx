@@ -14,10 +14,10 @@ import { differenceInDays, parseISO, format } from "date-fns";
 function docStatus(expiry) {
   if (!expiry) return null;
   const days = differenceInDays(parseISO(expiry), new Date());
-  if (days < 0) return { label: "Vencido", color: "bg-red-100 text-red-700" };
-  if (days <= 30) return { label: `${days}d`, color: "bg-red-100 text-red-700" };
-  if (days <= 60) return { label: `${days}d`, color: "bg-amber-100 text-amber-700" };
-  return { label: "OK", color: "bg-green-100 text-green-700" };
+  if (days < 0) return { label: "Vencido", color: "bg-red-500/15 text-red-700 dark:text-red-300" };
+  if (days <= 30) return { label: `${days}d`, color: "bg-red-500/15 text-red-700 dark:text-red-300" };
+  if (days <= 60) return { label: `${days}d`, color: "bg-amber-500/15 text-amber-700 dark:text-amber-300" };
+  return { label: "OK", color: "bg-green-500/15 text-green-700 dark:text-green-300" };
 }
 
 export default function DriverDetailPage() {
@@ -107,8 +107,8 @@ export default function DriverDetailPage() {
           </div>
         </div>
         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-          driver.status === "active" ? "bg-green-100 text-green-700" :
-          driver.status === "away" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"
+          driver.status === "active" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+          driver.status === "away" ? "bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-red-500/15 text-red-700 dark:text-red-300"
         }`}>
           {driver.status === "active" ? "Ativo" : driver.status === "away" ? "Afastado" : "Desligado"}
         </span>
@@ -241,8 +241,8 @@ export default function DriverDetailPage() {
               <CardTitle className="text-sm font-semibold flex items-center justify-between">
                 <span className="flex items-center gap-2"><Smartphone className="w-4 h-4 text-velox-amber" /> Acesso ao app</span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  access === "active" ? "bg-green-100 text-green-700" :
-                  access === "frozen" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"
+                  access === "active" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+                  access === "frozen" ? "bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"
                 }`}>
                   {access === "active" ? "Com acesso" : access === "frozen" ? "Congelado" : "Sem acesso"}
                 </span>
@@ -263,13 +263,13 @@ export default function DriverDetailPage() {
               ) : (
                 <div className="space-y-3">
                   <p className="text-sm">Login: <span className="font-mono font-medium">{driver.app_email || "—"}</span></p>
-                  {access === "frozen" && <p className="text-xs text-amber-700">Acesso congelado — o motorista não consegue entrar.</p>}
+                  {access === "frozen" && <p className="text-xs text-amber-700 dark:text-amber-300">Acesso congelado — o motorista não consegue entrar.</p>}
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" className="text-xs gap-1.5" disabled={accessBusy} onClick={resetPwd}><KeyRound className="w-3.5 h-3.5" /> Redefinir senha</Button>
-                    <Button size="sm" variant="outline" className={`text-xs gap-1.5 ${access === "frozen" ? "text-green-600" : "text-amber-600"}`} disabled={accessBusy} onClick={toggleFreeze}>
+                    <Button size="sm" variant="outline" className={`text-xs gap-1.5 ${access === "frozen" ? "text-green-600 dark:text-green-300" : "text-amber-600 dark:text-amber-300"}`} disabled={accessBusy} onClick={toggleFreeze}>
                       <Power className="w-3.5 h-3.5" /> {access === "frozen" ? "Reativar" : "Congelar"}
                     </Button>
-                    <Button size="sm" variant="outline" className="text-xs gap-1.5 text-red-600" disabled={accessBusy} onClick={deleteLogin}><Trash2 className="w-3.5 h-3.5" /> Excluir acesso</Button>
+                    <Button size="sm" variant="outline" className="text-xs gap-1.5 text-red-600 dark:text-red-300" disabled={accessBusy} onClick={deleteLogin}><Trash2 className="w-3.5 h-3.5" /> Excluir acesso</Button>
                   </div>
                 </div>
               )}
@@ -290,7 +290,7 @@ export default function DriverDetailPage() {
                   <p className="text-xs text-muted-foreground">Fretes no mês</p>
                 </div>
                 <div className="text-center p-3 bg-muted/30 rounded-lg">
-                  <p className="text-lg font-bold text-green-600 font-mono">R$ {monthRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}</p>
+                  <p className="text-lg font-bold text-green-600 dark:text-green-300 font-mono">R$ {monthRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}</p>
                   <p className="text-xs text-muted-foreground">Receita gerada</p>
                 </div>
                 <div className="text-center p-3 bg-muted/30 rounded-lg">
@@ -327,8 +327,8 @@ export default function DriverDetailPage() {
                           <td className="py-2">{o.client_name}</td>
                           <td className="py-2">
                             <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
-                              o.status === "delivered" ? "bg-green-100 text-green-700" :
-                              o.status === "in_transit" ? "bg-orange-100 text-orange-700" : "bg-muted text-muted-foreground"
+                              o.status === "delivered" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+                              o.status === "in_transit" ? "bg-orange-500/15 text-orange-700 dark:text-orange-300" : "bg-muted text-muted-foreground"
                             }`}>{o.status === "delivered" ? "Entregue" : o.status === "in_transit" ? "Em Trânsito" : o.status}</span>
                           </td>
                           <td className="py-2 text-right font-mono">{o.freight_value ? `R$ ${o.freight_value.toFixed(2)}` : "—"}</td>

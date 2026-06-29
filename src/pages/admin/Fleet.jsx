@@ -19,16 +19,16 @@ import { normalizePlate, formatPlate, isValidPlate } from "@/utils/validators";
 import { truckVolumeM3, fmtM3 } from "@/utils/cargoVolume";
 
 const statusConfig = {
-  available: { label: "Disponível", color: "bg-green-100 text-green-700" },
-  on_route: { label: "Em Rota", color: "bg-amber-100 text-amber-700" },
-  maintenance: { label: "Manutenção", color: "bg-red-100 text-red-700" },
+  available: { label: "Disponível", color: "bg-green-500/15 text-green-700 dark:text-green-300" },
+  on_route: { label: "Em Rota", color: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
+  maintenance: { label: "Manutenção", color: "bg-red-500/15 text-red-700 dark:text-red-300" },
   inactive: { label: "Inativo", color: "bg-muted text-muted-foreground" },
 };
 
 const truckStatusConfig = {
-  available:   { label: "Disponível", dot: "bg-green-600", cls: "text-green-700 bg-green-50 border-green-200" },
-  on_route:    { label: "Em rota",    dot: "bg-amber-500", cls: "text-amber-700 bg-amber-50 border-amber-200" },
-  maintenance: { label: "Manutenção", dot: "bg-red-500",   cls: "text-red-700 bg-red-50 border-red-200" },
+  available:   { label: "Disponível", dot: "bg-green-600", cls: "text-green-700 dark:text-green-300 bg-green-500/10 border-green-500/30" },
+  on_route:    { label: "Em rota",    dot: "bg-amber-500", cls: "text-amber-700 dark:text-amber-300 bg-amber-500/10 border-amber-500/30" },
+  maintenance: { label: "Manutenção", dot: "bg-red-500",   cls: "text-red-700 dark:text-red-300 bg-red-500/10 border-red-500/30" },
   inactive:    { label: "Inativo",    dot: "bg-gray-400",  cls: "text-muted-foreground bg-muted border-border" },
 };
 
@@ -274,8 +274,8 @@ export default function Fleet({ hideTitle = false }) {
           { key: "capacity_kg", label: "Capacidade", sortable: true, align: "right", className: "font-mono text-xs", render: t => t.capacity_kg ? `${t.capacity_kg.toLocaleString("pt-BR")} kg` : "—" },
           { key: "volume_m3", label: "Volume útil", align: "right", className: "font-mono text-xs", value: t => truckVolumeM3(t), render: t => { const v = truckVolumeM3(t); return v > 0 ? fmtM3(v) : "—"; } },
           { key: "docs", label: "Documentos", render: t => hasDocAlert(t)
-            ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded"><AlertTriangle className="w-3 h-3" /> Vencendo</span>
-            : <span className="text-[11px] text-green-700">Em dia</span>
+            ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded"><AlertTriangle className="w-3 h-3" /> Vencendo</span>
+            : <span className="text-[11px] text-green-700 dark:text-green-300">Em dia</span>
           },
           { key: "status", label: "Status", sortable: true, value: t => t.status, render: t => <StatusBadge status={t.status} config={truckStatusConfig} /> },
           { key: "actions", label: "", align: "right", stopPropagation: true, width: 50, render: t => (

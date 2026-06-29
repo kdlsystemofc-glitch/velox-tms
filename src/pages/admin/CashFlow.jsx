@@ -129,13 +129,13 @@ export default function CashFlow({ hideTitle = false }) {
             )}
           </CardContent>
         </Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Saldo projetado ({days}d)</p><p className={`text-xl font-bold font-mono ${endBalance >= 0 ? "text-green-600" : "text-red-600"}`}>{brl(endBalance)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Menor saldo no período</p><p className={`text-xl font-bold font-mono ${lowestBalance >= 0 ? "text-blue-600" : "text-red-600"}`}>{brl(lowestBalance)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Atrasados (receber / pagar)</p><p className="text-sm font-bold font-mono"><span className="text-amber-600">{brl(overdueRev)}</span> / <span className="text-red-600">{brl(overdueExp)}</span></p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Saldo projetado ({days}d)</p><p className={`text-xl font-bold font-mono ${endBalance >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>{brl(endBalance)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Menor saldo no período</p><p className={`text-xl font-bold font-mono ${lowestBalance >= 0 ? "text-blue-600 dark:text-blue-300" : "text-red-600 dark:text-red-300"}`}>{brl(lowestBalance)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Atrasados (receber / pagar)</p><p className="text-sm font-bold font-mono"><span className="text-amber-600 dark:text-amber-300">{brl(overdueRev)}</span> / <span className="text-red-600 dark:text-red-300">{brl(overdueExp)}</span></p></CardContent></Card>
       </div>
 
       {negativeDay && (
-        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-700 dark:text-red-300 text-sm">
           <AlertTriangle className="w-5 h-5 flex-shrink-0" />
           <p>Atenção: o caixa fica <strong>negativo</strong> em <strong>{negativeDay.date}</strong> — saldo projetado: <strong>{brl(negativeDay.saldo)}</strong></p>
         </div>
@@ -173,8 +173,8 @@ export default function CashFlow({ hideTitle = false }) {
                   <tr className="border-b border-border bg-muted/30">
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Data</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Descrição</th>
-                    <th className="text-right py-3 px-4 font-medium text-green-600">Entrada</th>
-                    <th className="text-right py-3 px-4 font-medium text-red-600">Saída</th>
+                    <th className="text-right py-3 px-4 font-medium text-green-600 dark:text-green-300">Entrada</th>
+                    <th className="text-right py-3 px-4 font-medium text-red-600 dark:text-red-300">Saída</th>
                     <th className="text-right py-3 px-4 font-medium text-muted-foreground">Saldo</th>
                   </tr>
                 </thead>
@@ -182,10 +182,10 @@ export default function CashFlow({ hideTitle = false }) {
                   {tableData.slice(0, 40).map((row, i) => (
                     <tr key={i} className="border-b border-border/40">
                       <td className="py-2 px-4 text-muted-foreground">{row.date}</td>
-                      <td className="py-2 px-4">{row.desc}{row.overdue && <span className="ml-2 text-[10px] bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded-full">atrasado</span>}</td>
-                      <td className="py-2 px-4 text-right font-mono text-green-600">{row.entrada > 0 ? brl(row.entrada) : "—"}</td>
-                      <td className="py-2 px-4 text-right font-mono text-red-600">{row.saida > 0 ? brl(row.saida) : "—"}</td>
-                      <td className={`py-2 px-4 text-right font-mono font-semibold ${row.saldo >= 0 ? "text-green-600" : "text-red-600"}`}>{brl(row.saldo)}</td>
+                      <td className="py-2 px-4">{row.desc}{row.overdue && <span className="ml-2 text-[10px] bg-red-500/15 text-red-700 dark:text-red-300 font-bold px-1.5 py-0.5 rounded-full">atrasado</span>}</td>
+                      <td className="py-2 px-4 text-right font-mono text-green-600 dark:text-green-300">{row.entrada > 0 ? brl(row.entrada) : "—"}</td>
+                      <td className="py-2 px-4 text-right font-mono text-red-600 dark:text-red-300">{row.saida > 0 ? brl(row.saida) : "—"}</td>
+                      <td className={`py-2 px-4 text-right font-mono font-semibold ${row.saldo >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>{brl(row.saldo)}</td>
                     </tr>
                   ))}
                 </tbody>

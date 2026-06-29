@@ -23,7 +23,7 @@ function Bar({ label, used, total, unit, pct, warn }) {
     <div className="space-y-1">
       <div className="flex justify-between text-xs">
         <span className="text-muted-foreground">{label}</span>
-        <span className={`font-mono ${warn ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>{used} / {total} {unit} · {pct.toFixed(0)}%</span>
+        <span className={`font-mono ${warn ? "text-red-600 dark:text-red-300 font-semibold" : "text-muted-foreground"}`}>{used} / {total} {unit} · {pct.toFixed(0)}%</span>
       </div>
       <div className="h-3 bg-muted rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${Math.min(pct, 100)}%` }} />
@@ -165,9 +165,9 @@ export default function LoadingSimulator() {
               <Bar label="Espaço (m³)" used={totalVolM3.toFixed(1)} total={truckVol.toFixed(1)} unit="m³" pct={volPct} warn={isOvervolume} />
               {(isOverweight || isOvervolume || pack.unplaced > 0) && (
                 <div className="space-y-1 pt-1">
-                  {isOverweight && <div className="flex items-center gap-2 text-red-600 text-sm font-medium"><AlertTriangle className="w-4 h-4" /> Peso excedido em {(totalKg - truckCapKg).toLocaleString("pt-BR")} kg</div>}
-                  {isOvervolume && <div className="flex items-center gap-2 text-red-600 text-sm font-medium"><AlertTriangle className="w-4 h-4" /> Volume excedido em {(totalVolM3 - truckVol).toFixed(1)} m³</div>}
-                  {pack.unplaced > 0 && <div className="flex items-center gap-2 text-amber-600 text-sm font-medium"><AlertTriangle className="w-4 h-4" /> {pack.unplaced} volume(s) não couberam fisicamente no baú</div>}
+                  {isOverweight && <div className="flex items-center gap-2 text-red-600 dark:text-red-300 text-sm font-medium"><AlertTriangle className="w-4 h-4" /> Peso excedido em {(totalKg - truckCapKg).toLocaleString("pt-BR")} kg</div>}
+                  {isOvervolume && <div className="flex items-center gap-2 text-red-600 dark:text-red-300 text-sm font-medium"><AlertTriangle className="w-4 h-4" /> Volume excedido em {(totalVolM3 - truckVol).toFixed(1)} m³</div>}
+                  {pack.unplaced > 0 && <div className="flex items-center gap-2 text-amber-600 dark:text-amber-300 text-sm font-medium"><AlertTriangle className="w-4 h-4" /> {pack.unplaced} volume(s) não couberam fisicamente no baú</div>}
                 </div>
               )}
             </CardContent>
@@ -178,7 +178,7 @@ export default function LoadingSimulator() {
               <CardTitle className="text-sm flex items-center gap-2"><Box className="w-4 h-4 text-velox-amber" /> Baú 3D — {truck?.plate || "carreta padrão"} ({truckL}m × {truckW}m × {truckH}m)</CardTitle>
             </CardHeader>
             <CardContent>
-              <Suspense fallback={<div className="h-[380px] flex items-center justify-center text-sm text-muted-foreground border-2 border-slate-200 rounded-lg">Carregando visualização 3D…</div>}>
+              <Suspense fallback={<div className="h-[380px] flex items-center justify-center text-sm text-muted-foreground border-2 border-slate-500/30 rounded-lg">Carregando visualização 3D…</div>}>
                 <Truck3D boxes={pack.boxes} truckL={truckL} truckW={truckW} truckH={truckH} />
               </Suspense>
               {orderIds.length > 0 && (
@@ -210,20 +210,20 @@ export default function LoadingSimulator() {
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">Centro de gravidade (frente → fundo)</span>
-                      <span className={`font-mono ${cgImbalance ? "text-red-600 font-semibold" : "text-muted-foreground"}`}>{(cg * 100).toFixed(0)}%</span>
+                      <span className={`font-mono ${cgImbalance ? "text-red-600 dark:text-red-300 font-semibold" : "text-muted-foreground"}`}>{(cg * 100).toFixed(0)}%</span>
                     </div>
                     <div className="relative h-3 bg-muted rounded-full">
                       {/* faixa ideal 35–65% */}
                       <div className="absolute top-0 bottom-0 bg-green-200/70 rounded" style={{ left: "35%", right: "35%" }} />
                       <div className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-white ${cgImbalance ? "bg-red-500" : "bg-green-600"}`} style={{ left: `${Math.min(Math.max(cg * 100, 2), 98)}%` }} />
                     </div>
-                    {cgImbalance && <p className="text-[11px] text-red-600 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Carga desbalanceada — redistribua para aproximar o CG do centro (eixos).</p>}
+                    {cgImbalance && <p className="text-[11px] text-red-600 dark:text-red-300 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Carga desbalanceada — redistribua para aproximar o CG do centro (eixos).</p>}
                   </div>
                 )}
                 <div className="flex flex-wrap gap-2">
                   <span className="text-[11px] px-2 py-1 rounded-full bg-muted text-muted-foreground">Aproveitamento: <b className="text-foreground">{Math.max(weightPct, volPct).toFixed(0)}%</b> ({weightPct >= volPct ? "peso" : "volume"})</span>
-                  {hasFragile && <span className="text-[11px] px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1"><Package className="w-3 h-3" /> Frágil — acomodar por cima</span>}
-                  {hasDangerous && <span className="text-[11px] px-2 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 flex items-center gap-1"><ShieldAlert className="w-3 h-3" /> Carga perigosa — isolar e sinalizar</span>}
+                  {hasFragile && <span className="text-[11px] px-2 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1"><Package className="w-3 h-3" /> Frágil — acomodar por cima</span>}
+                  {hasDangerous && <span className="text-[11px] px-2 py-1 rounded-full bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/30 flex items-center gap-1"><ShieldAlert className="w-3 h-3" /> Carga perigosa — isolar e sinalizar</span>}
                 </div>
                 <p className="text-[11px] text-muted-foreground">O plano de carga segue a lógica LIFO: o último pedido a carregar é o primeiro a entregar. Cada pedido recebe a zona do baú (frente/meio/fundo).</p>
               </CardContent>
@@ -251,7 +251,7 @@ export default function LoadingSimulator() {
                           <p className="text-sm font-medium">{kg.toLocaleString("pt-BR")} kg · {oi.reduce((s, i) => s + (i.volumes || 0), 0)} vol · {fmtM3(vol)}</p>
                         </div>
                       </div>
-                      <button onClick={() => removeOrder(orderId)} className="text-xs text-red-400 hover:text-red-600 px-2 py-1 rounded flex-shrink-0">Remover</button>
+                      <button onClick={() => removeOrder(orderId)} className="text-xs text-red-400 hover:text-red-600 dark:text-red-300 px-2 py-1 rounded flex-shrink-0">Remover</button>
                     </div>
                   );
                 })}
@@ -270,7 +270,7 @@ export default function LoadingSimulator() {
                 const kg = order.total_weight_kg || 0;
                 const wouldExceed = (totalKg + kg) > truckCapKg;
                 return (
-                  <div key={order.id} className={`p-3 border rounded-lg ${wouldExceed ? "border-red-200 bg-red-50/30" : "border-border"}`}>
+                  <div key={order.id} className={`p-3 border rounded-lg ${wouldExceed ? "border-red-500/30 bg-red-500/10/30" : "border-border"}`}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="font-mono text-[11px] text-muted-foreground">{order.protocol}</p>
@@ -278,7 +278,7 @@ export default function LoadingSimulator() {
                         <p className="text-xs text-muted-foreground">{kg.toLocaleString("pt-BR")} kg · {order.total_volumes || "?"} vol</p>
                         {wouldExceed && <p className="text-xs text-red-500 mt-0.5">⚠ Excede em {((totalKg + kg) - truckCapKg).toLocaleString("pt-BR")} kg</p>}
                       </div>
-                      <Button size="sm" variant={wouldExceed ? "outline" : "default"} className={wouldExceed ? "border-red-300 text-red-500 hover:bg-red-50" : ""} onClick={() => addOrder(order)}>
+                      <Button size="sm" variant={wouldExceed ? "outline" : "default"} className={wouldExceed ? "border-red-300 text-red-500 hover:bg-red-500/10" : ""} onClick={() => addOrder(order)}>
                         <Plus className="w-3 h-3" />
                       </Button>
                     </div>

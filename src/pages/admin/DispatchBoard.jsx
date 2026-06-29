@@ -370,14 +370,14 @@ export default function DispatchBoard() {
                       <span className="font-mono text-xs font-semibold flex items-center gap-1">
                         {o.protocol}
                         <PriorityBadge priority={o.priority} />
-                        {o.freight_type === "urgent" && <span className="text-[9px] bg-red-100 text-red-700 font-bold px-1 rounded uppercase">Frete urgente</span>}
+                        {o.freight_type === "urgent" && <span className="text-[9px] bg-red-500/15 text-red-700 dark:text-red-300 font-bold px-1 rounded uppercase">Frete urgente</span>}
                       </span>
                       <span className="text-xs font-mono text-muted-foreground">{(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</span>
                     </div>
                     <p className="text-sm font-medium truncate mt-0.5">
                       {o.client_name}
                       {localityCount[localityKey(o)] > 1 && (
-                        <span className="ml-1.5 text-[9px] bg-blue-100 text-blue-700 font-semibold px-1 py-0.5 rounded">Mesma região</span>
+                        <span className="ml-1.5 text-[9px] bg-blue-500/15 text-blue-700 dark:text-blue-300 font-semibold px-1 py-0.5 rounded">Mesma região</span>
                       )}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
@@ -385,7 +385,7 @@ export default function DispatchBoard() {
                       {o.origin?.city || "—"} → {(o.recipients || []).map(r => r.city).filter(Boolean).join(", ") || "—"}
                     </p>
                     {o.collection_date && (
-                      <p className="text-[11px] text-amber-600 mt-0.5">Solicitado: {formatDateBR(o.collection_date)}</p>
+                      <p className="text-[11px] text-amber-600 dark:text-amber-300 mt-0.5">Solicitado: {formatDateBR(o.collection_date)}</p>
                     )}
                   </div>
                 </div>
@@ -438,7 +438,7 @@ export default function DispatchBoard() {
                             {format(day, "dd/MM")}
                           </span>
                           {occ > 0 && (
-                            <span className={`block text-[10px] font-semibold ${occ > 95 ? "text-red-600" : occ > 75 ? "text-amber-600" : "text-green-600"}`}>
+                            <span className={`block text-[10px] font-semibold ${occ > 95 ? "text-red-600 dark:text-red-300" : occ > 75 ? "text-amber-600 dark:text-amber-300" : "text-green-600 dark:text-green-300"}`}>
                               {occ}% frota
                             </span>
                           )}
@@ -455,8 +455,8 @@ export default function DispatchBoard() {
                         <p className="text-xs text-muted-foreground">{truck.model}</p>
                         <p className="text-[11px] text-muted-foreground font-mono">{(truck.capacity_kg || 0).toLocaleString("pt-BR")} kg</p>
                         <span className={`inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                          truck.status === "available" ? "bg-green-100 text-green-700" :
-                          truck.status === "on_route" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"
+                          truck.status === "available" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+                          truck.status === "on_route" ? "bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"
                         }`}>
                           {truck.status === "available" ? "Disponível" : truck.status === "on_route" ? "Em rota" : "Manutenção"}
                         </span>
@@ -591,7 +591,7 @@ export default function DispatchBoard() {
                       </div>
                       <div className="text-right flex-shrink-0">
                         <span className="text-xs text-muted-foreground">{formatDateBR(load.date)} · </span>
-                        <span className={`text-xs font-semibold ${pct > 100 ? "text-red-600" : "text-foreground"}`}>{load.weight.toLocaleString("pt-BR")} / {load.truck.capacity_kg.toLocaleString("pt-BR")} kg ({pct}%)</span>
+                        <span className={`text-xs font-semibold ${pct > 100 ? "text-red-600 dark:text-red-300" : "text-foreground"}`}>{load.weight.toLocaleString("pt-BR")} / {load.truck.capacity_kg.toLocaleString("pt-BR")} kg ({pct}%)</span>
                         {load.capVol > 0 && (
                           <span className="block text-[11px] text-muted-foreground">{fmtM3(load.volume)} / {fmtM3(load.capVol)} de baú</span>
                         )}
@@ -603,12 +603,12 @@ export default function DispatchBoard() {
                         return (
                           <div key={o.id} className="px-3 py-1.5 text-xs">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="font-mono text-muted-foreground inline-flex items-center gap-1">{o.protocol}<PriorityBadge priority={o.priority} />{o.freight_type === "urgent" && <span className="text-[9px] bg-red-100 text-red-700 font-bold px-1 rounded">URG</span>}</span>
+                              <span className="font-mono text-muted-foreground inline-flex items-center gap-1">{o.protocol}<PriorityBadge priority={o.priority} />{o.freight_type === "urgent" && <span className="text-[9px] bg-red-500/15 text-red-700 dark:text-red-300 font-bold px-1 rounded">URG</span>}</span>
                               <span className="flex-1 truncate">{o.client_name}</span>
                               <span className="text-muted-foreground">{regionLabel(o)}</span>
                               <span className="font-mono">{(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</span>
                             </div>
-                            {r?.why && <p className="text-[10px] text-blue-600 mt-0.5">↳ {r.why}</p>}
+                            {r?.why && <p className="text-[10px] text-blue-600 dark:text-blue-300 mt-0.5">↳ {r.why}</p>}
                           </div>
                         );
                       })}
@@ -617,15 +617,15 @@ export default function DispatchBoard() {
                 );
               })}
               {plan.unassigned?.length > 0 && (
-                <div className="border border-amber-300 bg-amber-50 rounded-md p-3 text-xs text-amber-800 space-y-1.5">
+                <div className="border border-amber-300 bg-amber-500/10 rounded-md p-3 text-xs text-amber-800 dark:text-amber-300 space-y-1.5">
                   <strong>{plan.unassigned.length} pedido(s) não alocado(s):</strong>
                   {plan.unassigned.map((u, idx) => (
                     <div key={idx} className="flex items-start gap-1.5">
                       <span className="font-mono font-semibold flex-shrink-0">{u.order.protocol}</span>
-                      <span className="text-amber-700">— {u.reason}</span>
+                      <span className="text-amber-700 dark:text-amber-300">— {u.reason}</span>
                     </div>
                   ))}
-                  <p className="text-[11px] text-amber-600 pt-1">Despache manualmente ou ajuste a frota.</p>
+                  <p className="text-[11px] text-amber-600 dark:text-amber-300 pt-1">Despache manualmente ou ajuste a frota.</p>
                 </div>
               )}
             </div>

@@ -41,10 +41,10 @@ export default function FileUploadButton({ onUpload, label = "Anexar arquivo", a
         {previewUrl ? (
           <img src={previewUrl} alt="preview" className="w-10 h-10 object-cover rounded border" />
         ) : (
-          <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+          <FileText className="w-5 h-5 text-blue-600 dark:text-blue-300 flex-shrink-0" />
         )}
         <span className="flex-1 truncate text-xs text-muted-foreground">{fileName}</span>
-        <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+        <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-300 flex-shrink-0" />
         <button onClick={handleRemove} className="text-muted-foreground hover:text-red-500">
           <X className="w-4 h-4" />
         </button>

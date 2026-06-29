@@ -16,10 +16,10 @@ import StatCard from "@/components/shared/StatCard";
  * novo → em contato → convertido / perdido / arquivado.
  */
 const STATUS = {
-  novo:       { label: "Novo",       cls: "bg-blue-100 text-blue-700" },
-  em_contato: { label: "Em contato", cls: "bg-amber-100 text-amber-700" },
-  convertido: { label: "Convertido", cls: "bg-green-100 text-green-700" },
-  perdido:    { label: "Perdido",    cls: "bg-red-100 text-red-700" },
+  novo:       { label: "Novo",       cls: "bg-blue-500/15 text-blue-700 dark:text-blue-300" },
+  em_contato: { label: "Em contato", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
+  convertido: { label: "Convertido", cls: "bg-green-500/15 text-green-700 dark:text-green-300" },
+  perdido:    { label: "Perdido",    cls: "bg-red-500/15 text-red-700 dark:text-red-300" },
   arquivado:  { label: "Arquivado",  cls: "bg-muted text-muted-foreground" },
 };
 const statusOf = (m) => m.status || (m.read ? "em_contato" : "novo");
@@ -183,7 +183,7 @@ export default function Messages() {
                         )}
 
                         {msg.converted_order_id && (
-                          <button onClick={() => navigate(`/admin/coletas/${msg.converted_order_id}`)} className="text-xs text-green-700 font-medium hover:underline">
+                          <button onClick={() => navigate(`/admin/coletas/${msg.converted_order_id}`)} className="text-xs text-green-700 dark:text-green-300 font-medium hover:underline">
                             ✓ Pedido gerado{msg.converted_order_protocol ? `: ${msg.converted_order_protocol}` : ""}
                           </button>
                         )}

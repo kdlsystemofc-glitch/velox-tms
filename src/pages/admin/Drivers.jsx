@@ -19,15 +19,15 @@ import { AddressFields } from "@/components/shared/AddressFields";
 import { formatCPF, isValidCPF, onlyDigits } from "@/utils/validators";
 
 const driverStatusConfig = {
-  active:     { label: "Ativo",     dot: "bg-green-600", cls: "text-green-700 bg-green-50 border-green-200" },
-  away:       { label: "Afastado",  dot: "bg-amber-500", cls: "text-amber-700 bg-amber-50 border-amber-200" },
-  terminated: { label: "Desligado", dot: "bg-red-500",   cls: "text-red-700 bg-red-50 border-red-200" },
+  active:     { label: "Ativo",     dot: "bg-green-600", cls: "text-green-700 dark:text-green-300 bg-green-500/10 border-green-500/30" },
+  away:       { label: "Afastado",  dot: "bg-amber-500", cls: "text-amber-700 dark:text-amber-300 bg-amber-500/10 border-amber-500/30" },
+  terminated: { label: "Desligado", dot: "bg-red-500",   cls: "text-red-700 dark:text-red-300 bg-red-500/10 border-red-500/30" },
 };
 
 const statusLabels = {
-  active: { label: "Ativo", color: "bg-green-100 text-green-700" },
-  away: { label: "Afastado", color: "bg-amber-100 text-amber-700" },
-  terminated: { label: "Desligado", color: "bg-red-100 text-red-700" },
+  active: { label: "Ativo", color: "bg-green-500/15 text-green-700 dark:text-green-300" },
+  away: { label: "Afastado", color: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
+  terminated: { label: "Desligado", color: "bg-red-500/15 text-red-700 dark:text-red-300" },
 };
 
 export default function Drivers({ hideTitle = false }) {
@@ -255,7 +255,7 @@ export default function Drivers({ hideTitle = false }) {
                   const p = docPendencies(d);
                   if (p.length === 0) return null;
                   const expired = p.some(x => x.expired);
-                  return <span className={`text-[11px] flex items-center gap-0.5 ${expired ? "text-red-600" : "text-amber-600"}`}><AlertTriangle className="w-3 h-3" /> {expired ? "Pendência: " : "A vencer: "}{p.map(x => x.label).join(", ")}</span>;
+                  return <span className={`text-[11px] flex items-center gap-0.5 ${expired ? "text-red-600 dark:text-red-300" : "text-amber-600 dark:text-amber-300"}`}><AlertTriangle className="w-3 h-3" /> {expired ? "Pendência: " : "A vencer: "}{p.map(x => x.label).join(", ")}</span>;
                 })()}
               </span>
             </div>

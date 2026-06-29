@@ -8,7 +8,7 @@ export function FormField({ label, required, error, hint, children, className = 
   return (
     <div className={`space-y-1 ${className}`}>
       {label && (
-        <label className="text-sm font-medium text-slate-700 block">
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>

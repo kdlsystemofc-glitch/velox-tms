@@ -11,7 +11,7 @@ const brl = (v) => `R$ ${Number(v || 0).toLocaleString("pt-BR", { minimumFractio
 const MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const categoryLabels = { fuel: "Combustível", maintenance: "Manutenção", tires: "Pneus", tolls: "Pedágios", salaries: "Salários", taxes: "Impostos", insurance: "Seguros", rent: "Aluguel", administrative: "Administrativo", marketing: "Marketing", other: "Outros" };
 
-const TONE_MAP = { "text-green-600": "success", "text-red-600": "danger", "text-amber-600": "warning", "text-blue-600": "primary", "": "primary" };
+const TONE_MAP = { "text-green-600 dark:text-green-300": "success", "text-red-600 dark:text-red-300": "danger", "text-amber-600 dark:text-amber-300": "warning", "text-blue-600 dark:text-blue-300": "primary", "": "primary" };
 function Kpi({ label, value, tone = "", icon: Icon, hint }) {
   return <StatCard icon={Icon} label={label} value={value} hint={hint} tone={TONE_MAP[tone] || "primary"} />;
 }
@@ -86,11 +86,11 @@ export default function Financial({ hideTitle = false }) {
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <Kpi label="Saldo em caixa" value={brl(openingBalance)} icon={Wallet} hint="ajuste em Fluxo de Caixa" />
-        <Kpi label="Resultado do mês (caixa)" value={brl(resultadoMes)} tone={resultadoMes >= 0 ? "text-blue-600" : "text-red-600"} icon={DollarSign} hint={`Recebido ${brl(recebidoMes)} · Pago ${brl(pagoMes)}`} />
+        <Kpi label="Resultado do mês (caixa)" value={brl(resultadoMes)} tone={resultadoMes >= 0 ? "text-blue-600 dark:text-blue-300" : "text-red-600 dark:text-red-300"} icon={DollarSign} hint={`Recebido ${brl(recebidoMes)} · Pago ${brl(pagoMes)}`} />
         <Kpi label="Dias de caixa (runway)" value={runway == null ? "—" : `${runway} dias`} icon={CalendarClock} hint={avgDaily > 0 ? `saída média ${brl(avgDaily)}/dia` : "sem saídas recentes"} />
-        <Kpi label="A receber (em aberto)" value={brl(aReceber)} tone="text-amber-600" icon={TrendingUp} />
-        <Kpi label="A pagar (em aberto)" value={brl(aPagar)} tone="text-red-600" icon={TrendingDown} />
-        <Kpi label="Inadimplência" value={`${inadimplencia.toFixed(0)}%`} tone={inadimplencia > 15 ? "text-red-600" : "text-green-600"} icon={AlertCircle} hint={`${brl(vencidoReceber)} vencido`} />
+        <Kpi label="A receber (em aberto)" value={brl(aReceber)} tone="text-amber-600 dark:text-amber-300" icon={TrendingUp} />
+        <Kpi label="A pagar (em aberto)" value={brl(aPagar)} tone="text-red-600 dark:text-red-300" icon={TrendingDown} />
+        <Kpi label="Inadimplência" value={`${inadimplencia.toFixed(0)}%`} tone={inadimplencia > 15 ? "text-red-600 dark:text-red-300" : "text-green-600 dark:text-green-300"} icon={AlertCircle} hint={`${brl(vencidoReceber)} vencido`} />
       </div>
 
       <Card>
@@ -117,7 +117,7 @@ export default function Financial({ hideTitle = false }) {
             {topClients.length === 0 ? <p className="text-xs text-muted-foreground py-4 text-center">Sem dados no período.</p> : topClients.map((c, i) => (
               <div key={i} className="flex items-center justify-between text-sm">
                 <span className="truncate flex items-center gap-2"><span className="text-xs text-muted-foreground w-4">{i + 1}.</span>{c.name}</span>
-                <span className="font-mono font-semibold text-green-600">{brl(c.total)}</span>
+                <span className="font-mono font-semibold text-green-600 dark:text-green-300">{brl(c.total)}</span>
               </div>
             ))}
           </CardContent>
@@ -128,7 +128,7 @@ export default function Financial({ hideTitle = false }) {
           <CardContent className="space-y-2.5">
             {topCats.length === 0 ? <p className="text-xs text-muted-foreground py-4 text-center">Sem despesas no mês.</p> : topCats.map((c, i) => (
               <div key={i}>
-                <div className="flex items-center justify-between text-xs mb-0.5"><span>{c.label}</span><span className="font-mono text-red-600">{brl(c.total)}</span></div>
+                <div className="flex items-center justify-between text-xs mb-0.5"><span>{c.label}</span><span className="font-mono text-red-600 dark:text-red-300">{brl(c.total)}</span></div>
                 <div className="h-2 bg-muted rounded-full"><div className="h-2 bg-red-400 rounded-full" style={{ width: `${(c.total / catMax) * 100}%` }} /></div>
               </div>
             ))}
@@ -141,20 +141,20 @@ export default function Financial({ hideTitle = false }) {
           <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold flex items-center gap-2"><CalendarClock className="w-4 h-4 text-velox-amber" /> Vencem nos próximos 7 dias</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <p className="text-xs font-semibold text-green-700 mb-1.5">A receber ({dueRev.length})</p>
+              <p className="text-xs font-semibold text-green-700 dark:text-green-300 mb-1.5">A receber ({dueRev.length})</p>
               {dueRev.length === 0 ? <p className="text-xs text-muted-foreground">Nada a receber.</p> : dueRev.slice(0, 6).map(r => (
                 <div key={r.id} className="flex items-center justify-between text-xs py-1 border-b border-border/40 last:border-0">
                   <span className="truncate">{r.description || "Receita"} <span className="text-muted-foreground">· {formatDateBR(r.due_date)}</span></span>
-                  <span className="font-mono text-green-600 flex-shrink-0">{brl(r.amount)}</span>
+                  <span className="font-mono text-green-600 dark:text-green-300 flex-shrink-0">{brl(r.amount)}</span>
                 </div>
               ))}
             </div>
             <div>
-              <p className="text-xs font-semibold text-red-700 mb-1.5">A pagar ({dueExp.length})</p>
+              <p className="text-xs font-semibold text-red-700 dark:text-red-300 mb-1.5">A pagar ({dueExp.length})</p>
               {dueExp.length === 0 ? <p className="text-xs text-muted-foreground">Nada a pagar.</p> : dueExp.slice(0, 6).map(e => (
                 <div key={e.id} className="flex items-center justify-between text-xs py-1 border-b border-border/40 last:border-0">
                   <span className="truncate">{e.description || "Despesa"} <span className="text-muted-foreground">· {formatDateBR(e.due_date)}</span></span>
-                  <span className="font-mono text-red-600 flex-shrink-0">{brl(e.amount)}</span>
+                  <span className="font-mono text-red-600 dark:text-red-300 flex-shrink-0">{brl(e.amount)}</span>
                 </div>
               ))}
             </div>

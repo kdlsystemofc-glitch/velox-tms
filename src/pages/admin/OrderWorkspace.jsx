@@ -419,7 +419,7 @@ export default function OrderWorkspace() {
             <h1 className="font-display text-xl font-extrabold font-mono">{order.protocol}</h1>
             <StatusBadge status={order.status} />
             {order.freight_type === "urgent" && (
-              <span className="text-[10px] bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded-full uppercase">Frete urgente</span>
+              <span className="text-[10px] bg-red-500/15 text-red-700 dark:text-red-300 font-bold px-2 py-0.5 rounded-full uppercase">Frete urgente</span>
             )}
             {!isCancelled && order.status !== "delivered" ? (
               <Select
@@ -440,7 +440,7 @@ export default function OrderWorkspace() {
             {!isCancelled && (() => {
               const st = slaStatus(order, settings);
               const dl = slaDeadline(order, settings);
-              const meta = { on_time: ["No prazo", "bg-green-100 text-green-700"], late: ["Atrasado", "bg-red-100 text-red-700"], at_risk: ["Prazo em risco", "bg-amber-100 text-amber-700"], pending: [null, ""] }[st];
+              const meta = { on_time: ["No prazo", "bg-green-500/15 text-green-700 dark:text-green-300"], late: ["Atrasado", "bg-red-500/15 text-red-700 dark:text-red-300"], at_risk: ["Prazo em risco", "bg-amber-500/15 text-amber-700 dark:text-amber-300"], pending: [null, ""] }[st];
               if (!meta[0]) return null;
               return <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${meta[1]}`} title={dl ? `Prazo: ${dl.toLocaleDateString("pt-BR")}` : ""}>{meta[0]}</span>;
             })()}
@@ -491,7 +491,7 @@ export default function OrderWorkspace() {
                   </button>
                 )}
                 {!isCancelled && order.status !== "delivered" && (
-                  <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-red-50 text-red-600 text-left border-t border-border/50"
+                  <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-red-500/10 text-red-600 dark:text-red-300 text-left border-t border-border/50"
                     onClick={() => { setMenuOpen(false); setCancelOpen(true); }}>
                     <XCircle className="w-4 h-4" /> Cancelar pedido
                   </button>
@@ -534,7 +534,7 @@ export default function OrderWorkspace() {
           </div>
           {isCancelled && (
             <p className="mt-3 text-center">
-              <span className="text-xs font-semibold px-3 py-1 bg-red-100 text-red-700 rounded-full">
+              <span className="text-xs font-semibold px-3 py-1 bg-red-500/15 text-red-700 dark:text-red-300 rounded-full">
                 Cancelado — {(order.status_history || []).slice().reverse().find(h => h.status === "cancelled")?.note || ""}
               </span>
             </p>
@@ -585,12 +585,12 @@ export default function OrderWorkspace() {
                       </div>
                       {(order.recipients || []).map((r, i) => (
                         <div key={i}>
-                          <p className="text-[11px] font-bold text-green-600 uppercase tracking-wide">
+                          <p className="text-[11px] font-bold text-green-600 dark:text-green-300 uppercase tracking-wide">
                             Entrega {((order.recipients || []).length > 1) ? i + 1 : ""} — {r.name || "—"}
                             <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-semibold normal-case ${
-                              r.delivery_status === "delivered" ? "bg-green-100 text-green-700" :
-                              r.delivery_status === "failed" ? "bg-red-100 text-red-700" :
-              r.delivery_status === "partial" ? "bg-teal-100 text-teal-700" : "bg-muted text-muted-foreground"
+                              r.delivery_status === "delivered" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+                              r.delivery_status === "failed" ? "bg-red-500/15 text-red-700 dark:text-red-300" :
+              r.delivery_status === "partial" ? "bg-teal-500/15 text-teal-700 dark:text-teal-300" : "bg-muted text-muted-foreground"
                             }`}>
                               {r.delivery_status === "delivered" ? "Entregue" : r.delivery_status === "failed" ? "Falhou" : r.delivery_status === "partial" ? "Parcial" : "Pendente"}
                             </span>
@@ -644,7 +644,7 @@ export default function OrderWorkspace() {
                       const rows = destStates.map(s => ({ state: s, days: getDeliveryDaysByState(s, settings, order.origin?.state) })).filter(r => r.days);
                       if (rows.length === 0) return null;
                       return (
-                        <p className="text-xs text-blue-600 mt-2">
+                        <p className="text-xs text-blue-600 dark:text-blue-300 mt-2">
                           Prazo: {rows.map(r => `${r.state} ${r.days}d úteis`).join(" · ")}
                         </p>
                       );
@@ -668,9 +668,9 @@ export default function OrderWorkspace() {
                         <MapPin className="w-3 h-3" /> Alterar endereço
                       </Button>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        r.delivery_status === "delivered" ? "bg-green-100 text-green-700" :
-                        r.delivery_status === "failed" ? "bg-red-100 text-red-700" :
-              r.delivery_status === "partial" ? "bg-teal-100 text-teal-700" : "bg-muted text-muted-foreground"
+                        r.delivery_status === "delivered" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+                        r.delivery_status === "failed" ? "bg-red-500/15 text-red-700 dark:text-red-300" :
+              r.delivery_status === "partial" ? "bg-teal-500/15 text-teal-700 dark:text-teal-300" : "bg-muted text-muted-foreground"
                       }`}>
                         {r.delivery_status === "delivered" ? "Entregue" : r.delivery_status === "failed" ? "Falhou" : "Pendente"}
                       </span>
@@ -697,13 +697,13 @@ export default function OrderWorkspace() {
                             {r.items.map((item, ii) => (
                               <tr key={ii} className="border-b border-border/40">
                                 <td className="py-2 font-mono" title={item.nf_key ? `Chave: ${item.nf_key}` : undefined}>
-                                  {item.nf_number || "—"}{item.nf_key && <span className="ml-1 text-green-600">🔑</span>}
+                                  {item.nf_number || "—"}{item.nf_key && <span className="ml-1 text-green-600 dark:text-green-300">🔑</span>}
                                 </td>
                                 <td className="py-2 font-mono">{item.ncm || "—"}</td>
                                 <td className="py-2">
                                   {item.description || "—"}
-                                  {item.fragile && <span className="ml-1 text-[9px] bg-amber-100 text-amber-700 px-1 rounded font-semibold">Frágil</span>}
-                                  {item.dangerous && <span className="ml-1 text-[9px] bg-red-100 text-red-700 px-1 rounded font-semibold">Perigoso</span>}
+                                  {item.fragile && <span className="ml-1 text-[9px] bg-amber-500/15 text-amber-700 dark:text-amber-300 px-1 rounded font-semibold">Frágil</span>}
+                                  {item.dangerous && <span className="ml-1 text-[9px] bg-red-500/15 text-red-700 dark:text-red-300 px-1 rounded font-semibold">Perigoso</span>}
                                 </td>
                                 <td className="py-2 text-right">{item.volumes || 0}</td>
                                 <td className="py-2 text-right">{item.weight_kg || 0} kg</td>
@@ -713,7 +713,7 @@ export default function OrderWorkspace() {
                                 <td className="py-2 text-right">{item.declared_value ? `R$ ${Number(item.declared_value).toFixed(2)}` : "—"}</td>
                                 <td className="py-2 text-right">
                                   {item.nf_signed_url
-                                    ? <a href={item.nf_signed_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:underline"><FileText className="w-3 h-3" /> Ver</a>
+                                    ? <a href={item.nf_signed_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-300 hover:underline"><FileText className="w-3 h-3" /> Ver</a>
                                     : <FileUploadButton label="Anexar" accept="image/*,application/pdf" onUpload={async (url) => {
                                         if (!url) return;
                                         const updated = order.recipients.map((rec, rIdx) =>
@@ -814,7 +814,7 @@ export default function OrderWorkspace() {
                             <span>{c.label}</span>
                             <span className="flex items-center gap-2">
                               <span className="font-mono">R$ {Number(c.amount).toFixed(2)}</span>
-                              <button className="text-red-400 hover:text-red-600" onClick={() => removeCharge(i)}><XCircle className="w-3.5 h-3.5" /></button>
+                              <button className="text-red-400 hover:text-red-600 dark:text-red-300" onClick={() => removeCharge(i)}><XCircle className="w-3.5 h-3.5" /></button>
                             </span>
                           </div>
                         ))}
@@ -826,8 +826,8 @@ export default function OrderWorkspace() {
                       <span className="text-muted-foreground text-xs">Receita vinculada: </span>
                       {activeRevenue ? (
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          activeRevenue.status === "received" ? "bg-green-100 text-green-700" :
-                          activeRevenue.status === "overdue" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                          activeRevenue.status === "received" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+                          activeRevenue.status === "overdue" ? "bg-red-500/15 text-red-700 dark:text-red-300" : "bg-amber-500/15 text-amber-700 dark:text-amber-300"
                         }`}>
                           R$ {(activeRevenue.amount || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} · {
                             activeRevenue.status === "received" ? "Recebida" : activeRevenue.status === "overdue" ? "Em atraso" : "A receber"
@@ -862,16 +862,16 @@ export default function OrderWorkspace() {
                 </CardContent></Card>
               ) : incidents.map(inc => (
                 <div key={inc.id} className={`p-4 rounded-xl border ${
-                  inc.status === "resolved" ? "bg-green-50 border-green-200" :
-                  inc.type === "roubo" || inc.type === "acidente" ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"
+                  inc.status === "resolved" ? "bg-green-500/10 border-green-500/30" :
+                  inc.type === "roubo" || inc.type === "acidente" ? "bg-red-500/10 border-red-500/30" : "bg-amber-500/10 border-amber-500/30"
                 }`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-xs font-bold uppercase text-amber-700">{(inc.type || "").replace(/_/g, " ")}</span>
+                        <span className="text-xs font-bold uppercase text-amber-700 dark:text-amber-300">{(inc.type || "").replace(/_/g, " ")}</span>
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                          inc.status === "resolved" ? "bg-green-100 text-green-700" :
-                          inc.status === "in_progress" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
+                          inc.status === "resolved" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+                          inc.status === "in_progress" ? "bg-blue-500/15 text-blue-700 dark:text-blue-300" : "bg-amber-500/15 text-amber-700 dark:text-amber-300"
                         }`}>
                           {inc.status === "resolved" ? "Resolvida" : inc.status === "in_progress" ? "Em tratativa" : "Aberta"}
                         </span>
@@ -881,11 +881,11 @@ export default function OrderWorkspace() {
                         <p className="text-xs text-muted-foreground mt-1">Por: {inc.reported_by_name} · {inc.created_date ? new Date(inc.created_date).toLocaleString("pt-BR") : ""}</p>
                       )}
                       {inc.photo_urls?.length > 0 && (
-                        <a href={inc.photo_urls[0]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1">
+                        <a href={inc.photo_urls[0]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-300 hover:underline mt-1">
                           <FileText className="w-3 h-3" /> Ver foto
                         </a>
                       )}
-                      {inc.resolution_notes && <p className="text-xs text-green-700 mt-1 italic">Resolução: {inc.resolution_notes}</p>}
+                      {inc.resolution_notes && <p className="text-xs text-green-700 dark:text-green-300 mt-1 italic">Resolução: {inc.resolution_notes}</p>}
                     </div>
                     {inc.status !== "resolved" && (
                       <Button size="sm" variant="outline" className="text-xs flex-shrink-0"
@@ -911,10 +911,10 @@ export default function OrderWorkspace() {
                   <div className="space-y-1.5">
                     {(order.attachments || []).map((a, i) => (
                       <div key={i} className="flex items-center justify-between gap-2 text-sm bg-muted/30 rounded-lg px-3 py-2">
-                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 hover:underline min-w-0">
+                        <a href={a.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 dark:text-blue-300 hover:underline min-w-0">
                           <FileText className="w-4 h-4 flex-shrink-0" /> <span className="truncate">{a.name || "Anexo"}</span>
                         </a>
-                        <button onClick={() => removeAttachment(i)} className="text-red-400 hover:text-red-600 flex-shrink-0"><XCircle className="w-4 h-4" /></button>
+                        <button onClick={() => removeAttachment(i)} className="text-red-400 hover:text-red-600 dark:text-red-300 flex-shrink-0"><XCircle className="w-4 h-4" /></button>
                       </div>
                     ))}
                   </div>
@@ -949,14 +949,14 @@ export default function OrderWorkspace() {
         <div className="space-y-4">
           {/* Limite de crédito do cliente */}
           {creditInfo && (
-            <Card className={creditInfo.over ? "border-red-300 bg-red-50/60" : ""}>
+            <Card className={creditInfo.over ? "border-red-300 bg-red-500/10/60" : ""}>
               <CardContent className="pt-4 space-y-1.5">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                   <DollarSign className="w-3.5 h-3.5 text-velox-amber" /> Limite de crédito
                 </p>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Em aberto</span>
-                  <span className={`font-mono font-semibold ${creditInfo.over ? "text-red-600" : ""}`}>R$ {creditInfo.used.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  <span className={`font-mono font-semibold ${creditInfo.over ? "text-red-600 dark:text-red-300" : ""}`}>R$ {creditInfo.used.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Limite</span>
@@ -965,15 +965,15 @@ export default function OrderWorkspace() {
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                   <div className={`h-full ${creditInfo.over ? "bg-red-500" : creditInfo.pct > 80 ? "bg-amber-500" : "bg-green-500"}`} style={{ width: `${creditInfo.pct}%` }} />
                 </div>
-                {creditInfo.over && <p className="text-[11px] text-red-600 font-medium">Cliente acima do limite de crédito.</p>}
+                {creditInfo.over && <p className="text-[11px] text-red-600 dark:text-red-300 font-medium">Cliente acima do limite de crédito.</p>}
               </CardContent>
             </Card>
           )}
           {/* Encaixe rápido de URGENTE (S3) */}
           {order.freight_type === "urgent" && order.status === "confirmed" && !order.trip_id && (
-            <Card className="border-red-200 bg-red-50/60">
+            <Card className="border-red-500/30 bg-red-500/10/60">
               <CardContent className="pt-4 space-y-2">
-                <p className="text-xs font-semibold text-red-700 uppercase tracking-wide flex items-center gap-1.5">
+                <p className="text-xs font-semibold text-red-700 dark:text-red-300 uppercase tracking-wide flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5" /> Urgente — encaixe rápido
                 </p>
                 <p className="text-[11px] text-muted-foreground">Caminhões com espaço nos próximos 2 dias. Clique para programar direto.</p>
@@ -988,9 +988,9 @@ export default function OrderWorkspace() {
                         opts.map(({ truck: t, free }) => (
                           <button key={t.id}
                             onClick={() => { updateMutation.mutate({ scheduled_truck_id: t.id, scheduled_date: dateStr, status_history: [...(order.status_history || []), { status: order.status, timestamp: new Date().toISOString(), user: "Admin", note: `Encaixe urgente em ${t.plate} (${formatDateBR(dateStr)})` }] }); toast({ title: `Programado em ${t.plate}`, description: formatDateBR(dateStr) }); }}
-                            className={`w-full flex items-center justify-between text-xs rounded-lg border p-2 transition-colors ${free >= need ? "border-green-300 bg-green-50 hover:bg-green-100" : "border-border hover:bg-muted/40"}`}>
+                            className={`w-full flex items-center justify-between text-xs rounded-lg border p-2 transition-colors ${free >= need ? "border-green-300 bg-green-500/10 hover:bg-green-500/15" : "border-border hover:bg-muted/40"}`}>
                             <span className="font-mono font-semibold">{t.plate}</span>
-                            <span className={`font-mono ${free >= need ? "text-green-700" : "text-amber-600"}`}>{free.toLocaleString("pt-BR")} kg livres</span>
+                            <span className={`font-mono ${free >= need ? "text-green-700 dark:text-green-300" : "text-amber-600 dark:text-amber-300"}`}>{free.toLocaleString("pt-BR")} kg livres</span>
                           </button>
                         ))}
                     </div>
@@ -1059,8 +1059,8 @@ export default function OrderWorkspace() {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground text-xs">Status</span>
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  order.payment_status === "paid" ? "bg-green-100 text-green-700" :
-                  order.payment_status === "overdue" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                  order.payment_status === "paid" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+                  order.payment_status === "overdue" ? "bg-red-500/15 text-red-700 dark:text-red-300" : "bg-amber-500/15 text-amber-700 dark:text-amber-300"
                 }`}>
                   {order.payment_status === "paid" ? "Pago" : order.payment_status === "overdue" ? "Atrasado" : "Pendente"}
                 </span>
@@ -1086,7 +1086,7 @@ export default function OrderWorkspace() {
       <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
+            <DialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-300">
               <XCircle className="w-4 h-4" /> Cancelar Pedido {order.protocol}
             </DialogTitle>
           </DialogHeader>
@@ -1094,19 +1094,19 @@ export default function OrderWorkspace() {
             <Textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)}
               placeholder="Motivo do cancelamento (obrigatório)" rows={3} className="resize-none" />
             {tripLive && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-2">
-                <p className="text-xs font-semibold text-amber-800 flex items-center gap-1.5">
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 space-y-2">
+                <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5" /> Este pedido está em uma viagem em andamento
                 </p>
-                <p className="text-[11px] text-amber-700">A parada será removida do roteiro e o motorista será avisado. Deseja cobrar taxa de deslocamento improdutivo?</p>
+                <p className="text-[11px] text-amber-700 dark:text-amber-300">A parada será removida do roteiro e o motorista será avisado. Deseja cobrar taxa de deslocamento improdutivo?</p>
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-amber-800">Taxa improdutiva (R$)</label>
+                  <label className="text-xs text-amber-800 dark:text-amber-300">Taxa improdutiva (R$)</label>
                   <Input type="number" step="0.01" value={unproductiveFee} onChange={e => setUnproductiveFee(e.target.value)}
                     placeholder="0,00" className="h-8 w-28 font-mono text-sm" />
                 </div>
               </div>
             )}
-            <p className="text-xs text-red-600">Receitas pendentes do frete deste pedido serão estornadas.</p>
+            <p className="text-xs text-red-600 dark:text-red-300">Receitas pendentes do frete deste pedido serão estornadas.</p>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" size="sm" onClick={() => { setCancelOpen(false); setCancelReason(""); setUnproductiveFee(""); }}>Voltar</Button>
               <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white font-bold"
@@ -1127,7 +1127,7 @@ export default function OrderWorkspace() {
           </DialogHeader>
           <div className="space-y-3">
             {order.trip_id && trip && ["planned", "in_progress"].includes(trip.status) && (
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+              <p className="text-xs text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-lg p-2.5">
                 Este pedido já tem viagem. Ao salvar, a parada do motorista será atualizada e ele verá o novo endereço destacado.
               </p>
             )}
@@ -1153,7 +1153,7 @@ export default function OrderWorkspace() {
           {resolvingIncident && (
             <div className="space-y-3">
               <div className="p-3 bg-muted/30 rounded-lg text-sm">
-                <p className="text-xs font-bold uppercase text-amber-700 mb-1">{(resolvingIncident.type || "").replace(/_/g, " ")}</p>
+                <p className="text-xs font-bold uppercase text-amber-700 dark:text-amber-300 mb-1">{(resolvingIncident.type || "").replace(/_/g, " ")}</p>
                 <p>{resolvingIncident.description}</p>
               </div>
               <Textarea placeholder="O que foi feito para resolver..." rows={3}

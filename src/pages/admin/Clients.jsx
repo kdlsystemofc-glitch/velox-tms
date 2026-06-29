@@ -265,7 +265,7 @@ export default function Clients({ hideTitle = false }) {
           { key: "orders", label: "Pedidos", sortable: true, align: "right", className: "font-mono text-xs", value: c => usageByClient[c.id]?.count || 0, render: c => usageByClient[c.id]?.count || 0 },
           { key: "status", label: "Status", sortable: true, value: c => c.status, render: c => (
             <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded border ${
-              c.status === "active" ? "text-green-700 bg-green-50 border-green-200" : "text-muted-foreground bg-muted border-border"
+              c.status === "active" ? "text-green-700 dark:text-green-300 bg-green-500/10 border-green-500/30" : "text-muted-foreground bg-muted border-border"
             }`}>
               <span className={`w-1.5 h-1.5 rounded-full ${c.status === "active" ? "bg-green-600" : "bg-gray-400"}`} />
               {c.status === "active" ? "Ativo" : "Inativo"}
@@ -336,9 +336,9 @@ export default function Clients({ hideTitle = false }) {
                         {c.role && <p className="text-xs text-muted-foreground">{c.role}</p>}
                         <div className="flex gap-3 mt-1 flex-wrap text-xs">
                           {c.phone && <span>{c.phone}</span>}
-                          {c.email && <span className="text-blue-600">{c.email}</span>}
+                          {c.email && <span className="text-blue-600 dark:text-blue-300">{c.email}</span>}
                           {c.whatsapp && (
-                            <a href={`https://wa.me/55${c.whatsapp.replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer" className="text-green-600 flex items-center gap-1">
+                            <a href={`https://wa.me/55${c.whatsapp.replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer" className="text-green-600 dark:text-green-300 flex items-center gap-1">
                               <MessageCircle size={10} /> {c.whatsapp}
                             </a>
                           )}

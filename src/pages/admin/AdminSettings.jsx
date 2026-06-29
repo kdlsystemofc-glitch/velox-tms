@@ -502,7 +502,7 @@ export default function AdminSettings({ only = null }) {
                                 const t = [...(form.delivery_days_table || [])];
                                 t.splice(i, 1);
                                 setF("delivery_days_table", t);
-                              }} className="text-red-400 hover:text-red-600 text-xs">✕</button>
+                              }} className="text-red-400 hover:text-red-600 dark:text-red-300 text-xs">✕</button>
                             </td>
                           </tr>
                         ))}
@@ -742,7 +742,7 @@ export default function AdminSettings({ only = null }) {
                               const t = [...(form.route_pricing || [])];
                               t.splice(i, 1);
                               setF("route_pricing", t);
-                            }} className="text-red-400 hover:text-red-600 font-bold">✕</button>
+                            }} className="text-red-400 hover:text-red-600 dark:text-red-300 font-bold">✕</button>
                           </td>
                         </tr>
                       ))}

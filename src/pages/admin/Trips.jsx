@@ -12,10 +12,10 @@ import { formatDateTimeBR } from "@/utils/dateUtils";
 import PageHeader from "@/components/shared/PageHeader";
 
 const tripStatusConfig = {
-  planned: { label: "Planejada", color: "bg-blue-100 text-blue-700" },
-  in_progress: { label: "Em Andamento", color: "bg-amber-100 text-amber-700" },
-  completed: { label: "Concluída", color: "bg-green-100 text-green-700" },
-  cancelled: { label: "Cancelada", color: "bg-red-100 text-red-700" },
+  planned: { label: "Planejada", color: "bg-blue-500/15 text-blue-700 dark:text-blue-300" },
+  in_progress: { label: "Em Andamento", color: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
+  completed: { label: "Concluída", color: "bg-green-500/15 text-green-700 dark:text-green-300" },
+  cancelled: { label: "Cancelada", color: "bg-red-500/15 text-red-700 dark:text-red-300" },
 };
 
 function TripCard({ trip }) {
@@ -37,7 +37,7 @@ function TripCard({ trip }) {
               <p className="font-semibold text-sm">{trip.driver_name || <span className="text-red-500">sem motorista</span>}</p>
               <p className="text-xs text-muted-foreground font-mono flex items-center gap-1.5">
                 {trip.truck_plate || "—"}
-                {crewSize > 1 && <span className="text-[9px] bg-blue-100 text-blue-700 font-bold px-1 rounded">comboio {crewSize}</span>}
+                {crewSize > 1 && <span className="text-[9px] bg-blue-500/15 text-blue-700 dark:text-blue-300 font-bold px-1 rounded">comboio {crewSize}</span>}
               </p>
             </div>
           </div>
@@ -75,7 +75,7 @@ function TripCard({ trip }) {
         {trip.status === "completed" && (
           <div className="flex items-center justify-between text-xs mb-3 pt-3 border-t border-border/60">
             <span className="text-muted-foreground">Lucro · margem</span>
-            <span className={`font-mono font-semibold ${(trip.net_profit || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>
+            <span className={`font-mono font-semibold ${(trip.net_profit || 0) >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>
               R$ {(trip.net_profit || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}{margin != null ? ` · ${margin.toFixed(0)}%` : ""}
             </span>
           </div>
@@ -165,10 +165,10 @@ export default function Trips() {
       </PageHeader>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Kpi label="Em rota" value={trips.filter(t => t.status === "in_progress").length} tone="text-amber-600" hint="viagens em andamento" />
-        <Kpi label="Planejadas" value={trips.filter(t => t.status === "planned").length} tone="text-blue-600" hint="prontas para sair" />
+        <Kpi label="Em rota" value={trips.filter(t => t.status === "in_progress").length} tone="text-amber-600 dark:text-amber-300" hint="viagens em andamento" />
+        <Kpi label="Planejadas" value={trips.filter(t => t.status === "planned").length} tone="text-blue-600 dark:text-blue-300" hint="prontas para sair" />
         <Kpi label="Concluídas no mês" value={trips.filter(t => t.status === "completed" && (t.arrival_date || t.departure_date) && new Date(t.arrival_date || t.departure_date) >= monthStart).length} hint="finalizadas neste mês" />
-        <Kpi label="Lucro do mês" value={`R$ ${lucroMes.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} tone={lucroMes >= 0 ? "text-green-600" : "text-red-600"} hint="líquido das concluídas" />
+        <Kpi label="Lucro do mês" value={`R$ ${lucroMes.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} tone={lucroMes >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"} hint="líquido das concluídas" />
       </div>
 
       <div className="flex flex-col sm:flex-row gap-2">

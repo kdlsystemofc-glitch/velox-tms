@@ -269,7 +269,7 @@ export default function DRE({ hideTitle = false }) {
   const Row = ({ label, value, indent = false, bold = false, color = "" }) => (
     <div className={`flex items-center justify-between py-1.5 border-b border-border/30 ${bold ? "font-semibold text-base" : "text-sm"}`}>
       <span className={`${indent ? "pl-6" : ""} ${color} text-muted-foreground`}>{label}</span>
-      <span className={`font-mono ${color} ${bold ? "text-base" : ""} ${value < 0 ? "text-red-600" : ""}`}>
+      <span className={`font-mono ${color} ${bold ? "text-base" : ""} ${value < 0 ? "text-red-600 dark:text-red-300" : ""}`}>
         {value < 0 ? `(R$ ${Math.abs(value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })})` : `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
       </span>
     </div>
@@ -347,7 +347,7 @@ export default function DRE({ hideTitle = false }) {
             </div>
 
             <div className="mt-4 pt-2 border-t-2 border-border">
-              <div className={`flex items-center justify-between py-2 text-lg font-bold ${netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
+              <div className={`flex items-center justify-between py-2 text-lg font-bold ${netProfit >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>
                 <span>(=) {netProfit >= 0 ? "LUCRO" : "PREJUÍZO"} LÍQUIDO</span>
                 <span className="font-mono">R$ {Math.abs(netProfit).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
               </div>
@@ -369,7 +369,7 @@ export default function DRE({ hideTitle = false }) {
                   <span className="text-muted-foreground">{label}</span>
                   <span className="flex items-center gap-2">
                     <span className="font-mono">R$ {cur.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                    {d != null && <span className={`text-[11px] font-semibold ${d >= 0 ? "text-green-600" : "text-red-600"}`}>{d >= 0 ? "▲" : "▼"} {Math.abs(d).toFixed(0)}%</span>}
+                    {d != null && <span className={`text-[11px] font-semibold ${d >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>{d >= 0 ? "▲" : "▼"} {Math.abs(d).toFixed(0)}%</span>}
                   </span>
                 </div>
               );
@@ -380,7 +380,7 @@ export default function DRE({ hideTitle = false }) {
           <CardContent className="pt-5">
             <h3 className="font-semibold text-sm mb-3">Acumulado do ano ({year})</h3>
             <div className="flex items-center justify-between py-1.5 border-b border-border/30 text-sm"><span className="text-muted-foreground">Receita bruta (YTD)</span><span className="font-mono">R$ {ytd.grossRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
-            <div className="flex items-center justify-between py-1.5 border-b border-border/30 text-sm"><span className="text-muted-foreground">Lucro líquido (YTD)</span><span className={`font-mono font-semibold ${ytd.netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>R$ {ytd.netProfit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+            <div className="flex items-center justify-between py-1.5 border-b border-border/30 text-sm"><span className="text-muted-foreground">Lucro líquido (YTD)</span><span className={`font-mono font-semibold ${ytd.netProfit >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>R$ {ytd.netProfit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
             <div className="flex items-center justify-between py-1.5 text-sm"><span className="text-muted-foreground">Margem acumulada</span><span className="font-mono">{ytd.grossRevenue > 0 ? ((ytd.netProfit / ytd.grossRevenue) * 100).toFixed(1) : "0.0"}%</span></div>
           </CardContent>
         </Card>
@@ -392,8 +392,8 @@ export default function DRE({ hideTitle = false }) {
           <h3 className="font-semibold text-sm mb-1">Conciliação: competência × caixa</h3>
           <p className="text-xs text-muted-foreground mb-3">Receita reconhecida na DRE (fretes do mês) vs efetivamente recebida (baixas no mês). A diferença é o que ficou a receber ou veio de meses anteriores.</p>
           <div className="flex items-center justify-between py-1.5 border-b border-border/30 text-sm"><span className="text-muted-foreground">Receita por competência (DRE)</span><span className="font-mono">R$ {grossRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
-          <div className="flex items-center justify-between py-1.5 border-b border-border/30 text-sm"><span className="text-muted-foreground">Receita por caixa (recebido)</span><span className="font-mono text-green-600">R$ {caixaRecebido.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
-          <div className="flex items-center justify-between py-1.5 text-sm font-semibold"><span>Diferença (competência − caixa)</span><span className={`font-mono ${grossRevenue - caixaRecebido >= 0 ? "text-amber-600" : "text-blue-600"}`}>R$ {(grossRevenue - caixaRecebido).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex items-center justify-between py-1.5 border-b border-border/30 text-sm"><span className="text-muted-foreground">Receita por caixa (recebido)</span><span className="font-mono text-green-600 dark:text-green-300">R$ {caixaRecebido.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex items-center justify-between py-1.5 text-sm font-semibold"><span>Diferença (competência − caixa)</span><span className={`font-mono ${grossRevenue - caixaRecebido >= 0 ? "text-amber-600 dark:text-amber-300" : "text-blue-600 dark:text-blue-300"}`}>R$ {(grossRevenue - caixaRecebido).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>
         </CardContent>
       </Card>
 
@@ -436,9 +436,9 @@ export default function DRE({ hideTitle = false }) {
                   {truckResults.map(({ truck, revenue, directCosts, result }) => (
                     <tr key={truck.id} className="border-b border-border/40">
                       <td className="py-2 font-mono font-semibold">{truck.plate}</td>
-                      <td className="py-2 text-right font-mono text-green-600">R$ {revenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
-                      <td className="py-2 text-right font-mono text-red-600">R$ {directCosts.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
-                      <td className={`py-2 text-right font-mono font-semibold ${result >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      <td className="py-2 text-right font-mono text-green-600 dark:text-green-300">R$ {revenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+                      <td className="py-2 text-right font-mono text-red-600 dark:text-red-300">R$ {directCosts.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+                      <td className={`py-2 text-right font-mono font-semibold ${result >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>
                         R$ {result.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </td>
                     </tr>

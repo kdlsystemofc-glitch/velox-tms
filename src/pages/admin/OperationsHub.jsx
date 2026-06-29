@@ -8,8 +8,8 @@ import StatCard from "@/components/shared/StatCard";
 import StatusBadge from "@/components/admin/StatusBadge";
 
 const TONE_FROM_COLOR = {
-  "text-blue-600": "primary", "text-green-600": "success", "text-indigo-600": "primary",
-  "text-amber-600": "warning", "text-violet-600": "primary", "text-red-600": "danger",
+  "text-blue-600 dark:text-blue-300": "primary", "text-green-600 dark:text-green-300": "success", "text-indigo-600 dark:text-indigo-300": "primary",
+  "text-amber-600 dark:text-amber-300": "warning", "text-violet-600 dark:text-violet-300": "primary", "text-red-600 dark:text-red-300": "danger",
   "text-muted-foreground": "muted",
 };
 import { useAuth } from "@/lib/AuthContext";
@@ -67,13 +67,13 @@ export default function OperationsHub() {
   const active = orders.filter(o => o.status !== "cancelled");
   const awaitingApproval = active.filter(o => o.status === "awaiting_approval");
   const pipeline = [
-    ...(awaitingApproval.length ? [{ key: "awaiting_approval", label: "Aprovação", count: awaitingApproval.length, to: "/admin/coletas?status=awaiting_approval", color: "text-fuchsia-600 bg-fuchsia-50 border-fuchsia-200" }] : []),
-    { key: "new",        label: "Novos",       count: active.filter(o => o.status === "new").length,        to: "/admin/coletas?status=new",        color: "text-blue-600 bg-blue-50 border-blue-200" },
-    { key: "confirmed",  label: "Confirmados", count: active.filter(o => o.status === "confirmed").length,  to: "/admin/coletas?status=confirmed",  color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
-    { key: "collecting", label: "Em coleta",   count: active.filter(o => o.status === "collecting").length, to: "/admin/coletas?status=collecting", color: "text-amber-600 bg-amber-50 border-amber-200" },
-    { key: "in_transit", label: "Em trânsito", count: active.filter(o => o.status === "in_transit").length, to: "/admin/coletas?status=in_transit", color: "text-purple-600 bg-purple-50 border-purple-200" },
-    ...(active.some(o => o.status === "in_transfer") ? [{ key: "in_transfer", label: "Em transferência", count: active.filter(o => o.status === "in_transfer").length, to: "/admin/transferencias", color: "text-cyan-600 bg-cyan-50 border-cyan-200" }] : []),
-    { key: "delivered",  label: "Entregues",   count: active.filter(o => o.status === "delivered").length,  to: "/admin/coletas?status=delivered",  color: "text-green-600 bg-green-50 border-green-200" },
+    ...(awaitingApproval.length ? [{ key: "awaiting_approval", label: "Aprovação", count: awaitingApproval.length, to: "/admin/coletas?status=awaiting_approval", color: "text-fuchsia-600 dark:text-fuchsia-300 bg-fuchsia-500/10 border-fuchsia-500/30" }] : []),
+    { key: "new",        label: "Novos",       count: active.filter(o => o.status === "new").length,        to: "/admin/coletas?status=new",        color: "text-blue-600 dark:text-blue-300 bg-blue-500/10 border-blue-500/30" },
+    { key: "confirmed",  label: "Confirmados", count: active.filter(o => o.status === "confirmed").length,  to: "/admin/coletas?status=confirmed",  color: "text-indigo-600 dark:text-indigo-300 bg-indigo-500/10 border-indigo-500/30" },
+    { key: "collecting", label: "Em coleta",   count: active.filter(o => o.status === "collecting").length, to: "/admin/coletas?status=collecting", color: "text-amber-600 dark:text-amber-300 bg-amber-500/10 border-amber-500/30" },
+    { key: "in_transit", label: "Em trânsito", count: active.filter(o => o.status === "in_transit").length, to: "/admin/coletas?status=in_transit", color: "text-purple-600 dark:text-purple-300 bg-purple-500/10 border-purple-500/30" },
+    ...(active.some(o => o.status === "in_transfer") ? [{ key: "in_transfer", label: "Em transferência", count: active.filter(o => o.status === "in_transfer").length, to: "/admin/transferencias", color: "text-cyan-600 dark:text-cyan-300 bg-cyan-500/10 border-cyan-500/30" }] : []),
+    { key: "delivered",  label: "Entregues",   count: active.filter(o => o.status === "delivered").length,  to: "/admin/coletas?status=delivered",  color: "text-green-600 dark:text-green-300 bg-green-500/10 border-green-500/30" },
   ];
 
   // ── Fila de ação (exceções) ─────────────────────────────────
@@ -98,64 +98,64 @@ export default function OperationsHub() {
 
   const actionQueue = [
     awaitingApproval.length > 0 && {
-      icon: ShieldAlert, color: "border-fuchsia-300 bg-fuchsia-50",
-      iconColor: "text-fuchsia-600",
+      icon: ShieldAlert, color: "border-fuchsia-300 bg-fuchsia-500/10",
+      iconColor: "text-fuchsia-600 dark:text-fuchsia-300",
       title: `${awaitingApproval.length} pedido${awaitingApproval.length > 1 ? "s" : ""} aguardando aprovação`,
       desc: "Aprove ou recuse para liberar à operação",
       action: { label: "Aprovar", to: "/admin/coletas?status=awaiting_approval" },
     },
     staleList.length > 0 && {
-      icon: Clock, color: "border-rose-300 bg-rose-50",
-      iconColor: "text-rose-600",
+      icon: Clock, color: "border-rose-300 bg-rose-500/10",
+      iconColor: "text-rose-600 dark:text-rose-300",
       title: `${staleList.length} pedido${staleList.length > 1 ? "s" : ""} parado${staleList.length > 1 ? "s" : ""} há +${staleDays} dias`,
       desc: `Mais antigo: ${staleList[0]?.protocol || "—"} (${staleList[0]?.client_name || "—"}) há ${staleList[0]?.stale_days} dias sem programação`,
       action: { label: "Resolver", to: "/admin/coletas?status=new" },
     },
     criticalIncidents.length > 0 && {
-      icon: AlertCircle, color: "border-red-300 bg-red-50",
-      iconColor: "text-red-600",
+      icon: AlertCircle, color: "border-red-300 bg-red-500/10",
+      iconColor: "text-red-600 dark:text-red-300",
       title: `${criticalIncidents.length} ocorrência(s) grave(s) em aberto`,
       desc: "Roubo, acidente, avaria ou recusa — trate agora",
       action: { label: "Tratar", to: "/admin/ocorrencias" },
     },
     truckReplan.length > 0 && {
-      icon: Wrench, color: "border-amber-300 bg-amber-50",
-      iconColor: "text-amber-600",
+      icon: Wrench, color: "border-amber-300 bg-amber-500/10",
+      iconColor: "text-amber-600 dark:text-amber-300",
       title: `${truckReplan.length} caminhão(ões) indisponível(eis) com carga programada`,
       desc: "Redistribua os pedidos/viagens afetados",
       action: { label: "Replanejar", to: "/admin/replanejamento" },
     },
     driverReplan.length > 0 && {
-      icon: UserX, color: "border-orange-300 bg-orange-50",
-      iconColor: "text-orange-600",
+      icon: UserX, color: "border-orange-300 bg-orange-500/10",
+      iconColor: "text-orange-600 dark:text-orange-300",
       title: `${driverReplan.reduce((s, d) => s + d.trips.length, 0)} viagem(ns) sem motorista hoje`,
       desc: "Reatribua a um motorista disponível",
       action: { label: "Reatribuir", to: "/admin/replanejamento" },
     },
     newOrders.length > 0 && {
-      icon: Inbox, color: "border-blue-300 bg-blue-50",
-      iconColor: "text-blue-600",
+      icon: Inbox, color: "border-blue-300 bg-blue-500/10",
+      iconColor: "text-blue-600 dark:text-blue-300",
       title: `${newOrders.length} pedido${newOrders.length > 1 ? "s" : ""} aguardando confirmação`,
       desc: "Confirme ou recuse na fila de pedidos",
       action: { label: "Revisar", to: "/admin/coletas?status=new" },
     },
     confirmedUnassigned.length > 0 && {
-      icon: CalendarDays, color: "border-indigo-300 bg-indigo-50",
-      iconColor: "text-indigo-600",
+      icon: CalendarDays, color: "border-indigo-300 bg-indigo-500/10",
+      iconColor: "text-indigo-600 dark:text-indigo-300",
       title: `${confirmedUnassigned.length} pedido${confirmedUnassigned.length > 1 ? "s" : ""} confirmado${confirmedUnassigned.length > 1 ? "s" : ""} sem viagem`,
       desc: "Programe no quadro de despacho",
       action: { label: "Despachar", to: "/admin/despacho" },
     },
     criticalAlerts.length > 0 && {
-      icon: AlertCircle, color: "border-red-300 bg-red-50",
-      iconColor: "text-red-600",
+      icon: AlertCircle, color: "border-red-300 bg-red-500/10",
+      iconColor: "text-red-600 dark:text-red-300",
       title: `${criticalAlerts.length} alerta${criticalAlerts.length > 1 ? "s" : ""} crítico${criticalAlerts.length > 1 ? "s" : ""}`,
       desc: criticalAlerts[0]?.message || "Documentos ou manutenção",
       action: { label: "Ver alertas", to: "/admin/alertas" },
     },
     isAdmin && overdueRevenues.length > 0 && {
-      icon: DollarSign, color: "border-amber-300 bg-amber-50",
-      iconColor: "text-amber-600",
+      icon: DollarSign, color: "border-amber-300 bg-amber-500/10",
+      iconColor: "text-amber-600 dark:text-amber-300",
       title: `${overdueRevenues.length} recebimento${overdueRevenues.length > 1 ? "s" : ""} em atraso`,
       desc: `R$ ${overdueRevenues.reduce((s, r) => s + (r.amount || 0), 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} vencidos`,
       action: { label: "Cobrar", to: "/admin/financeiro?aba=receitas" },
@@ -218,21 +218,21 @@ export default function OperationsHub() {
   const occupancy = totalCapacityKg > 0 ? Math.round((todaysLoadKg / totalCapacityKg) * 100) : 0;
 
   const metrics = [
-    { label: "Frota disponível", value: `${trucksAvailable}/${activeTrucks.length}`, icon: Truck, color: "text-blue-600" },
-    { label: "Em rota agora", value: trucksOnRoute, icon: MapPin, color: "text-green-600" },
-    { label: "Ocupação da frota", value: `${occupancy}%`, icon: Percent, color: "text-indigo-600" },
-    { label: "Coletas hoje", value: collectingToday, icon: Clock, color: "text-amber-600" },
-    { label: "Entregas hoje", value: deliveredToday, icon: CheckCircle2, color: "text-violet-600" },
-    { label: "No prazo (hoje)", value: otdToday != null ? `${otdToday}%` : "—", icon: TrendingUp, color: otdToday != null && otdToday < 90 ? "text-amber-600" : "text-green-600" },
-    { label: "Atrasados / em risco", value: `${lateOrders}/${atRiskOrders}`, icon: ShieldAlert, color: lateOrders > 0 ? "text-red-600" : "text-muted-foreground" },
-    { label: "Ocorrências abertas", value: incidents.length, icon: Activity, color: incidents.length > 0 ? "text-orange-600" : "text-muted-foreground" },
+    { label: "Frota disponível", value: `${trucksAvailable}/${activeTrucks.length}`, icon: Truck, color: "text-blue-600 dark:text-blue-300" },
+    { label: "Em rota agora", value: trucksOnRoute, icon: MapPin, color: "text-green-600 dark:text-green-300" },
+    { label: "Ocupação da frota", value: `${occupancy}%`, icon: Percent, color: "text-indigo-600 dark:text-indigo-300" },
+    { label: "Coletas hoje", value: collectingToday, icon: Clock, color: "text-amber-600 dark:text-amber-300" },
+    { label: "Entregas hoje", value: deliveredToday, icon: CheckCircle2, color: "text-violet-600 dark:text-violet-300" },
+    { label: "No prazo (hoje)", value: otdToday != null ? `${otdToday}%` : "—", icon: TrendingUp, color: otdToday != null && otdToday < 90 ? "text-amber-600 dark:text-amber-300" : "text-green-600 dark:text-green-300" },
+    { label: "Atrasados / em risco", value: `${lateOrders}/${atRiskOrders}`, icon: ShieldAlert, color: lateOrders > 0 ? "text-red-600 dark:text-red-300" : "text-muted-foreground" },
+    { label: "Ocorrências abertas", value: incidents.length, icon: Activity, color: incidents.length > 0 ? "text-orange-600 dark:text-orange-300" : "text-muted-foreground" },
   ];
 
   // ── Selo de SLA por pedido ──────────────────────────────────
   const slaBadge = (o) => {
     const st = slaStatus(o, settings);
-    if (st === "late") return { label: "Atrasado", cls: "bg-red-100 text-red-700" };
-    if (st === "at_risk") return { label: "Risco", cls: "bg-amber-100 text-amber-700" };
+    if (st === "late") return { label: "Atrasado", cls: "bg-red-500/15 text-red-700 dark:text-red-300" };
+    if (st === "at_risk") return { label: "Risco", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300" };
     return null;
   };
 
@@ -260,7 +260,7 @@ export default function OperationsHub() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-display text-xl font-bold text-foreground">Painel de Operações</h1>
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-green-700 dark:text-green-300 bg-green-500/10 border border-green-500/30 px-1.5 py-0.5 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Ao vivo
             </span>
           </div>
@@ -303,9 +303,9 @@ export default function OperationsHub() {
           ))}
         </div>
       ) : (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-4 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-green-600" />
-          <p className="text-sm font-medium text-green-800">Nenhuma pendência. Operação em dia.</p>
+        <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-4 flex items-center gap-3">
+          <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-300" />
+          <p className="text-sm font-medium text-green-800 dark:text-green-300">Nenhuma pendência. Operação em dia.</p>
         </div>
       )}
 
@@ -347,11 +347,11 @@ export default function OperationsHub() {
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                 {exceptions.slice(0, 12).map(({ o, reason }) => (
                   <Link key={o.id} to={`/admin/coletas/${o.id}`}
-                    className="flex items-center gap-3 p-2.5 rounded-lg border border-amber-200 bg-amber-50/40 hover:border-velox-amber/50 transition-colors">
+                    className="flex items-center gap-3 p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10/40 hover:border-velox-amber/50 transition-colors">
                     <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{o.client_name} <span className="font-mono text-xs text-muted-foreground">{o.protocol}</span></p>
-                      <p className="text-xs text-amber-700">{reason}</p>
+                      <p className="text-xs text-amber-700 dark:text-amber-300">{reason}</p>
                     </div>
                     <StatusBadge status={o.status} />
                   </Link>
@@ -535,7 +535,7 @@ export default function OperationsHub() {
             className="card-interactive rounded-xl border border-border p-4 flex items-center justify-between hover:border-green-300">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">A receber</p>
-              <p className="text-xl font-bold font-mono text-green-600">R$ {toReceive.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              <p className="text-xl font-bold font-mono text-green-600 dark:text-green-300">R$ {toReceive.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
             </div>
             <DollarSign className="w-6 h-6 text-green-300" />
           </Link>
@@ -543,7 +543,7 @@ export default function OperationsHub() {
             className="card-interactive rounded-xl border border-border p-4 flex items-center justify-between hover:border-red-300">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">A pagar</p>
-              <p className="text-xl font-bold font-mono text-red-600">R$ {toPay.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              <p className="text-xl font-bold font-mono text-red-600 dark:text-red-300">R$ {toPay.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
             </div>
             <DollarSign className="w-6 h-6 text-red-300" />
           </Link>

@@ -33,10 +33,10 @@ export default function MapPage() {
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Viagens Ativas", value: activeTrips.length, color: "text-amber-600", bg: "bg-amber-50" },
-          { label: "Viagens Planejadas", value: plannedTrips.length, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Pedidos em Trânsito", value: orders.filter(o => o.status === "in_transit").length, color: "text-orange-600", bg: "bg-orange-50" },
-          { label: "Em Coleta", value: orders.filter(o => o.status === "collecting").length, color: "text-purple-600", bg: "bg-purple-50" },
+          { label: "Viagens Ativas", value: activeTrips.length, color: "text-amber-600 dark:text-amber-300", bg: "bg-amber-500/10" },
+          { label: "Viagens Planejadas", value: plannedTrips.length, color: "text-blue-600 dark:text-blue-300", bg: "bg-blue-500/10" },
+          { label: "Pedidos em Trânsito", value: orders.filter(o => o.status === "in_transit").length, color: "text-orange-600 dark:text-orange-300", bg: "bg-orange-500/10" },
+          { label: "Em Coleta", value: orders.filter(o => o.status === "collecting").length, color: "text-purple-600 dark:text-purple-300", bg: "bg-purple-500/10" },
         ].map(item => (
           <Card key={item.label} className="p-4">
             <p className="text-xs text-muted-foreground">{item.label}</p>
@@ -153,7 +153,7 @@ export default function MapPage() {
                           <p className="font-mono font-semibold text-sm">{order.protocol}</p>
                           <p className="text-xs text-muted-foreground">{order.client_name}</p>
                         </div>
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${order.status === "in_transit" ? "bg-orange-100 text-orange-700" : "bg-amber-100 text-amber-700"}`}>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${order.status === "in_transit" ? "bg-orange-500/15 text-orange-700 dark:text-orange-300" : "bg-amber-500/15 text-amber-700 dark:text-amber-300"}`}>
                           {order.status === "in_transit" ? "Em Trânsito" : "Em Coleta"}
                         </span>
                       </div>

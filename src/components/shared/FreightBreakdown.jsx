@@ -117,9 +117,9 @@ export function FreightBreakdown({ breakdown, compact = false }) {
       {expanded && (
         <div className="p-4 space-y-2">
           {rows.map((row, i) => (
-            <div key={i} className={`flex items-start justify-between text-sm ${row.isNote ? "bg-amber-50 rounded-lg p-2 -mx-2" : ""}`}>
+            <div key={i} className={`flex items-start justify-between text-sm ${row.isNote ? "bg-amber-500/10 rounded-lg p-2 -mx-2" : ""}`}>
               <div>
-                {row.label && <p className={row.isNote ? "text-amber-700 text-xs font-medium" : "text-foreground"}>{row.label}</p>}
+                {row.label && <p className={row.isNote ? "text-amber-700 dark:text-amber-300 text-xs font-medium" : "text-foreground"}>{row.label}</p>}
                 {row.detail && <p className="text-xs text-muted-foreground">{row.detail}</p>}
               </div>
               {!row.isNote && row.value !== null && (
@@ -129,24 +129,24 @@ export function FreightBreakdown({ breakdown, compact = false }) {
           ))}
           {breakdown.cubicDetails && breakdown.cubicDetails.length > 0 && (
             <div className={`rounded-lg p-3 text-xs space-y-1 -mx-2 ${
-              breakdown.usedCubic ? "bg-amber-50 border border-amber-200" : "bg-green-50 border border-green-200"
+              breakdown.usedCubic ? "bg-amber-500/10 border border-amber-500/30" : "bg-green-500/10 border border-green-500/30"
             }`}>
-              <p className={`font-semibold ${breakdown.usedCubic ? "text-amber-800" : "text-green-800"}`}>
+              <p className={`font-semibold ${breakdown.usedCubic ? "text-amber-800 dark:text-amber-300" : "text-green-800 dark:text-green-300"}`}>
                 {breakdown.usedCubic ? "⚠ Peso cubado é maior — cobrança pelo cubado" : "✓ Peso real é maior — cobrança pelo peso real"}
               </p>
               {breakdown.cubicDetails.map((d, i) => (
                 <div key={i} className={`pl-2 border-l-2 ${breakdown.usedCubic ? "border-amber-300" : "border-green-300"}`}>
                   {d.description && <p className="text-muted-foreground">{d.description}:</p>}
-                  <p className={`font-mono text-[11px] ${breakdown.usedCubic ? "text-amber-700" : "text-green-700"}`}>
+                  <p className={`font-mono text-[11px] ${breakdown.usedCubic ? "text-amber-700 dark:text-amber-300" : "text-green-700 dark:text-green-300"}`}>
                     Cubado: {d.formula}
                   </p>
-                  <p className={breakdown.usedCubic ? "text-amber-700" : "text-green-700"}>
+                  <p className={breakdown.usedCubic ? "text-amber-700 dark:text-amber-300" : "text-green-700 dark:text-green-300"}>
                     Real: {d.realKg.toLocaleString("pt-BR")} kg →{" "}
                     <strong>usa {d.usedCubic ? "cubado" : "real"}: {d.taxableKg.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} kg</strong>
                   </p>
                 </div>
               ))}
-              <p className={`font-bold pt-1 ${breakdown.usedCubic ? "text-amber-800" : "text-green-800"}`}>
+              <p className={`font-bold pt-1 ${breakdown.usedCubic ? "text-amber-800 dark:text-amber-300" : "text-green-800 dark:text-green-300"}`}>
                 Peso taxável total: {breakdown.taxableKg?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} kg
               </p>
             </div>

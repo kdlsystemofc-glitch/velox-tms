@@ -175,13 +175,13 @@ export default function Replanning() {
         const replacementId = pickTruck[truck.id] || best?.truck.id || "";
         const riskCount = slaRisk(affectedOrders) + slaRisk(tripOrders(affectedTrips));
         return (
-          <Card key={truck.id} className="border-amber-200">
+          <Card key={truck.id} className="border-amber-500/30">
             <CardContent className="pt-5 space-y-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <Wrench className="w-5 h-5 text-amber-600" />
+                <Wrench className="w-5 h-5 text-amber-600 dark:text-amber-300" />
                 <span className="font-mono font-bold">{truck.plate}</span>
                 <span className="text-sm text-muted-foreground">{truck.model}</span>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300">
                   {truck.status === "maintenance" ? "Em manutenção" : "Inativo"}
                 </span>
                 <span className="text-xs text-muted-foreground ml-auto">
@@ -189,7 +189,7 @@ export default function Replanning() {
                 </span>
               </div>
               {riskCount > 0 && (
-                <p className="text-[11px] text-red-600 font-medium flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Impacto: {riskCount} pedido(s) com prazo crítico se não redistribuir.</p>
+                <p className="text-[11px] text-red-600 dark:text-red-300 font-medium flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Impacto: {riskCount} pedido(s) com prazo crítico se não redistribuir.</p>
               )}
 
               {/* Afetados */}
@@ -257,18 +257,18 @@ export default function Replanning() {
         const replacementId = pickDriver[driver.id] || best?.driver.id || "";
         const riskCount = slaRisk(tripOrders(affectedTrips));
         return (
-          <Card key={driver.id} className="border-orange-200">
+          <Card key={driver.id} className="border-orange-500/30">
             <CardContent className="pt-5 space-y-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <UserX className="w-5 h-5 text-orange-600" />
+                <UserX className="w-5 h-5 text-orange-600 dark:text-orange-300" />
                 <span className="font-bold">{driver.name}</span>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-700 dark:text-orange-300">
                   {driver.status === "away" ? "Ausente" : "Afastado"}
                 </span>
                 <span className="text-xs text-muted-foreground ml-auto">{affectedTrips.length} viagem(ns) sem motorista</span>
               </div>
               {riskCount > 0 && (
-                <p className="text-[11px] text-red-600 font-medium flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Impacto: {riskCount} pedido(s) com prazo crítico.</p>
+                <p className="text-[11px] text-red-600 dark:text-red-300 font-medium flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Impacto: {riskCount} pedido(s) com prazo crítico.</p>
               )}
               <div className="space-y-1.5">
                 {affectedTrips.map((t) => (
@@ -312,15 +312,15 @@ export default function Replanning() {
 
       {/* ── Excesso de carga (célula programada acima da capacidade) ── */}
       {overloaded.map(({ truck, date, orders: cellOrders, kg, over }) => (
-        <Card key={`ovl-${truck.id}-${date}`} className="border-red-200">
+        <Card key={`ovl-${truck.id}-${date}`} className="border-red-500/30">
           <CardContent className="pt-5 space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <Scale className="w-5 h-5 text-red-600" />
+              <Scale className="w-5 h-5 text-red-600 dark:text-red-300" />
               <span className="font-mono font-bold">{truck.plate}</span>
               <span className="text-sm text-muted-foreground">{formatDateBR(date)}</span>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">Excesso de carga</span>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-500/15 text-red-700 dark:text-red-300">Excesso de carga</span>
               <span className="text-xs text-muted-foreground ml-auto">
-                {kg.toLocaleString("pt-BR")} / {truck.capacity_kg.toLocaleString("pt-BR")} kg · <strong className="text-red-600">+{over.toLocaleString("pt-BR")} kg</strong>
+                {kg.toLocaleString("pt-BR")} / {truck.capacity_kg.toLocaleString("pt-BR")} kg · <strong className="text-red-600 dark:text-red-300">+{over.toLocaleString("pt-BR")} kg</strong>
               </span>
             </div>
             <p className="text-xs text-muted-foreground">{cellOrders.length} pedido(s) programados acima da capacidade. Reequilibre no despacho (mova parte para outro caminhão/dia).</p>
@@ -331,13 +331,13 @@ export default function Replanning() {
 
       {/* ── Viagens sem recurso (sem motorista ou sem caminhão) ── */}
       {missingResource.length > 0 && (
-        <Card className="border-orange-200">
+        <Card className="border-orange-500/30">
           <CardContent className="pt-5 space-y-3">
-            <div className="flex items-center gap-2"><HelpCircle className="w-5 h-5 text-orange-600" /><span className="font-semibold">Viagens sem recurso ({missingResource.length})</span></div>
+            <div className="flex items-center gap-2"><HelpCircle className="w-5 h-5 text-orange-600 dark:text-orange-300" /><span className="font-semibold">Viagens sem recurso ({missingResource.length})</span></div>
             <div className="space-y-1.5">
               {missingResource.map((t) => (
                 <Link key={t.id} to={`/admin/viagens/${t.id}`} className="flex items-center justify-between text-xs rounded-lg border border-border p-2 hover:border-velox-amber/40">
-                  <span className="flex-1 truncate">{t.truck_plate || <span className="text-red-600">sem caminhão</span>} · {t.driver_name || <span className="text-red-600">sem motorista</span>}</span>
+                  <span className="flex-1 truncate">{t.truck_plate || <span className="text-red-600 dark:text-red-300">sem caminhão</span>} · {t.driver_name || <span className="text-red-600 dark:text-red-300">sem motorista</span>}</span>
                   <StatusBadge status={t.status} />
                 </Link>
               ))}
@@ -349,9 +349,9 @@ export default function Replanning() {
 
       {/* ── Urgentes sem recurso ── */}
       {urgentNoResource.length > 0 && (
-        <Card className="border-red-200">
+        <Card className="border-red-500/30">
           <CardContent className="pt-5 space-y-3">
-            <div className="flex items-center gap-2"><Zap className="w-5 h-5 text-red-600" /><span className="font-semibold">Urgentes sem recurso ({urgentNoResource.length})</span></div>
+            <div className="flex items-center gap-2"><Zap className="w-5 h-5 text-red-600 dark:text-red-300" /><span className="font-semibold">Urgentes sem recurso ({urgentNoResource.length})</span></div>
             <div className="space-y-1.5">
               {urgentNoResource.map((o) => (
                 <Link key={o.id} to={`/admin/coletas/${o.id}`} className="flex items-center justify-between text-xs rounded-lg border border-border p-2 hover:border-velox-amber/40">

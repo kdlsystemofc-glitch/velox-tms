@@ -550,8 +550,8 @@ export default function TripDetailPage() {
   };
 
   const stopTypeLabel = { departure: "Partida", collection: "Coleta", delivery: "Entrega" };
-  const stopTypeColor = { departure: "text-blue-600 bg-blue-50", collection: "text-amber-600 bg-amber-50", delivery: "text-green-600 bg-green-50" };
-  const statusColor = { pending: "text-muted-foreground", arrived: "text-amber-600", completed: "text-green-600" };
+  const stopTypeColor = { departure: "text-blue-600 dark:text-blue-300 bg-blue-500/10", collection: "text-amber-600 dark:text-amber-300 bg-amber-500/10", delivery: "text-green-600 dark:text-green-300 bg-green-500/10" };
+  const statusColor = { pending: "text-muted-foreground", arrived: "text-amber-600 dark:text-amber-300", completed: "text-green-600 dark:text-green-300" };
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -561,9 +561,9 @@ export default function TripDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="font-display text-xl font-bold">Viagem</h1>
             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-              trip.status === "in_progress" ? "bg-amber-100 text-amber-700" :
-              trip.status === "completed" ? "bg-green-100 text-green-700" :
-              trip.status === "planned" ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"
+              trip.status === "in_progress" ? "bg-amber-500/15 text-amber-700 dark:text-amber-300" :
+              trip.status === "completed" ? "bg-green-500/15 text-green-700 dark:text-green-300" :
+              trip.status === "planned" ? "bg-blue-500/15 text-blue-700 dark:text-blue-300" : "bg-muted text-muted-foreground"
             }`}>
               {trip.status === "in_progress" ? "Em Andamento" : trip.status === "completed" ? "Concluída" : trip.status === "planned" ? "Planejada" : "Cancelada"}
             </span>
@@ -610,17 +610,17 @@ export default function TripDetailPage() {
         {/* Stops timeline */}
         <div className="lg:col-span-2">
           {backhaulCandidates.length > 0 && (
-            <Card className="mb-3 border-blue-200 bg-blue-50/60">
+            <Card className="mb-3 border-blue-500/30 bg-blue-500/10/60">
               <CardContent className="pt-4">
-                <p className="text-sm font-semibold text-blue-800 flex items-center gap-2 mb-1">
+                <p className="text-sm font-semibold text-blue-800 dark:text-blue-300 flex items-center gap-2 mb-1">
                   <MapPin className="w-4 h-4" /> Aproveitar o retorno?
                 </p>
-                <p className="text-xs text-blue-700 mb-3">
+                <p className="text-xs text-blue-700 dark:text-blue-300 mb-3">
                   As entregas terminaram. O caminhão vai voltar vazio e há coleta(s) pendente(s) na mesma região:
                 </p>
                 <div className="space-y-2">
                   {backhaulCandidates.map(o => (
-                    <div key={o.id} className="flex items-center justify-between gap-2 rounded-lg border border-blue-200 bg-card p-2.5">
+                    <div key={o.id} className="flex items-center justify-between gap-2 rounded-lg border border-blue-500/30 bg-card p-2.5">
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{o.client_name} <span className="font-mono text-xs text-muted-foreground">{o.protocol}</span></p>
                         <p className="text-xs text-muted-foreground">{o.origin?.city}/{o.origin?.state} · {(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</p>
@@ -670,7 +670,7 @@ export default function TripDetailPage() {
                           <GripVertical className="w-4 h-4" />
                         </div>
                       )}
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${stop.status === "completed" ? "bg-green-100 text-green-700" : stop.status === "arrived" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${stop.status === "completed" ? "bg-green-500/15 text-green-700 dark:text-green-300" : stop.status === "arrived" ? "bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-muted text-muted-foreground"}`}>
                         {stop.status === "completed" ? <CheckCircle2 className="w-4 h-4" /> : <span>{i + 1}</span>}
                       </div>
                       <div className="flex-1">
@@ -690,13 +690,13 @@ export default function TripDetailPage() {
                         {crew.length > 1 && trip.status === "completed" && (
                           <span className="text-[11px] text-muted-foreground"> · {crew[stop.vehicle_index || 0]?.truck_plate}</span>
                         )}
-                        {stop.completed_at && <p className="text-xs text-green-600 mt-1">Concluído em {formatDateTimeBR(stop.completed_at)}</p>}
+                        {stop.completed_at && <p className="text-xs text-green-600 dark:text-green-300 mt-1">Concluído em {formatDateTimeBR(stop.completed_at)}</p>}
                         {stopWaitingMinutes(stop) > 0 && (
                           <p className="text-[11px] text-muted-foreground mt-0.5">⏱ {formatMinutes(stopWaitingMinutes(stop))} no local{stop.estadia_charged ? " · estadia cobrada" : ""}</p>
                         )}
                         {stop.type === "delivery" && (
                           stop.nf_signed_url
-                            ? <a href={stop.nf_signed_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1"><FileText className="w-3.5 h-3.5" /> Ver NF Assinada</a>
+                            ? <a href={stop.nf_signed_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-300 hover:underline mt-1"><FileText className="w-3.5 h-3.5" /> Ver NF Assinada</a>
                             : trip.status === "in_progress"
                               ? <div className="mt-1"><FileUploadButton label="Anexar NF" accept="image/*,application/pdf" onUpload={async (url) => {
                                   if (!url) return;
@@ -769,9 +769,9 @@ export default function TripDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm pt-4">
-              <div className="flex justify-between"><span className="text-muted-foreground">Receita total</span><span className="font-mono font-semibold text-green-600">R$ {(trip.total_revenue || 0).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Receita total</span><span className="font-mono font-semibold text-green-600 dark:text-green-300">R$ {(trip.total_revenue || 0).toFixed(2)}</span></div>
               {Number(trip.advance_amount) > 0 && (
-                <div className="flex justify-between"><span className="text-muted-foreground">Adiantamento pago</span><span className="font-mono text-amber-600">R$ {Number(trip.advance_amount).toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Adiantamento pago</span><span className="font-mono text-amber-600 dark:text-amber-300">R$ {Number(trip.advance_amount).toFixed(2)}</span></div>
               )}
               {trip.status !== "completed" && Number(trip.estimated_km) > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground">
@@ -781,10 +781,10 @@ export default function TripDetailPage() {
               )}
               {trip.status === "completed" && (
                 <>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Custo total</span><span className="font-mono text-red-600">R$ {(trip.total_cost || 0).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Custo total</span><span className="font-mono text-red-600 dark:text-red-300">R$ {(trip.total_cost || 0).toFixed(2)}</span></div>
                   <div className="flex justify-between border-t border-border pt-2 font-semibold">
                     <span>Lucro líquido</span>
-                    <span className={`font-mono ${(trip.net_profit || 0) >= 0 ? "text-green-600" : "text-red-600"}`}>R$ {(trip.net_profit || 0).toFixed(2)}</span>
+                    <span className={`font-mono ${(trip.net_profit || 0) >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>R$ {(trip.net_profit || 0).toFixed(2)}</span>
                   </div>
                   {(() => {
                     const rev = trip.total_revenue || 0;
@@ -796,13 +796,13 @@ export default function TripDetailPage() {
                     const kmDev = estKm > 0 && realKm > 0 ? ((realKm - estKm) / estKm) * 100 : null;
                     const costDev = estCost > 0 ? (((trip.total_cost || 0) - estCost) / estCost) * 100 : null;
                     const kmPerL = Number(trip.km_per_liter) || (realKm > 0 && Number(trip.fuel_liters) > 0 ? realKm / trip.fuel_liters : null);
-                    const devColor = (d) => d == null ? "" : d <= 0 ? "text-green-600" : d <= 10 ? "text-amber-600" : "text-red-600";
+                    const devColor = (d) => d == null ? "" : d <= 0 ? "text-green-600 dark:text-green-300" : d <= 10 ? "text-amber-600 dark:text-amber-300" : "text-red-600 dark:text-red-300";
                     const devLabel = (d) => d == null ? "" : `${d > 0 ? "+" : ""}${d.toFixed(0)}%`;
                     return (
                       <>
                         <div className="flex justify-between text-xs">
                           <span className="text-muted-foreground">Margem</span>
-                          <span className={`font-mono font-semibold ${margin >= 0 ? "text-green-600" : "text-red-600"}`}>{margin.toFixed(1)}%</span>
+                          <span className={`font-mono font-semibold ${margin >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>{margin.toFixed(1)}%</span>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-muted-foreground">Custo por km</span>
@@ -868,21 +868,21 @@ export default function TripDetailPage() {
                             <p className="font-medium truncate">{r.driver_name || "Motorista"}</p>
                             <p className="text-[11px] text-muted-foreground font-mono">{r.truck_plate || "—"} · {r.pct}%</p>
                           </div>
-                          <span className="font-mono text-green-600 flex-shrink-0">R$ {Number(r.amount).toFixed(2)}</span>
+                          <span className="font-mono text-green-600 dark:text-green-300 flex-shrink-0">R$ {Number(r.amount).toFixed(2)}</span>
                         </div>
                       ))}
-                      <div className="flex justify-between border-t border-border pt-2"><span className="text-muted-foreground">Comissão total</span><span className="font-mono font-semibold text-green-600">R$ {comm.toFixed(2)}</span></div>
+                      <div className="flex justify-between border-t border-border pt-2"><span className="text-muted-foreground">Comissão total</span><span className="font-mono font-semibold text-green-600 dark:text-green-300">R$ {comm.toFixed(2)}</span></div>
                     </>
                   ) : (
                     <>
                       <div className="flex justify-between"><span className="text-muted-foreground">Motorista</span><span className="font-medium">{trip.driver_name || "—"}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Comissão</span><span className="font-mono text-green-600">R$ {comm.toFixed(2)}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Comissão</span><span className="font-mono text-green-600 dark:text-green-300">R$ {comm.toFixed(2)}</span></div>
                     </>
                   )}
-                  <div className="flex justify-between"><span className="text-muted-foreground">(−) Adiantamento (vale-frete)</span><span className="font-mono text-amber-600">R$ {adv.toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">(−) Adiantamento (vale-frete)</span><span className="font-mono text-amber-600 dark:text-amber-300">R$ {adv.toFixed(2)}</span></div>
                   <div className="flex justify-between border-t border-border pt-2 font-semibold">
                     <span>Saldo a {saldo >= 0 ? "pagar" : "receber"}{isComboio ? " (comboio)" : saldo >= 0 ? " ao motorista" : " do motorista"}</span>
-                    <span className={`font-mono ${saldo >= 0 ? "text-green-600" : "text-red-600"}`}>R$ {Math.abs(saldo).toFixed(2)}</span>
+                    <span className={`font-mono ${saldo >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>R$ {Math.abs(saldo).toFixed(2)}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground">{isComboio ? "Cada motorista do comboio teve sua comissão lançada como despesa \"a pagar\"" : "A comissão foi lançada como despesa \"a pagar\""} em Financeiro → Despesas.</p>
                 </CardContent>
@@ -902,12 +902,12 @@ export default function TripDetailPage() {
                       <p className="font-medium truncate text-xs">{r.recipient_name}</p>
                       <p className="text-[11px] text-muted-foreground">{formatMinutes(r.minutes)} no local · {r.billableHours}h cobrável{r.already_charged ? " · já cobrada" : ""}</p>
                     </div>
-                    <span className={`font-mono flex-shrink-0 ${r.already_charged ? "text-muted-foreground line-through" : "text-green-600"}`}>R$ {r.fee.toFixed(2)}</span>
+                    <span className={`font-mono flex-shrink-0 ${r.already_charged ? "text-muted-foreground line-through" : "text-green-600 dark:text-green-300"}`}>R$ {r.fee.toFixed(2)}</span>
                   </div>
                 ))}
                 <div className="flex justify-between border-t border-border pt-2 font-semibold text-xs">
                   <span>Total a cobrar (pendente)</span>
-                  <span className="font-mono text-green-600">R$ {estadia.pendingFee.toFixed(2)}</span>
+                  <span className="font-mono text-green-600 dark:text-green-300">R$ {estadia.pendingFee.toFixed(2)}</span>
                 </div>
                 {estadia.hasPending ? (
                   <Button size="sm" className="w-full mt-1 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" disabled={chargeEstadia.isPending} onClick={() => chargeEstadia.mutate()}>
@@ -987,10 +987,10 @@ export default function TripDetailPage() {
             </div>
 
             <div className="p-3 bg-muted/30 rounded-lg text-sm space-y-0.5">
-              <div className="flex justify-between"><span>Receita</span><span className="font-mono text-green-600">R$ {(trip.total_revenue || 0).toFixed(2)}</span></div>
-              <div className="flex justify-between"><span>Custo estimado</span><span className="font-mono text-red-600">R$ {(Number(closeForm.fuel_cost || 0) + Number(closeForm.tolls_cost || 0) + closeForm.other_costs.reduce((s, c) => s + Number(c.amount || 0), 0)).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>Receita</span><span className="font-mono text-green-600 dark:text-green-300">R$ {(trip.total_revenue || 0).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span>Custo estimado</span><span className="font-mono text-red-600 dark:text-red-300">R$ {(Number(closeForm.fuel_cost || 0) + Number(closeForm.tolls_cost || 0) + closeForm.other_costs.reduce((s, c) => s + Number(c.amount || 0), 0)).toFixed(2)}</span></div>
               {Number(trip.advance_amount) > 0 && (
-                <div className="flex justify-between text-xs text-amber-700"><span>Adiantamento já pago (acerto)</span><span className="font-mono">R$ {Number(trip.advance_amount).toFixed(2)}</span></div>
+                <div className="flex justify-between text-xs text-amber-700 dark:text-amber-300"><span>Adiantamento já pago (acerto)</span><span className="font-mono">R$ {Number(trip.advance_amount).toFixed(2)}</span></div>
               )}
             </div>
 

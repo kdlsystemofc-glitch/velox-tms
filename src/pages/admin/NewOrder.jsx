@@ -662,13 +662,13 @@ export default function NewOrder() {
       {(coverageWarnings.length > 0 || duplicateOf) && (
         <div className="mt-3 space-y-2">
           {coverageWarnings.length > 0 && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 flex items-start gap-2">
+            <div className="rounded-lg border border-amber-300 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span><strong>Fora da área de cobertura:</strong> {coverageWarnings.join(", ")}. Confirme se a operação atende esta(s) região(ões).</span>
             </div>
           )}
           {duplicateOf && (
-            <div className="rounded-lg border border-orange-300 bg-orange-50 p-3 text-xs text-orange-800 flex items-start gap-2">
+            <div className="rounded-lg border border-orange-300 bg-orange-500/10 p-3 text-xs text-orange-800 dark:text-orange-300 flex items-start gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span><strong>Possível duplicado:</strong> já existe o pedido <span className="font-mono font-semibold">{duplicateOf}</span> para este cliente, mesma origem e data. Verifique antes de criar.</span>
             </div>
@@ -728,17 +728,17 @@ export default function NewOrder() {
                       </div>
                     </div>
                     {clientInsights && (
-                      <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 space-y-2">
-                        <p className="text-xs font-semibold text-blue-800">
+                      <div className="rounded-lg border border-blue-500/30 bg-blue-500/10/60 p-3 space-y-2">
+                        <p className="text-xs font-semibold text-blue-800 dark:text-blue-300">
                           Este cliente tem {clientInsights.count} pedido(s) anterior(es).
                           {clientInsights.avgDeclared > 0 && <span className="font-normal"> Valor médio declarado: R$ {clientInsights.avgDeclared.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}.</span>}
                         </p>
                         {clientInsights.topRecipients.length > 0 && (
                           <div className="flex flex-wrap gap-1.5">
-                            <span className="text-[11px] text-blue-700">Destinatários frequentes:</span>
+                            <span className="text-[11px] text-blue-700 dark:text-blue-300">Destinatários frequentes:</span>
                             {clientInsights.topRecipients.map((r, i) => (
                               <button key={i} type="button" onClick={() => addSuggestedRecipient(r)}
-                                className="text-[11px] bg-card border border-blue-200 rounded-full px-2 py-0.5 hover:bg-blue-100 text-blue-800">
+                                className="text-[11px] bg-card border border-blue-500/30 rounded-full px-2 py-0.5 hover:bg-blue-500/15 text-blue-800 dark:text-blue-300">
                                 + {r.name} {r.count > 1 && <span className="text-blue-400">({r.count}x)</span>}
                               </button>
                             ))}
@@ -814,7 +814,7 @@ export default function NewOrder() {
                     <div key={i} className="border border-border rounded-lg p-3 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold">Ponto de coleta {i + 2}</span>
-                        <button type="button" onClick={() => removeExtraOrigin(i)} className="text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <button type="button" onClick={() => removeExtraOrigin(i)} className="text-red-400 hover:text-red-600 dark:text-red-300"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                       <AddressFields value={o} onChange={(addr) => setExtraOrigin(i, addr)} />
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -913,7 +913,7 @@ export default function NewOrder() {
                                   }) }))}>
                                   <p className="font-medium text-sm flex items-center gap-1.5">
                                     {c.name}
-                                    <span className={`text-[9px] px-1 rounded ${c.kind === "dest" ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"}`}>{c.kind === "dest" ? "destinatário" : "cliente"}</span>
+                                    <span className={`text-[9px] px-1 rounded ${c.kind === "dest" ? "bg-blue-500/15 text-blue-700 dark:text-blue-300" : "bg-muted text-muted-foreground"}`}>{c.kind === "dest" ? "destinatário" : "cliente"}</span>
                                   </p>
                                   <p className="text-xs text-muted-foreground">{c.cpf}{c.address?.city && ` · ${c.address.city}/${c.address.state}`}</p>
                                 </button>
@@ -940,7 +940,7 @@ export default function NewOrder() {
                           <div key={ii} className="border border-border rounded-lg p-3 space-y-3 bg-background">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Item {ii + 1}</span>
-                              {r.items.length > 1 && (<Button variant="ghost" size="sm" onClick={() => removeItem(ri, ii)} className="h-6 w-6 p-0 text-red-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></Button>)}
+                              {r.items.length > 1 && (<Button variant="ghost" size="sm" onClick={() => removeItem(ri, ii)} className="h-6 w-6 p-0 text-red-400 hover:text-red-600 dark:text-red-300"><Trash2 className="w-3.5 h-3.5" /></Button>)}
                             </div>
                             <div className="grid grid-cols-4 gap-2">
                               <div className="space-y-1"><label className="text-xs font-medium text-muted-foreground">Nº da NF</label><Input placeholder="ex: 001234" value={item.nf_number} onChange={e => setItem(ri, ii, "nf_number", e.target.value)} className="h-8 text-sm" /></div>
@@ -959,7 +959,7 @@ export default function NewOrder() {
                                 onChange={e => { const d = e.target.value.replace(/\D/g, "").slice(0, 44); setItem(ri, ii, "nf_key", d); if (d.length === 44 && !item.nf_number) { const num = nfNumberFromKey(d); if (num) setItem(ri, ii, "nf_number", num); } }}
                                 className={`h-8 text-xs font-mono ${item.nf_key ? (validateNFeKey(item.nf_key).valid ? "border-green-400" : "border-red-400") : ""}`} />
                               {item.nf_key && !validateNFeKey(item.nf_key).valid && <p className="text-[11px] text-red-500">Chave inválida — {validateNFeKey(item.nf_key).reason}</p>}
-                              {item.nf_key && validateNFeKey(item.nf_key).valid && <p className="text-[11px] text-green-600">✓ Chave válida</p>}
+                              {item.nf_key && validateNFeKey(item.nf_key).valid && <p className="text-[11px] text-green-600 dark:text-green-300">✓ Chave válida</p>}
                             </div>
                             <div className="space-y-1"><label className="text-xs font-medium text-muted-foreground">Descrição da mercadoria <span className="text-red-500">*</span></label><Input placeholder="ex: Caixas de produtos eletrônicos" value={item.description} onChange={e => setItem(ri, ii, "description", e.target.value)} className="text-sm" /></div>
                             <div className="grid grid-cols-4 gap-2">
@@ -1146,7 +1146,7 @@ export default function NewOrder() {
                 <div><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Volumes</p><p className="font-semibold text-sm">{totals.volumes}</p></div>
                 <div><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Peso real</p><p className="font-semibold text-sm font-mono">{totals.weight.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg</p></div>
                 {freightBreakdown && (
-                  <div><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Peso taxável</p><p className="font-semibold text-sm font-mono">{freightBreakdown.taxableKg.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg {freightBreakdown.usedCubic && <span className="text-[10px] text-amber-600 font-sans">cubado</span>}</p></div>
+                  <div><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Peso taxável</p><p className="font-semibold text-sm font-mono">{freightBreakdown.taxableKg.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg {freightBreakdown.usedCubic && <span className="text-[10px] text-amber-600 dark:text-amber-300 font-sans">cubado</span>}</p></div>
                 )}
                 <div><p className="text-[11px] text-muted-foreground uppercase tracking-wide">Valor declarado</p><p className="font-semibold text-sm font-mono">R$ {totals.declared.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p></div>
               </div>
@@ -1186,9 +1186,9 @@ export default function NewOrder() {
                   )}
                   {capacityPct != null && (
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground flex items-center gap-1"><TruckIcon className="w-3 h-3" /> Ocupação do veículo</span><span className={`font-semibold ${capacityPct > 100 ? "text-red-600" : "text-foreground"}`}>{capacityPct}%</span></div>
+                      <div className="flex items-center justify-between text-xs"><span className="text-muted-foreground flex items-center gap-1"><TruckIcon className="w-3 h-3" /> Ocupação do veículo</span><span className={`font-semibold ${capacityPct > 100 ? "text-red-600 dark:text-red-300" : "text-foreground"}`}>{capacityPct}%</span></div>
                       <div className="h-1.5 rounded-full bg-muted overflow-hidden"><div className={`h-full ${capacityPct > 100 ? "bg-red-500" : capacityPct > 85 ? "bg-amber-500" : "bg-emerald-500"}`} style={{ width: `${Math.min(capacityPct, 100)}%` }} /></div>
-                      {capacityPct > 100 && <p className="text-[11px] text-red-600">Carga acima da capacidade do veículo selecionado.</p>}
+                      {capacityPct > 100 && <p className="text-[11px] text-red-600 dark:text-red-300">Carga acima da capacidade do veículo selecionado.</p>}
                     </div>
                   )}
                 </div>

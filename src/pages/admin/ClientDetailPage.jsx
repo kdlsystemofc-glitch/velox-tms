@@ -109,7 +109,7 @@ export default function ClientDetailPage() {
             </div>
           </div>
         </div>
-        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${client.status === "active" ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>
+        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${client.status === "active" ? "bg-green-500/15 text-green-700 dark:text-green-300" : "bg-muted text-muted-foreground"}`}>
           {client.status === "active" ? "Ativo" : "Inativo"}
         </span>
         {client.billing_type === "monthly" && !editing && (
@@ -304,19 +304,19 @@ export default function ClientDetailPage() {
                          <p className="text-xs text-muted-foreground">{c.role}</p>
                          <div className="flex gap-3 mt-1">
                            {c.phone && <p className="text-xs">{c.phone}</p>}
-                           {c.email && <p className="text-xs text-blue-600">{c.email}</p>}
+                           {c.email && <p className="text-xs text-blue-600 dark:text-blue-300">{c.email}</p>}
                          </div>
                        </div>
                        <div className="flex gap-1">
                          {c.whatsapp && (
-                           <a href={`https://wa.me/55${c.whatsapp.replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer" className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg">
+                           <a href={`https://wa.me/55${c.whatsapp.replace(/\D/g,"")}`} target="_blank" rel="noopener noreferrer" className="p-1.5 text-green-600 dark:text-green-300 hover:bg-green-500/10 rounded-lg">
                              <MessageCircle className="w-3.5 h-3.5" />
                            </a>
                          )}
-                         <button onClick={() => { setEditingContactIndex(i); setEditContact({ ...c }); setShowContactModal(true); }} className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg">
+                         <button onClick={() => { setEditingContactIndex(i); setEditContact({ ...c }); setShowContactModal(true); }} className="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded-lg">
                            <Pencil className="w-3.5 h-3.5" />
                          </button>
-                         <button onClick={() => handleRemoveContact(i)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg">
+                         <button onClick={() => handleRemoveContact(i)} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg">
                            <Trash2 className="w-3.5 h-3.5" />
                          </button>
                        </div>
@@ -407,7 +407,7 @@ export default function ClientDetailPage() {
                     </div>
                   ))}
                   <div className="flex gap-2 pt-2">
-                    <Button size="sm" variant="outline" className="flex-1 text-xs text-red-600" onClick={async () => {
+                    <Button size="sm" variant="outline" className="flex-1 text-xs text-red-600 dark:text-red-300" onClick={async () => {
                       await base44.entities.Client.update(client.id, { custom_pricing: {} });
                       queryClient.invalidateQueries({ queryKey: ["client", id] });
                       setEditingPricing(false);
@@ -448,13 +448,13 @@ export default function ClientDetailPage() {
           </Card>
           {/* Billing info card */}
           {client.billing_type === "monthly" && (
-            <Card className="border-amber-200 bg-amber-50/50">
+            <Card className="border-amber-500/30 bg-amber-500/10/50">
               <CardContent className="pt-4 pb-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <FileText className="w-4 h-4 text-amber-600" />
-                  <span className="text-sm font-semibold text-amber-700">Faturamento Mensal</span>
+                  <FileText className="w-4 h-4 text-amber-600 dark:text-amber-300" />
+                  <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">Faturamento Mensal</span>
                 </div>
-                <p className="text-xs text-amber-600">
+                <p className="text-xs text-amber-600 dark:text-amber-300">
                   Fechamento dia {client.billing_day || "—"} · Prazo {client.payment_term_days || "—"} dias
                 </p>
               </CardContent>
@@ -521,7 +521,7 @@ export default function ClientDetailPage() {
                         <td className="py-2 text-right font-mono">{(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</td>
                         <td className="py-2 text-right font-mono">{o.total_declared_value ? `R$ ${Number(o.total_declared_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}</td>
                         <td className="py-2 text-right font-mono">{o.freight_value ? `R$ ${Number(o.freight_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}</td>
-                        <td className={`py-2 text-right font-mono font-semibold ${off ? (dev > 0 ? "text-red-600" : "text-amber-600") : "text-foreground"}`} title={off ? `${(dev * 100).toFixed(0)}% vs. média` : ""}>
+                        <td className={`py-2 text-right font-mono font-semibold ${off ? (dev > 0 ? "text-red-600 dark:text-red-300" : "text-amber-600 dark:text-amber-300") : "text-foreground"}`} title={off ? `${(dev * 100).toFixed(0)}% vs. média` : ""}>
                           {perKg != null ? `R$ ${perKg.toFixed(2)}` : "—"}{off && (dev > 0 ? " ▲" : " ▼")}
                         </td>
                       </tr>
@@ -580,7 +580,7 @@ export default function ClientDetailPage() {
                   <div className="border-t border-border pt-3 space-y-1">
                     <div className="flex justify-between font-semibold">
                       <span>Total da fatura</span>
-                      <span className="font-mono text-green-600">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                      <span className="font-mono text-green-600 dark:text-green-300">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Fechamento</span>
@@ -588,7 +588,7 @@ export default function ClientDetailPage() {
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Vencimento ({termDays} dias)</span>
-                      <span className="font-semibold text-amber-600">{dueDate.toLocaleDateString("pt-BR")}</span>
+                      <span className="font-semibold text-amber-600 dark:text-amber-300">{dueDate.toLocaleDateString("pt-BR")}</span>
                     </div>
                   </div>
                   <Button

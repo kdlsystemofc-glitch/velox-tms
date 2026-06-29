@@ -118,8 +118,8 @@ export default function Cotacao() {
                 <div className="text-center py-2">
                   <p className="text-xs text-muted-foreground">Frete estimado</p>
                   <p className="text-3xl font-bold font-mono text-velox-amber">R$ {breakdown.total.toFixed(2)}</p>
-                  {breakdown.usedCubic && <p className="text-[11px] text-amber-600">cobrado pelo peso cubado ({breakdown.taxableKg.toFixed(0)} kg)</p>}
-                  {prazo && <p className="text-xs text-blue-600 mt-1">Prazo: {prazo} dia(s) úteis</p>}
+                  {breakdown.usedCubic && <p className="text-[11px] text-amber-600 dark:text-amber-300">cobrado pelo peso cubado ({breakdown.taxableKg.toFixed(0)} kg)</p>}
+                  {prazo && <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">Prazo: {prazo} dia(s) úteis</p>}
                 </div>
                 <FreightBreakdown breakdown={breakdown} compact />
                 <Button className="w-full font-bold gap-2" onClick={toOrder}>

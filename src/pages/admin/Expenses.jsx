@@ -17,11 +17,11 @@ import { parseLocalDate, formatDateBR } from "@/utils/dateUtils";
 import { FormSection, Field } from "@/components/shared/FormSection";
 
 const AGING = [
-  { key: "overdue", label: "Vencidas",      cls: "text-red-700 bg-red-50 border-red-200 hover:bg-red-100" },
-  { key: "d7",      label: "Vence ≤ 7 dias", cls: "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100" },
-  { key: "d30",     label: "8–30 dias",      cls: "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100" },
-  { key: "d60",     label: "31–60 dias",     cls: "text-indigo-700 bg-indigo-50 border-indigo-200 hover:bg-indigo-100" },
-  { key: "future",  label: "> 60 dias",      cls: "text-slate-700 bg-slate-50 border-slate-200 hover:bg-slate-100" },
+  { key: "overdue", label: "Vencidas",      cls: "text-red-700 dark:text-red-300 bg-red-500/10 border-red-500/30 hover:bg-red-500/15" },
+  { key: "d7",      label: "Vence ≤ 7 dias", cls: "text-amber-700 dark:text-amber-300 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/15" },
+  { key: "d30",     label: "8–30 dias",      cls: "text-blue-700 dark:text-blue-300 bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/15" },
+  { key: "d60",     label: "31–60 dias",     cls: "text-indigo-700 dark:text-indigo-300 bg-indigo-500/10 border-indigo-500/30 hover:bg-indigo-500/15" },
+  { key: "future",  label: "> 60 dias",      cls: "text-slate-700 dark:text-slate-300 bg-slate-500/10 border-slate-500/30 hover:bg-slate-500/15" },
 ];
 function agingOf(dateStr) {
   const d = parseLocalDate(dateStr);
@@ -41,9 +41,9 @@ const categoryLabels = {
 };
 
 const statusConfig = {
-  pending: { label: "A Pagar", color: "bg-amber-100 text-amber-700" },
-  paid: { label: "Pago", color: "bg-green-100 text-green-700" },
-  installment: { label: "Parcelado", color: "bg-blue-100 text-blue-700" },
+  pending: { label: "A Pagar", color: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
+  paid: { label: "Pago", color: "bg-green-500/15 text-green-700 dark:text-green-300" },
+  installment: { label: "Parcelado", color: "bg-blue-500/15 text-blue-700 dark:text-blue-300" },
 };
 
 const EMPTY_FORM = { category: "fuel", description: "", amount: "", date: "", due_date: "", paid_date: "", payment_method: "pix", status: "paid", notes: "", supplier_id: "", supplier_name: "", truck_id: "", driver_id: "", cost_center: "", receipt_url: "" };
@@ -152,11 +152,11 @@ export default function Expenses({ hideTitle = false }) {
       <div className="grid grid-cols-2 lg:grid-cols-7 gap-2.5">
         <Card className="p-3">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Total a pagar</p>
-          <p className="text-lg font-bold font-mono text-amber-600">R$ {totalPending.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+          <p className="text-lg font-bold font-mono text-amber-600 dark:text-amber-300">R$ {totalPending.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
         </Card>
         <Card className="p-3">
           <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Total pago</p>
-          <p className="text-lg font-bold font-mono text-red-600">R$ {totalPaid.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+          <p className="text-lg font-bold font-mono text-red-600 dark:text-red-300">R$ {totalPaid.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
         </Card>
         {AGING.map(b => {
           const t = agingTotals[b.key] || { count: 0, total: 0 };
@@ -218,10 +218,10 @@ export default function Expenses({ hideTitle = false }) {
                     <td className="py-3 px-4 hidden md:table-cell text-muted-foreground">
                       {e.description || "—"}
                       {e.status === "pending" && (
-                        <span className="ml-2 text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded-full">Pendente de baixa</span>
+                        <span className="ml-2 text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold px-1.5 py-0.5 rounded-full">Pendente de baixa</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono font-semibold text-red-600">R$ {(e.amount || 0).toFixed(2)}</td>
+                    <td className="py-3 px-4 text-right font-mono font-semibold text-red-600 dark:text-red-300">R$ {(e.amount || 0).toFixed(2)}</td>
                     <td className="py-3 px-4">
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${(statusConfig[e.status] || statusConfig.pending).color}`}>
                         {(statusConfig[e.status] || statusConfig.pending).label}
@@ -229,7 +229,7 @@ export default function Expenses({ hideTitle = false }) {
                     </td>
                     <td className="py-3 px-4 text-right">
                       {e.status === "pending" && (
-                        <Button variant="ghost" size="sm" onClick={() => openPayModal(e)} className="h-7 text-xs gap-1 text-green-600">
+                        <Button variant="ghost" size="sm" onClick={() => openPayModal(e)} className="h-7 text-xs gap-1 text-green-600 dark:text-green-300">
                           <CheckCircle2 className="w-3 h-3" /> Dar Baixa
                         </Button>
                       )}

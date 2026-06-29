@@ -12,9 +12,9 @@ import { ptBR } from "date-fns/locale";
 
 const levelIcon = { critical: AlertCircle, warning: AlertTriangle, info: Info };
 const levelColor = {
-  critical: "text-red-500 bg-red-50 border-red-200",
-  warning: "text-amber-500 bg-amber-50 border-amber-200",
-  info: "text-blue-500 bg-blue-50 border-blue-200",
+  critical: "text-red-500 bg-red-500/10 border-red-500/30",
+  warning: "text-amber-500 bg-amber-500/10 border-amber-500/30",
+  info: "text-blue-500 bg-blue-500/10 border-blue-500/30",
 };
 const levelLabel = { critical: "Crítico", warning: "Atenção", info: "Info" };
 

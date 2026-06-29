@@ -256,7 +256,7 @@ export default function Transfers() {
     onError: (e) => toast({ title: "Erro", description: e?.message, variant: "destructive" }),
   });
 
-  const statusMeta = { planned: ["Planejada", "bg-blue-100 text-blue-700"], in_transit: ["Em trânsito", "bg-amber-100 text-amber-700"], received: ["Recebida", "bg-green-100 text-green-700"], cancelled: ["Cancelada", "bg-muted text-muted-foreground"] };
+  const statusMeta = { planned: ["Planejada", "bg-blue-500/15 text-blue-700 dark:text-blue-300"], in_transit: ["Em trânsito", "bg-amber-500/15 text-amber-700 dark:text-amber-300"], received: ["Recebida", "bg-green-500/15 text-green-700 dark:text-green-300"], cancelled: ["Cancelada", "bg-muted text-muted-foreground"] };
   const toggleOrder = (id) => setForm(f => ({ ...f, order_ids: f.order_ids.includes(id) ? f.order_ids.filter(x => x !== id) : [...f.order_ids, id] }));
 
   return (
@@ -268,7 +268,7 @@ export default function Transfers() {
       </PageHeader>
 
       {branches.length < 2 && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
           Cadastre ao menos 2 filiais/CDs em <Link to="/admin/cadastros?aba=filiais" className="underline font-semibold">Cadastros → Filiais</Link> para transferir entre elas.
         </div>
       )}
@@ -325,7 +325,7 @@ export default function Transfers() {
                     {t.status === "planned" && <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => dispatch.mutate(t)}><Send className="w-3.5 h-3.5" /> Despachar</Button>}
                     {t.status === "in_transit" && <Button size="sm" className="text-xs gap-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => { setReceiveForm({ km: "", cost: "", divergences: {} }); setReceiveModal(t); }}><PackageCheck className="w-3.5 h-3.5" /> Receber no destino</Button>}
                     {(t.status === "planned" || t.status === "in_transit") && (
-                      <Button size="sm" variant="outline" className="text-xs gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      <Button size="sm" variant="outline" className="text-xs gap-1 text-red-600 dark:text-red-300 hover:text-red-700 dark:text-red-300 hover:bg-red-500/10"
                         disabled={cancelTransfer.isPending}
                         onClick={() => { if (window.confirm(`Estornar a transferência ${t.protocol}? Os ${(t.order_ids || []).length} pedido(s) voltam ao status anterior.`)) cancelTransfer.mutate(t); }}>
                         <Ban className="w-3.5 h-3.5" /> Estornar
@@ -374,7 +374,7 @@ export default function Transfers() {
               <div className="flex items-center justify-between">
                 <label className="text-xs text-muted-foreground">Pedidos a transferir ({form.order_ids.length})</label>
                 {selectedWeight > 0 && (
-                  <span className={`text-xs font-medium ${overCapacity ? "text-red-600" : "text-muted-foreground"}`}>
+                  <span className={`text-xs font-medium ${overCapacity ? "text-red-600 dark:text-red-300" : "text-muted-foreground"}`}>
                     {selectedWeight.toLocaleString("pt-BR")} kg{truckCapacity > 0 ? ` / ${truckCapacity.toLocaleString("pt-BR")} kg` : ""}
                   </span>
                 )}
@@ -393,7 +393,7 @@ export default function Transfers() {
               </div>
             </div>
             {overCapacity && (
-              <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
+              <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2.5 text-xs text-red-700 dark:text-red-300">
                 <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                 Peso selecionado ({selectedWeight.toLocaleString("pt-BR")} kg) excede a capacidade do caminhão ({truckCapacity.toLocaleString("pt-BR")} kg).
               </div>
@@ -412,7 +412,7 @@ export default function Transfers() {
       {/* Conferência de recebimento (Tr-3) */}
       <Dialog open={!!receiveModal} onOpenChange={(v) => { if (!v) setReceiveModal(null); }}>
         <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><PackageCheck className="w-4 h-4 text-green-600" /> Conferência de recebimento</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><PackageCheck className="w-4 h-4 text-green-600 dark:text-green-300" /> Conferência de recebimento</DialogTitle></DialogHeader>
           {receiveModal && (
             <div className="space-y-3">
               <div className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -437,7 +437,7 @@ export default function Transfers() {
                           placeholder="Divergência? (avaria, falta de volume…) — opcional"
                           value={receiveForm.divergences[oid] || ""}
                           onChange={e => setReceiveForm(f => ({ ...f, divergences: { ...f.divergences, [oid]: e.target.value } }))}
-                          className={`h-7 text-xs mt-1 ${hasDiv ? "border-amber-300 bg-amber-50" : ""}`}
+                          className={`h-7 text-xs mt-1 ${hasDiv ? "border-amber-300 bg-amber-500/10" : ""}`}
                         />
                       </div>
                     );

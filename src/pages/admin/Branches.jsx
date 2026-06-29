@@ -82,13 +82,13 @@ export default function Branches({ hideTitle = false }) {
               <span className="truncate">{b.name}</span>
             </div>
           )},
-          { key: "type", label: "Tipo", sortable: true, value: b => TYPES[b.type] || b.type, render: b => <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">{TYPES[b.type] || b.type}</span> },
+          { key: "type", label: "Tipo", sortable: true, value: b => TYPES[b.type] || b.type, render: b => <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-300">{TYPES[b.type] || b.type}</span> },
           { key: "city", label: "Cidade", value: b => b.address?.city || "", className: "text-xs text-muted-foreground", render: b => b.address?.city ? `${b.address.city}/${b.address.state}` : "—" },
           { key: "phone", label: "Telefone", className: "text-xs text-muted-foreground", render: b => b.phone || "—" },
           { key: "actions", label: "", align: "right", stopPropagation: true, width: 80, render: b => (
             <div className="flex justify-end">
-              <button onClick={() => { setEditingId(b.id); setForm({ ...EMPTY, ...b, address: b.address || EMPTY.address }); setShowForm(true); }} className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
-              <button onClick={() => { if (window.confirm(`Remover ${b.name}?`)) remove.mutate(b.id); }} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
+              <button onClick={() => { setEditingId(b.id); setForm({ ...EMPTY, ...b, address: b.address || EMPTY.address }); setShowForm(true); }} className="p-1.5 text-blue-400 hover:bg-blue-500/10 rounded-lg"><Pencil className="w-3.5 h-3.5" /></button>
+              <button onClick={() => { if (window.confirm(`Remover ${b.name}?`)) remove.mutate(b.id); }} className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
             </div>
           )},
         ]}
