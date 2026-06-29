@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, CalendarDays, Truck,
   DollarSign, Settings, ChevronLeft, ChevronRight, LogOut, BookUser,
-  FolderOpen, MessageSquare, Route as RouteIcon, AlertTriangle, ShieldAlert, BarChart3, ArrowLeftRight, Users
+  FolderOpen, MessageSquare, Route as RouteIcon, AlertTriangle, ShieldAlert, BarChart3, ArrowLeftRight, Users, Palette
 } from "lucide-react";
 import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
 import { base44 } from "@/api/base44Client";
@@ -11,26 +11,34 @@ import { supabase } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 
+// Navegação por ÁREAS (padrão Open TMS): cada bloco é uma área da operação.
 const navItems = [
   { icon: LayoutDashboard, label: "Operações",      path: "/admin",            exact: true },
 
-  { group: "Fluxo" },
+  { group: "Operação" },
   { icon: Package,         label: "Pedidos",        path: "/admin/coletas",    badge: "pendingOrders" },
   { icon: CalendarDays,    label: "Despacho",       path: "/admin/despacho",   badge: "toDispatch" },
   { icon: AlertTriangle,   label: "Replanejamento", path: "/admin/replanejamento", badge: "replan" },
-  { icon: ShieldAlert,     label: "Ocorrências",    path: "/admin/ocorrencias", badge: "openIncidents" },
   { icon: RouteIcon,       label: "Viagens",        path: "/admin/viagens" },
   { icon: ArrowLeftRight,  label: "Transferências", path: "/admin/transferencias" },
-  { icon: Truck,           label: "Frota",          path: "/admin/frota" },
+  { icon: ShieldAlert,     label: "Ocorrências",    path: "/admin/ocorrencias", badge: "openIncidents" },
 
-  { group: "Cadastros & Gestão" },
+  { group: "Frota & Cadastros" },
+  { icon: Truck,           label: "Frota",          path: "/admin/frota" },
   { icon: BookUser,        label: "Cadastros",      path: "/admin/cadastros" },
   { icon: FolderOpen,      label: "Documentos",     path: "/admin/documentos" },
+
+  { group: "Comercial" },
   { icon: MessageSquare,   label: "Mensagens",      path: "/admin/mensagens",  badge: "unreadMessages" },
+
+  { group: "Financeiro", adminOnly: true },
   { icon: DollarSign,      label: "Financeiro",     path: "/admin/financeiro", adminOnly: true },
   { icon: BarChart3,       label: "Indicadores",    path: "/admin/indicadores", adminOnly: true },
+
+  { group: "Sistema", adminOnly: true },
   { icon: Users,           label: "Usuários",       path: "/admin/usuarios",   adminOnly: true },
   { icon: Settings,        label: "Configurações",  path: "/admin/config",     adminOnly: true },
+  { icon: Palette,         label: "Style Guide",    path: "/admin/style-guide", adminOnly: true },
 ];
 
 export default function AdminSidebar({ collapsed, setCollapsed }) {
