@@ -4,8 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#1B2430" />
+    <meta name="theme-color" content="#0b1220" />
     <title>Velox TMS — Gestão de Transporte</title>
+    <script>
+      // Tema: ESCURO por padrão (padrão Open TMS). Aplica antes da pintura
+      // para não piscar. Persistido em localStorage ("velox-theme").
+      (function () {
+        try {
+          var t = localStorage.getItem("velox-theme") || "dark";
+          if (t === "dark") document.documentElement.classList.add("dark");
+        } catch (e) { document.documentElement.classList.add("dark"); }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -18,78 +18,86 @@
     --card-foreground: 218 30% 14%;
     --popover: 0 0% 100%;
     --popover-foreground: 218 30% 14%;
-    --primary: 224 76% 56%;          /* azul-índigo vivo */
+    --primary: 217 91% 60%;          /* azul Open TMS */
     --primary-foreground: 0 0% 100%;
     --secondary: 222 30% 92%;        /* slate claro azulado */
     --secondary-foreground: 222 40% 20%;
     --muted: 215 24% 94%;            /* canvas suave */
     --muted-foreground: 218 14% 42%;
-    --accent: 224 70% 94%;           /* hover azulado claro */
-    --accent-foreground: 224 70% 42%;
-    --destructive: 358 75% 55%;      /* vermelho vivo */
+    --accent: 222 90% 95%;           /* hover azul claro */
+    --accent-foreground: 217 80% 45%;
+    --destructive: 0 73% 50%;        /* vermelho */
     --destructive-foreground: 0 0% 100%;
-    --success: 150 72% 41%;          /* verde vivo */
-    --warning: 35 95% 52%;           /* âmbar vivo */
+    --success: 142 71% 45%;          /* verde semântico */
+    --success-foreground: 0 0% 100%;
+    --warning: 45 93% 47%;           /* âmbar (texto escuro) */
+    --warning-foreground: 222 47% 11%;
+    --info: 189 94% 43%;             /* ciano informativo */
+    --info-foreground: 0 0% 100%;
     --border: 216 20% 86%;
     --input: 216 20% 83%;
-    --ring: 224 76% 56%;
-    --chart-1: 224 76% 56%;
-    --chart-2: 256 80% 62%;
-    --chart-3: 150 72% 41%;
-    --chart-4: 35 95% 55%;
+    --ring: 217 91% 60%;
+    --chart-1: 217 91% 60%;
+    --chart-2: 258 90% 66%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 45 93% 50%;
     --chart-5: 320 70% 55%;
     --radius: 0.625rem;             /* 10px — moderno, cantos suaves */
-    --brand-from: 214 84% 50%;      /* gradiente de marca: azul vivo… */
-    --brand-to: 256 80% 62%;        /* …→ violeta (CTAs, chips, vida!) */
+    --brand-from: 217 91% 60%;      /* gradiente de marca: azul… */
+    --brand-to: 258 90% 66%;        /* …→ roxo (Open TMS) */
     --font-heading: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, monospace;
-    --sidebar-background: 222 32% 14%;       /* grafite azulado */
+    --sidebar-background: 222 47% 11%;       /* navy Open TMS */
     --sidebar-foreground: 214 16% 80%;       /* texto claro */
-    --sidebar-primary: 217 88% 62%;          /* acento ativo (vivo) */
+    --sidebar-primary: 217 91% 60%;          /* acento ativo (azul) */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 22% 21%;           /* hover */
+    --sidebar-accent: 217 33% 20%;           /* hover */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 215 20% 23%;
-    --sidebar-ring: 213 70% 55%;
+    --sidebar-border: 217 33% 20%;
+    --sidebar-ring: 217 91% 60%;
   }
 
   .dark {
-    --background: 218 30% 9%;
-    --foreground: 210 20% 94%;
-    --card: 218 26% 13%;
-    --card-foreground: 210 20% 94%;
-    --popover: 218 26% 13%;
-    --popover-foreground: 210 20% 94%;
-    --primary: 213 70% 55%;
+    --background: 222 47% 7%;        /* navy profundo Open TMS */
+    --foreground: 210 40% 96%;
+    --card: 222 44% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 44% 11%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 215 22% 20%;
-    --secondary-foreground: 210 20% 90%;
-    --muted: 215 22% 18%;
-    --muted-foreground: 214 14% 60%;
-    --accent: 215 22% 22%;
-    --accent-foreground: 210 20% 92%;
-    --destructive: 4 60% 50%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 20%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 73% 50%;
     --destructive-foreground: 0 0% 100%;
-    --success: 142 55% 45%;
-    --warning: 32 81% 55%;
-    --border: 215 20% 22%;
-    --input: 215 20% 24%;
-    --ring: 213 70% 55%;
-    --chart-1: 213 70% 55%;
-    --chart-2: 210 20% 70%;
-    --chart-3: 142 55% 45%;
-    --chart-4: 32 81% 55%;
-    --chart-5: 4 60% 55%;
-    --sidebar-background: 218 30% 11%;
-    --sidebar-foreground: 214 14% 78%;
-    --sidebar-primary: 213 70% 55%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 222 47% 11%;
+    --info: 189 94% 43%;
+    --info-foreground: 0 0% 100%;
+    --border: 217 33% 20%;
+    --input: 217 33% 22%;
+    --ring: 217 91% 60%;
+    --chart-1: 217 91% 60%;
+    --chart-2: 258 90% 66%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 45 93% 55%;
+    --chart-5: 320 70% 60%;
+    --sidebar-background: 222 47% 9%;
+    --sidebar-foreground: 214 14% 80%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 22% 18%;
+    --sidebar-accent: 217 33% 16%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 215 20% 18%;
-    --sidebar-ring: 213 70% 55%;
+    --sidebar-border: 217 33% 16%;
+    --sidebar-ring: 217 91% 60%;
   }
 }
 

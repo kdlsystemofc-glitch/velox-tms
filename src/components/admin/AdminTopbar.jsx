@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Bell, Search, AlertCircle, AlertTriangle, Info, X, Package, Users, Truck, User } from "lucide-react";
+import { Bell, Search, AlertCircle, AlertTriangle, Info, X, Package, Users, Truck, User, Sun, Moon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { getTheme, toggleTheme } from "@/lib/theme";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { Link, useNavigate } from "react-router-dom";
@@ -173,6 +174,7 @@ export default function AdminTopbar() {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
+  const [dark, setDark] = useState(getTheme() === "dark");
   const searchRef = useRef(null);
   const bellRef = useRef(null);
 
@@ -226,6 +228,11 @@ export default function AdminTopbar() {
 
       {/* Right */}
       <div className="flex items-center gap-3 ml-auto">
+        {/* Tema claro/escuro */}
+        <Button variant="ghost" size="icon" title={dark ? "Tema claro" : "Tema escuro"}
+          onClick={() => setDark(toggleTheme() === "dark")}>
+          {dark ? <Sun className="w-5 h-5 text-muted-foreground" /> : <Moon className="w-5 h-5 text-muted-foreground" />}
+        </Button>
         {/* Bell */}
         <div ref={bellRef} className="relative">
           <Button variant="ghost" size="icon" className="relative" onClick={() => setBellOpen(o => !o)}>
