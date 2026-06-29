@@ -250,7 +250,7 @@ export default function OrdersWorkspace() {
             }`}>
             {t.label}
             <span className={`text-xs font-bold font-mono px-1.5 py-0.5 rounded ${
-              tab === t.key ? "bg-white/15" : "bg-background"
+              tab === t.key ? "bg-card/15" : "bg-background"
             } ${t.key === "new" && counts.new > 0 ? "!bg-red-500 !text-white" : ""}`}>
               {counts[t.key] ?? 0}
             </span>

@@ -242,7 +242,7 @@ export default function DriverDetailPage() {
                 <span className="flex items-center gap-2"><Smartphone className="w-4 h-4 text-velox-amber" /> Acesso ao app</span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   access === "active" ? "bg-green-100 text-green-700" :
-                  access === "frozen" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"
+                  access === "frozen" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"
                 }`}>
                   {access === "active" ? "Com acesso" : access === "frozen" ? "Congelado" : "Sem acesso"}
                 </span>
@@ -328,7 +328,7 @@ export default function DriverDetailPage() {
                           <td className="py-2">
                             <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
                               o.status === "delivered" ? "bg-green-100 text-green-700" :
-                              o.status === "in_transit" ? "bg-orange-100 text-orange-700" : "bg-gray-100 text-gray-600"
+                              o.status === "in_transit" ? "bg-orange-100 text-orange-700" : "bg-muted text-muted-foreground"
                             }`}>{o.status === "delivered" ? "Entregue" : o.status === "in_transit" ? "Em Trânsito" : o.status}</span>
                           </td>
                           <td className="py-2 text-right font-mono">{o.freight_value ? `R$ ${o.freight_value.toFixed(2)}` : "—"}</td>

@@ -18,7 +18,7 @@ const ROLE_CLS = {
   admin: "bg-velox-amber/15 text-velox-amber border-velox-amber/30",
   operator: "bg-blue-100 text-blue-700 border-blue-200",
   motorista: "bg-green-100 text-green-700 border-green-200",
-  pending: "bg-gray-100 text-gray-600 border-gray-200",
+  pending: "bg-muted text-muted-foreground border-border",
 };
 const EMPTY_CREATE = { full_name: "", email: "", role: "operator", password: "" };
 

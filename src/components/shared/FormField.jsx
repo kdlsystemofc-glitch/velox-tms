@@ -38,7 +38,7 @@ export function PublicFormField({ label, required, error, hint, children, classN
       )}
       {children}
       {hint && !error && (
-        <p className="text-xs text-gray-500">{hint}</p>
+        <p className="text-xs text-muted-foreground">{hint}</p>
       )}
       {error && (
         <p className="text-xs text-red-500 flex items-center gap-1">

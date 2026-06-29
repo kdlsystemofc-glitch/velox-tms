@@ -590,7 +590,7 @@ export default function OrderWorkspace() {
                             <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-semibold normal-case ${
                               r.delivery_status === "delivered" ? "bg-green-100 text-green-700" :
                               r.delivery_status === "failed" ? "bg-red-100 text-red-700" :
-              r.delivery_status === "partial" ? "bg-teal-100 text-teal-700" : "bg-gray-100 text-gray-600"
+              r.delivery_status === "partial" ? "bg-teal-100 text-teal-700" : "bg-muted text-muted-foreground"
                             }`}>
                               {r.delivery_status === "delivered" ? "Entregue" : r.delivery_status === "failed" ? "Falhou" : r.delivery_status === "partial" ? "Parcial" : "Pendente"}
                             </span>
@@ -670,7 +670,7 @@ export default function OrderWorkspace() {
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         r.delivery_status === "delivered" ? "bg-green-100 text-green-700" :
                         r.delivery_status === "failed" ? "bg-red-100 text-red-700" :
-              r.delivery_status === "partial" ? "bg-teal-100 text-teal-700" : "bg-gray-100 text-gray-600"
+              r.delivery_status === "partial" ? "bg-teal-100 text-teal-700" : "bg-muted text-muted-foreground"
                       }`}>
                         {r.delivery_status === "delivered" ? "Entregue" : r.delivery_status === "failed" ? "Falhou" : "Pendente"}
                       </span>

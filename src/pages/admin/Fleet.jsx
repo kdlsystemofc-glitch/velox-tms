@@ -22,14 +22,14 @@ const statusConfig = {
   available: { label: "Disponível", color: "bg-green-100 text-green-700" },
   on_route: { label: "Em Rota", color: "bg-amber-100 text-amber-700" },
   maintenance: { label: "Manutenção", color: "bg-red-100 text-red-700" },
-  inactive: { label: "Inativo", color: "bg-gray-100 text-gray-600" },
+  inactive: { label: "Inativo", color: "bg-muted text-muted-foreground" },
 };
 
 const truckStatusConfig = {
   available:   { label: "Disponível", dot: "bg-green-600", cls: "text-green-700 bg-green-50 border-green-200" },
   on_route:    { label: "Em rota",    dot: "bg-amber-500", cls: "text-amber-700 bg-amber-50 border-amber-200" },
   maintenance: { label: "Manutenção", dot: "bg-red-500",   cls: "text-red-700 bg-red-50 border-red-200" },
-  inactive:    { label: "Inativo",    dot: "bg-gray-400",  cls: "text-gray-600 bg-gray-50 border-gray-200" },
+  inactive:    { label: "Inativo",    dot: "bg-gray-400",  cls: "text-muted-foreground bg-muted border-border" },
 };
 
 const truckTypeLabel = { carreta: "Carreta", truck: "Truck", vuc: "VUC", toco: "Toco", bitruck: "Bitruck", outro: "Outro" };

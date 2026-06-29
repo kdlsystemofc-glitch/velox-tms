@@ -456,7 +456,7 @@ export default function DispatchBoard() {
                         <p className="text-[11px] text-muted-foreground font-mono">{(truck.capacity_kg || 0).toLocaleString("pt-BR")} kg</p>
                         <span className={`inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
                           truck.status === "available" ? "bg-green-100 text-green-700" :
-                          truck.status === "on_route" ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600"
+                          truck.status === "on_route" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"
                         }`}>
                           {truck.status === "available" ? "Disponível" : truck.status === "on_route" ? "Em rota" : "Manutenção"}
                         </span>

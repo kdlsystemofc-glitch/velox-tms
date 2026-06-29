@@ -134,7 +134,7 @@ export default function TruckDetailPage() {
             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
               truck.status === "available" ? "bg-green-100 text-green-700" :
               truck.status === "on_route" ? "bg-amber-100 text-amber-700" :
-              truck.status === "maintenance" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"
+              truck.status === "maintenance" ? "bg-red-100 text-red-700" : "bg-muted text-muted-foreground"
             }`}>
               {truck.status === "available" ? "Disponível" : truck.status === "on_route" ? "Em Rota" : truck.status === "maintenance" ? "Manutenção" : "Inativo"}
             </span>

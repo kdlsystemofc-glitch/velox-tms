@@ -256,7 +256,7 @@ export default function Transfers() {
     onError: (e) => toast({ title: "Erro", description: e?.message, variant: "destructive" }),
   });
 
-  const statusMeta = { planned: ["Planejada", "bg-blue-100 text-blue-700"], in_transit: ["Em trânsito", "bg-amber-100 text-amber-700"], received: ["Recebida", "bg-green-100 text-green-700"], cancelled: ["Cancelada", "bg-gray-100 text-gray-600"] };
+  const statusMeta = { planned: ["Planejada", "bg-blue-100 text-blue-700"], in_transit: ["Em trânsito", "bg-amber-100 text-amber-700"], received: ["Recebida", "bg-green-100 text-green-700"], cancelled: ["Cancelada", "bg-muted text-muted-foreground"] };
   const toggleOrder = (id) => setForm(f => ({ ...f, order_ids: f.order_ids.includes(id) ? f.order_ids.filter(x => x !== id) : [...f.order_ids, id] }));
 
   return (

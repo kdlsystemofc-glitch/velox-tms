@@ -67,7 +67,7 @@ export default function MapPage() {
             <div className="text-center text-white">
               <div className="flex flex-wrap justify-center gap-4 p-4">
                 {activeTrips.map((trip, i) => (
-                  <div key={trip.id} className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 text-sm backdrop-blur-sm">
+                  <div key={trip.id} className="flex items-center gap-2 bg-card/10 rounded-lg px-3 py-2 text-sm backdrop-blur-sm">
                     <Truck className="w-4 h-4 text-velox-amber" />
                     <span>{trip.truck_plate}</span>
                     <span className="text-white/60">·</span>

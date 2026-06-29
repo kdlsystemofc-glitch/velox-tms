@@ -68,7 +68,7 @@ export default function SignaturePad({ onSave, saving = false, label = "Assinatu
   return (
     <div className="space-y-2">
       <p className="text-xs text-white/50">{label}</p>
-      <div className="rounded-lg bg-white overflow-hidden border border-white/20">
+      <div className="rounded-lg bg-card overflow-hidden border border-white/20">
         <canvas
           ref={canvasRef}
           className="w-full h-36 touch-none block"
@@ -77,7 +77,7 @@ export default function SignaturePad({ onSave, saving = false, label = "Assinatu
         />
       </div>
       <div className="flex gap-2">
-        <Button type="button" variant="outline" className="flex-1 h-11 border-white/20 text-white hover:bg-white/10 gap-2" onClick={clear} disabled={saving}>
+        <Button type="button" variant="outline" className="flex-1 h-11 border-white/20 text-white hover:bg-card/10 gap-2" onClick={clear} disabled={saving}>
           <Eraser className="w-4 h-4" /> Limpar
         </Button>
         <Button type="button" className="flex-1 h-11 bg-green-600 hover:bg-green-700 text-white font-bold gap-2" onClick={save} disabled={!hasInk || saving}>

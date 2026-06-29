@@ -563,7 +563,7 @@ export default function TripDetailPage() {
             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
               trip.status === "in_progress" ? "bg-amber-100 text-amber-700" :
               trip.status === "completed" ? "bg-green-100 text-green-700" :
-              trip.status === "planned" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"
+              trip.status === "planned" ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"
             }`}>
               {trip.status === "in_progress" ? "Em Andamento" : trip.status === "completed" ? "Concluída" : trip.status === "planned" ? "Planejada" : "Cancelada"}
             </span>
@@ -620,7 +620,7 @@ export default function TripDetailPage() {
                 </p>
                 <div className="space-y-2">
                   {backhaulCandidates.map(o => (
-                    <div key={o.id} className="flex items-center justify-between gap-2 rounded-lg border border-blue-200 bg-white p-2.5">
+                    <div key={o.id} className="flex items-center justify-between gap-2 rounded-lg border border-blue-200 bg-card p-2.5">
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{o.client_name} <span className="font-mono text-xs text-muted-foreground">{o.protocol}</span></p>
                         <p className="text-xs text-muted-foreground">{o.origin?.city}/{o.origin?.state} · {(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</p>

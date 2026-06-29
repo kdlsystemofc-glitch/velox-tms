@@ -110,10 +110,10 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
               className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all mx-0.5 ${
                 active
                   ? "bg-brand-gradient text-white font-semibold shadow-soft"
-                  : "text-sidebar-foreground/60 hover:text-white hover:bg-white/[0.07]"
+                  : "text-sidebar-foreground/60 hover:text-white hover:bg-card/[0.07]"
               }`}
             >
-              {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-white/90" />}
+              {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-card/90" />}
               <item.icon className={`w-4 h-4 flex-shrink-0 transition-all ${active ? "" : "group-hover:scale-110 group-hover:text-[hsl(var(--sidebar-primary))]"}`} />
               {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
               {count > 0 && !collapsed && (

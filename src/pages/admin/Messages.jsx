@@ -20,7 +20,7 @@ const STATUS = {
   em_contato: { label: "Em contato", cls: "bg-amber-100 text-amber-700" },
   convertido: { label: "Convertido", cls: "bg-green-100 text-green-700" },
   perdido:    { label: "Perdido",    cls: "bg-red-100 text-red-700" },
-  arquivado:  { label: "Arquivado",  cls: "bg-gray-100 text-gray-600" },
+  arquivado:  { label: "Arquivado",  cls: "bg-muted text-muted-foreground" },
 };
 const statusOf = (m) => m.status || (m.read ? "em_contato" : "novo");
 

@@ -738,7 +738,7 @@ export default function NewOrder() {
                             <span className="text-[11px] text-blue-700">Destinatários frequentes:</span>
                             {clientInsights.topRecipients.map((r, i) => (
                               <button key={i} type="button" onClick={() => addSuggestedRecipient(r)}
-                                className="text-[11px] bg-white border border-blue-200 rounded-full px-2 py-0.5 hover:bg-blue-100 text-blue-800">
+                                className="text-[11px] bg-card border border-blue-200 rounded-full px-2 py-0.5 hover:bg-blue-100 text-blue-800">
                                 + {r.name} {r.count > 1 && <span className="text-blue-400">({r.count}x)</span>}
                               </button>
                             ))}
@@ -913,7 +913,7 @@ export default function NewOrder() {
                                   }) }))}>
                                   <p className="font-medium text-sm flex items-center gap-1.5">
                                     {c.name}
-                                    <span className={`text-[9px] px-1 rounded ${c.kind === "dest" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>{c.kind === "dest" ? "destinatário" : "cliente"}</span>
+                                    <span className={`text-[9px] px-1 rounded ${c.kind === "dest" ? "bg-blue-100 text-blue-700" : "bg-muted text-muted-foreground"}`}>{c.kind === "dest" ? "destinatário" : "cliente"}</span>
                                   </p>
                                   <p className="text-xs text-muted-foreground">{c.cpf}{c.address?.city && ` · ${c.address.city}/${c.address.state}`}</p>
                                 </button>

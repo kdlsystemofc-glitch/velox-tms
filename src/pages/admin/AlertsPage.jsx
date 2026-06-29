@@ -96,7 +96,7 @@ export default function AlertsPage() {
                 const colorClass = levelColor[alert.level] || levelColor.info;
                 return (
                   <div key={alert.id} className={`flex items-start gap-3 p-3 rounded-lg border ${colorClass} ${!alert.read ? "opacity-100" : "opacity-70"}`}>
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-white/70">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 bg-card/70">
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -105,7 +105,7 @@ export default function AlertsPage() {
                         <span className="text-xs opacity-70">
                           {alert.created_date ? formatDistanceToNow(new Date(alert.created_date), { addSuffix: true, locale: ptBR }) : "—"}
                         </span>
-                        <span className="text-xs font-semibold px-1.5 py-0.5 bg-white/50 rounded">{levelLabel[alert.level]}</span>
+                        <span className="text-xs font-semibold px-1.5 py-0.5 bg-card/50 rounded">{levelLabel[alert.level]}</span>
                         {!alert.read && <span className="text-xs font-bold">● Não lido</span>}
                       </div>
                     </div>
