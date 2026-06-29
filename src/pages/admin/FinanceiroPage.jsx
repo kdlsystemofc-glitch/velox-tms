@@ -1,12 +1,13 @@
 import React from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, TrendingUp, TrendingDown, FileText, Activity, DollarSign } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, FileText, Activity, DollarSign, Receipt } from "lucide-react";
 import Financial from "@/pages/admin/Financial";
 import Revenues from "@/pages/admin/Revenues";
 import Expenses from "@/pages/admin/Expenses";
 import DRE from "@/pages/admin/DRE";
 import CashFlow from "@/pages/admin/CashFlow";
+import Invoices from "@/pages/admin/Invoices";
 import PageHeader, { segmentedTabsClass, segmentedTriggerClass } from "@/components/shared/PageHeader";
 
 export default function FinanceiroPage() {
@@ -21,6 +22,7 @@ export default function FinanceiroPage() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className={segmentedTabsClass}>
           <TabsTrigger value="resumo" className={segmentedTriggerClass}><BarChart3 className="w-3.5 h-3.5" /> Resumo</TabsTrigger>
+          <TabsTrigger value="faturas" className={segmentedTriggerClass}><Receipt className="w-3.5 h-3.5" /> Faturas</TabsTrigger>
           <TabsTrigger value="receitas" className={segmentedTriggerClass}><TrendingUp className="w-3.5 h-3.5" /> Receitas</TabsTrigger>
           <TabsTrigger value="despesas" className={segmentedTriggerClass}><TrendingDown className="w-3.5 h-3.5" /> Despesas</TabsTrigger>
           <TabsTrigger value="dre" className={segmentedTriggerClass}><FileText className="w-3.5 h-3.5" /> DRE</TabsTrigger>
@@ -28,6 +30,7 @@ export default function FinanceiroPage() {
         </TabsList>
 
         <TabsContent value="resumo" className="mt-4"><Financial hideTitle /></TabsContent>
+        <TabsContent value="faturas" className="mt-4"><Invoices /></TabsContent>
         <TabsContent value="receitas" className="mt-4"><Revenues hideTitle /></TabsContent>
         <TabsContent value="despesas" className="mt-4"><Expenses hideTitle /></TabsContent>
         <TabsContent value="dre" className="mt-4"><DRE hideTitle /></TabsContent>

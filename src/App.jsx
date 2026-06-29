@@ -62,6 +62,7 @@ const PortalLayout = lazy(() => import('@/pages/portal/PortalLayout'));
 const ClientOrders = lazy(() => import('@/pages/portal/ClientOrders'));
 const ClientOrderDetail = lazy(() => import('@/pages/portal/ClientOrderDetail'));
 const ClientNewOrder = lazy(() => import('@/pages/portal/ClientNewOrder'));
+const ClientInvoices = lazy(() => import('@/pages/portal/ClientInvoices'));
 const ClientRegister = lazy(() => import('@/pages/portal/ClientRegister'));
 
 const AuthenticatedApp = () => {
@@ -182,6 +183,7 @@ const AuthenticatedApp = () => {
           <Route index element={<ClientOrders />} />
           <Route path="novo" element={<ClientNewOrder />} />
           <Route path="pedido/:id" element={<ClientOrderDetail />} />
+          <Route path="faturas" element={<ClientInvoices />} />
         </Route>
       </Route>
 

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Truck, Package, LogOut } from "lucide-react";
+import { Truck, Package, LogOut, Receipt } from "lucide-react";
 import { supabase } from "@/api/supabaseClient";
 
 const navItems = [
   { to: "/portal", label: "Meus Pedidos", icon: Package, end: true },
+  { to: "/portal/faturas", label: "Faturas", icon: Receipt },
 ];
 
 export default function PortalLayout() {
