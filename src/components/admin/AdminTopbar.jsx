@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Bell, Search, AlertCircle, AlertTriangle, Info, X, Package, Users, Truck, User, Sun, Moon } from "lucide-react";
+import { Bell, Search, AlertCircle, AlertTriangle, Info, X, Package, Users, Truck, User, Sun, Moon, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getTheme, toggleTheme } from "@/lib/theme";
+import { supabase } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { base44 } from "@/api/base44Client";
 import { Link, useNavigate } from "react-router-dom";
@@ -209,7 +210,18 @@ export default function AdminTopbar() {
   }, []);
 
   return (
-    <header className="h-16 border-b border-border glass flex items-center justify-between px-6 sticky top-0 z-30">
+    <header className="h-16 border-b border-border glass flex items-center gap-4 px-5 sticky top-0 z-30">
+      {/* Logo (a navegação foi para a barra de baixo) */}
+      <Link to="/admin" className="flex items-center gap-2.5 flex-shrink-0 group">
+        <div className="w-9 h-9 bg-brand-gradient rounded-xl flex items-center justify-center shadow-soft transition-transform group-hover:scale-105">
+          <Truck className="w-5 h-5 text-white" />
+        </div>
+        <div className="hidden md:block leading-none">
+          <span className="font-display text-lg font-extrabold tracking-tight block">VELOX</span>
+          <span className="text-[9px] text-muted-foreground uppercase tracking-widest block">TMS</span>
+        </div>
+      </Link>
+
       {/* Search */}
       <div ref={searchRef} className="relative w-80 hidden sm:block">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -256,6 +268,11 @@ export default function AdminTopbar() {
             <p className="text-xs text-muted-foreground mt-0.5">{user?.role || "admin"}</p>
           </div>
         </div>
+        {/* Sair */}
+        <Button variant="ghost" size="icon" title="Sair"
+          onClick={() => { supabase.auth.signOut(); window.location.href = "/login"; }}>
+          <LogOut className="w-5 h-5 text-muted-foreground" />
+        </Button>
       </div>
     </header>
   );

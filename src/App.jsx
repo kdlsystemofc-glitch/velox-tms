@@ -53,7 +53,6 @@ const AlertsPage = lazy(() => import('@/pages/admin/AlertsPage'));
 const FrotaPage = lazy(() => import('@/pages/admin/FrotaPage'));
 const FinanceiroPage = lazy(() => import('@/pages/admin/FinanceiroPage'));
 const ConfigPage = lazy(() => import('@/pages/admin/ConfigPage'));
-const StyleGuide = lazy(() => import('@/pages/admin/StyleGuide'));
 const DriverHome = lazy(() => import('@/pages/driver/DriverHome'));
 const DriverTrip = lazy(() => import('@/pages/driver/DriverTrip'));
 const DriverHistory = lazy(() => import('@/pages/driver/DriverHistory'));
@@ -157,7 +156,6 @@ const AuthenticatedApp = () => {
             <Route path="/admin/configuracoes" element={<Navigate to="/admin/config" replace />} />
             <Route path="/admin/usuarios" element={<UserManagement />} />
             <Route path="/admin/indicadores" element={<Indicators />} />
-            <Route path="/admin/style-guide" element={<StyleGuide />} />
           </Route>
         </Route>
       </Route>
