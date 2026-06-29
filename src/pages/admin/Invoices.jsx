@@ -10,8 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import StatCard from "@/components/shared/StatCard";
 import { useToast } from "@/components/ui/use-toast";
-import { FileText, Plus, CheckCircle2, Receipt } from "lucide-react";
+import { FileText, Plus, CheckCircle2, Receipt, FileDown, X } from "lucide-react";
 import { todayLocalISO, formatDateBR } from "@/utils/dateUtils";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
 const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const statusMeta = {
@@ -27,6 +29,16 @@ export default function Invoices() {
   const [clientId, setClientId] = useState("");
   const [picked, setPicked] = useState([]);
   const [dueDate, setDueDate] = useState("");
+  const [detail, setDetail] = useState(null);
+  const { settings } = useCompanySettings();
+
+  const downloadPdf = (inv) => {
+    const blob = generateInvoicePDF(inv, settings);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${inv.number || "fatura"}.pdf`; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: () => base44.entities.Invoice.list("-created_date", 300) });
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
@@ -107,14 +119,17 @@ export default function Invoices() {
               </thead>
               <tbody>
                 {invoices.map(inv => (
-                  <tr key={inv.id} className="border-b border-border last:border-0">
-                    <td className="py-2.5 px-4 font-mono font-semibold text-xs">{inv.number}</td>
+                  <tr key={inv.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                    <td className="py-2.5 px-4 font-mono font-semibold text-xs">
+                      <button onClick={() => setDetail(inv)} className="text-primary hover:underline">{inv.number}</button>
+                    </td>
                     <td className="py-2.5 px-4 max-w-[200px] truncate">{inv.client_name}</td>
                     <td className="py-2.5 px-4 text-muted-foreground hidden sm:table-cell">{formatDateBR(inv.issue_date)}</td>
                     <td className="py-2.5 px-4 text-muted-foreground hidden sm:table-cell">{formatDateBR(inv.due_date)}</td>
                     <td className="py-2.5 px-4 text-right font-mono">{brl(inv.total)}</td>
                     <td className="py-2.5 px-4"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusMeta[inv.status]?.cls}`}>{statusMeta[inv.status]?.label || inv.status}</span></td>
-                    <td className="py-2.5 px-4 text-right">
+                    <td className="py-2.5 px-4 text-right whitespace-nowrap">
+                      <Button size="sm" variant="ghost" className="gap-1" onClick={() => downloadPdf(inv)}><FileDown className="w-3.5 h-3.5" /> PDF</Button>
                       {inv.status === "open" && (
                         <Button size="sm" variant="outline" disabled={pay.isPending} onClick={() => pay.mutate(inv.id)}>Dar baixa</Button>
                       )}
@@ -173,6 +188,44 @@ export default function Invoices() {
               {create.isPending ? "Gerando…" : `Gerar fatura (${picked.length} pedido${picked.length !== 1 ? "s" : ""})`}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detalhe da fatura */}
+      <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
+        <DialogContent className="max-w-lg">
+          {detail && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <span className="font-mono">{detail.number}</span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusMeta[detail.status]?.cls}`}>{statusMeta[detail.status]?.label}</span>
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Cliente</span><span className="font-medium">{detail.client_name}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Emissão</span><span>{formatDateBR(detail.issue_date)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Vencimento</span><span>{formatDateBR(detail.due_date)}</span></div>
+                <div className="border border-border rounded-lg overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead><tr className="bg-muted/40 text-muted-foreground text-left"><th className="py-1.5 px-2">Protocolo</th><th className="py-1.5 px-2 text-right">Valor</th></tr></thead>
+                    <tbody>
+                      {(detail.lines || []).map((l, i) => (
+                        <tr key={i} className="border-t border-border"><td className="py-1.5 px-2 font-mono">{l.protocol}</td><td className="py-1.5 px-2 text-right font-mono">{brl(l.amount)}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex justify-between font-semibold border-t border-border pt-2"><span>Total</span><span className="font-mono">{brl(detail.total)}</span></div>
+                <div className="flex gap-2 pt-1">
+                  <Button variant="outline" className="flex-1 gap-1" onClick={() => downloadPdf(detail)}><FileDown className="w-4 h-4" /> Baixar PDF</Button>
+                  {detail.status === "open" && (
+                    <Button className="flex-1" disabled={pay.isPending} onClick={() => { pay.mutate(detail.id); setDetail(null); }}>Dar baixa</Button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

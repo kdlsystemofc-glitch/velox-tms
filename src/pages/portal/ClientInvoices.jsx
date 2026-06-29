@@ -1,8 +1,10 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/api/supabaseClient";
-import { Receipt } from "lucide-react";
+import { Receipt, FileDown } from "lucide-react";
 import { formatDateBR } from "@/utils/dateUtils";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
 const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const meta = {
@@ -12,6 +14,14 @@ const meta = {
 };
 
 export default function ClientInvoices() {
+  const { settings } = useCompanySettings();
+  const downloadPdf = (inv) => {
+    const blob = generateInvoicePDF(inv, settings);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${inv.number || "fatura"}.pdf`; a.click();
+    URL.revokeObjectURL(url);
+  };
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["my-client-invoices"],
     queryFn: async () => {
@@ -46,6 +56,7 @@ export default function ClientInvoices() {
                 <th className="py-2.5 px-4">Vencimento</th>
                 <th className="py-2.5 px-4 text-right">Total</th>
                 <th className="py-2.5 px-4">Status</th>
+                <th className="py-2.5 px-4 text-right">PDF</th>
               </tr>
             </thead>
             <tbody>
@@ -56,6 +67,9 @@ export default function ClientInvoices() {
                   <td className="py-2.5 px-4 text-gray-500">{formatDateBR(inv.due_date)}</td>
                   <td className="py-2.5 px-4 text-right font-mono">{brl(inv.total)}</td>
                   <td className="py-2.5 px-4"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${meta[inv.status]?.cls}`}>{meta[inv.status]?.label || inv.status}</span></td>
+                  <td className="py-2.5 px-4 text-right">
+                    <button onClick={() => downloadPdf(inv)} title="Baixar PDF" className="inline-flex items-center gap-1 text-primary hover:underline text-xs"><FileDown className="w-3.5 h-3.5" /> PDF</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
