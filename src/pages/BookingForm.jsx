@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { isAddressInCoverage } from "@/utils/coverageChecker";
+import { parseBRNumber } from "@/utils/number";
 import PublicNavbar from "@/components/public/PublicNavbar";
 import PublicFooter from "@/components/public/PublicFooter";
 import WhatsAppButton from "@/components/public/WhatsAppButton";
@@ -207,21 +208,14 @@ export default function BookingForm() {
     });
   };
 
-  // Parse de número no formato BR ("28.500,00" → 28500.00). Number() puro
-  // retornava NaN nesses casos e zerava o Valor Declarado (FND-10).
-  const parseBR = (s) => {
-    if (typeof s === "number") return s;
-    if (!s) return 0;
-    const n = parseFloat(String(s).replace(/\./g, "").replace(",", "."));
-    return Number.isFinite(n) ? n : 0;
-  };
+  // Soma os totais usando o parser BR compartilhado (C2 — antes era local).
   const getTotals = () => {
     let volumes = 0, weight = 0, value = 0;
     form.recipients.forEach((r) => {
       r.items.forEach((item) => {
-        volumes += parseBR(item.volumes);
-        weight += parseBR(item.weight_kg);
-        value += parseBR(item.declared_value);
+        volumes += parseBRNumber(item.volumes);
+        weight += parseBRNumber(item.weight_kg);
+        value += parseBRNumber(item.declared_value);
       });
     });
     return { volumes, weight, value, recipients: form.recipients.length };

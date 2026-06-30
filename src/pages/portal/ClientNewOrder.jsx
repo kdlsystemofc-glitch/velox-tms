@@ -5,9 +5,11 @@ import { Plus, Trash2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { lookupCep } from "@/components/shared/AddressFields";
 import { calculateFreightFull } from "@/utils/freightCalculator";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { parseBRNumber } from "@/utils/number";
 
 const inputCls = "mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40";
 const emptyItem = { nf_number: "", volumes: "", weight_kg: "" };
+const emptyRecipient = () => ({ name: "", cep: "", city: "", state: "", street: "", number: "", items: [{ ...emptyItem }] });
 
 function Field({ label, children, className = "" }) {
   return <div className={className}><label className="text-xs font-medium text-gray-600">{label}</label>{children}</div>;
@@ -18,8 +20,7 @@ export default function ClientNewOrder() {
   const [form, setForm] = useState({
     origin: { cep: "", street: "", number: "", city: "", state: "" },
     collection_date: "",
-    recipient: { name: "", cep: "", city: "", state: "", street: "", number: "" },
-    items: [{ ...emptyItem }],
+    recipients: [emptyRecipient()],
     general_notes: "",
   });
   const [loading, setLoading] = useState(false);
@@ -28,48 +29,60 @@ export default function ClientNewOrder() {
   const { settings } = useCompanySettings();
 
   const setOrigin = (k, v) => setForm(f => ({ ...f, origin: { ...f.origin, [k]: v } }));
-  const setRecipient = (k, v) => setForm(f => ({ ...f, recipient: { ...f.recipient, [k]: v } }));
-
-  // Autofill por CEP (ViaCEP) — origem e destinatário (U3).
-  const fillFromCep = async (which, cep) => {
+  const fillOriginCep = async (cep) => {
     const found = await lookupCep(cep);
-    if (!found) return;
-    const patch = { street: found.street || "", city: found.city || "", state: found.state || "" };
-    if (which === "origin") setForm(f => ({ ...f, origin: { ...f.origin, ...patch } }));
-    else setForm(f => ({ ...f, recipient: { ...f.recipient, ...patch } }));
+    if (found) setForm(f => ({ ...f, origin: { ...f.origin, street: found.street || "", city: found.city || "", state: found.state || "" } }));
   };
 
-  // Estimativa de frete (U4) — mesma engine do site/admin.
+  // Destinatários (U5: vários)
+  const setRecipient = (ri, k, v) => setForm(f => ({ ...f, recipients: f.recipients.map((r, j) => j === ri ? { ...r, [k]: v } : r) }));
+  const fillRecipientCep = async (ri, cep) => {
+    const found = await lookupCep(cep);
+    if (found) setForm(f => ({ ...f, recipients: f.recipients.map((r, j) => j === ri ? { ...r, street: found.street || "", city: found.city || "", state: found.state || "" } : r) }));
+  };
+  const addRecipient = () => setForm(f => ({ ...f, recipients: [...f.recipients, emptyRecipient()] }));
+  const removeRecipient = (ri) => setForm(f => ({ ...f, recipients: f.recipients.filter((_, j) => j !== ri) }));
+  const setItem = (ri, ii, k, v) => setForm(f => ({ ...f, recipients: f.recipients.map((r, j) => j !== ri ? r : { ...r, items: r.items.map((it, k2) => k2 === ii ? { ...it, [k]: v } : it) }) }));
+  const addItem = (ri) => setForm(f => ({ ...f, recipients: f.recipients.map((r, j) => j === ri ? { ...r, items: [...r.items, { ...emptyItem }] } : r) }));
+  const removeItem = (ri, ii) => setForm(f => ({ ...f, recipients: f.recipients.map((r, j) => j === ri ? { ...r, items: r.items.filter((_, k2) => k2 !== ii) } : r) }));
+
+  // Estimativa de frete (U4): soma a estimativa de cada destinatário.
   const estimate = useMemo(() => {
-    const items = form.items.filter(it => it.volumes || it.weight_kg);
-    if (!items.length || !form.origin.state || !form.recipient.state) return null;
-    try {
-      return calculateFreightFull({
-        items, distanceKm: null,
-        nfCount: items.filter(i => i.nf_number).length || 1,
-        pricing: settings?.pricing, settings,
-        originState: form.origin.state, destState: form.recipient.state,
-      });
-    } catch { return null; }
-  }, [form.items, form.origin.state, form.recipient.state, settings]);
-  const setItem = (i, k, v) => setForm(f => ({ ...f, items: f.items.map((it, j) => j === i ? { ...it, [k]: v } : it) }));
-  const addItem = () => setForm(f => ({ ...f, items: [...f.items, { ...emptyItem }] }));
-  const removeItem = (i) => setForm(f => ({ ...f, items: f.items.filter((_, j) => j !== i) }));
+    if (!form.origin.state) return 0;
+    let total = 0;
+    for (const r of form.recipients) {
+      const items = (r.items || []).filter(it => it.volumes || it.weight_kg);
+      if (!items.length || !r.state) continue;
+      try {
+        const bd = calculateFreightFull({
+          items, distanceKm: null,
+          nfCount: items.filter(i => i.nf_number).length || 1,
+          pricing: settings?.pricing, settings,
+          originState: form.origin.state, destState: r.state,
+        });
+        total += Number(bd?.total) || 0;
+      } catch { /* ignora */ }
+    }
+    return Math.round(total * 100) / 100;
+  }, [form.recipients, form.origin.state, settings]);
 
   const submit = async (e) => {
     e.preventDefault();
     setError(null);
     if (!form.origin.cep || !form.collection_date) return setError("Informe o CEP de origem e a data de coleta.");
-    if (!form.recipient.name || !form.recipient.city) return setError("Informe o destinatário (nome e cidade).");
+    if (form.recipients.some(r => !r.name || !r.city)) return setError("Cada destinatário precisa de nome e cidade.");
     setLoading(true);
     try {
-      const items = form.items.filter(it => it.volumes || it.weight_kg || it.nf_number);
-      const total_volumes = items.reduce((s, it) => s + (Number(it.volumes) || 0), 0);
-      const total_weight_kg = items.reduce((s, it) => s + (Number(String(it.weight_kg).replace(",", ".")) || 0), 0);
+      let total_volumes = 0, total_weight_kg = 0;
+      const recipients = form.recipients.map(r => {
+        const items = (r.items || []).filter(it => it.volumes || it.weight_kg || it.nf_number);
+        items.forEach(it => { total_volumes += parseBRNumber(it.volumes); total_weight_kg += parseBRNumber(it.weight_kg); });
+        return { ...r, items };
+      });
       const payload = {
         origin: form.origin,
         collection_date: form.collection_date,
-        recipients: [{ ...form.recipient, items }],
+        recipients,
         total_volumes: String(total_volumes || ""),
         total_weight_kg: String(total_weight_kg || ""),
         general_notes: form.general_notes,
@@ -108,7 +121,7 @@ export default function ClientNewOrder() {
         <section className="bg-white border border-gray-200 rounded-xl p-5">
           <h2 className="font-semibold text-sm mb-3">Coleta (origem)</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Field label="CEP *"><input className={inputCls} value={form.origin.cep} onChange={e => setOrigin("cep", e.target.value)} onBlur={e => fillFromCep("origin", e.target.value)} placeholder="00000-000" /></Field>
+            <Field label="CEP *"><input className={inputCls} value={form.origin.cep} onChange={e => setOrigin("cep", e.target.value)} onBlur={e => fillOriginCep(e.target.value)} placeholder="00000-000" /></Field>
             <Field label="Cidade" className="col-span-2"><input className={inputCls} value={form.origin.city} onChange={e => setOrigin("city", e.target.value)} /></Field>
             <Field label="UF"><input className={inputCls} value={form.origin.state} onChange={e => setOrigin("state", e.target.value)} maxLength={2} /></Field>
             <Field label="Endereço" className="col-span-3"><input className={inputCls} value={form.origin.street} onChange={e => setOrigin("street", e.target.value)} /></Field>
@@ -117,48 +130,59 @@ export default function ClientNewOrder() {
           </div>
         </section>
 
-        <section className="bg-white border border-gray-200 rounded-xl p-5">
-          <h2 className="font-semibold text-sm mb-3">Destinatário</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Field label="Nome / Razão social *" className="col-span-2"><input className={inputCls} value={form.recipient.name} onChange={e => setRecipient("name", e.target.value)} /></Field>
-            <Field label="CEP"><input className={inputCls} value={form.recipient.cep} onChange={e => setRecipient("cep", e.target.value)} onBlur={e => fillFromCep("recipient", e.target.value)} placeholder="00000-000" /></Field>
-            <Field label="UF"><input className={inputCls} value={form.recipient.state} onChange={e => setRecipient("state", e.target.value)} maxLength={2} /></Field>
-            <Field label="Cidade *" className="col-span-2"><input className={inputCls} value={form.recipient.city} onChange={e => setRecipient("city", e.target.value)} /></Field>
-            <Field label="Endereço" className="col-span-3"><input className={inputCls} value={form.recipient.street} onChange={e => setRecipient("street", e.target.value)} /></Field>
-            <Field label="Número"><input className={inputCls} value={form.recipient.number} onChange={e => setRecipient("number", e.target.value)} /></Field>
-          </div>
-        </section>
+        {form.recipients.map((r, ri) => (
+          <section key={ri} className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold text-sm">Destinatário {form.recipients.length > 1 ? ri + 1 : ""}</h2>
+              {form.recipients.length > 1 && (
+                <button type="button" onClick={() => removeRecipient(ri)} className="text-red-400 hover:text-red-600 inline-flex items-center gap-1 text-xs"><Trash2 className="w-3.5 h-3.5" /> Remover</button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Field label="Nome / Razão social *" className="col-span-2"><input className={inputCls} value={r.name} onChange={e => setRecipient(ri, "name", e.target.value)} /></Field>
+              <Field label="CEP"><input className={inputCls} value={r.cep} onChange={e => setRecipient(ri, "cep", e.target.value)} onBlur={e => fillRecipientCep(ri, e.target.value)} placeholder="00000-000" /></Field>
+              <Field label="UF"><input className={inputCls} value={r.state} onChange={e => setRecipient(ri, "state", e.target.value)} maxLength={2} /></Field>
+              <Field label="Cidade *" className="col-span-2"><input className={inputCls} value={r.city} onChange={e => setRecipient(ri, "city", e.target.value)} /></Field>
+              <Field label="Endereço" className="col-span-3"><input className={inputCls} value={r.street} onChange={e => setRecipient(ri, "street", e.target.value)} /></Field>
+              <Field label="Número"><input className={inputCls} value={r.number} onChange={e => setRecipient(ri, "number", e.target.value)} /></Field>
+            </div>
 
-        <section className="bg-white border border-gray-200 rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-sm">Itens / Notas fiscais</h2>
-            <button type="button" onClick={addItem} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"><Plus className="w-3.5 h-3.5" /> Adicionar item</button>
-          </div>
-          <div className="space-y-2">
-            {form.items.map((it, i) => (
-              <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                <Field label="Nº NF" className="col-span-5"><input className={inputCls} value={it.nf_number} onChange={e => setItem(i, "nf_number", e.target.value)} placeholder="ex: 001234" /></Field>
-                <Field label="Volumes" className="col-span-3"><input className={inputCls} value={it.volumes} onChange={e => setItem(i, "volumes", e.target.value.replace(/\D/g, ""))} placeholder="ex: 12" /></Field>
-                <Field label="Peso (kg)" className="col-span-3"><input className={inputCls} value={it.weight_kg} onChange={e => setItem(i, "weight_kg", e.target.value)} placeholder="ex: 480" /></Field>
-                <div className="col-span-1">
-                  {form.items.length > 1 && <button type="button" onClick={() => removeItem(i)} className="p-2 text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>}
-                </div>
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-600">Itens / Notas fiscais</p>
+                <button type="button" onClick={() => addItem(ri)} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"><Plus className="w-3.5 h-3.5" /> Adicionar item</button>
               </div>
-            ))}
-          </div>
-        </section>
+              <div className="space-y-2">
+                {r.items.map((it, ii) => (
+                  <div key={ii} className="grid grid-cols-12 gap-2 items-end">
+                    <Field label="Nº NF" className="col-span-5"><input className={inputCls} value={it.nf_number} onChange={e => setItem(ri, ii, "nf_number", e.target.value)} placeholder="ex: 001234" /></Field>
+                    <Field label="Volumes" className="col-span-3"><input className={inputCls} value={it.volumes} onChange={e => setItem(ri, ii, "volumes", e.target.value.replace(/\D/g, ""))} placeholder="ex: 12" /></Field>
+                    <Field label="Peso (kg)" className="col-span-3"><input className={inputCls} value={it.weight_kg} onChange={e => setItem(ri, ii, "weight_kg", e.target.value)} placeholder="ex: 480" /></Field>
+                    <div className="col-span-1">
+                      {r.items.length > 1 && <button type="button" onClick={() => removeItem(ri, ii)} className="p-2 text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        ))}
+
+        <button type="button" onClick={addRecipient} className="w-full border border-dashed border-gray-300 rounded-xl py-2.5 text-sm font-medium text-gray-600 hover:border-primary/50 hover:text-primary inline-flex items-center justify-center gap-1.5">
+          <Plus className="w-4 h-4" /> Adicionar destinatário
+        </button>
 
         <section className="bg-white border border-gray-200 rounded-xl p-5">
           <Field label="Observações"><textarea rows={2} className={inputCls + " resize-none"} value={form.general_notes} onChange={e => setForm(f => ({ ...f, general_notes: e.target.value }))} placeholder="Restrições de horário, instruções de coleta…" /></Field>
         </section>
 
-        {estimate?.total > 0 && (
+        {estimate > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500">Estimativa de frete</p>
               <p className="text-[11px] text-gray-400">Valor aproximado — a Velox confirma ao programar.</p>
             </div>
-            <p className="font-mono font-bold text-lg text-blue-700">R$ {Number(estimate.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+            <p className="font-mono font-bold text-lg text-blue-700">R$ {estimate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
           </div>
         )}
 

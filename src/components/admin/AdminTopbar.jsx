@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Bell, Search, AlertCircle, AlertTriangle, Info, X, Package, Users, Truck, User, Sun, Moon, LogOut } from "lucide-react";
+import { Bell, Search, AlertCircle, AlertTriangle, Info, X, Package, Users, Truck, User, Sun, Moon, LogOut, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getTheme, toggleTheme } from "@/lib/theme";
@@ -172,6 +172,7 @@ function SearchDropdown({ query, onClose }) {
 // ── Main Topbar ───────────────────────────────────────────────────────────────
 export default function AdminTopbar() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
@@ -240,6 +241,10 @@ export default function AdminTopbar() {
 
       {/* Right */}
       <div className="flex items-center gap-3 ml-auto">
+        {/* Ação rápida: novo pedido (F3) */}
+        <Button className="gap-1.5 font-semibold hidden sm:flex" size="sm" onClick={() => navigate("/admin/coletas/nova")}>
+          <Plus className="w-4 h-4" /> Novo pedido
+        </Button>
         {/* Tema claro/escuro */}
         <Button variant="ghost" size="icon" title={dark ? "Tema claro" : "Tema escuro"}
           onClick={() => setDark(toggleTheme() === "dark")}>
