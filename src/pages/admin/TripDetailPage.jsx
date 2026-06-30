@@ -5,14 +5,10 @@ import { base44 } from "@/api/base44Client";
 import { supabase } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import {
-  ArrowLeft, MapPin, CheckCircle2, Truck,
-  DollarSign, Play, Square, Plus, Trash2, FileText, AlertTriangle, FileDown,
+  ArrowLeft, MapPin, CheckCircle2, Truck, Play, Square, Plus, FileText, AlertTriangle, FileDown,
   Sparkles, ChevronUp, ChevronDown, GripVertical
 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -22,18 +18,10 @@ import { todayLocalISO, formatDateTimeBR } from "@/utils/dateUtils";
 import { tripEstadiaSummary, stopWaitingMinutes, formatMinutes } from "@/utils/waitingTime";
 import { optimizeStops, optimizeStopsByCoords } from "@/utils/routeOptimizer";
 import { geocodeCeps, haversineKm, googleMapsRouteUrl } from "@/utils/geocode";
-
-// Categorias de gasto de viagem → categoria de despesa (Financeiro). Vi-3.
-const COST_PRESETS = [
-  { key: "meals", label: "Alimentação", category: "other" },
-  { key: "lodging", label: "Pernoite / Diária", category: "other" },
-  { key: "maintenance", label: "Manutenção em rota", category: "maintenance" },
-  { key: "tires", label: "Pneu / Borracharia", category: "tires" },
-  { key: "parking", label: "Estacionamento", category: "other" },
-  { key: "loading", label: "Chapa / Descarga", category: "other" },
-  { key: "fines", label: "Multas", category: "other" },
-  { key: "other", label: "Outros", category: "other" },
-];
+import TripFinancialCard from "@/components/admin/trip/TripFinancialCard";
+import TripSettlementCard from "@/components/admin/trip/TripSettlementCard";
+import TripEstadiaCard from "@/components/admin/trip/TripEstadiaCard";
+import TripCloseModal from "@/components/admin/trip/TripCloseModal";
 
 export default function TripDetailPage() {
   const { id } = useParams();
@@ -762,162 +750,14 @@ export default function TripDetailPage() {
               </CardContent>
             </Card>
           )}
-          <Card>
-            <CardHeader className="py-3 border-b border-border bg-muted/30">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-velox-amber" /> Financeiro
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm pt-4">
-              <div className="flex justify-between"><span className="text-muted-foreground">Receita total</span><span className="font-mono font-semibold text-green-600 dark:text-green-300">R$ {(trip.total_revenue || 0).toFixed(2)}</span></div>
-              {Number(trip.advance_amount) > 0 && (
-                <div className="flex justify-between"><span className="text-muted-foreground">Adiantamento pago</span><span className="font-mono text-amber-600 dark:text-amber-300">R$ {Number(trip.advance_amount).toFixed(2)}</span></div>
-              )}
-              {trip.status !== "completed" && Number(trip.estimated_km) > 0 && (
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Trajeto previsto</span>
-                  <span className="font-mono">~{trip.estimated_km} km{Number(trip.estimated_cost) > 0 ? ` · R$ ${Number(trip.estimated_cost).toFixed(0)}` : ""}</span>
-                </div>
-              )}
-              {trip.status === "completed" && (
-                <>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Custo total</span><span className="font-mono text-red-600 dark:text-red-300">R$ {(trip.total_cost || 0).toFixed(2)}</span></div>
-                  <div className="flex justify-between border-t border-border pt-2 font-semibold">
-                    <span>Lucro líquido</span>
-                    <span className={`font-mono ${(trip.net_profit || 0) >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>R$ {(trip.net_profit || 0).toFixed(2)}</span>
-                  </div>
-                  {(() => {
-                    const rev = trip.total_revenue || 0;
-                    const margin = rev > 0 ? ((trip.net_profit || 0) / rev) * 100 : 0;
-                    const realKm = Number(trip.real_km) || 0;
-                    const costPerKm = realKm > 0 ? (trip.total_cost || 0) / realKm : null;
-                    const estKm = Number(trip.estimated_km) || 0;
-                    const estCost = Number(trip.estimated_cost) || 0;
-                    const kmDev = estKm > 0 && realKm > 0 ? ((realKm - estKm) / estKm) * 100 : null;
-                    const costDev = estCost > 0 ? (((trip.total_cost || 0) - estCost) / estCost) * 100 : null;
-                    const kmPerL = Number(trip.km_per_liter) || (realKm > 0 && Number(trip.fuel_liters) > 0 ? realKm / trip.fuel_liters : null);
-                    const devColor = (d) => d == null ? "" : d <= 0 ? "text-green-600 dark:text-green-300" : d <= 10 ? "text-amber-600 dark:text-amber-300" : "text-red-600 dark:text-red-300";
-                    const devLabel = (d) => d == null ? "" : `${d > 0 ? "+" : ""}${d.toFixed(0)}%`;
-                    return (
-                      <>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Margem</span>
-                          <span className={`font-mono font-semibold ${margin >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>{margin.toFixed(1)}%</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Custo por km</span>
-                          <span className="font-mono">{costPerKm != null ? `R$ ${costPerKm.toFixed(2)}/km` : "—"}</span>
-                        </div>
-                        {kmPerL != null && (
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Eficiência</span>
-                            <span className="font-mono">{kmPerL.toFixed(2)} km/L</span>
-                          </div>
-                        )}
-                        {(estKm > 0 || estCost > 0) && (
-                          <div className="pt-2 mt-1 border-t border-dashed border-border space-y-1">
-                            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Estimado × Real</p>
-                            {estKm > 0 && (
-                              <div className="flex justify-between text-xs">
-                                <span className="text-muted-foreground">Km: {estKm} → {realKm || "—"}</span>
-                                <span className={`font-mono font-semibold ${devColor(kmDev)}`}>{devLabel(kmDev)}</span>
-                              </div>
-                            )}
-                            {estCost > 0 && (
-                              <div className="flex justify-between text-xs">
-                                <span className="text-muted-foreground">Custo: R$ {estCost.toFixed(0)} → R$ {(trip.total_cost || 0).toFixed(0)}</span>
-                                <span className={`font-mono font-semibold ${devColor(costDev)}`}>{devLabel(costDev)}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Km real</span><span className="font-mono">{trip.real_km || "—"} km</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Combustível</span><span className="font-mono">{trip.fuel_liters || "—"}L · R$ {(trip.fuel_cost || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Pedágios</span><span className="font-mono">R$ {(trip.tolls_cost || 0).toFixed(2)}</span>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+          <TripFinancialCard trip={trip} />
 
-          {trip.status === "completed" && (Number(trip.commission_amount) > 0 || Number(trip.advance_amount) > 0) && (() => {
-            const comm = Number(trip.commission_amount) || 0;
-            const adv = Number(trip.advance_amount) || 0;
-            const saldo = comm - adv;
-            const rows = Array.isArray(trip.commission_rows) ? trip.commission_rows.filter(r => Number(r.amount) > 0) : [];
-            const isComboio = rows.length > 1;
-            return (
-              <Card>
-                <CardHeader className="py-3 border-b border-border bg-muted/30">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2"><Truck className="w-4 h-4 text-velox-amber" /> Acerto {isComboio ? "do comboio" : "do motorista"}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm pt-4">
-                  {isComboio ? (
-                    <>
-                      {rows.map((r, i) => (
-                        <div key={i} className="flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="font-medium truncate">{r.driver_name || "Motorista"}</p>
-                            <p className="text-[11px] text-muted-foreground font-mono">{r.truck_plate || "—"} · {r.pct}%</p>
-                          </div>
-                          <span className="font-mono text-green-600 dark:text-green-300 flex-shrink-0">R$ {Number(r.amount).toFixed(2)}</span>
-                        </div>
-                      ))}
-                      <div className="flex justify-between border-t border-border pt-2"><span className="text-muted-foreground">Comissão total</span><span className="font-mono font-semibold text-green-600 dark:text-green-300">R$ {comm.toFixed(2)}</span></div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Motorista</span><span className="font-medium">{trip.driver_name || "—"}</span></div>
-                      <div className="flex justify-between"><span className="text-muted-foreground">Comissão</span><span className="font-mono text-green-600 dark:text-green-300">R$ {comm.toFixed(2)}</span></div>
-                    </>
-                  )}
-                  <div className="flex justify-between"><span className="text-muted-foreground">(−) Adiantamento (vale-frete)</span><span className="font-mono text-amber-600 dark:text-amber-300">R$ {adv.toFixed(2)}</span></div>
-                  <div className="flex justify-between border-t border-border pt-2 font-semibold">
-                    <span>Saldo a {saldo >= 0 ? "pagar" : "receber"}{isComboio ? " (comboio)" : saldo >= 0 ? " ao motorista" : " do motorista"}</span>
-                    <span className={`font-mono ${saldo >= 0 ? "text-green-600 dark:text-green-300" : "text-red-600 dark:text-red-300"}`}>R$ {Math.abs(saldo).toFixed(2)}</span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">{isComboio ? "Cada motorista do comboio teve sua comissão lançada como despesa \"a pagar\"" : "A comissão foi lançada como despesa \"a pagar\""} em Financeiro → Despesas.</p>
-                </CardContent>
-              </Card>
-            );
-          })()}
+          {trip.status === "completed" && (Number(trip.commission_amount) > 0 || Number(trip.advance_amount) > 0) && (
+            <TripSettlementCard trip={trip} />
+          )}
 
           {estadia.rows.length > 0 && (
-            <Card>
-              <CardHeader className="py-3 border-b border-border bg-muted/30">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-velox-amber" /> Estadia / tempo de espera</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm pt-4">
-                {estadia.rows.map((r) => (
-                  <div key={r.index} className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-medium truncate text-xs">{r.recipient_name}</p>
-                      <p className="text-[11px] text-muted-foreground">{formatMinutes(r.minutes)} no local · {r.billableHours}h cobrável{r.already_charged ? " · já cobrada" : ""}</p>
-                    </div>
-                    <span className={`font-mono flex-shrink-0 ${r.already_charged ? "text-muted-foreground line-through" : "text-green-600 dark:text-green-300"}`}>R$ {r.fee.toFixed(2)}</span>
-                  </div>
-                ))}
-                <div className="flex justify-between border-t border-border pt-2 font-semibold text-xs">
-                  <span>Total a cobrar (pendente)</span>
-                  <span className="font-mono text-green-600 dark:text-green-300">R$ {estadia.pendingFee.toFixed(2)}</span>
-                </div>
-                {estadia.hasPending ? (
-                  <Button size="sm" className="w-full mt-1 bg-velox-amber hover:bg-velox-amber/90 text-velox-dark font-bold" disabled={chargeEstadia.isPending} onClick={() => chargeEstadia.mutate()}>
-                    {chargeEstadia.isPending ? "Lançando..." : "Lançar estadia como receita"}
-                  </Button>
-                ) : (
-                  <p className="text-[11px] text-muted-foreground pt-1">Toda a estadia já foi lançada em Financeiro → Receitas.</p>
-                )}
-              </CardContent>
-            </Card>
+            <TripEstadiaCard estadia={estadia} onCharge={() => chargeEstadia.mutate()} charging={chargeEstadia.isPending} />
           )}
 
           {trip.events && trip.events.length > 0 && (
@@ -936,70 +776,15 @@ export default function TripDetailPage() {
         </div>
       </div>
 
-      {/* Close modal */}
-      <Dialog open={showCloseModal} onOpenChange={setShowCloseModal}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Encerrar Viagem</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1"><label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Km Final (odômetro)</label><Input type="number" value={closeForm.real_km} onChange={e => setCloseForm(f => ({ ...f, real_km: e.target.value }))} /></div>
-              <div className="space-y-1"><label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Combustível (litros)</label><Input type="number" step="0.1" value={closeForm.fuel_liters} onChange={e => setCloseForm(f => ({ ...f, fuel_liters: e.target.value }))} /></div>
-              <div className="space-y-1"><label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Custo combustível (R$)</label><Input type="number" step="0.01" value={closeForm.fuel_cost} onChange={e => setCloseForm(f => ({ ...f, fuel_cost: e.target.value }))} /></div>
-              <div className="space-y-1"><label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pedágios (R$)</label><Input type="number" step="0.01" value={closeForm.tolls_cost} onChange={e => setCloseForm(f => ({ ...f, tolls_cost: e.target.value }))} /></div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Outros gastos da viagem</label>
-                <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={() => setCloseForm(f => ({ ...f, other_costs: [...f.other_costs, { type: "meals", category: "other", description: "", amount: "" }] }))}>
-                  <Plus className="w-3 h-3" /> Adicionar
-                </Button>
-              </div>
-              {closeForm.other_costs.length === 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-1">
-                  {COST_PRESETS.slice(0, 4).map(p => (
-                    <button key={p.key} type="button"
-                      className="text-[11px] px-2 py-1 rounded-full border border-border hover:bg-muted text-muted-foreground"
-                      onClick={() => setCloseForm(f => ({ ...f, other_costs: [...f.other_costs, { type: p.key, category: p.category, description: p.label, amount: "" }] }))}>
-                      + {p.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-              {closeForm.other_costs.map((c, i) => (
-                <div key={i} className="flex gap-2 mb-2">
-                  <select value={c.type || "other"} className="h-8 text-xs border border-border rounded-md px-1.5 bg-background w-32 flex-shrink-0"
-                    onChange={e => { const preset = COST_PRESETS.find(p => p.key === e.target.value); const oc = [...closeForm.other_costs]; oc[i] = { ...oc[i], type: e.target.value, category: preset?.category || "other", description: oc[i].description || preset?.label || "" }; setCloseForm(f => ({ ...f, other_costs: oc })); }}>
-                    {COST_PRESETS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
-                  </select>
-                  <Input placeholder="Descrição" value={c.description} onChange={e => { const oc = [...closeForm.other_costs]; oc[i] = { ...oc[i], description: e.target.value }; setCloseForm(f => ({ ...f, other_costs: oc })); }} className="flex-1 h-8 text-xs" />
-                  <Input type="number" step="0.01" placeholder="R$" value={c.amount} onChange={e => { const oc = [...closeForm.other_costs]; oc[i] = { ...oc[i], amount: e.target.value }; setCloseForm(f => ({ ...f, other_costs: oc })); }} className="w-20 h-8 text-xs" />
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 flex-shrink-0" onClick={() => setCloseForm(f => ({ ...f, other_costs: f.other_costs.filter((_, j) => j !== i) }))}>
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Observações finais</label>
-              <Textarea placeholder="Ocorrências, observações sobre a rota, etc." rows={2} value={closeForm.notes} onChange={e => setCloseForm(f => ({ ...f, notes: e.target.value }))} className="resize-none" />
-            </div>
-
-            <div className="p-3 bg-muted/30 rounded-lg text-sm space-y-0.5">
-              <div className="flex justify-between"><span>Receita</span><span className="font-mono text-green-600 dark:text-green-300">R$ {(trip.total_revenue || 0).toFixed(2)}</span></div>
-              <div className="flex justify-between"><span>Custo estimado</span><span className="font-mono text-red-600 dark:text-red-300">R$ {(Number(closeForm.fuel_cost || 0) + Number(closeForm.tolls_cost || 0) + closeForm.other_costs.reduce((s, c) => s + Number(c.amount || 0), 0)).toFixed(2)}</span></div>
-              {Number(trip.advance_amount) > 0 && (
-                <div className="flex justify-between text-xs text-amber-700 dark:text-amber-300"><span>Adiantamento já pago (acerto)</span><span className="font-mono">R$ {Number(trip.advance_amount).toFixed(2)}</span></div>
-              )}
-            </div>
-
-            <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold" onClick={closeTrip} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? "Encerrando..." : "Confirmar Encerramento"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <TripCloseModal
+        open={showCloseModal}
+        onOpenChange={setShowCloseModal}
+        form={closeForm}
+        setForm={setCloseForm}
+        trip={trip}
+        onConfirm={closeTrip}
+        submitting={updateMutation.isPending}
+      />
     </div>
   );
 }
