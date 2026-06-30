@@ -8,7 +8,7 @@ import { formatDateBR } from "@/utils/dateUtils";
 
 export default function ClientOrders() {
   const navigate = useNavigate();
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: orders = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["my-client-orders"],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("my_client_orders");
@@ -32,6 +32,11 @@ export default function ClientOrders() {
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {isLoading ? (
           <div className="p-10 text-center text-gray-400 text-sm">Carregando…</div>
+        ) : isError ? (
+          <div className="p-10 text-center">
+            <p className="text-gray-600 font-medium">Não foi possível carregar seus pedidos.</p>
+            <button onClick={() => refetch()} className="mt-3 text-sm font-semibold text-primary hover:underline">Tentar de novo</button>
+          </div>
         ) : orders.length === 0 ? (
           <div className="p-12 text-center">
             <Package className="w-10 h-10 mx-auto mb-3 text-gray-300" />

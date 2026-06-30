@@ -22,7 +22,7 @@ export default function ClientInvoices() {
     a.href = url; a.download = `${inv.number || "fatura"}.pdf`; a.click();
     URL.revokeObjectURL(url);
   };
-  const { data: invoices = [], isLoading } = useQuery({
+  const { data: invoices = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["my-client-invoices"],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("my_client_invoices");
@@ -41,6 +41,11 @@ export default function ClientInvoices() {
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {isLoading ? (
           <div className="p-10 text-center text-gray-400 text-sm">Carregando…</div>
+        ) : isError ? (
+          <div className="p-10 text-center">
+            <p className="text-gray-600 font-medium">Não foi possível carregar suas faturas.</p>
+            <button onClick={() => refetch()} className="mt-3 text-sm font-semibold text-primary hover:underline">Tentar de novo</button>
+          </div>
         ) : invoices.length === 0 ? (
           <div className="p-12 text-center">
             <Receipt className="w-10 h-10 mx-auto mb-3 text-gray-300" />

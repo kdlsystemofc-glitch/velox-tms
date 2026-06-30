@@ -16,6 +16,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { todayLocalISO, formatDateTimeBR } from "@/utils/dateUtils";
 import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
 import { incidentSeverity } from "@/utils/incidents";
+import { incidentSlaStatus } from "@/utils/incidentSla";
 import { slaStatus } from "@/utils/sla";
 import { findStaleOrders, DEFAULT_STALE_DAYS } from "@/utils/staleOrders";
 import { orderVolumeM3, truckVolumeM3, fmtM3 } from "@/utils/cargoVolume";
@@ -85,6 +86,8 @@ export default function OperationsHub() {
   const driverReplan = driversNeedingReplan(drivers, trips);
 
   const criticalIncidents = incidents.filter(i => ["critical", "high"].includes(incidentSeverity(i)));
+  // AU2: ocorrências em aberto que já estouraram o SLA de resolução.
+  const slaBreached = incidents.filter(i => incidentSlaStatus(i, settings) === "late");
 
   // Pedidos parados (item 42 / L-004): criados há mais de N dias e ainda sem
   // programação. Limite configurável em Configurações (padrão 3 dias).
@@ -95,6 +98,13 @@ export default function OperationsHub() {
   const staleList = findStaleOrders(orders, staleDays);
 
   const actionQueue = [
+    slaBreached.length > 0 && {
+      icon: ShieldAlert, color: "border-red-300 bg-red-500/10",
+      iconColor: "text-red-600 dark:text-red-300",
+      title: `${slaBreached.length} ocorrência${slaBreached.length > 1 ? "s" : ""} com SLA estourado`,
+      desc: "Prazo de resolução vencido — trate com prioridade",
+      action: { label: "Ver ocorrências", to: "/admin/ocorrencias" },
+    },
     awaitingApproval.length > 0 && {
       icon: ShieldAlert, color: "border-fuchsia-300 bg-fuchsia-500/10",
       iconColor: "text-fuchsia-600 dark:text-fuchsia-300",
