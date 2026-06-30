@@ -10,15 +10,14 @@ export default function ClientOrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["my-client-orders"],
+  const { data: order, isLoading } = useQuery({
+    queryKey: ["my-client-order", id],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("my_client_orders");
+      const { data, error } = await supabase.rpc("my_client_order", { p_id: id });
       if (error) throw error;
-      return data || [];
+      return (data && data[0]) || null;
     },
   });
-  const order = orders.find(o => o.id === id);
 
   if (isLoading) return <div className="text-center py-12 text-gray-400 text-sm">Carregando…</div>;
   if (!order) return (
