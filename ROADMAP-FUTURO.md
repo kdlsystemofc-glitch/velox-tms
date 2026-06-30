@@ -15,7 +15,10 @@ registrados aqui como trabalho futuro.
 - **F4 — Enviar fatura por e-mail/WhatsApp ao cliente** (hoje o PDF é só download).
 
 ## Funcionalidades grandes (novas áreas)
-- **Rastreamento em mapa ao vivo** (posição do veículo) — hoje só timeline textual.
+- ~~**Rastreamento em mapa ao vivo**~~ ✅ **Entregue** (Leaflet/OSM): app do
+  motorista envia GPS → mapa no admin → cliente acompanha a carga no portal.
+  _Refinos futuros:_ ETA por parada, rastro (trail) no portal, geofence de
+  chegada, e usar Supabase Realtime no lugar do polling de 20s.
 - **Multi-tenant real** — `company_settings` é uma linha única (uma empresa).
   Para o Velox como produto SaaS, isolar dados por empresa/tenant.
 - **Portal da transportadora / agregados + leilão de frete** (subcontratação).
@@ -23,11 +26,12 @@ registrados aqui como trabalho futuro.
 - **Conciliação bancária / baixa por boleto.**
 
 ## Qualidade / arquitetura (refactor contínuo)
-- **A2 — Quebrar os "god-components"** (`NewOrder`, `OrderWorkspace`,
-  `BookingForm`, `TripDetailPage` ~1000–1235 linhas) em componentes/hooks. Fazer
-  aos poucos com o CI verde de rede de segurança.
-- **A1 (parte E2E) — Testes de fluxo com Playwright** no CI. Já há o gate de
-  lint+testes+build; falta E2E navegando as telas.
+- **A2 — Quebrar os "god-components"** — ✅ feito em `TripDetailPage` (1004→789)
+  e `ClientDetailPage` (627→490). _Faltam_ `NewOrder`, `OrderWorkspace` e
+  `BookingForm` (~1186–1235 linhas), mesmo padrão, aos poucos com o CI verde.
+- ~~**A1 (parte E2E) — Testes de fluxo com Playwright**~~ ✅ **Entregue**: smoke
+  das telas públicas + job `e2e` no CI. _Futuro:_ E2E autenticado (admin/portal/
+  motorista) cobrindo fluxos de criar pedido, faturar, encerrar viagem.
 - **A5 — Versionamento/rollback de migrations** (hoje numeração sequencial manual).
 - **C1 — Centralizar os "chips" de status** inline num componente único.
 - **U6 — Padronizar estados (loading/empty/error/success)** em todas as telas.
