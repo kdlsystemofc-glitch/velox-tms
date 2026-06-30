@@ -39,6 +39,7 @@ const TABLE_MAP = {
   ContactMessage:  'contact_messages',
   Testimonial:     'testimonials',
   CompanySettings: 'company_settings',
+  Invoice:         'invoices',
 };
 
 // Converte campos created_date/updated_date do base44 para created_at/updated_at do Supabase
@@ -489,10 +490,13 @@ export const base44 = {
   functions,
   entities: new Proxy({}, {
     get(_, entityName) {
+      // Ignora acessos internos (symbols, then/inspeção) — não são entidades.
+      if (typeof entityName !== "string") return undefined;
       const tableName = TABLE_MAP[entityName];
       if (!tableName) {
-        console.warn(`Entidade não mapeada: ${entityName}`);
-        return createEntityLayer(entityName.toLowerCase() + 's');
+        // A3: em vez de adivinhar a tabela (entity+'s') e falhar silenciosamente
+        // num typo, falha alto e claro. Toda entidade legítima está no TABLE_MAP.
+        throw new Error(`base44.entities.${entityName}: entidade não registrada. Adicione em TABLE_MAP (src/api/supabaseClient.js).`);
       }
       return createEntityLayer(tableName);
     },
