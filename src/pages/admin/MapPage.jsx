@@ -4,12 +4,16 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Truck, MapPin, Package, ArrowRight } from "lucide-react";
+import LiveMap from "@/components/shared/LiveMap";
+import { formatDateTimeBR } from "@/utils/dateUtils";
 
 export default function MapPage() {
   const { data: trips = [] } = useQuery({
     queryKey: ["trips"],
     queryFn: () => base44.entities.Trip.list("-created_date", 50),
     select: (d) => d.filter(t => t.status === "in_progress" || t.status === "planned"),
+    refetchInterval: 20_000,        // posições atualizam ~a cada 20s
+    refetchOnWindowFocus: true,
   });
 
   const { data: orders = [] } = useQuery({
@@ -20,6 +24,17 @@ export default function MapPage() {
 
   const activeTrips = trips.filter(t => t.status === "in_progress");
   const plannedTrips = trips.filter(t => t.status === "planned");
+
+  // Posições ao vivo dos caminhões em viagem (quem já enviou GPS).
+  const located = activeTrips.filter(t => Number.isFinite(t.current_lat) && Number.isFinite(t.current_lng));
+  const truckMarkers = located.map(t => ({
+    lat: t.current_lat, lng: t.current_lng, kind: "truck", pulse: true,
+    label: `${t.truck_plate || "Caminhão"} · ${t.driver_name || ""}${t.location_updated_at ? ` — ${formatDateTimeBR(t.location_updated_at)}` : ""}`,
+  }));
+  const lastUpdate = located.reduce((acc, t) => {
+    const ts = t.location_updated_at ? new Date(t.location_updated_at).getTime() : 0;
+    return ts > acc ? ts : acc;
+  }, 0);
 
   return (
     <div className="space-y-6">
@@ -43,40 +58,29 @@ export default function MapPage() {
         ))}
       </div>
 
-      {/* Map placeholder */}
+      {/* Mapa ao vivo */}
       <Card className="overflow-hidden">
-        <div className="h-80 bg-gradient-to-br from-velox-dark to-velox-blue flex items-center justify-center relative">
-          <div className="absolute inset-0 opacity-10">
-            {/* Grid lines for map feel */}
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="absolute border-white/20" style={{ left: `${i * 12.5}%`, top: 0, bottom: 0, borderLeftWidth: 1 }} />
-            ))}
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="absolute border-white/20" style={{ top: `${i * 16.6}%`, left: 0, right: 0, borderTopWidth: 1 }} />
-            ))}
+        <CardContent className="p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2 px-1">
+            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+              <Truck className="w-3.5 h-3.5 text-blue-500" /> {located.length} de {activeTrips.length} enviando posição
+            </span>
+            {lastUpdate > 0 && (
+              <span className="text-[11px] text-muted-foreground">Atualizado às {new Date(lastUpdate).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+            )}
           </div>
-          {activeTrips.length === 0 ? (
-            <div className="text-center text-white/50">
-              <MapPin className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p className="font-heading text-base">Nenhuma viagem em andamento</p>
-              <p className="text-sm opacity-60 mt-1">O mapa será exibido quando houver viagens ativas</p>
+          {truckMarkers.length === 0 ? (
+            <div className="h-80 flex items-center justify-center bg-muted/30 rounded-xl text-center">
+              <div className="text-muted-foreground">
+                <MapPin className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p className="font-heading text-base">Nenhuma posição ao vivo</p>
+                <p className="text-sm opacity-70 mt-1">{activeTrips.length > 0 ? "Aguardando o GPS do motorista durante a viagem." : "O mapa aparece quando houver viagem em andamento."}</p>
+              </div>
             </div>
           ) : (
-            <div className="text-center text-white">
-              <div className="flex flex-wrap justify-center gap-4 p-4">
-                {activeTrips.map((trip, i) => (
-                  <div key={trip.id} className="flex items-center gap-2 bg-card/10 rounded-lg px-3 py-2 text-sm backdrop-blur-sm">
-                    <Truck className="w-4 h-4 text-velox-amber" />
-                    <span>{trip.truck_plate}</span>
-                    <span className="text-white/60">·</span>
-                    <span>{trip.driver_name}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-sm text-white/40 mt-2">Integração com GPS em desenvolvimento</p>
-            </div>
+            <LiveMap markers={truckMarkers} height={360} />
           )}
-        </div>
+        </CardContent>
       </Card>
 
       {/* Active trips list */}
