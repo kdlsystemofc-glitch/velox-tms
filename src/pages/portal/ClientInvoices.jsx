@@ -5,13 +5,9 @@ import { Receipt, FileDown } from "lucide-react";
 import { formatDateBR } from "@/utils/dateUtils";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
+import StatusBadge, { invoiceStatusConfig } from "@/components/admin/StatusBadge";
 
 const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-const meta = {
-  open: { label: "Em aberto", cls: "bg-amber-100 text-amber-700" },
-  paid: { label: "Paga", cls: "bg-green-100 text-green-700" },
-  cancelled: { label: "Cancelada", cls: "bg-red-100 text-red-700" },
-};
 
 export default function ClientInvoices() {
   const { settings } = useCompanySettings();
@@ -71,7 +67,7 @@ export default function ClientInvoices() {
                   <td className="py-2.5 px-4 text-gray-500 hidden sm:table-cell">{formatDateBR(inv.issue_date)}</td>
                   <td className="py-2.5 px-4 text-gray-500">{formatDateBR(inv.due_date)}</td>
                   <td className="py-2.5 px-4 text-right font-mono">{brl(inv.total)}</td>
-                  <td className="py-2.5 px-4"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${meta[inv.status]?.cls}`}>{meta[inv.status]?.label || inv.status}</span></td>
+                  <td className="py-2.5 px-4"><StatusBadge status={inv.status} config={invoiceStatusConfig} /></td>
                   <td className="py-2.5 px-4 text-right">
                     <button onClick={() => downloadPdf(inv)} title="Baixar PDF" className="inline-flex items-center gap-1 text-primary hover:underline text-xs"><FileDown className="w-3.5 h-3.5" /> PDF</button>
                   </td>

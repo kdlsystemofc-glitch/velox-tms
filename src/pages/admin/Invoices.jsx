@@ -14,13 +14,9 @@ import { FileText, Plus, CheckCircle2, Receipt, FileDown } from "lucide-react";
 import { formatDateBR } from "@/utils/dateUtils";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
+import StatusBadge, { invoiceStatusConfig } from "@/components/admin/StatusBadge";
 
 const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-const statusMeta = {
-  open: { label: "Em aberto", cls: "bg-warning/15 text-warning border-warning/30" },
-  paid: { label: "Paga", cls: "bg-success/15 text-success border-success/30" },
-  cancelled: { label: "Cancelada", cls: "bg-destructive/15 text-destructive border-destructive/30" },
-};
 
 export default function Invoices() {
   const { toast } = useToast();
@@ -127,7 +123,7 @@ export default function Invoices() {
                     <td className="py-2.5 px-4 text-muted-foreground hidden sm:table-cell">{formatDateBR(inv.issue_date)}</td>
                     <td className="py-2.5 px-4 text-muted-foreground hidden sm:table-cell">{formatDateBR(inv.due_date)}</td>
                     <td className="py-2.5 px-4 text-right font-mono">{brl(inv.total)}</td>
-                    <td className="py-2.5 px-4"><span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusMeta[inv.status]?.cls}`}>{statusMeta[inv.status]?.label || inv.status}</span></td>
+                    <td className="py-2.5 px-4"><StatusBadge status={inv.status} config={invoiceStatusConfig} /></td>
                     <td className="py-2.5 px-4 text-right whitespace-nowrap">
                       <Button size="sm" variant="ghost" className="gap-1" onClick={() => downloadPdf(inv)}><FileDown className="w-3.5 h-3.5" /> PDF</Button>
                       {inv.status === "open" && (
@@ -199,7 +195,7 @@ export default function Invoices() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <span className="font-mono">{detail.number}</span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusMeta[detail.status]?.cls}`}>{statusMeta[detail.status]?.label}</span>
+                  <StatusBadge status={detail.status} config={invoiceStatusConfig} />
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-3 text-sm">

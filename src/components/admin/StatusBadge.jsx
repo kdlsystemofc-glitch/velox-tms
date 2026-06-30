@@ -21,6 +21,14 @@ export const orderStatusConfig = {
   completed:   { label: "Concluída",   dot: "bg-slate-500",  cls: "text-slate-600 dark:text-slate-300 bg-slate-500/10 border-slate-500/25" },
 };
 
+// Status de fatura — fonte única (portal + admin). Antes estava duplicado
+// e divergente: admin com tokens semânticos, portal só claro (amber/green/red).
+export const invoiceStatusConfig = {
+  open:      { label: "Em aberto", dot: "bg-amber-500", cls: "text-warning bg-warning/15 border-warning/30" },
+  paid:      { label: "Paga",      dot: "bg-green-600", cls: "text-success bg-success/15 border-success/30" },
+  cancelled: { label: "Cancelada", dot: "bg-red-500",   cls: "text-destructive bg-destructive/15 border-destructive/30" },
+};
+
 export default function StatusBadge({ status, config = orderStatusConfig }) {
   const c = config[status] || { label: status, dot: "bg-gray-400", cls: "text-muted-foreground dark:text-gray-300 bg-gray-500/10 border-gray-500/25" };
   return (
