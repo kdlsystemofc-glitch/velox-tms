@@ -16,6 +16,7 @@ import AdminRoute from '@/components/auth/AdminRoute';
 import OperatorRoute from '@/components/auth/OperatorRoute';
 import DriverRoute from '@/components/auth/DriverRoute';
 import ClientRoute from '@/components/auth/ClientRoute';
+import CarrierRoute from '@/components/auth/CarrierRoute';
 
 // Auth pages — primeiro contato, mantidas eager
 import Login from '@/pages/Login';
@@ -64,6 +65,11 @@ const ClientOrderDetail = lazy(() => import('@/pages/portal/ClientOrderDetail'))
 const ClientNewOrder = lazy(() => import('@/pages/portal/ClientNewOrder'));
 const ClientInvoices = lazy(() => import('@/pages/portal/ClientInvoices'));
 const ClientRegister = lazy(() => import('@/pages/portal/ClientRegister'));
+const CarrierLayout = lazy(() => import('@/pages/carrier/CarrierLayout'));
+const CarrierOffers = lazy(() => import('@/pages/carrier/CarrierOffers'));
+const CarrierOrders = lazy(() => import('@/pages/carrier/CarrierOrders'));
+const CarrierOrderDetail = lazy(() => import('@/pages/carrier/CarrierOrderDetail'));
+const CarrierRegister = lazy(() => import('@/pages/carrier/CarrierRegister'));
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
@@ -101,6 +107,7 @@ const AuthenticatedApp = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/portal/cadastro" element={<ClientRegister />} />
+      <Route path="/parceiro/cadastro" element={<CarrierRegister />} />
       <Route path="/sem-acesso" element={<NoAccess />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
@@ -184,6 +191,15 @@ const AuthenticatedApp = () => {
           <Route path="novo" element={<ClientNewOrder />} />
           <Route path="pedido/:id" element={<ClientOrderDetail />} />
           <Route path="faturas" element={<ClientInvoices />} />
+        </Route>
+      </Route>
+
+      {/* Portal da Transportadora (parceiro subcontratado) */}
+      <Route element={<CarrierRoute />}>
+        <Route path="/parceiro" element={<CarrierLayout />}>
+          <Route index element={<CarrierOffers />} />
+          <Route path="cargas" element={<CarrierOrders />} />
+          <Route path="carga/:id" element={<CarrierOrderDetail />} />
         </Route>
       </Route>
 

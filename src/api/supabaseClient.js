@@ -40,6 +40,7 @@ const TABLE_MAP = {
   Testimonial:     'testimonials',
   CompanySettings: 'company_settings',
   Invoice:         'invoices',
+  Carrier:         'carriers',
 };
 
 // Converte campos created_date/updated_date do base44 para created_at/updated_at do Supabase

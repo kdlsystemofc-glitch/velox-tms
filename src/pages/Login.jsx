@@ -36,6 +36,7 @@ export default function Login() {
       const dest = blocked ? "/sem-acesso"
         : role === "motorista" ? "/motorista"
         : role === "client" ? "/portal"
+        : role === "carrier" ? "/parceiro"
         : (role === "admin" || role === "operator") ? "/admin"
         : "/sem-acesso";
       window.location.href = dest;
@@ -67,6 +68,10 @@ export default function Login() {
           {" · "}
           <Link to="/portal/cadastro" className="text-primary font-medium hover:underline">
             Sou cliente
+          </Link>
+          {" · "}
+          <Link to="/parceiro/cadastro" className="text-primary font-medium hover:underline">
+            Sou transportadora
           </Link>
         </>
       }
