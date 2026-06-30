@@ -37,3 +37,17 @@ describe("matchCandidates", () => {
     expect(c).toHaveLength(3);
   });
 });
+
+describe("conciliação por fatura (1.8)", () => {
+  const invoices = [{ id: "inv1", number: "FAT-2024-001", total: 1200, due_date: "2024-01-15", status: "open" }];
+  it("crédito prefere fatura de valor exato sobre receita", () => {
+    const m = suggestMatch({ amount: 1200, posted_at: "2024-01-15" }, revenues, expenses, invoices);
+    expect(m.type).toBe("invoice");
+    expect(m.candidate.id).toBe("inv1");
+  });
+  it("candidatos de crédito incluem faturas e receitas", () => {
+    const c = matchCandidates({ amount: 1200, posted_at: "2024-01-15" }, revenues, expenses, invoices);
+    expect(c.some(x => x.type === "invoice")).toBe(true);
+    expect(c.some(x => x.type === "revenue")).toBe(true);
+  });
+});

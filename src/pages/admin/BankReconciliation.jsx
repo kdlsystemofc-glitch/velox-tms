@@ -35,8 +35,12 @@ export default function BankReconciliation() {
   const { data: expenses = [] } = useQuery({
     queryKey: ["expenses"], queryFn: () => base44.entities.Expense.list("-date", 1000),
   });
+  const { data: invoices = [] } = useQuery({
+    queryKey: ["invoices"], queryFn: () => base44.entities.Invoice.list("-issue_date", 1000),
+  });
   const openRevenues = revenues.filter(r => r.status === "receivable");
   const openExpenses = expenses.filter(e => e.status === "pending");
+  const openInvoices = invoices.filter(i => i.status === "open");
 
   const pending = txs.filter(t => t.status === "pending");
   const matched = txs.filter(t => t.status === "matched");
@@ -92,6 +96,10 @@ export default function BankReconciliation() {
   });
 
   const ledgerLabel = (t) => {
+    if (t.matched_type === "invoice") {
+      const inv = invoices.find(x => x.id === t.matched_id);
+      return inv ? `Fatura ${inv.number || ""}` : "Fatura";
+    }
     const arr = t.matched_type === "revenue" ? revenues : expenses;
     const f = arr.find(x => x.id === t.matched_id);
     return f ? f.description : (t.matched_type === "revenue" ? "Receita" : "Despesa");
@@ -135,10 +143,10 @@ export default function BankReconciliation() {
               <div className="divide-y divide-border">
                 {pending.map(t => {
                   const credit = Number(t.amount) > 0;
-                  const sug = suggestMatch(t, openRevenues, openExpenses);
-                  const cands = matchCandidates(t, openRevenues, openExpenses);
+                  const sug = suggestMatch(t, openRevenues, openExpenses, openInvoices);
+                  const cands = matchCandidates(t, openRevenues, openExpenses, openInvoices);
                   const chosen = manual[t.id] || sug?.candidate?.id || "";
-                  const type = credit ? "revenue" : "expense";
+                  const chosenType = cands.find(c => c.id === chosen)?.type || (credit ? "revenue" : "expense");
                   return (
                     <div key={t.id} className="p-3 flex flex-col lg:flex-row lg:items-center gap-3">
                       <div className="flex items-start gap-2.5 min-w-0 flex-1">
@@ -166,7 +174,7 @@ export default function BankReconciliation() {
                           </SelectContent>
                         </Select>
                         <Button size="sm" className="h-8 gap-1" disabled={!chosen || reconcile.isPending}
-                          onClick={() => reconcile.mutate({ txId: t.id, type, targetId: chosen })}>
+                          onClick={() => reconcile.mutate({ txId: t.id, type: chosenType, targetId: chosen })}>
                           <CheckCircle2 className="w-3.5 h-3.5" /> Conciliar
                         </Button>
                         <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground" title="Ignorar"
