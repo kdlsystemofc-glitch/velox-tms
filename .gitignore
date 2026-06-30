@@ -29,6 +29,11 @@ Thumbs.db
 /dist
 /build
 
+# Playwright (E2E)
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
 # Artefatos de QA/automação (Antigravity, scripts de seed/inspeção) — não versionar
 /check_*.js
 /clear_*.js
