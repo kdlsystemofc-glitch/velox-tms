@@ -1,0 +1,132 @@
+# 🚀 Roadmap Estratégico de Evolução — Velox TMS
+
+> Plano de evolução por **níveis de maturidade**, derivado de
+> `INVENTARIO-SISTEMA.md`, `ARQUITETURA-FUNCIONAL.md`, `MAPA-FLUXOS-PERFIS.md` e
+> `GAP-ANALYSIS-ENTERPRISE.md`.
+>
+> Gerado em 2026-06-30 (skills: `redesign-existing-projects`, `ui-ux-designer`,
+> `vibe-code-auditor`).
+>
+> **Legenda:** Prioridade (P) Alta/Média/Baixa · Impacto (I) Alto/Médio/Baixo ·
+> Esforço (E) S(<1 sem) / M(1–4 sem) / L(1–3 meses) / XL(>3 meses).
+
+O Velox está hoje **entre MVP e Profissional**: ciclo operacional fechado,
+portais, financeiro básico, rastreio, subcontratação e conciliação.
+
+---
+
+## 🟢 Nível 1 — MVP (consolidar o mínimo viável robusto)
+
+**1.1 Pipeline de migrações versionadas** — P: Alta · I: Alto · E: S · Dep: —
+Justificativa: aplicação manual gera risco de drift código×banco.
+Op: implantações previsíveis · Téc: sem divergência de schema · Usuário: menos falhas.
+
+**1.2 Motor de notificações transacionais (e-mail base)** — P: Alta · I: Alto · E: M · Dep: provedor de e-mail
+Justificativa: hoje só toasts/`alerts`, sem canal externo.
+Op: menos suporte reativo · Téc: canal único · Usuário: avisos de status/fatura.
+
+**1.3 ETA + milestones no rastreio** — P: Alta · I: Alto · E: M · Dep: 1.2 + rastreio
+Justificativa: mostra posição, sem previsão/marcos.
+Op: menos suporte · Téc: base de eventos · Usuário: visibilidade real.
+
+**1.4 Fechar ciclo financeiro do parceiro** — P: Alta · I: Alto · E: M · Dep: subcontratação + financeiro
+Justificativa: registra valor combinado, mas não paga o parceiro.
+Op: acerto completo · Téc: parceiro no ledger · Usuário(parceiro): recebimento rastreável.
+
+**1.5 Unificar design system dos portais** — P: Média · I: Médio · E: M · Dep: tokens do admin
+Justificativa: admin tokenizado/dark; portais com paleta clara hardcoded.
+Op: marca coesa · Téc: menos divergência CSS · Usuário: experiência consistente.
+
+**1.6 Cobertura de testes dos fluxos críticos** — P: Alta · I: Médio · E: M · Dep: CI
+Justificativa: testes só de utils + smoke.
+Op: menos regressões · Téc: rede de segurança · Usuário: estabilidade.
+
+**1.7 Paginação server-side nas listas de maior volume** — P: Média · I: Médio · E: M · Dep: —
+Justificativa: `.list(500/1000)` + filtro no cliente.
+Op: telas rápidas com massa · Téc: menos carga no browser · Usuário: responsividade.
+
+**1.8 Conciliação ligada à fatura/boleto** — P: Média · I: Médio · E: M · Dep: conciliação
+Justificativa: baixa concilia receita/despesa, não a fatura.
+Op: baixa correta · Téc: unifica caminhos de baixa · Usuário: financeiro coerente.
+
+---
+
+## 🔵 Nível 2 — Profissional
+
+**2.1 Motor de tarifação (rating engine)** — P: Alta · I: Alto · E: L · Dep: cadastros + financeiro
+Contratos por lane/faixa/acessoriais/fuel. Op: preço correto · Téc: fonte única de tarifa · Usuário: cotação confiável.
+
+**2.2 Freight audit & payment (3-way match)** — P: Alta · I: Alto · E: L · Dep: 2.1
+Op: corta sobrepreço · Téc: ledger conciliado · Usuário: faturas corretas.
+
+**2.3 RBAC granular + SoD + audit log central** — P: Alta · I: Alto · E: L · Dep: AuthContext/RLS
+Op: compliance · Téc: permissão por função/campo/filial · Usuário: acesso adequado.
+
+**2.4 Control Tower (exceções unificadas)** — P: Média · I: Alto · E: M · Dep: alerts/incidents/SLA
+Op: ação proativa · Téc: agrega eventos · Usuário: operação no controle.
+
+**2.5 Tendering automático + scorecard de parceiros** — P: Média · I: Alto · E: L · Dep: subcontratação + 2.1
+Op: melhor custo/serviço · Téc: alocação por regra · Usuário(parceiro): ofertas justas.
+
+**2.6 Boleto/CNAB/PIX + baixa por retorno** — P: Alta · I: Alto · E: L · Dep: financeiro + banco
+Op: cobrança/baixa automatizadas · Téc: integração bancária · Usuário: pagamento fácil.
+
+**2.7 BI/Analytics (freight spend, OTIF, custo por lane)** — P: Média · I: Alto · E: L · Dep: dados consolidados
+Op: decisão por dado · Téc: camada analítica · Usuário(gestor): KPIs acionáveis.
+
+**2.8 CT-e/MDF-e (emissão via provedor)** — P: Alta · I: Alto · E: L · Dep: provedor fiscal
+Op: opera legalmente · Téc: integra SEFAZ · Usuário: documento fiscal válido.
+
+---
+
+## 🟣 Nível 3 — Enterprise
+
+**3.1 Compliance fiscal completo (CT-e/MDF-e/CIOT/ANTT/seguro)** — P: Alta · I: Alto · E: XL · Dep: 2.8
+**3.2 Integrações ERP/EDI (SAP/TOTVS/Oracle/X12)** — P: Alta · I: Alto · E: XL · Dep: contratos
+**3.3 SSO/MFA (SAML/OIDC) + provisionamento** — P: Alta · I: Médio · E: L · Dep: IdP
+**3.4 Multi-tenant real (SaaS)** — P: Alta · I: Alto · E: XL · Dep: rearquitetura RLS + onboarding
+**3.5 Telemetria/rastreadores + status automático** — P: Média · I: Alto · E: L · Dep: APIs externas
+**3.6 Otimizador de rota/carga (VRP, janelas, pedágio)** — P: Média · I: Alto · E: XL · Dep: mapas enterprise
+**3.7 Arquitetura de eventos + filas/jobs + observabilidade** — P: Alta · I: Alto · E: XL · Dep: infra
+
+---
+
+## 🟡 Nível 4 — World Class
+
+**4.1 ETA preditivo + exceções preditivas (ML)** — P: Média · I: Alto · E: XL · Dep: 3.7 + dados
+**4.2 Pricing dinâmico (ML)** — P: Baixa · I: Alto · E: XL · Dep: 2.1 + dados
+**4.3 Control tower prescritiva** — P: Média · I: Alto · E: XL · Dep: 2.4 + ML
+**4.4 Otimização de rede em tempo real (continuous moves/pooling)** — P: Baixa · I: Alto · E: XL · Dep: 3.6
+**4.5 ESG/pegada de carbono por embarque** — P: Baixa · I: Médio · E: L · Dep: dados de viagem
+**4.6 Workflows autônomos (auto-tender, auto-resolução)** — P: Baixa · I: Alto · E: XL · Dep: 3.7 + ML
+
+---
+
+## 🔗 Sequência lógica de implementação (ondas)
+```mermaid
+flowchart LR
+    F0["Onda 0 - Fundacao\n(1.1, 1.6, 1.7, 1.2, 1.5)"]
+    F1["Onda 1 - Comercial & Financeiro\n(2.1, 2.2, 2.6, 1.8, 1.4)"]
+    F2["Onda 2 - Governanca & Visibilidade\n(2.3, 2.4, 1.3, 2.7, 2.5)"]
+    F3["Onda 3 - Fiscal & Integracoes\n(2.8, 3.1, 3.2, 3.3, 3.5)"]
+    F4["Onda 4 - Escala\n(3.7, 3.4, 3.6)"]
+    F5["Onda 5 - World Class\n(4.1, 4.2, 4.3, 4.4, 4.5, 4.6)"]
+    F0 --> F1 --> F2 --> F3 --> F4 --> F5
+    F0 -.->|"base de eventos"| F2
+    F1 -.->|"tarifa habilita"| F2
+    F3 -.->|"integra dados"| F4
+    F4 -.->|"plataforma p/ ML"| F5
+```
+
+### Dependências (resumo)
+- **Onda 0** é pré-requisito de tudo (confiabilidade, testes, notificações, eventos).
+- **Tarifação (2.1)** habilita auditoria (2.2), tendering (2.5) e pricing dinâmico (4.2).
+- **Governança (2.3)** precede integrações corporativas e multi-tenant.
+- **Eventos/observabilidade (3.7)** é a base para automação e ML (Onda 5).
+- **CT-e/MDF-e (2.8→3.1)** é o portão fiscal para escalar legalmente.
+
+---
+
+## 📌 Status de execução (atualizado conforme implementação)
+- Pré-roadmap já entregue nesta linha: rastreamento ao vivo, portal da transportadora, conciliação bancária, A2 (refactor parcial), E2E no CI.
+- Ver progresso detalhado nos commits e no acompanhamento de status.
