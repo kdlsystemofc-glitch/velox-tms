@@ -56,6 +56,8 @@ const FrotaPage = lazy(() => import('@/pages/admin/FrotaPage'));
 const FinanceiroPage = lazy(() => import('@/pages/admin/FinanceiroPage'));
 const ConfigPage = lazy(() => import('@/pages/admin/ConfigPage'));
 const ClientAccess = lazy(() => import('@/pages/admin/ClientAccess'));
+const Carriers = lazy(() => import('@/pages/admin/Carriers'));
+const CarrierAccess = lazy(() => import('@/pages/admin/CarrierAccess'));
 const DriverHome = lazy(() => import('@/pages/driver/DriverHome'));
 const DriverTrip = lazy(() => import('@/pages/driver/DriverTrip'));
 const DriverHistory = lazy(() => import('@/pages/driver/DriverHistory'));
@@ -158,6 +160,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/cadastros" element={<CadastrosPage />} />
             <Route path="/admin/clientes" element={<Navigate to="/admin/cadastros" replace />} />
             <Route path="/admin/clientes/:id" element={<ClientDetailPage />} />
+            <Route path="/admin/transportadoras" element={<Carriers />} />
             <Route path="/admin/fornecedores" element={<Navigate to="/admin/cadastros?aba=fornecedores" replace />} />
           </Route>
 
@@ -173,6 +176,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/usuarios" element={<UserManagement />} />
             <Route path="/admin/indicadores" element={<Indicators />} />
             <Route path="/admin/portal-clientes" element={<ClientAccess />} />
+            <Route path="/admin/portal-parceiros" element={<CarrierAccess />} />
           </Route>
         </Route>
       </Route>

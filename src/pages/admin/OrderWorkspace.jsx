@@ -29,8 +29,9 @@ import { slaStatus, slaDeadline } from "@/utils/sla";
 import { addDays } from "date-fns";
 import {
   ArrowLeft, Package, User, MapPin, Truck, DollarSign, CheckCircle2, Circle,
-  FileText, FileDown, AlertTriangle, Copy, MoreHorizontal, XCircle, ArrowRight
+  FileText, FileDown, AlertTriangle, Copy, MoreHorizontal, XCircle, ArrowRight, Send
 } from "lucide-react";
+import OfferToCarrierDialog from "@/components/admin/OfferToCarrierDialog";
 
 const STATUS_FLOW = ["new", "confirmed", "collecting", "in_transit", "delivered"];
 const STATUS_LABELS = {
@@ -59,6 +60,7 @@ export default function OrderWorkspace() {
   const { settings } = useCompanySettings();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [unproductiveFee, setUnproductiveFee] = useState("");
@@ -488,6 +490,13 @@ export default function OrderWorkspace() {
                   <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/40 text-left"
                     onClick={() => { setMenuOpen(false); navigate(`/admin/viagens/${order.trip_id}`); }}>
                     <Truck className="w-4 h-4 text-muted-foreground" /> Ver viagem
+                  </button>
+                )}
+                {!isCancelled && order.status !== "delivered" && (
+                  <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/40 text-left"
+                    onClick={() => { setMenuOpen(false); setOfferOpen(true); }}>
+                    <Send className="w-4 h-4 text-muted-foreground" /> Ofertar a parceiro
+                    {order.carrier_status && <span className="ml-auto text-[10px] text-muted-foreground capitalize">{order.carrier_status === "accepted" ? "aceito" : order.carrier_status === "offered" ? "ofertado" : "recusado"}</span>}
                   </button>
                 )}
                 {!isCancelled && order.status !== "delivered" && (
@@ -1181,6 +1190,8 @@ export default function OrderWorkspace() {
           )}
         </DialogContent>
       </Dialog>
+
+      <OfferToCarrierDialog order={order} open={offerOpen} onOpenChange={setOfferOpen} />
     </div>
   );
 }
