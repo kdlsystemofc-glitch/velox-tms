@@ -21,7 +21,10 @@ registrados aqui como trabalho futuro.
   chegada, e usar Supabase Realtime no lugar do polling de 20s.
 - **Multi-tenant real** — `company_settings` é uma linha única (uma empresa).
   Para o Velox como produto SaaS, isolar dados por empresa/tenant.
-- **Portal da transportadora / agregados + leilão de frete** (subcontratação).
+- ~~**Portal da transportadora / agregados** (subcontratação)~~ ✅ **Entregue**:
+  cadastro de parceiros, ofertar pedido (valor + margem), parceiro aceita/recusa
+  e atualiza status no portal próprio. _Futuro:_ leilão (ofertar a vários de uma
+  vez), acerto financeiro automático com o parceiro, documentos/CT-e do parceiro.
 - **Cutoffs (horário de corte) e lanes** como entidade.
 - **Conciliação bancária / baixa por boleto.**
 
