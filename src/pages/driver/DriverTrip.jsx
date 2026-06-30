@@ -15,6 +15,8 @@ import SignaturePad from "@/components/shared/SignaturePad";
 import { storage } from "@/api/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import { incidentTypeLabel } from "@/utils/incidents";
+import { useTripGeolocation } from "@/hooks/useTripGeolocation";
+import { Navigation } from "lucide-react";
 
 const CHECKLIST_ITEMS = [
   { key: "tires", label: "Pneus calibrados e em bom estado" },
@@ -55,6 +57,9 @@ export default function DriverTrip() {
     select: (d) => d[0],
     enabled: !!user?.id,
   });
+
+  // Rastreamento ao vivo: envia GPS enquanto a viagem está em andamento.
+  const geo = useTripGeolocation(trip?.id, trip?.status === "in_progress");
 
   // Ocorrências em aberto desta viagem (F1/F3) — o motorista acompanha e complementa.
   const { data: tripIncidents = [] } = useQuery({
@@ -316,6 +321,28 @@ export default function DriverTrip() {
       </div>
 
       <div className="flex-1 px-4 py-4 max-w-sm mx-auto w-full space-y-3 pb-24">
+        {/* Rastreamento ao vivo (só durante a viagem) */}
+        {trip.status === "in_progress" && (
+          <div className={`rounded-xl border p-3 flex items-center gap-3 ${geo.error ? "border-red-500/30 bg-red-900/10" : geo.sharing ? "border-green-500/20 bg-green-900/15" : "border-white/10 bg-white/5"}`}>
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${geo.sharing ? "bg-green-500/20" : "bg-white/10"}`}>
+              <Navigation className={`w-4 h-4 ${geo.sharing ? "text-green-400" : "text-white/50"}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white">
+                {geo.sharing ? "Compartilhando localização" : geo.enabled ? "Ativando localização…" : "Localização pausada"}
+              </p>
+              <p className="text-[11px] text-white/50 truncate">
+                {geo.error ? geo.error : !geo.supported ? "Aparelho sem GPS/permissão" : geo.lastSentAt ? `Última posição enviada às ${geo.lastSentAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "A central acompanha sua viagem em tempo real."}
+              </p>
+            </div>
+            {geo.supported && (
+              <button onClick={geo.toggle} className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-white/15 text-white/70 hover:bg-white/10 flex-shrink-0">
+                {geo.enabled ? "Pausar" : "Retomar"}
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Checklist de saída do veículo */}
         {!checklistDone && (trip.status === "planned" || trip.status === "in_progress") && (
           <div className="rounded-xl border border-velox-amber/40 bg-velox-amber/10 p-4">
