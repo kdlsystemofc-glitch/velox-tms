@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/api/supabaseClient";
 import { Plus, Trash2, CheckCircle2, ArrowLeft } from "lucide-react";
+import { lookupCep } from "@/components/shared/AddressFields";
+import { calculateFreightFull } from "@/utils/freightCalculator";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 const inputCls = "mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40";
 const emptyItem = { nf_number: "", volumes: "", weight_kg: "" };
@@ -22,9 +25,33 @@ export default function ClientNewOrder() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [done, setDone] = useState(null);
+  const { settings } = useCompanySettings();
 
   const setOrigin = (k, v) => setForm(f => ({ ...f, origin: { ...f.origin, [k]: v } }));
   const setRecipient = (k, v) => setForm(f => ({ ...f, recipient: { ...f.recipient, [k]: v } }));
+
+  // Autofill por CEP (ViaCEP) — origem e destinatário (U3).
+  const fillFromCep = async (which, cep) => {
+    const found = await lookupCep(cep);
+    if (!found) return;
+    const patch = { street: found.street || "", city: found.city || "", state: found.state || "" };
+    if (which === "origin") setForm(f => ({ ...f, origin: { ...f.origin, ...patch } }));
+    else setForm(f => ({ ...f, recipient: { ...f.recipient, ...patch } }));
+  };
+
+  // Estimativa de frete (U4) — mesma engine do site/admin.
+  const estimate = useMemo(() => {
+    const items = form.items.filter(it => it.volumes || it.weight_kg);
+    if (!items.length || !form.origin.state || !form.recipient.state) return null;
+    try {
+      return calculateFreightFull({
+        items, distanceKm: null,
+        nfCount: items.filter(i => i.nf_number).length || 1,
+        pricing: settings?.pricing, settings,
+        originState: form.origin.state, destState: form.recipient.state,
+      });
+    } catch { return null; }
+  }, [form.items, form.origin.state, form.recipient.state, settings]);
   const setItem = (i, k, v) => setForm(f => ({ ...f, items: f.items.map((it, j) => j === i ? { ...it, [k]: v } : it) }));
   const addItem = () => setForm(f => ({ ...f, items: [...f.items, { ...emptyItem }] }));
   const removeItem = (i) => setForm(f => ({ ...f, items: f.items.filter((_, j) => j !== i) }));
@@ -81,7 +108,7 @@ export default function ClientNewOrder() {
         <section className="bg-white border border-gray-200 rounded-xl p-5">
           <h2 className="font-semibold text-sm mb-3">Coleta (origem)</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Field label="CEP *"><input className={inputCls} value={form.origin.cep} onChange={e => setOrigin("cep", e.target.value)} placeholder="00000-000" /></Field>
+            <Field label="CEP *"><input className={inputCls} value={form.origin.cep} onChange={e => setOrigin("cep", e.target.value)} onBlur={e => fillFromCep("origin", e.target.value)} placeholder="00000-000" /></Field>
             <Field label="Cidade" className="col-span-2"><input className={inputCls} value={form.origin.city} onChange={e => setOrigin("city", e.target.value)} /></Field>
             <Field label="UF"><input className={inputCls} value={form.origin.state} onChange={e => setOrigin("state", e.target.value)} maxLength={2} /></Field>
             <Field label="Endereço" className="col-span-3"><input className={inputCls} value={form.origin.street} onChange={e => setOrigin("street", e.target.value)} /></Field>
@@ -94,7 +121,7 @@ export default function ClientNewOrder() {
           <h2 className="font-semibold text-sm mb-3">Destinatário</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Field label="Nome / Razão social *" className="col-span-2"><input className={inputCls} value={form.recipient.name} onChange={e => setRecipient("name", e.target.value)} /></Field>
-            <Field label="CEP"><input className={inputCls} value={form.recipient.cep} onChange={e => setRecipient("cep", e.target.value)} placeholder="00000-000" /></Field>
+            <Field label="CEP"><input className={inputCls} value={form.recipient.cep} onChange={e => setRecipient("cep", e.target.value)} onBlur={e => fillFromCep("recipient", e.target.value)} placeholder="00000-000" /></Field>
             <Field label="UF"><input className={inputCls} value={form.recipient.state} onChange={e => setRecipient("state", e.target.value)} maxLength={2} /></Field>
             <Field label="Cidade *" className="col-span-2"><input className={inputCls} value={form.recipient.city} onChange={e => setRecipient("city", e.target.value)} /></Field>
             <Field label="Endereço" className="col-span-3"><input className={inputCls} value={form.recipient.street} onChange={e => setRecipient("street", e.target.value)} /></Field>
@@ -124,6 +151,16 @@ export default function ClientNewOrder() {
         <section className="bg-white border border-gray-200 rounded-xl p-5">
           <Field label="Observações"><textarea rows={2} className={inputCls + " resize-none"} value={form.general_notes} onChange={e => setForm(f => ({ ...f, general_notes: e.target.value }))} placeholder="Restrições de horário, instruções de coleta…" /></Field>
         </section>
+
+        {estimate?.total > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500">Estimativa de frete</p>
+              <p className="text-[11px] text-gray-400">Valor aproximado — a Velox confirma ao programar.</p>
+            </div>
+            <p className="font-mono font-bold text-lg text-blue-700">R$ {Number(estimate.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+          </div>
+        )}
 
         <button type="submit" disabled={loading} className="w-full bg-brand-gradient text-white font-semibold py-3 rounded-lg text-sm disabled:opacity-60">
           {loading ? "Enviando…" : "Solicitar coleta"}

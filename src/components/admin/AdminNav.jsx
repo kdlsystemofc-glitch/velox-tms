@@ -89,8 +89,11 @@ export default function AdminNav() {
   };
 
   const dashActive = location.pathname === "/admin";
+  // Área que contém a rota atual → seus itens viram a 2ª linha (visíveis, 1 clique).
+  const activeArea = AREAS.find(a => (!a.adminOnly || isAdmin) && a.items.some(it => location.pathname.startsWith(it.path)));
 
   return (
+    <>
     <nav className="h-12 border-b border-border bg-card/60 backdrop-blur flex items-center gap-1 px-4 sticky top-16 z-20 overflow-x-auto">
       <Link
         to="/admin"
@@ -142,5 +145,26 @@ export default function AdminNav() {
         );
       })}
     </nav>
+
+    {/* 2ª linha: itens da área ativa, visíveis (sem precisar abrir dropdown). */}
+    {activeArea && (
+      <div className="h-10 border-b border-border bg-muted/20 flex items-center gap-1 px-4 sticky top-28 z-10 overflow-x-auto">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/60 pr-2 whitespace-nowrap">{activeArea.label}</span>
+        {activeArea.items.filter(it => !it.adminOnly || isAdmin).map(it => {
+          const count = it.badge ? badges[it.badge] || 0 : 0;
+          const active = location.pathname.startsWith(it.path);
+          return (
+            <Link key={it.path} to={it.path}
+              className={`flex items-center gap-1.5 px-2.5 h-7 rounded-md text-sm whitespace-nowrap transition-colors ${
+                active ? "bg-primary/15 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              }`}>
+              <it.icon className="w-3.5 h-3.5" /> {it.label}
+              {count > 0 && <span className="bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 inline-flex items-center justify-center px-1">{count > 99 ? "99+" : count}</span>}
+            </Link>
+          );
+        })}
+      </div>
+    )}
+    </>
   );
 }

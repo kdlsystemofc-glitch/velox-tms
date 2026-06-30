@@ -666,6 +666,21 @@ export default function AdminSettings({ only = null }) {
                 </p>
               </div>
 
+              <div className="border-t border-border pt-5">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">SLA de ocorrências (horas para resolver)</p>
+                <p className="text-xs text-muted-foreground mb-3">Prazo por gravidade. A ocorrência mostra “No prazo / Em risco / SLA estourado” conforme isto.</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[["critical", "Crítica", 4], ["high", "Alta", 24], ["medium", "Média", 72], ["low", "Baixa", 168]].map(([key, label, def]) => (
+                    <div key={key} className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">{label} (h)</label>
+                      <Input type="number" min={1} className="text-center"
+                        value={form.incident_sla_hours?.[key] ?? def}
+                        onChange={e => setNested("incident_sla_hours", key, Number(e.target.value))} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex justify-end"><SaveBtn /></div>
             </CardContent>
           </Card>
