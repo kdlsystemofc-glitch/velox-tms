@@ -29,7 +29,7 @@ import { slaStatus, slaDeadline } from "@/utils/sla";
 import { addDays } from "date-fns";
 import {
   ArrowLeft, Package, User, MapPin, Truck, DollarSign, CheckCircle2, Circle,
-  FileText, FileDown, AlertTriangle, Copy, MoreHorizontal, XCircle, ArrowRight, Send
+  FileText, FileDown, AlertTriangle, Copy, MoreHorizontal, XCircle, ArrowRight, Send, Wallet
 } from "lucide-react";
 import OfferToCarrierDialog from "@/components/admin/OfferToCarrierDialog";
 
@@ -113,6 +113,21 @@ export default function OrderWorkspace() {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
     onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),
+  });
+
+  // Roadmap 1.4 — lança o pagamento ao parceiro (despesa "a pagar") quando a
+  // oferta foi aceita. Idempotente no servidor (orders.carrier_expense_id).
+  const settleCarrier = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("settle_carrier_order", { p_order_id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["order", id] });
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      toast({ title: "Pagamento ao parceiro lançado!", description: "Despesa criada em Financeiro → Despesas (a pagar)." });
+    },
+    onError: (e) => toast({ title: "Não foi possível lançar", description: e?.message, variant: "destructive" }),
   });
 
   React.useEffect(() => {
@@ -498,6 +513,18 @@ export default function OrderWorkspace() {
                     <Send className="w-4 h-4 text-muted-foreground" /> Ofertar a parceiro
                     {order.carrier_status && <span className="ml-auto text-[10px] text-muted-foreground capitalize">{order.carrier_status === "accepted" ? "aceito" : order.carrier_status === "offered" ? "ofertado" : "recusado"}</span>}
                   </button>
+                )}
+                {order.carrier_status === "accepted" && order.carrier_amount > 0 && (
+                  order.carrier_expense_id ? (
+                    <div className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground">
+                      <Wallet className="w-4 h-4" /> Pagamento ao parceiro lançado
+                    </div>
+                  ) : (
+                    <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/40 text-left"
+                      onClick={() => { setMenuOpen(false); settleCarrier.mutate(); }} disabled={settleCarrier.isPending}>
+                      <Wallet className="w-4 h-4 text-muted-foreground" /> Lançar pagamento ao parceiro
+                    </button>
+                  )
                 )}
                 {!isCancelled && order.status !== "delivered" && (
                   <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-red-500/10 text-red-600 dark:text-red-300 text-left border-t border-border/50"
