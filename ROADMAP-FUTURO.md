@@ -20,13 +20,17 @@ registrados aqui como trabalho futuro.
   _Refinos futuros:_ ETA por parada, rastro (trail) no portal, geofence de
   chegada, e usar Supabase Realtime no lugar do polling de 20s.
 - **Multi-tenant real** — `company_settings` é uma linha única (uma empresa).
-  Para o Velox como produto SaaS, isolar dados por empresa/tenant.
+  Para o Velox como produto SaaS, isolar dados por empresa/tenant. **Adiado por
+  decisão de produto** (não ativar por enquanto; preferir features aditivas).
 - ~~**Portal da transportadora / agregados** (subcontratação)~~ ✅ **Entregue**:
   cadastro de parceiros, ofertar pedido (valor + margem), parceiro aceita/recusa
   e atualiza status no portal próprio. _Futuro:_ leilão (ofertar a vários de uma
   vez), acerto financeiro automático com o parceiro, documentos/CT-e do parceiro.
 - **Cutoffs (horário de corte) e lanes** como entidade.
-- **Conciliação bancária / baixa por boleto.**
+- ~~**Conciliação bancária**~~ ✅ **Entregue**: importa OFX/CSV, sugere baixa
+  por valor+data, concilia crédito↔receita e débito↔despesa. _Futuro:_ conciliar
+  faturas/boletos (hoje é receita/despesa), regras de auto-baixa em lote,
+  conciliar por linha digitável do boleto.
 
 ## Qualidade / arquitetura (refactor contínuo)
 - **A2 — Quebrar os "god-components"** — ✅ feito em `TripDetailPage` (1004→789)
