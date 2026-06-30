@@ -1,11 +1,9 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { Truck, MapPin, Package, Clock, ArrowRight } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Truck, MapPin, Package, ArrowRight } from "lucide-react";
 
 export default function MapPage() {
   const { data: trips = [] } = useQuery({

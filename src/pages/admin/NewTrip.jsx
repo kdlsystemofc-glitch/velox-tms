@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Package, Truck, Users, MapPin, DollarSign, AlertCircle } from "lucide-react";
+import { ArrowLeft, Package, Users, MapPin, AlertCircle } from "lucide-react";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { optimizeStops } from "@/utils/routeOptimizer";

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -556,7 +557,7 @@ export default function ClientDetailPage() {
             if (!o.created_date) return false;
             const d = new Date(o.created_date);
             return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-              && o.status !== "cancelled" && o.freight_value > 0;
+              && o.status !== "cancelled" && o.freight_value > 0 && !o.invoice_id; // só não-faturados
           });
           const total = monthOrders.reduce((s, o) => s + (o.freight_value || 0), 0);
           const billingDay = client.billing_day || 25;
@@ -594,15 +595,23 @@ export default function ClientDetailPage() {
                   <Button
                     className="w-full font-bold"
                     onClick={async () => {
-                      await base44.entities.Revenue.create({
-                        description: `Fatura mensal — ${client.company_name} (${now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })})`,
-                        amount: total,
-                        due_date: toLocalISO(dueDate),
-                        client_id: client.id,
-                        status: "receivable",
+                      // Unificado (B1/B2/F1): gera uma FATURA de verdade (documento) e
+                      // marca os pedidos, em vez de criar uma 2ª receita solta sobre as
+                      // receitas por pedido que já existem (evita dupla cobrança).
+                      const ids = monthOrders.filter(o => !o.invoice_id).map(o => o.id);
+                      if (ids.length === 0) {
+                        toast({ title: "Nada a faturar", description: "Os fretes do mês já estão em uma fatura.", variant: "destructive" });
+                        return;
+                      }
+                      const { data, error } = await supabase.rpc("create_invoice", {
+                        p_client_id: client.id, p_order_ids: ids, p_due_date: toLocalISO(dueDate),
+                        p_notes: `Fatura mensal — ${now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}`,
                       });
+                      if (error) { toast({ title: "Erro ao faturar", description: error.message, variant: "destructive" }); return; }
+                      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+                      queryClient.invalidateQueries({ queryKey: ["orders"] });
                       setShowInvoiceModal(false);
-                      toast({ title: "Fatura gerada!", description: `R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} — vence em ${dueDate.toLocaleDateString("pt-BR")}` });
+                      toast({ title: `Fatura ${data} gerada!`, description: `R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} — vence em ${dueDate.toLocaleDateString("pt-BR")}` });
                     }}
                   >
                     Gerar fatura (R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })})

@@ -11,8 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import {
-  ArrowLeft, MapPin, CheckCircle2, Circle, Truck, Package,
-  DollarSign, X, Play, Square, Plus, Trash2, FileText, AlertTriangle, FileDown,
+  ArrowLeft, MapPin, CheckCircle2, Truck,
+  DollarSign, Play, Square, Plus, Trash2, FileText, AlertTriangle, FileDown,
   Sparkles, ChevronUp, ChevronDown, GripVertical
 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";

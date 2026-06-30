@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import StatCard from "@/components/shared/StatCard";
 import { useToast } from "@/components/ui/use-toast";
-import { FileText, Plus, CheckCircle2, Receipt, FileDown, X } from "lucide-react";
-import { todayLocalISO, formatDateBR } from "@/utils/dateUtils";
+import { FileText, Plus, CheckCircle2, Receipt, FileDown } from "lucide-react";
+import { formatDateBR } from "@/utils/dateUtils";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { isAddressInCoverage } from "@/utils/coverageChecker";
@@ -10,9 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, ArrowRight, Plus, Trash2, CheckCircle2, AlertCircle, MapPinOff } from "lucide-react";
-import { NumericInput } from "@/components/shared/NumericInput";
 import { base44 } from "@/api/base44Client";
 import { useLocation } from "react-router-dom";
 import VeloxDatePicker from "@/components/public/VeloxDatePicker";

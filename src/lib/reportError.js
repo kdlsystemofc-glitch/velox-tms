@@ -5,7 +5,7 @@
  */
 export function reportError(error, context = {}) {
   try {
-    // eslint-disable-next-line no-console
+     
     console.error("[Velox]", error, context);
     if (typeof window !== "undefined" && window.Sentry?.captureException) {
       window.Sentry.captureException(error, { extra: context });

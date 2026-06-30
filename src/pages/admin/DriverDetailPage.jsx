@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, User, FileText, TrendingUp, AlertTriangle, CheckCircle, AlertCircle, Smartphone, KeyRound, Power, Trash2 } from "lucide-react";
+import { ArrowLeft, User, FileText, TrendingUp, Smartphone, KeyRound, Power, Trash2 } from "lucide-react";
 import { differenceInDays, parseISO, format } from "date-fns";
 
 function docStatus(expiry) {

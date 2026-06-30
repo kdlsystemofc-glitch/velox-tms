@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, CheckCircle2, MapPin, AlertTriangle, FileText, ClipboardCheck, PackageX, UserX, Clock } from "lucide-react";
+import { ArrowLeft, CheckCircle2, AlertTriangle, ClipboardCheck, PackageX, UserX, Clock } from "lucide-react";
 import { formatDateTimeBR } from "@/utils/dateUtils";
 import { stopWaitingMinutes, formatMinutes } from "@/utils/waitingTime";
 import FileUploadButton from "@/components/shared/FileUploadButton";

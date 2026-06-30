@@ -1,0 +1,27 @@
+name: CI
+
+# Gate de qualidade: roda em todo push e PR. O lint inclui
+# react-hooks/rules-of-hooks, que pega bugs como o crash React #310
+# (hook depois de early return) ANTES de ir para produção.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Lint (inclui rules-of-hooks)
+        run: npm run lint
+      - name: Testes (vitest)
+        run: npm test
+      - name: Build
+        run: npm run build

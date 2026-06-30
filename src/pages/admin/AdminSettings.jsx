@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Building2, DollarSign, Bell, Globe, MessageSquare, Save, MapPin, CalendarDays, Shield, Clock, Plus, BarChart3, Package, Route, Check, Download, Upload, History } from "lucide-react";
+import { Building2, DollarSign, Bell, Globe, Save, MapPin, CalendarDays, Shield, Clock, Plus, BarChart3, Package, Route, Check, Download, Upload, History } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { Checkbox } from "@/components/ui/checkbox";

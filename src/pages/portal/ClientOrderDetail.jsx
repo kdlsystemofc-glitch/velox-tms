@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/api/supabaseClient";
 import StatusBadge, { orderStatusConfig } from "@/components/admin/StatusBadge";
-import { ArrowLeft, MapPin, Package } from "lucide-react";
+import { ArrowLeft, MapPin } from "lucide-react";
 import { formatDateBR, formatDateTimeBR } from "@/utils/dateUtils";
 
 export default function ClientOrderDetail() {

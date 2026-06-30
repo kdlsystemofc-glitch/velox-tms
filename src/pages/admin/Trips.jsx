@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Truck, User, MapPin, CheckCircle2, Clock, Route, Download, Search, X } from "lucide-react";
+import { Plus, Truck, MapPin, Clock, Route, Download, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { downloadCsv, csvMoney, csvDate } from "@/utils/exportCsv";
 import { formatDateTimeBR } from "@/utils/dateUtils";

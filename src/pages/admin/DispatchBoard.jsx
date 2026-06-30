@@ -10,7 +10,7 @@ import StatusBadge from "@/components/admin/StatusBadge";
 import PriorityBadge from "@/components/shared/PriorityBadge";
 import { sortByPriority, isElevatedPriority } from "@/utils/priority";
 import { useToast } from "@/components/ui/use-toast";
-import { todayLocalISO, toLocalISO, formatDateBR } from "@/utils/dateUtils";
+import { toLocalISO, formatDateBR } from "@/utils/dateUtils";
 import { planLoads, regionLabel, localityKey } from "@/utils/dispatchPlanner";
 import { truckVolumeM3, orderVolumeM3, fmtM3 } from "@/utils/cargoVolume";
 import { orderWindowConflicts } from "@/utils/deliveryWindow";
@@ -18,7 +18,7 @@ import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { Input } from "@/components/ui/input";
 import {
   Package, Truck, ChevronLeft, ChevronRight, MapPin,
-  CalendarDays, Send, X, ArrowRight, Sparkles, Search, GripVertical
+  CalendarDays, Send, X, Sparkles, Search, GripVertical
 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import PageHeader from "@/components/shared/PageHeader";

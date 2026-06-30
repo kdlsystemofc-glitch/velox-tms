@@ -19,10 +19,8 @@ import { incidentSeverity } from "@/utils/incidents";
 import { slaStatus } from "@/utils/sla";
 import { findStaleOrders, DEFAULT_STALE_DAYS } from "@/utils/staleOrders";
 import { orderVolumeM3, truckVolumeM3, fmtM3 } from "@/utils/cargoVolume";
-import { incidentTypeLabel } from "@/utils/incidents";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
-import {
-  Package, Truck, CheckCircle2, AlertCircle, ArrowRight, Plus,
+import { Truck, CheckCircle2, AlertCircle, ArrowRight, Plus,
   Clock, MapPin, DollarSign, CalendarDays, Inbox, Wrench, UserX,
   TrendingUp, Percent, ShieldAlert, Activity
 } from "lucide-react";
