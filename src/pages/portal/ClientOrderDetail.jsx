@@ -3,8 +3,18 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/api/supabaseClient";
 import StatusBadge, { orderStatusConfig } from "@/components/admin/StatusBadge";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft, MapPin, Navigation } from "lucide-react";
 import { formatDateBR, formatDateTimeBR } from "@/utils/dateUtils";
+import LiveMap from "@/components/shared/LiveMap";
+
+function relativeFromNow(iso) {
+  if (!iso) return "";
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return "agora mesmo";
+  if (mins < 60) return `há ${mins} min`;
+  const h = Math.floor(mins / 60);
+  return `há ${h}h${mins % 60 ? ` ${mins % 60}min` : ""}`;
+}
 
 export default function ClientOrderDetail() {
   const { id } = useParams();
@@ -17,6 +27,19 @@ export default function ClientOrderDetail() {
       if (error) throw error;
       return (data && data[0]) || null;
     },
+  });
+
+  // Rastreamento ao vivo da carga (só enquanto está em coleta/trânsito).
+  const inTransit = order && ["collecting", "in_transit"].includes(order.status);
+  const { data: live } = useQuery({
+    queryKey: ["order-live-location", id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("order_live_location", { p_order_id: id });
+      if (error) throw error;
+      return data || null;
+    },
+    enabled: !!inTransit,
+    refetchInterval: 20_000,
   });
 
   if (isLoading) return <div className="text-center py-12 text-gray-400 text-sm">Carregando…</div>;
@@ -40,6 +63,22 @@ export default function ClientOrderDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
+          {inTransit && (
+            <section className="bg-white border border-gray-200 rounded-xl p-5">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <h2 className="font-semibold text-sm flex items-center gap-1.5"><Navigation className="w-4 h-4 text-primary" /> Onde está minha carga</h2>
+                {live?.updated_at && <span className="text-[11px] text-gray-400">Atualizado {relativeFromNow(live.updated_at)}</span>}
+              </div>
+              {live?.lat ? (
+                <LiveMap height={280} markers={[{ lat: live.lat, lng: live.lng, kind: "truck", pulse: true, label: `${live.truck_plate || "Caminhão"}${live.driver_name ? ` · ${live.driver_name}` : ""}` }]} />
+              ) : (
+                <div className="h-40 flex items-center justify-center bg-gray-50 rounded-xl text-center text-sm text-gray-400 px-4">
+                  Aguardando a posição do motorista. O mapa aparece assim que a viagem começar a enviar GPS.
+                </div>
+              )}
+            </section>
+          )}
+
           <section className="bg-white border border-gray-200 rounded-xl p-5">
             <h2 className="font-semibold text-sm mb-3">Acompanhamento</h2>
             {history.length === 0 ? (
