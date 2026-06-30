@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,9 +10,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Building2, TrendingUp, Plus, Trash2, MessageCircle, FileText, Receipt, Pencil, DollarSign, Package } from "lucide-react";
 import StatCard from "@/components/shared/StatCard";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import StatusBadge from "@/components/admin/StatusBadge";
-import { toLocalISO } from "@/utils/dateUtils";
+import ClientPriceHistoryCard from "@/components/admin/client/ClientPriceHistoryCard";
+import ClientInvoiceModal from "@/components/admin/client/ClientInvoiceModal";
 
 const PRICING_FIELDS = [
   { key: "price_per_kg", label: "R$ / kg", step: "0.01" },
@@ -484,145 +483,9 @@ export default function ClientDetailPage() {
           </Card>
         </div>
       </div>
-    {/* Histórico de preços (5.6) */}
-    <Card>
-      <CardHeader className="py-3 border-b border-border bg-muted/30">
-        <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <DollarSign className="w-4 h-4 text-velox-amber" /> Histórico de preços
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
-        {(() => {
-          const priced = orders.filter(o => o.status !== "cancelled" && (o.freight_value > 0 || o.total_weight_kg > 0));
-          if (priced.length === 0) return <p className="text-sm text-muted-foreground text-center py-3">Nenhum pedido com valor ainda.</p>;
-          const perKgList = priced.map(o => (o.total_weight_kg > 0 ? (o.freight_value || 0) / o.total_weight_kg : null)).filter(v => v != null);
-          const avgPerKg = perKgList.length ? perKgList.reduce((s, v) => s + v, 0) / perKgList.length : 0;
-          return (
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border text-muted-foreground">
-                    <th className="text-left py-2 font-medium">Data</th>
-                    <th className="text-left py-2 font-medium">Protocolo</th>
-                    <th className="text-right py-2 font-medium">Peso</th>
-                    <th className="text-right py-2 font-medium">Valor decl.</th>
-                    <th className="text-right py-2 font-medium">Frete</th>
-                    <th className="text-right py-2 font-medium">R$/kg</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {priced.map(o => {
-                    const perKg = o.total_weight_kg > 0 ? (o.freight_value || 0) / o.total_weight_kg : null;
-                    const dev = perKg != null && avgPerKg > 0 ? (perKg - avgPerKg) / avgPerKg : 0;
-                    const off = Math.abs(dev) > 0.3; // >30% fora da média
-                    return (
-                      <tr key={o.id} className="border-b border-border/40">
-                        <td className="py-2 text-muted-foreground">{o.created_date ? new Date(o.created_date).toLocaleDateString("pt-BR") : "—"}</td>
-                        <td className="py-2"><Link to={`/admin/coletas/${o.id}`} className="font-mono text-velox-amber hover:underline">{o.protocol}</Link></td>
-                        <td className="py-2 text-right font-mono">{(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg</td>
-                        <td className="py-2 text-right font-mono">{o.total_declared_value ? `R$ ${Number(o.total_declared_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}</td>
-                        <td className="py-2 text-right font-mono">{o.freight_value ? `R$ ${Number(o.freight_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : "—"}</td>
-                        <td className={`py-2 text-right font-mono font-semibold ${off ? (dev > 0 ? "text-red-600 dark:text-red-300" : "text-amber-600 dark:text-amber-300") : "text-foreground"}`} title={off ? `${(dev * 100).toFixed(0)}% vs. média` : ""}>
-                          {perKg != null ? `R$ ${perKg.toFixed(2)}` : "—"}{off && (dev > 0 ? " ▲" : " ▼")}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t border-border">
-                    <td colSpan={5} className="py-2 text-right text-muted-foreground">Média R$/kg</td>
-                    <td className="py-2 text-right font-mono font-bold">R$ {avgPerKg.toFixed(2)}</td>
-                  </tr>
-                </tfoot>
-              </table>
-              <p className="text-[10px] text-muted-foreground mt-2">▲ acima / ▼ abaixo da média (desvio &gt; 30%) — ajuda a achar fretes fora do padrão.</p>
-            </div>
-          );
-        })()}
-      </CardContent>
-    </Card>
+    <ClientPriceHistoryCard orders={orders} />
 
-    {/* Invoice modal */}
-    <Dialog open={showInvoiceModal} onOpenChange={setShowInvoiceModal}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Receipt className="w-4 h-4 text-velox-amber" /> Fechar Fatura do Mês
-          </DialogTitle>
-        </DialogHeader>
-        {(() => {
-          const now = new Date();
-          const monthOrders = orders.filter(o => {
-            if (!o.created_date) return false;
-            const d = new Date(o.created_date);
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-              && o.status !== "cancelled" && o.freight_value > 0 && !o.invoice_id; // só não-faturados
-          });
-          const total = monthOrders.reduce((s, o) => s + (o.freight_value || 0), 0);
-          const billingDay = client.billing_day || 25;
-          const termDays = client.payment_term_days || 30;
-          const closingDate = new Date(now.getFullYear(), now.getMonth(), billingDay);
-          const dueDate = new Date(closingDate.getTime() + termDays * 86400000);
-          return (
-            <div className="space-y-4">
-              {monthOrders.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-4">Nenhum frete no mês atual.</p>
-              ) : (
-                <>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {monthOrders.map(o => (
-                      <div key={o.id} className="flex items-center justify-between text-sm">
-                        <span className="font-mono text-xs">{o.protocol}</span>
-                        <span className="font-medium">R$ {(o.freight_value || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="border-t border-border pt-3 space-y-1">
-                    <div className="flex justify-between font-semibold">
-                      <span>Total da fatura</span>
-                      <span className="font-mono text-green-600 dark:text-green-300">R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Fechamento</span>
-                      <span>{closingDate.toLocaleDateString("pt-BR")}</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Vencimento ({termDays} dias)</span>
-                      <span className="font-semibold text-amber-600 dark:text-amber-300">{dueDate.toLocaleDateString("pt-BR")}</span>
-                    </div>
-                  </div>
-                  <Button
-                    className="w-full font-bold"
-                    onClick={async () => {
-                      // Unificado (B1/B2/F1): gera uma FATURA de verdade (documento) e
-                      // marca os pedidos, em vez de criar uma 2ª receita solta sobre as
-                      // receitas por pedido que já existem (evita dupla cobrança).
-                      const ids = monthOrders.filter(o => !o.invoice_id).map(o => o.id);
-                      if (ids.length === 0) {
-                        toast({ title: "Nada a faturar", description: "Os fretes do mês já estão em uma fatura.", variant: "destructive" });
-                        return;
-                      }
-                      const { data, error } = await supabase.rpc("create_invoice", {
-                        p_client_id: client.id, p_order_ids: ids, p_due_date: toLocalISO(dueDate),
-                        p_notes: `Fatura mensal — ${now.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}`,
-                      });
-                      if (error) { toast({ title: "Erro ao faturar", description: error.message, variant: "destructive" }); return; }
-                      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-                      queryClient.invalidateQueries({ queryKey: ["orders"] });
-                      setShowInvoiceModal(false);
-                      toast({ title: `Fatura ${data} gerada!`, description: `R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} — vence em ${dueDate.toLocaleDateString("pt-BR")}` });
-                    }}
-                  >
-                    Gerar fatura (R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })})
-                  </Button>
-                </>
-              )}
-            </div>
-          );
-        })()}
-      </DialogContent>
-    </Dialog>
+    <ClientInvoiceModal open={showInvoiceModal} onOpenChange={setShowInvoiceModal} orders={orders} client={client} />
     </div>
   );
 }
