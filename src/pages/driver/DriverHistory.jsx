@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { useAuth } from "@/lib/AuthContext";
 import { ArrowLeft, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { safeDateBR, formatTimeBR } from "@/utils/dateUtils";
@@ -15,7 +15,7 @@ export default function DriverHistory() {
 
   const { data: driver } = useQuery({
     queryKey: ["my-driver", user?.id],
-    queryFn: () => base44.entities.Driver.filter({ user_id: user.id }),
+    queryFn: () => db.Driver.filter({ user_id: user.id }),
     select: (d) => d[0],
     enabled: !!user?.id,
   });
@@ -23,7 +23,7 @@ export default function DriverHistory() {
   // Paginação server-side (1.7): busca só a página atual das viagens encerradas.
   const { data, isLoading } = useQuery({
     queryKey: ["driver-trips", driver?.id, page],
-    queryFn: () => base44.entities.Trip.page({
+    queryFn: () => db.Trip.page({
       orderBy: "-created_date",
       page,
       pageSize: PAGE_SIZE,

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -26,11 +26,11 @@ export default function OfferToCarrierDialog({ order, open, onOpenChange }) {
 
   const { data: carriers = [] } = useQuery({
     queryKey: ["carriers"],
-    queryFn: () => base44.entities.Carrier.list(),
+    queryFn: () => db.Carrier.list(),
     enabled: open,
   });
   const { data: orders = [] } = useQuery({
-    queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 1000), enabled: open,
+    queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 1000), enabled: open,
   });
   const activeCarriers = carriers.filter(c => c.status !== "inactive");
   // Tendering: ranqueia por desempenho (aceite/volume) para sugerir o melhor.

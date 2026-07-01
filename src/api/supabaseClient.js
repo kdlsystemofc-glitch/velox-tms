@@ -20,7 +20,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Isso permite trocar base44 por Supabase sem reescrever tudo
 // ============================================================
 
-const TABLE_MAP = {
+export const TABLE_MAP = {
   Order:           'orders',
   Client:          'clients',
   Supplier:        'suppliers',
@@ -84,7 +84,7 @@ function sanitizePayload(payload) {
 }
 
 // Construtor da camada de entidade
-function createEntityLayer(tableName) {
+export function createEntityLayer(tableName) {
   return {
     // Listar com ordenação e limite
     async list(orderBy = '-created_at', limit = 200) {

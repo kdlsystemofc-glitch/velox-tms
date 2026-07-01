@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Phone, Mail, MapPin, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 function FieldError({ message }) {
@@ -37,7 +37,7 @@ export default function ContactSection() {
     setErrors({});
     setSending(true);
     try {
-      await base44.entities.ContactMessage.create({ name: form.name, email: form.email, phone: form.phone, message: form.message, read: false });
+      await db.ContactMessage.create({ name: form.name, email: form.email, phone: form.phone, message: form.message, read: false });
       toast({ title: "Mensagem enviada!", description: "Entraremos em contato em breve." });
       setForm({ name: "", email: "", phone: "", message: "" });
     } catch {

@@ -5,7 +5,7 @@ import WhatsAppButton from "@/components/public/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Clock } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { motion } from "framer-motion";
 
@@ -52,10 +52,10 @@ export default function Tracking() {
       throw error || new Error("rpc indisponível");
     } catch {
       // Fallback (pré-migration): busca client-side
-      let results = await base44.entities.Order.filter({ protocol: q });
-      if (results.length === 0) results = await base44.entities.Order.filter({ cte_number: q });
+      let results = await db.Order.filter({ protocol: q });
+      if (results.length === 0) results = await db.Order.filter({ cte_number: q });
       if (results.length === 0) {
-        const allOrders = await base44.entities.Order.list("-created_date", 500);
+        const allOrders = await db.Order.list("-created_date", 500);
         results = allOrders.filter(o =>
           (o.recipients || []).some(r =>
             (r.items || []).some(i => i.nf_number && i.nf_number.toUpperCase() === q)

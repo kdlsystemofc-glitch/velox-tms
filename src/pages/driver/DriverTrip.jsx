@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,13 +47,13 @@ export default function DriverTrip() {
 
   const { data: trip, isLoading } = useQuery({
     queryKey: ["trip", id],
-    queryFn: () => base44.entities.Trip.filter({ id }),
+    queryFn: () => db.Trip.filter({ id }),
     select: (d) => d[0],
   });
 
   const { data: driver } = useQuery({
     queryKey: ["my-driver", user?.id],
-    queryFn: () => base44.entities.Driver.filter({ user_id: user.id }),
+    queryFn: () => db.Driver.filter({ user_id: user.id }),
     select: (d) => d[0],
     enabled: !!user?.id,
   });
@@ -64,7 +64,7 @@ export default function DriverTrip() {
   // Ocorrências em aberto desta viagem (F1/F3) — o motorista acompanha e complementa.
   const { data: tripIncidents = [] } = useQuery({
     queryKey: ["trip-incidents", id],
-    queryFn: () => base44.entities.Incident.filter({ trip_id: id }),
+    queryFn: () => db.Incident.filter({ trip_id: id }),
     select: (d) => d.filter(i => i.status !== "resolved"),
     enabled: !!id,
   });
@@ -72,7 +72,7 @@ export default function DriverTrip() {
   const addDriverNote = async (inc) => {
     const text = (incidentNote[inc.id] || "").trim();
     if (!text) return;
-    await base44.entities.Incident.update(inc.id, {
+    await db.Incident.update(inc.id, {
       timeline: [...(inc.timeline || []), { at: new Date().toISOString(), by: driver?.name || "Motorista", text, kind: "driver_note" }],
     });
     setIncidentNote(prev => ({ ...prev, [inc.id]: "" }));
@@ -81,7 +81,7 @@ export default function DriverTrip() {
   };
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.Trip.update(id, data),
+    mutationFn: (data) => db.Trip.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["trip", id] }),
   });
 
@@ -144,11 +144,11 @@ export default function DriverTrip() {
     // Sync order status
     if (stop.order_id) {
       try {
-        const orders = await base44.entities.Order.filter({ id: stop.order_id });
+        const orders = await db.Order.filter({ id: stop.order_id });
         const order = orders[0];
         if (order) {
           if (stop.type === "collection") {
-            await base44.entities.Order.update(stop.order_id, { status: "in_transit", status_history: [...(order.status_history || []), { status: "in_transit", timestamp: new Date().toISOString(), user: driverName, note: "Coleta concluída pelo motorista" }] });
+            await db.Order.update(stop.order_id, { status: "in_transit", status_history: [...(order.status_history || []), { status: "in_transit", timestamp: new Date().toISOString(), user: driverName, note: "Coleta concluída pelo motorista" }] });
           } else if (stop.type === "delivery") {
             const recipients = (order.recipients || []).map(r => r.name === stop.recipient_name ? { ...r, delivery_status: "delivered" } : r);
             const allDelivered = recipients.every(r => r.delivery_status === "delivered");
@@ -163,7 +163,7 @@ export default function DriverTrip() {
                 delivered_at: new Date().toISOString(),
               };
             });
-            await base44.entities.Order.update(stop.order_id, { recipients: updatedRecipients, status: allDelivered ? "delivered" : "in_transit", status_history: [...(order.status_history || []), { status: allDelivered ? "delivered" : "in_transit", timestamp: new Date().toISOString(), user: driverName, note: `Entrega para ${stop.recipient_name} concluída` }] });
+            await db.Order.update(stop.order_id, { recipients: updatedRecipients, status: allDelivered ? "delivered" : "in_transit", status_history: [...(order.status_history || []), { status: allDelivered ? "delivered" : "in_transit", timestamp: new Date().toISOString(), user: driverName, note: `Entrega para ${stop.recipient_name} concluída` }] });
           }
         }
       } catch (e) { /* silent */ }
@@ -187,7 +187,7 @@ export default function DriverTrip() {
     }
 
     // 1. Salvar na entidade Incident (permanente e rastreável)
-    await base44.entities.Incident.create({
+    await db.Incident.create({
       order_id:         activeOrderId,
       trip_id:          trip.id,
       type:             incident.type,
@@ -217,7 +217,7 @@ export default function DriverTrip() {
   // Cria um alerta para o gestor (torre de controle). Falha em silêncio se a entidade não existir.
   const notifyManager = async ({ type, level = "warning", message, reference_id }) => {
     try {
-      await base44.entities.Alert.create({ type, level, message, reference_id, reference_type: "order", read: false, resolved: false });
+      await db.Alert.create({ type, level, message, reference_id, reference_type: "order", read: false, resolved: false });
     } catch { /* alerta é best-effort */ }
   };
 
@@ -237,14 +237,14 @@ export default function DriverTrip() {
 
     if (stop.order_id) {
       try {
-        const order = (await base44.entities.Order.filter({ id: stop.order_id }))[0];
+        const order = (await db.Order.filter({ id: stop.order_id }))[0];
         if (order) {
           const recipients = (order.recipients || []).map(r => r.name === stop.recipient_name
             ? { ...r, delivery_status: "partial", delivered_volumes: delivered, partial_reason: partialForm.reason, delivered_at: new Date().toISOString(), nf_signed_url: action.nf_url, signature_url: action.signature_url, receiver_name: action.receiver_name || r.receiver_name }
             : r);
           // pedido nunca fica 100% entregue se há parcial → status partially_delivered
-          await base44.entities.Order.update(stop.order_id, { recipients, status: "partially_delivered", status_history: [...(order.status_history || []), { status: "partially_delivered", timestamp: new Date().toISOString(), user: driverName, note: `Entrega parcial p/ ${stop.recipient_name}: ${delivered} vol., restante ${reasonLabel}` }] });
-          await base44.entities.Incident.create({ order_id: stop.order_id, trip_id: trip.id, type: "entrega_parcial", description: `${delivered} volume(s) entregue(s) a ${stop.recipient_name}. Restante: ${reasonLabel}.`, recipient_name: stop.recipient_name, reported_by_name: driverName, reported_by_role: "motorista", status: "open" });
+          await db.Order.update(stop.order_id, { recipients, status: "partially_delivered", status_history: [...(order.status_history || []), { status: "partially_delivered", timestamp: new Date().toISOString(), user: driverName, note: `Entrega parcial p/ ${stop.recipient_name}: ${delivered} vol., restante ${reasonLabel}` }] });
+          await db.Incident.create({ order_id: stop.order_id, trip_id: trip.id, type: "entrega_parcial", description: `${delivered} volume(s) entregue(s) a ${stop.recipient_name}. Restante: ${reasonLabel}.`, recipient_name: stop.recipient_name, reported_by_name: driverName, reported_by_role: "motorista", status: "open" });
           await notifyManager({ type: "delivery_attempt", message: `Entrega parcial — ${order.protocol} (${stop.recipient_name}): ${reasonLabel}`, reference_id: stop.order_id });
         }
       } catch { /* silent */ }
@@ -266,15 +266,15 @@ export default function DriverTrip() {
 
     if (stop.order_id) {
       try {
-        const order = (await base44.entities.Order.filter({ id: stop.order_id }))[0];
+        const order = (await db.Order.filter({ id: stop.order_id }))[0];
         if (order) {
           const recipients = (order.recipients || []).map(r => {
             if (r.name !== stop.recipient_name) return r;
             const attempts = [...(r.attempts || []), { date: new Date().toISOString(), action: absentForm.action, notes: absentForm.notes || "", by: driverName }];
             return { ...r, delivery_status: "failed", failure_action: absentForm.action, next_attempt_date: nextAttempt, attempts };
           });
-          await base44.entities.Order.update(stop.order_id, { recipients, status_history: [...(order.status_history || []), { status: order.status, timestamp: new Date().toISOString(), user: driverName, note: `Destinatário ${stop.recipient_name} ausente — ${actionLabel}` }] });
-          await base44.entities.Incident.create({ order_id: stop.order_id, trip_id: trip.id, type: "destinatario_ausente", description: `Destinatário ${stop.recipient_name} ausente. Ação definida: ${actionLabel}.${absentForm.notes ? " Obs: " + absentForm.notes : ""}`, recipient_name: stop.recipient_name, reported_by_name: driverName, reported_by_role: "motorista", status: "open", due_date: nextAttempt });
+          await db.Order.update(stop.order_id, { recipients, status_history: [...(order.status_history || []), { status: order.status, timestamp: new Date().toISOString(), user: driverName, note: `Destinatário ${stop.recipient_name} ausente — ${actionLabel}` }] });
+          await db.Incident.create({ order_id: stop.order_id, trip_id: trip.id, type: "destinatario_ausente", description: `Destinatário ${stop.recipient_name} ausente. Ação definida: ${actionLabel}.${absentForm.notes ? " Obs: " + absentForm.notes : ""}`, recipient_name: stop.recipient_name, reported_by_name: driverName, reported_by_role: "motorista", status: "open", due_date: nextAttempt });
           await notifyManager({ type: "delivery_attempt", level: absentForm.action === "wait" ? "critical" : "warning", message: `Destinatário ausente — ${order.protocol} (${stop.recipient_name}): ${actionLabel}`, reference_id: stop.order_id });
         }
       } catch { /* silent */ }
@@ -294,10 +294,10 @@ export default function DriverTrip() {
 
     if (stop.order_id) {
       try {
-        const order = (await base44.entities.Order.filter({ id: stop.order_id }))[0];
+        const order = (await db.Order.filter({ id: stop.order_id }))[0];
         if (order) {
-          await base44.entities.Order.update(stop.order_id, { status: "awaiting_cargo", status_history: [...(order.status_history || []), { status: "awaiting_cargo", timestamp: new Date().toISOString(), user: driverName, note: `Carga não estava pronta (chegada ${new Date(arrivedAt).toLocaleString("pt-BR")}). ${cargoNotes || ""}` }] });
-          await base44.entities.Incident.create({ order_id: stop.order_id, trip_id: trip.id, type: "carga_nao_pronta", description: `Carga não estava pronta no momento da coleta. Chegada às ${new Date(arrivedAt).toLocaleString("pt-BR")}. ${cargoNotes || ""}`, reported_by_name: driverName, reported_by_role: "motorista", status: "open" });
+          await db.Order.update(stop.order_id, { status: "awaiting_cargo", status_history: [...(order.status_history || []), { status: "awaiting_cargo", timestamp: new Date().toISOString(), user: driverName, note: `Carga não estava pronta (chegada ${new Date(arrivedAt).toLocaleString("pt-BR")}). ${cargoNotes || ""}` }] });
+          await db.Incident.create({ order_id: stop.order_id, trip_id: trip.id, type: "carga_nao_pronta", description: `Carga não estava pronta no momento da coleta. Chegada às ${new Date(arrivedAt).toLocaleString("pt-BR")}. ${cargoNotes || ""}`, reported_by_name: driverName, reported_by_role: "motorista", status: "open" });
           await notifyManager({ type: "cargo_hold", level: "warning", message: `Carga não pronta — ${order.protocol} (${order.client_name})`, reference_id: stop.order_id });
         }
       } catch { /* silent */ }

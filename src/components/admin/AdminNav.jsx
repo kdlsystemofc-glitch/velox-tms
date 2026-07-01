@@ -9,7 +9,7 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { trucksNeedingReplan, driversNeedingReplan } from "@/utils/replanner";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 
@@ -78,12 +78,12 @@ export default function AdminNav() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
-  const { data: allOrders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 300) });
-  const { data: messages = [] } = useQuery({ queryKey: ["contact-messages"], queryFn: () => base44.entities.ContactMessage.list("-created_date", 100) });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
-  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => base44.entities.Trip.list("-created_date", 80) });
-  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
-  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => base44.entities.Incident.list("-created_date", 300) });
+  const { data: allOrders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 300) });
+  const { data: messages = [] } = useQuery({ queryKey: ["contact-messages"], queryFn: () => db.ContactMessage.list("-created_date", 100) });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
+  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => db.Trip.list("-created_date", 80) });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => db.Driver.list() });
+  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => db.Incident.list("-created_date", 300) });
 
   const badges = {
     pendingOrders: allOrders.filter(o => o.status === "new").length,

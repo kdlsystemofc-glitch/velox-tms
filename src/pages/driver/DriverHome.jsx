@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { Truck, MapPin, Clock, History } from "lucide-react";
@@ -14,7 +14,7 @@ export default function DriverHome() {
 
   const { data: driver } = useQuery({
     queryKey: ["my-driver", user?.id],
-    queryFn: () => base44.entities.Driver.filter({ user_id: user.id }),
+    queryFn: () => db.Driver.filter({ user_id: user.id }),
     select: (d) => d[0],
     enabled: !!user?.id,
   });
@@ -22,7 +22,7 @@ export default function DriverHome() {
   const { data: trip } = useQuery({
     queryKey: ["my-active-trip", driver?.id],
     queryFn: async () => {
-      const trips = await base44.entities.Trip.filter({ driver_id: driver.id });
+      const trips = await db.Trip.filter({ driver_id: driver.id });
       return trips.find(t => t.status === "in_progress" || t.status === "planned") || null;
     },
     enabled: !!driver?.id,

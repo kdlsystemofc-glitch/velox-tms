@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { getTheme, toggleTheme } from "@/lib/theme";
 import { supabase } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
@@ -16,7 +16,7 @@ function NotificationsDropdown({ onClose }) {
   const queryClient = useQueryClient();
   const { data: alerts = [] } = useQuery({
     queryKey: ["alerts"],
-    queryFn: () => base44.entities.Alert.list("-created_date", 200),
+    queryFn: () => db.Alert.list("-created_date", 200),
   });
 
   const unresolved = alerts.filter(a => !a.resolved);
@@ -24,7 +24,7 @@ function NotificationsDropdown({ onClose }) {
 
   const markAllRead = async () => {
     const unread = unresolved.filter(a => !a.read);
-    await Promise.all(unread.map(a => base44.entities.Alert.update(a.id, { read: true })));
+    await Promise.all(unread.map(a => db.Alert.update(a.id, { read: true })));
     queryClient.invalidateQueries({ queryKey: ["alerts"] });
   };
 
@@ -97,10 +97,10 @@ function SearchDropdown({ query, onClose }) {
     const timer = setTimeout(async () => {
       const q = query.toLowerCase();
       const [orders, clients, trucks, drivers] = await Promise.all([
-        base44.entities.Order.list("-created_date", 200),
-        base44.entities.Client.list(),
-        base44.entities.Truck.list(),
-        base44.entities.Driver.list(),
+        db.Order.list("-created_date", 200),
+        db.Client.list(),
+        db.Truck.list(),
+        db.Driver.list(),
       ]);
       setResults({
         orders: orders.filter(o => o.protocol?.toLowerCase().includes(q) || o.client_name?.toLowerCase().includes(q)).slice(0, 4),
@@ -182,7 +182,7 @@ export default function AdminTopbar() {
 
   const { data: alerts = [] } = useQuery({
     queryKey: ["alerts"],
-    queryFn: () => base44.entities.Alert.list("-created_date", 200),
+    queryFn: () => db.Alert.list("-created_date", 200),
   });
   const unreadCount = alerts.filter(a => !a.resolved && !a.read).length;
 

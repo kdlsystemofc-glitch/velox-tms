@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 
 const defaultTestimonials = [
   { name: "Carlos Mendes", company: "Distribuidora Brasil", text: "Profissionalismo e pontualidade. A Velox transformou nossa logística. Entregas sempre no prazo e cargas chegam em perfeito estado.", rating: 5 },
@@ -14,7 +14,7 @@ export default function TestimonialsSection() {
   const [testimonials, setTestimonials] = useState(defaultTestimonials);
 
   useEffect(() => {
-    base44.entities.Testimonial.filter({ active: true }).then((list) => {
+    db.Testimonial.filter({ active: true }).then((list) => {
       if (list && list.length > 0) setTestimonials(list);
     }).catch(() => {});
   }, []);
