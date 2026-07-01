@@ -40,6 +40,7 @@ const DispatchBoard = lazy(() => import('@/pages/admin/DispatchBoard'));
 const Replanning = lazy(() => import('@/pages/admin/Replanning'));
 const Incidents = lazy(() => import('@/pages/admin/Incidents'));
 const Indicators = lazy(() => import('@/pages/admin/Indicators'));
+const Analytics = lazy(() => import('@/pages/admin/Analytics'));
 const Transfers = lazy(() => import('@/pages/admin/Transfers'));
 const OrderWorkspace = lazy(() => import('@/pages/admin/OrderWorkspace'));
 const NewOrder = lazy(() => import('@/pages/admin/NewOrder'));
@@ -178,6 +179,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/configuracoes" element={<Navigate to="/admin/config" replace />} />
             <Route path="/admin/usuarios" element={<UserManagement />} />
             <Route path="/admin/indicadores" element={<Indicators />} />
+            <Route path="/admin/analises" element={<Analytics />} />
             <Route path="/admin/portal-clientes" element={<ClientAccess />} />
             <Route path="/admin/portal-parceiros" element={<CarrierAccess />} />
             <Route path="/admin/auditoria" element={<AuditLog />} />
