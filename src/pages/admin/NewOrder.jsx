@@ -13,7 +13,8 @@ import DeliveryWindowEditor from "@/components/shared/DeliveryWindowEditor";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { AddressFields } from "@/components/shared/AddressFields";
 import { useFormValidation } from "@/hooks/useFormValidation";
-import { calculateFreightFull, calculateFreight, getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { calculateFreight, getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { quoteFreight } from "@/services/pricing";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { isAddressInCoverage } from "@/utils/coverageChecker";
@@ -421,8 +422,8 @@ export default function NewOrder() {
     const allItems = form.recipients.flatMap(r => r.items || []);
     const nfCount = allItems.filter(i => i.nf_number).length || 1;
     const firstDestState = form.recipients[0]?.state || null;
-    return calculateFreightFull({
-      items: allItems, distanceKm: null, nfCount, pricing: settings?.pricing, clientPricing, settings,
+    return quoteFreight({
+      items: allItems, distanceKm: null, nfCount, clientPricing, settings,
       originState: form.origin?.state || null, destState: firstDestState,
       freightType: form.freight_type, refDate: form.collection_date || undefined,
     });

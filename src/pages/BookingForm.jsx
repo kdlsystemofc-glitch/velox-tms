@@ -17,7 +17,8 @@ import { useLocation } from "react-router-dom";
 import VeloxDatePicker from "@/components/public/VeloxDatePicker";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFormValidation } from "@/hooks/useFormValidation";
-import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { quoteFreight } from "@/services/pricing";
 import { FreightBreakdown } from "@/components/shared/FreightBreakdown";
 import { validateNFeKey, nfNumberFromKey } from "@/utils/nfeUtils";
 
@@ -310,10 +311,10 @@ export default function BookingForm() {
     // Frete estimado (BUG-05): o resumo já mostrava o valor, mas ele não era
     // gravado no pedido. Calcula igual ao passo 5 e persiste em freight_value.
     const allItems = form.recipients.flatMap(r => r.items || []);
-    const estimate = calculateFreightFull({
+    const estimate = quoteFreight({
       items: allItems, distanceKm: null,
       nfCount: allItems.filter(i => i.nf_number).length || 1,
-      pricing: settings?.pricing, settings,
+      settings,
       originState: form.origin_state || null,
       destState: form.recipients[0]?.state || null,
     });
@@ -1125,9 +1126,8 @@ function Step5({ form, totals, settings }) {
   const allItems = form.recipients.flatMap(r => r.items || []);
   const nfCount = allItems.filter(i => i.nf_number).length || 1;
   const firstDestState = form.recipients[0]?.state || null;
-  const breakdown = calculateFreightFull({
+  const breakdown = quoteFreight({
     items: allItems, distanceKm: null, nfCount,
-    pricing: settings?.pricing,
     settings,
     originState: form.origin_state || null,
     destState: firstDestState,

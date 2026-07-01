@@ -8,7 +8,8 @@ import PageHeader from "@/components/shared/PageHeader";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { FreightBreakdown } from "@/components/shared/FreightBreakdown";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
-import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { quoteFreight } from "@/services/pricing";
 import { Calculator, ArrowRight } from "lucide-react";
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
@@ -26,13 +27,13 @@ export default function Cotacao() {
 
   const breakdown = useMemo(() => {
     if (!num(f.weight_kg)) return null;
-    return calculateFreightFull({
+    return quoteFreight({
       items: [{
         weight_kg: num(f.weight_kg), volumes: parseInt(f.volumes) || 1,
         height_cm: num(f.height_cm), width_cm: num(f.width_cm), length_cm: num(f.length_cm),
         declared_value: num(f.declared_value),
       }],
-      nfCount: parseInt(f.nfCount) || 1, pricing: settings?.pricing, settings,
+      nfCount: parseInt(f.nfCount) || 1, settings,
       originState: f.originState || null, destState: f.destState || null, freightType: f.freight_type,
     });
   }, [f, settings]);

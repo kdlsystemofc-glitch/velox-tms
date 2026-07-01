@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
-import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { quoteFreight } from "@/services/pricing";
 import { FreightBreakdown } from "@/components/shared/FreightBreakdown";
 import PublicNavbar from "@/components/public/PublicNavbar";
 import PublicFooter from "@/components/public/PublicFooter";
@@ -37,11 +38,10 @@ export default function QuoteForm() {
       volumes:   parseInt(i.volumes) || 1,
       declared_value: parseFloat(String(i.declared_value).replace(",", ".")) || 0,
     }));
-    const breakdown = calculateFreightFull({
+    const breakdown = quoteFreight({
       items,
       distanceKm: null,
       nfCount,
-      pricing: settings?.pricing,
       settings,
       originState: form.origin_state,
       destState: form.dest_state,

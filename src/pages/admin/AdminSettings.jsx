@@ -16,7 +16,7 @@ import CoverageSettings from "@/components/admin/CoverageSettings";
 import { useAuth } from "@/lib/AuthContext";
 import { resetSettingsCache } from "@/hooks/useCompanySettings";
 import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
-import { calculateFreightFull } from "@/utils/freightCalculator";
+import { quoteFreight } from "@/services/pricing";
 import { Calculator } from "lucide-react";
 
 // Campos da config geridos por OUTROS módulos — nunca sobrescrever ao salvar aqui (Cfg-1).
@@ -37,10 +37,10 @@ function FreightSim({ form }) {
 
   const r = useMemo(() => {
     try {
-      return calculateFreightFull({
+      return quoteFreight({
         items: [{ weight_kg: Number(w) || 0, declared_value: Number(val) || 0, volumes: 1 }],
         distanceKm: Number(km) || 0, nfCount: Number(nf) || 1,
-        pricing: form.pricing || {}, settings: form,
+        settings: { ...form, pricing: form.pricing || {} },
         originState: orig || null, destState: dest || null, freightType: type,
       });
     } catch { return null; }

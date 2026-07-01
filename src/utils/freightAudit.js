@@ -1,11 +1,7 @@
-import { calculateFreightFull } from "./freightCalculator";
+import { quoteFreight, resolveClientPricing } from "@/services/pricing";
 
-// Resolve a tabela do cliente (custom_pricing mesclada ao padrão), como no NewOrder.
-export function resolveClientPricing(client, settings) {
-  const cp = client?.custom_pricing;
-  const has = cp && Object.keys(cp).some(k => cp[k] != null && cp[k] !== "");
-  return has ? { ...(settings?.pricing || {}), ...cp } : null;
-}
+// Re-export para compatibilidade (a regra agora mora no serviço de precificação).
+export { resolveClientPricing };
 
 // Conta NFs do pedido (fallback 1).
 function nfCountOf(order) {
@@ -29,12 +25,12 @@ export function auditOrderFreight(order, { client, settings, tolerancePct = 5 } 
   const originState = order?.origin?.state || null;
   const destState = (order?.recipients || [])[0]?.state || null;
 
-  const calc = calculateFreightFull({
+  const calc = quoteFreight({
     items: [{ weight_kg: weight, declared_value: declared }],
     nfCount: nfCountOf(order),
-    pricing: settings?.pricing,
-    clientPricing: resolveClientPricing(client, settings),
-    originState, destState, settings,
+    client,
+    settings,
+    originState, destState,
     freightType: order?.freight_type || "shared",
   });
   const expected = calc ? calc.total : 0;

@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { FreightBreakdown } from "@/components/shared/FreightBreakdown";
-import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { quoteFreight } from "@/services/pricing";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, ArrowRight, RotateCcw } from "lucide-react";
 
@@ -55,11 +56,10 @@ export default function QuickQuote() {
       volumes,
     }];
 
-    const breakdown = calculateFreightFull({
+    const breakdown = quoteFreight({
       items,
       distanceKm,
       nfCount: parseInt(form.nf_count) || 1,
-      pricing: settings?.pricing,
       settings,
       destState: form.dest_state || null,
     });

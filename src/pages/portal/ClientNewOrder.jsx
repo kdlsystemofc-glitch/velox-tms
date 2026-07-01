@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/api/supabaseClient";
 import { Plus, Trash2, CheckCircle2, ArrowLeft } from "lucide-react";
 import { lookupCep } from "@/components/shared/AddressFields";
-import { calculateFreightFull } from "@/utils/freightCalculator";
+import { quoteFreight } from "@/services/pricing";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { parseBRNumber } from "@/utils/number";
 
@@ -54,10 +54,10 @@ export default function ClientNewOrder() {
       const items = (r.items || []).filter(it => it.volumes || it.weight_kg);
       if (!items.length || !r.state) continue;
       try {
-        const bd = calculateFreightFull({
+        const bd = quoteFreight({
           items, distanceKm: null,
           nfCount: items.filter(i => i.nf_number).length || 1,
-          pricing: settings?.pricing, settings,
+          settings,
           originState: form.origin.state, destState: r.state,
         });
         total += Number(bd?.total) || 0;

@@ -20,7 +20,8 @@ import CollapsibleSection from "@/components/shared/CollapsibleSection";
 import { generateDeliveryReceipt } from "@/utils/generateDeliveryReceipt";
 import { generateShipmentDoc } from "@/utils/generateShipmentDoc";
 import { generateVolumeLabels } from "@/utils/generateVolumeLabels";
-import { calculateFreightFull, getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { getDeliveryDaysByState } from "@/utils/freightCalculator";
+import { quoteFreight } from "@/services/pricing";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO, formatDateBR, toLocalISO, formatDateTimeBR } from "@/utils/dateUtils";
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
@@ -170,9 +171,9 @@ export default function OrderWorkspace() {
   const allItems = (order.recipients || []).flatMap(r => r.items || []);
   const nfCount = allItems.filter(i => i.nf_number).length || 1;
   const firstDestState = (order.recipients || [])[0]?.state || null;
-  const breakdown = calculateFreightFull({
+  const breakdown = quoteFreight({
     items: allItems, distanceKm: null, nfCount,
-    pricing: settings?.pricing, clientPricing, settings,
+    clientPricing, settings,
     originState: order.origin?.state || null, destState: firstDestState,
     freightType: order.freight_type, refDate: order.collection_date,
     cubageFactor: order.cubage_factor, extraCharges: order.extra_charges || [],
