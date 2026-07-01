@@ -42,3 +42,48 @@ jobs:
         run: npm run build
       - name: Smoke E2E (telas públicas)
         run: npm run test:e2e
+
+  # Gate de migrations: aplica schema.sql + todas as migrations em um Postgres
+  # LIMPO, em ordem, e falha se qualquer uma quebrar. Depois REAPLICA todas para
+  # provar idempotência. Pega erros (como o de tipo de retorno) ANTES de você
+  # rodar no Supabase. Stubs em ci/db-stubs.sql suprem os objetos da plataforma.
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: velox
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: velox
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Stubs da plataforma (roles/auth/storage/extensões)
+        run: psql -v ON_ERROR_STOP=1 -f ci/db-stubs.sql
+      - name: Baseline (schema.sql)
+        run: psql -v ON_ERROR_STOP=1 -f supabase/schema.sql
+      - name: Aplicar migrations em ordem
+        run: |
+          for f in supabase/migrations/*.sql; do
+            echo "== aplicar $f =="
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
+      - name: Idempotência — reaplicar todas as migrations
+        run: |
+          for f in supabase/migrations/*.sql; do
+            echo "== reaplicar $f =="
+            psql -v ON_ERROR_STOP=1 -f "$f"
+          done
