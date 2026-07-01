@@ -10,6 +10,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Send } from "lucide-react";
 import { parseBRNumber } from "@/utils/number";
 import { logAction } from "@/utils/auditLog";
+import { rankCarriers } from "@/utils/carrierScorecard";
+import { Sparkles } from "lucide-react";
 
 const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const OFFER_LABEL = { offered: "ofertado", accepted: "aceito", refused: "recusado" };
@@ -27,7 +29,13 @@ export default function OfferToCarrierDialog({ order, open, onOpenChange }) {
     queryFn: () => base44.entities.Carrier.list(),
     enabled: open,
   });
+  const { data: orders = [] } = useQuery({
+    queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 1000), enabled: open,
+  });
   const activeCarriers = carriers.filter(c => c.status !== "inactive");
+  // Tendering: ranqueia por desempenho (aceite/volume) para sugerir o melhor.
+  const ranked = rankCarriers(activeCarriers, orders);
+  const best = ranked[0];
 
   const offer = useMutation({
     mutationFn: async () => {
@@ -70,12 +78,22 @@ export default function OfferToCarrierDialog({ order, open, onOpenChange }) {
           ) : (
             <>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Transportadora</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Transportadora</label>
+                  {best && (
+                    <button type="button" onClick={() => setCarrierId(best.carrier.id)}
+                      className="text-[11px] font-semibold text-velox-amber hover:underline inline-flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Sugerir melhor{best.score.acceptanceRate != null ? ` (${best.score.acceptanceRate}%)` : ""}
+                    </button>
+                  )}
+                </div>
                 <Select value={carrierId} onValueChange={setCarrierId}>
                   <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Selecione o parceiro…" /></SelectTrigger>
                   <SelectContent>
-                    {activeCarriers.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.company_name}{c.cpf_cnpj ? ` · ${c.cpf_cnpj}` : ""}</SelectItem>
+                    {ranked.map(({ carrier: c, score }) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.company_name}{score.acceptanceRate != null ? ` · ${score.acceptanceRate}% aceite` : ""}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

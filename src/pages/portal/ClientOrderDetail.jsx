@@ -6,6 +6,7 @@ import StatusBadge, { orderStatusConfig } from "@/components/admin/StatusBadge";
 import { ArrowLeft, MapPin, Navigation } from "lucide-react";
 import { formatDateBR, formatDateTimeBR } from "@/utils/dateUtils";
 import LiveMap from "@/components/shared/LiveMap";
+import OrderMilestones from "@/components/shared/OrderMilestones";
 
 function relativeFromNow(iso) {
   if (!iso) return "";
@@ -63,6 +64,8 @@ export default function ClientOrderDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
+          <OrderMilestones order={order} />
+
           {inTransit && (
             <section className="bg-card border border-border rounded-xl p-5">
               <div className="flex items-center justify-between gap-2 mb-3">
