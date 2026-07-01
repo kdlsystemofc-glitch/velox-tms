@@ -141,3 +141,10 @@ Pré-roadmap: rastreamento ao vivo, portal da transportadora, conciliação banc
 - 🟡 1.3 ETA + milestones: milestones viáveis; a notificação depende de 1.2
 
 Migrations novas a aplicar: `20260655_carrier_settlement`, `20260656_reconcile_invoice`.
+
+**Onda 1 — Comercial & Financeiro:**
+- ✅ 2.1 Rating engine — faixas de peso + fuel surcharge (`aba9806`, `5ab3429`)
+- ⬜ 2.2 Freight audit (3-way match) — em andamento
+- 🟡 2.6 Boleto/CNAB/PIX: **adiado** — aguarda decisão de banco/gateway
+
+**Adiados (mapeados):** 1.2/1.3 notificações (provedor de e-mail), 2.6 integração bancária (banco/gateway).
