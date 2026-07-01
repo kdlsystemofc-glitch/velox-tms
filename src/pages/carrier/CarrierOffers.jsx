@@ -32,46 +32,46 @@ export default function CarrierOffers() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="font-display text-2xl font-bold text-gray-900">Ofertas de frete</h1>
-        <p className="text-sm text-gray-500">Fretes que a Velox ofereceu à sua transportadora. Aceite para assumir a carga.</p>
+        <h1 className="font-display text-2xl font-bold text-foreground">Ofertas de frete</h1>
+        <p className="text-sm text-muted-foreground">Fretes que a Velox ofereceu à sua transportadora. Aceite para assumir a carga.</p>
       </div>
 
       {isLoading ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-400 text-sm">Carregando…</div>
+        <div className="bg-card border border-border rounded-xl p-10 text-center text-muted-foreground text-sm">Carregando…</div>
       ) : isError ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center">
-          <p className="text-gray-600 font-medium">Não foi possível carregar as ofertas.</p>
+        <div className="bg-card border border-border rounded-xl p-10 text-center">
+          <p className="text-muted-foreground font-medium">Não foi possível carregar as ofertas.</p>
           <button onClick={() => refetch()} className="mt-3 text-sm font-semibold text-primary hover:underline">Tentar de novo</button>
         </div>
       ) : offers.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-12 text-center">
-          <Inbox className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-          <p className="text-gray-600 font-medium">Nenhuma oferta no momento</p>
-          <p className="text-sm text-gray-400 mt-1">Quando a Velox ofertar um frete para você, ele aparece aqui.</p>
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
+          <Inbox className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
+          <p className="text-muted-foreground font-medium">Nenhuma oferta no momento</p>
+          <p className="text-sm text-muted-foreground mt-1">Quando a Velox ofertar um frete para você, ele aparece aqui.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {offers.map(o => {
             const cities = (o.recipients || []).map(r => r.city).filter(Boolean).join(", ");
             return (
-              <div key={o.id} className="bg-white border border-gray-200 rounded-xl p-4">
+              <div key={o.id} className="bg-card border border-border rounded-xl p-4">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
                     <p className="font-mono font-semibold text-sm">{o.protocol}</p>
-                    <p className="text-sm text-gray-700 flex items-center gap-1.5 mt-1">
-                      <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                    <p className="text-sm text-foreground flex items-center gap-1.5 mt-1">
+                      <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
                       {o.origin?.city || "Origem"} → {cities || "destino"}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Coleta {formatDateBR(o.collection_date)} · {(o.total_weight_kg || 0).toLocaleString("pt-BR")} kg · {o.total_volumes || 0} vol.
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[11px] text-gray-400 uppercase tracking-wide">Valor ofertado</p>
+                    <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Valor ofertado</p>
                     <p className="font-mono font-bold text-green-600 text-lg">{brl(o.carrier_amount)}</p>
                   </div>
                 </div>
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                <div className="flex gap-2 mt-3 pt-3 border-t border-border">
                   <button disabled={respond.isPending}
                     onClick={() => respond.mutate({ orderId: o.id, accept: true })}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg text-sm disabled:opacity-60">
@@ -79,7 +79,7 @@ export default function CarrierOffers() {
                   </button>
                   <button disabled={respond.isPending}
                     onClick={() => { if (confirm("Recusar esta oferta de frete?")) respond.mutate({ orderId: o.id, accept: false }); }}
-                    className="inline-flex items-center justify-center gap-1.5 border border-gray-300 text-gray-600 hover:bg-gray-50 font-semibold py-2 px-4 rounded-lg text-sm disabled:opacity-60">
+                    className="inline-flex items-center justify-center gap-1.5 border border-input text-muted-foreground hover:bg-muted/40 font-semibold py-2 px-4 rounded-lg text-sm disabled:opacity-60">
                     <X className="w-4 h-4" /> Recusar
                   </button>
                 </div>

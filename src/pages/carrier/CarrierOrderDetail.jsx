@@ -45,53 +45,53 @@ export default function CarrierOrderDetail() {
     onError: (e) => toast({ title: "Não foi possível atualizar", description: e?.message, variant: "destructive" }),
   });
 
-  if (isLoading) return <div className="text-center py-12 text-gray-400 text-sm">Carregando…</div>;
+  if (isLoading) return <div className="text-center py-12 text-muted-foreground text-sm">Carregando…</div>;
   if (!order) return (
     <div className="text-center py-12">
-      <p className="text-gray-600">Carga não encontrada.</p>
+      <p className="text-muted-foreground">Carga não encontrada.</p>
       <button onClick={() => navigate("/parceiro/cargas")} className="mt-3 text-sm font-semibold text-primary hover:underline">Voltar para Minhas Cargas</button>
     </div>
   );
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
-      <button onClick={() => navigate("/parceiro/cargas")} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"><ArrowLeft className="w-4 h-4" /> Minhas Cargas</button>
+      <button onClick={() => navigate("/parceiro/cargas")} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="w-4 h-4" /> Minhas Cargas</button>
 
       <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="font-display text-2xl font-bold font-mono text-gray-900">{order.protocol}</h1>
+        <h1 className="font-display text-2xl font-bold font-mono text-foreground">{order.protocol}</h1>
         <StatusBadge status={order.status} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
-          <section className="bg-white border border-gray-200 rounded-xl p-5">
+          <section className="bg-card border border-border rounded-xl p-5">
             <h2 className="font-semibold text-sm mb-3 flex items-center gap-1.5"><Truck className="w-4 h-4 text-primary" /> Atualizar status da carga</h2>
             <div className="flex flex-wrap gap-2">
               {FLOW.map(s => (
                 <button key={s.key} disabled={updateStatus.isPending || order.status === s.key}
                   onClick={() => updateStatus.mutate(s.key)}
                   className={`px-3 py-2 rounded-lg text-sm font-semibold border transition-colors disabled:opacity-50 ${
-                    order.status === s.key ? "bg-brand-gradient text-white border-transparent" : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    order.status === s.key ? "bg-brand-gradient text-white border-transparent" : "border-input text-foreground hover:bg-muted/40"
                   }`}>
                   {s.label}{order.status === s.key ? " (atual)" : ""}
                 </button>
               ))}
             </div>
             <input value={note} onChange={e => setNote(e.target.value)} placeholder="Observação (opcional) — ex: chegou ao destino"
-              className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
+              className="mt-3 w-full rounded-lg border border-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40" />
           </section>
 
-          <section className="bg-white border border-gray-200 rounded-xl p-5">
+          <section className="bg-card border border-border rounded-xl p-5">
             <h2 className="font-semibold text-sm mb-3">Destinatários</h2>
             <div className="space-y-2">
               {(order.recipients || []).map((r, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm">
-                  <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-medium text-gray-900">{r.name || "—"}</p>
-                    <p className="text-xs text-gray-500">{[r.street, r.number, r.city, r.state].filter(Boolean).join(", ") || r.city}</p>
+                    <p className="font-medium text-foreground">{r.name || "—"}</p>
+                    <p className="text-xs text-muted-foreground">{[r.street, r.number, r.city, r.state].filter(Boolean).join(", ") || r.city}</p>
                     {(r.items || []).length > 0 && (
-                      <p className="text-xs text-gray-400 mt-0.5">{r.items.length} item(ns) · NF {(r.items.map(it => it.nf_number).filter(Boolean).join(", ")) || "—"}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{r.items.length} item(ns) · NF {(r.items.map(it => it.nf_number).filter(Boolean).join(", ")) || "—"}</p>
                     )}
                   </div>
                 </div>
@@ -101,13 +101,13 @@ export default function CarrierOrderDetail() {
         </div>
 
         <div className="space-y-4">
-          <section className="bg-white border border-gray-200 rounded-xl p-5 text-sm space-y-2">
+          <section className="bg-card border border-border rounded-xl p-5 text-sm space-y-2">
             <h2 className="font-semibold mb-1 flex items-center gap-1.5"><PackageCheck className="w-4 h-4 text-primary" /> Resumo</h2>
-            <div className="flex justify-between"><span className="text-gray-500">Origem</span><span className="font-medium">{order.origin?.city || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Coleta</span><span className="font-medium">{formatDateBR(order.collection_date)}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Volumes</span><span className="font-medium">{order.total_volumes || "—"}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Peso</span><span className="font-medium">{order.total_weight_kg ? `${order.total_weight_kg} kg` : "—"}</span></div>
-            <div className="flex justify-between border-t border-gray-100 pt-2"><span className="text-gray-500">Valor combinado</span><span className="font-mono font-semibold text-green-600">{order.carrier_amount ? brl(order.carrier_amount) : "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Origem</span><span className="font-medium">{order.origin?.city || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Coleta</span><span className="font-medium">{formatDateBR(order.collection_date)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Volumes</span><span className="font-medium">{order.total_volumes || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Peso</span><span className="font-medium">{order.total_weight_kg ? `${order.total_weight_kg} kg` : "—"}</span></div>
+            <div className="flex justify-between border-t border-border pt-2"><span className="text-muted-foreground">Valor combinado</span><span className="font-mono font-semibold text-green-600">{order.carrier_amount ? brl(order.carrier_amount) : "—"}</span></div>
           </section>
         </div>
       </div>
