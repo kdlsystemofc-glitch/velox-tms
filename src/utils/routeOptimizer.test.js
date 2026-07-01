@@ -31,6 +31,36 @@ describe("optimizeStops (heurística por CEP)", () => {
   });
 });
 
+describe("refino 2-opt", () => {
+  const hav = (a, b) => Math.hypot(a.lat - b.lat, a.lng - b.lng);
+  it("melhora uma rota subótima do nearest-neighbor", () => {
+    // NN gera A,B,D,C; o 2-opt corrige para A,D,B,C (mais curto).
+    const coords = {
+      "00000000": { lat: 0, lng: 0 }, "00000001": { lat: 0, lng: 1 },
+      "00000002": { lat: 0, lng: 2 }, "00000003": { lat: 0.5, lng: 0.9 },
+    };
+    const stops = [
+      { type: "collection", order_id: "A", cep: "00000000" },
+      { type: "collection", order_id: "B", cep: "00000001" },
+      { type: "collection", order_id: "C", cep: "00000002" },
+      { type: "collection", order_id: "D", cep: "00000003" },
+    ];
+    const r = optimizeStopsByCoords(stops, coords, hav);
+    expect(r.map(s => s.order_id)).toEqual(["A", "D", "B", "C"]);
+  });
+  it("nunca viola precedência ao refinar", () => {
+    const coords = { "1": { lat: 0, lng: 0 }, "2": { lat: 0, lng: 9 } };
+    const stops = [
+      { type: "delivery", order_id: "X", cep: "2" },
+      { type: "collection", order_id: "X", cep: "1" },
+    ];
+    const r = optimizeStopsByCoords(stops, coords, hav);
+    const col = r.findIndex(s => s.type === "collection");
+    const del = r.findIndex(s => s.type === "delivery");
+    expect(col).toBeLessThan(del);
+  });
+});
+
 describe("optimizeStopsByCoords (distância injetada)", () => {
   const hav = (a, b) => Math.abs(a.lat - b.lat); // distância 1D para teste determinístico
   it("ordena por distância geográfica respeitando coleta-antes-da-entrega", () => {
