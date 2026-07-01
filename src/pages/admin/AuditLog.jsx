@@ -2,17 +2,21 @@ import React, { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import PageHeader from "@/components/shared/PageHeader";
-import { ScrollText, ChevronLeft, ChevronRight } from "lucide-react";
+import { ScrollText, ChevronLeft, ChevronRight, Bug } from "lucide-react";
 import { formatDateTimeBR } from "@/utils/dateUtils";
 
 const PAGE_SIZE = 30;
+const TABS = [["actions", "Ações"], ["errors", "Erros do sistema"]];
 
 export default function AuditLog() {
   const [page, setPage] = useState(0);
+  const [tab, setTab] = useState("actions");
+  const isErrors = tab === "errors";
 
   const { data, isLoading } = useQuery({
-    queryKey: ["audit-log", page],
-    queryFn: () => base44.entities.AuditLog.page({ orderBy: "-created_at", page, pageSize: PAGE_SIZE }),
+    queryKey: ["audit-log", tab, page],
+    queryFn: () => (isErrors ? base44.entities.ClientError : base44.entities.AuditLog)
+      .page({ orderBy: "-created_at", page, pageSize: PAGE_SIZE }),
     placeholderData: keepPreviousData,
   });
 
@@ -22,7 +26,16 @@ export default function AuditLog() {
 
   return (
     <div className="space-y-4 max-w-4xl">
-      <PageHeader icon={ScrollText} title="Trilha de auditoria" subtitle="Ações sensíveis registradas por usuário (cancelamentos, faturas, conciliações, subcontratação)." />
+      <PageHeader icon={ScrollText} title="Trilha de auditoria" subtitle="Ações sensíveis por usuário e erros do sistema registrados." />
+
+      <div className="flex gap-1">
+        {TABS.map(([v, l]) => (
+          <button key={v} onClick={() => { setTab(v); setPage(0); }}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-lg inline-flex items-center gap-1.5 ${tab === v ? "bg-brand-gradient text-white" : "text-muted-foreground hover:bg-muted"}`}>
+            {v === "errors" ? <Bug className="w-3.5 h-3.5" /> : <ScrollText className="w-3.5 h-3.5" />} {l}
+          </button>
+        ))}
+      </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         {isLoading ? (
@@ -31,7 +44,30 @@ export default function AuditLog() {
           <div className="p-12 text-center">
             <ScrollText className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
             <p className="text-foreground font-medium">Nenhum registro ainda</p>
-            <p className="text-sm text-muted-foreground mt-1">As ações sensíveis aparecem aqui conforme acontecem.</p>
+            <p className="text-sm text-muted-foreground mt-1">{isErrors ? "Nenhum erro de front registrado." : "As ações sensíveis aparecem aqui conforme acontecem."}</p>
+          </div>
+        ) : isErrors ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-muted-foreground border-b border-border bg-muted/30">
+                  <th className="py-2.5 px-4">Quando</th>
+                  <th className="py-2.5 px-4">Usuário</th>
+                  <th className="py-2.5 px-4">Erro</th>
+                  <th className="py-2.5 px-4 hidden sm:table-cell">Tela</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(r => (
+                  <tr key={r.id} className="border-b border-border/60 last:border-0">
+                    <td className="py-2.5 px-4 text-muted-foreground whitespace-nowrap">{formatDateTimeBR(r.created_at)}</td>
+                    <td className="py-2.5 px-4 max-w-[140px] truncate">{r.user_email || "—"}</td>
+                    <td className="py-2.5 px-4 max-w-[320px] truncate" title={r.stack || ""}>{r.message || "—"}</td>
+                    <td className="py-2.5 px-4 font-mono text-xs text-muted-foreground hidden sm:table-cell">{r.url || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
           <div className="overflow-x-auto">
