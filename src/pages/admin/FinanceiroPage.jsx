@@ -1,7 +1,7 @@
 import React from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, TrendingUp, TrendingDown, FileText, Activity, DollarSign, Receipt, Landmark } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, FileText, Activity, DollarSign, Receipt, Landmark, ScanLine } from "lucide-react";
 import Financial from "@/pages/admin/Financial";
 import Revenues from "@/pages/admin/Revenues";
 import Expenses from "@/pages/admin/Expenses";
@@ -9,6 +9,7 @@ import DRE from "@/pages/admin/DRE";
 import CashFlow from "@/pages/admin/CashFlow";
 import Invoices from "@/pages/admin/Invoices";
 import BankReconciliation from "@/pages/admin/BankReconciliation";
+import FreightAudit from "@/pages/admin/FreightAudit";
 import PageHeader, { segmentedTabsClass, segmentedTriggerClass } from "@/components/shared/PageHeader";
 
 export default function FinanceiroPage() {
@@ -29,6 +30,7 @@ export default function FinanceiroPage() {
           <TabsTrigger value="dre" className={segmentedTriggerClass}><FileText className="w-3.5 h-3.5" /> DRE</TabsTrigger>
           <TabsTrigger value="fluxo" className={segmentedTriggerClass}><Activity className="w-3.5 h-3.5" /> Fluxo de Caixa</TabsTrigger>
           <TabsTrigger value="conciliacao" className={segmentedTriggerClass}><Landmark className="w-3.5 h-3.5" /> Conciliação</TabsTrigger>
+          <TabsTrigger value="auditoria" className={segmentedTriggerClass}><ScanLine className="w-3.5 h-3.5" /> Auditoria de frete</TabsTrigger>
         </TabsList>
 
         <TabsContent value="resumo" className="mt-4"><Financial hideTitle /></TabsContent>
@@ -38,6 +40,7 @@ export default function FinanceiroPage() {
         <TabsContent value="dre" className="mt-4"><DRE hideTitle /></TabsContent>
         <TabsContent value="fluxo" className="mt-4"><CashFlow hideTitle /></TabsContent>
         <TabsContent value="conciliacao" className="mt-4"><BankReconciliation /></TabsContent>
+        <TabsContent value="auditoria" className="mt-4"><FreightAudit /></TabsContent>
       </Tabs>
     </div>
   );
