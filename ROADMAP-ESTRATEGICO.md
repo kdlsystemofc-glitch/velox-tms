@@ -148,13 +148,17 @@ Migrations novas a aplicar: `20260655_carrier_settlement`, `20260656_reconcile_i
 - ✅ 1.4 Ciclo do parceiro · ✅ 1.8 Conciliação por fatura
 - 🟡 2.6 Boleto/CNAB/PIX: **adiado** — aguarda decisão de banco/gateway
 
-**Onda 2 — Governança & Visibilidade (em andamento):**
+**Onda 2 — Governança & Visibilidade (CONCLUÍDA):**
 - ✅ 2.3 Audit log central (`f85709c`) + RBAC granular/SoD (`91701f5`)
 - ✅ 2.4 Torre de Controle — exceções unificadas (`60ba2ee`)
-- ✅ 2.5 Scorecard de transportadoras (`a842a0b`) — falta tendering-waterfall automático
-- ⬜ 2.7 BI/Analytics (OTIF, custo por lane/cliente)
-- ⬜ 1.3 (parte milestones — sem o e-mail)
+- ✅ 2.5 Scorecard + tendering assistido (`a842a0b`, `d1b7ffe`) — falta só o broadcast/waterfall automático
+- ✅ 2.7 BI/Analytics — OTIF + custo por lane/cliente (`d09bfdd`)
+- ✅ 1.3 Marcos (milestones) no portal (`d1b7ffe`) — notificação por e-mail segue adiada
 
 Migrations novas a aplicar: `20260657_audit_log`, `20260658_rbac_permissions`.
+
+### 🎯 Progresso geral: Ondas 0, 1 e 2 entregues (exceto itens adiados por decisão).
+Restante = Onda 3 (Enterprise) e Onda 4 (World Class) — em geral dependem de
+decisões/infra externas (provedor fiscal, ERP/EDI, IdP/SSO, telemetria, banco).
 
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).
