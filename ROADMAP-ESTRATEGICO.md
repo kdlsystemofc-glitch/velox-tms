@@ -196,6 +196,12 @@ Migration nova a aplicar: `20260661_public_order_authoritative` (⚠️ testar `
 - ✅ **Projeto 02.3 — Aposentar a fachada `base44` (entidades)** concluído: nova
   camada de repositórios `db` (`src/repositories`); 276 chamadas `base44.entities.*`
   migradas em lotes; Proxy removida. `base44` mantém só auth/storage/functions.
-  Faltam P02.4 (público→lead completo) e P02.5 (reorg de domínios).
+- ✅ **Projeto 02.4 — Público→lead** concluído: o essencial saiu no P02.2 (INSERT
+  anônimo removido + frete = estimativa); triagem via aba "Aprovação" já existia.
+  Acabamento: badge **"Site"** (estimativa no tooltip) na fila, distinguindo leads.
+- ✅ **Projeto 02.5 — Domínios** resolvido: mapa `domains` explícito em
+  `src/repositories`. Reorg **física** de pastas adiada (churn sem valor funcional).
+
+**➡️ Projeto 02 (Núcleo de Domínio & Precificação Única): 100% concluído** — 188 testes / lint / build / E2E verdes.
 
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).
