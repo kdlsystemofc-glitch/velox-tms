@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign } from "lucide-react";
+import { tripCO2 } from "@/utils/carbon";
 
 // Painel financeiro da viagem (somente leitura). Extraído de TripDetailPage (A2).
 export default function TripFinancialCard({ trip }) {
@@ -87,6 +88,15 @@ export default function TripFinancialCard({ trip }) {
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Pedágios</span><span className="font-mono">R$ {(trip.tolls_cost || 0).toFixed(2)}</span>
             </div>
+            {(() => {
+              const c = tripCO2(trip);
+              return c.kg > 0 ? (
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Pegada de carbono</span>
+                  <span className="font-mono">{c.kg >= 1000 ? `${(c.kg / 1000).toFixed(1)} t` : `${c.kg} kg`} CO₂</span>
+                </div>
+              ) : null;
+            })()}
           </>
         )}
       </CardContent>

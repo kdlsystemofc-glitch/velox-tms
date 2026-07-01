@@ -5,7 +5,8 @@ import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { computeOTIF, laneAnalysis, clientAnalysis } from "@/utils/analytics";
-import { BarChart3, Target, DollarSign, Route } from "lucide-react";
+import { fleetCO2 } from "@/utils/carbon";
+import { BarChart3, Target, DollarSign, Route, Leaf } from "lucide-react";
 
 const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const pctColor = (p) => p == null ? "" : p >= 95 ? "text-green-600 dark:text-green-300" : p >= 85 ? "text-amber-600 dark:text-amber-300" : "text-red-600 dark:text-red-300";
@@ -15,8 +16,12 @@ export default function Analytics() {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 1000),
   });
+  const { data: trips = [] } = useQuery({
+    queryKey: ["trips"], queryFn: () => base44.entities.Trip.list("-created_date", 500),
+  });
 
   const otif = useMemo(() => computeOTIF(orders, settings), [orders, settings]);
+  const co2 = useMemo(() => fleetCO2(trips), [trips]);
   const lanes = useMemo(() => laneAnalysis(orders).slice(0, 12), [orders]);
   const clients = useMemo(() => clientAnalysis(orders).slice(0, 12), [orders]);
   const freightSpend = useMemo(() => orders.filter(o => o.status !== "cancelled").reduce((s, o) => s + (Number(o.freight_value) || 0), 0), [orders]);
@@ -29,11 +34,12 @@ export default function Analytics() {
         <div className="bg-card border border-border rounded-xl p-10 text-center text-muted-foreground text-sm">Carregando…</div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <StatCard icon={Target} label="OTIF" value={otif.otifPct != null ? `${otif.otifPct}%` : "—"} tone="primary" hint={`${otif.otif}/${otif.total} entregas`} />
             <StatCard icon={Target} label="No prazo (OT)" value={otif.onTimePct != null ? `${otif.onTimePct}%` : "—"} tone="success" />
             <StatCard icon={Target} label="Completo (IF)" value={otif.inFullPct != null ? `${otif.inFullPct}%` : "—"} tone="success" />
             <StatCard icon={DollarSign} label="Frete total" value={brl(freightSpend)} tone="primary" />
+            <StatCard icon={Leaf} label="CO₂ (frota)" value={co2.kg >= 1000 ? `${(co2.kg / 1000).toFixed(1)} t` : `${co2.kg} kg`} tone="success" hint={co2.perKm != null ? `${co2.perKm} kg/km · ${co2.trips} viagens` : `${co2.trips} viagens`} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
