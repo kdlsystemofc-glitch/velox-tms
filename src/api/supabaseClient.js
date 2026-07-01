@@ -134,6 +134,32 @@ function createEntityLayer(tableName) {
       return normalizeRecords(data);
     },
 
+    // Paginação server-side (range + contagem total). Retorna { rows, total }.
+    // Uso: Entidade.page({ orderBy, page, pageSize, criteria })
+    async page({ orderBy = '-created_at', page = 0, pageSize = 25, criteria = {} } = {}) {
+      let ascending = true;
+      let column = orderBy;
+      if (orderBy.startsWith('-')) { ascending = false; column = orderBy.slice(1); }
+      const colMap = { created_date: 'created_at', updated_date: 'updated_at' };
+      column = colMap[column] || column;
+
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = supabase.from(tableName).select('*', { count: 'exact' });
+      for (const [key, value] of Object.entries(criteria)) {
+        if (Array.isArray(value)) {
+          if (value.length) query = query.in(key, value);
+        } else if (value !== undefined && value !== null && value !== '') {
+          query = query.eq(key, value);
+        }
+      }
+
+      const { data, error, count } = await query.order(column, { ascending }).range(from, to);
+      if (error) throw new Error(error.message);
+      return { rows: normalizeRecords(data), total: count ?? 0 };
+    },
+
     // Buscar por ID
     async get(id) {
       const { data, error } = await supabase
