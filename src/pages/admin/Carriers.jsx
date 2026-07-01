@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { Handshake, Plus, Phone, Mail, Pencil } from "lucide-react";
+import { carrierScorecard } from "@/utils/carrierScorecard";
 
 const empty = { company_name: "", cpf_cnpj: "", contact_name: "", phone: "", email: "", payment_term_days: 30, status: "active", notes: "" };
+const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 
 export default function Carriers() {
   const { toast } = useToast();
@@ -20,6 +22,10 @@ export default function Carriers() {
   const { data: carriers = [], isLoading } = useQuery({
     queryKey: ["carriers"],
     queryFn: () => base44.entities.Carrier.list("-created_at", 200),
+  });
+  // Scorecard (2.5): desempenho a partir dos pedidos subcontratados.
+  const { data: orders = [] } = useQuery({
+    queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 1000),
   });
 
   const save = useMutation({
@@ -57,7 +63,9 @@ export default function Carriers() {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {carriers.map(c => (
+            {carriers.map(c => {
+              const s = carrierScorecard(orders, c.id);
+              return (
               <div key={c.id} className="p-4 flex items-center gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-sm truncate">{c.company_name}
@@ -69,10 +77,19 @@ export default function Carriers() {
                     {c.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{c.phone}</span>}
                     {c.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{c.email}</span>}
                   </div>
+                  {s.offered > 0 && (
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{s.offered} ofertas</span>
+                      {s.acceptanceRate != null && <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${s.acceptanceRate >= 70 ? "bg-green-500/15 text-green-700 dark:text-green-300" : s.acceptanceRate >= 40 ? "bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-red-500/15 text-red-700 dark:text-red-300"}`}>{s.acceptanceRate}% aceite</span>}
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{s.delivered} entregues</span>
+                      {s.paid > 0 && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{brl(s.paid)} pago</span>}
+                    </div>
+                  )}
                 </div>
                 <Button variant="ghost" size="sm" className="gap-1" onClick={() => openEdit(c)}><Pencil className="w-3.5 h-3.5" /> Editar</Button>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
