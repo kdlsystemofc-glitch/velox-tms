@@ -193,5 +193,9 @@ Migrations novas a aplicar: `20260659_sod_enforcement`, `20260660_client_errors`
   Restam P02.3 (retire base44), P02.4 (público→lead completo), P02.5 (domínios).
 
 Migration nova a aplicar: `20260661_public_order_authoritative` (⚠️ testar `/agendar` após).
+- ✅ **Projeto 02.3 — Aposentar a fachada `base44` (entidades)** concluído: nova
+  camada de repositórios `db` (`src/repositories`); 276 chamadas `base44.entities.*`
+  migradas em lotes; Proxy removida. `base44` mantém só auth/storage/functions.
+  Faltam P02.4 (público→lead completo) e P02.5 (reorg de domínios).
 
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).
