@@ -128,5 +128,16 @@ flowchart LR
 ---
 
 ## 📌 Status de execução (atualizado conforme implementação)
-- Pré-roadmap já entregue nesta linha: rastreamento ao vivo, portal da transportadora, conciliação bancária, A2 (refactor parcial), E2E no CI.
-- Ver progresso detalhado nos commits e no acompanhamento de status.
+Pré-roadmap: rastreamento ao vivo, portal da transportadora, conciliação bancária, A2 (parcial), E2E no CI.
+
+**Onda 0 — Fundação:**
+- ✅ 1.4 Ciclo financeiro do parceiro (`83cacc5`)
+- ✅ 1.5 Design unificado dos portais em tokens (`1e43552`)
+- ✅ 1.6 Testes de utils críticos — routeOptimizer + revenueHelper (`a4c1da5`)
+- ✅ 1.7 Paginação server-side — primitivo `.page()` + DriverHistory (`3c8c7c3`)
+- ✅ 1.8 Conciliação ligada à fatura (`adbfa36`)
+- ⚪ 1.1 Migrações versionadas: padrão idempotente já é regra; falta automação em CI
+- 🟡 1.2 Notificações (e-mail): **bloqueado** — aguarda decisão do provedor
+- 🟡 1.3 ETA + milestones: milestones viáveis; a notificação depende de 1.2
+
+Migrations novas a aplicar: `20260655_carrier_settlement`, `20260656_reconcile_invoice`.
