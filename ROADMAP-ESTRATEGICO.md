@@ -158,7 +158,23 @@ Migrations novas a aplicar: `20260655_carrier_settlement`, `20260656_reconcile_i
 Migrations novas a aplicar: `20260657_audit_log`, `20260658_rbac_permissions`.
 
 ### 🎯 Progresso geral: Ondas 0, 1 e 2 entregues (exceto itens adiados por decisão).
-Restante = Onda 3 (Enterprise) e Onda 4 (World Class) — em geral dependem de
-decisões/infra externas (provedor fiscal, ERP/EDI, IdP/SSO, telemetria, banco).
+
+**Onda 3/4 — itens COST-FREE já entregues:**
+- ✅ 2.3 (completado) SoD server-side em reconcile/offer + UI-gates (`08f18bc`, migr. `20260659`)
+- ✅ 3.6 (parcial) Otimizador de rota com refino 2-opt (`eef5f24`)
+- ✅ 3.7 (base) Observabilidade — erros do front no banco (`fe7cecf`, migr. `20260660`)
+- ✅ 4.5 ESG — pegada de carbono (`8ca060a`)
+
+**Onda 3 — cost-free restante (com ressalva):**
+- ⚠️ 3.3 (parte) MFA/2FA (TOTP Supabase, grátis) — **não implementado**: sem um
+  caminho de recuperação (reset de fator por admin via service-role/edge
+  function) há risco real de lockout. Requer decisão sobre recuperação.
+
+**Onda 3/4 — dependem de custo/decisão (mapeados):** fiscal CT-e/MDF-e (provedor),
+ERP/EDI, SSO SAML (plano pago), telemetria (API), multi-tenant (decisão),
+notificações e-mail (provedor), boleto/CNAB (banco), ML/preditivo e pricing
+dinâmico (plataforma de dados).
+
+Migrations novas a aplicar: `20260659_sod_enforcement`, `20260660_client_errors`.
 
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).
