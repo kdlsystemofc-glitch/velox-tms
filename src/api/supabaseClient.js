@@ -42,6 +42,7 @@ const TABLE_MAP = {
   Invoice:         'invoices',
   Carrier:         'carriers',
   BankTransaction: 'bank_transactions',
+  AuditLog:        'audit_log',
 };
 
 // Converte campos created_date/updated_date do base44 para created_at/updated_at do Supabase

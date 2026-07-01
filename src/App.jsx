@@ -59,6 +59,7 @@ const ConfigPage = lazy(() => import('@/pages/admin/ConfigPage'));
 const ClientAccess = lazy(() => import('@/pages/admin/ClientAccess'));
 const Carriers = lazy(() => import('@/pages/admin/Carriers'));
 const CarrierAccess = lazy(() => import('@/pages/admin/CarrierAccess'));
+const AuditLog = lazy(() => import('@/pages/admin/AuditLog'));
 const DriverHome = lazy(() => import('@/pages/driver/DriverHome'));
 const DriverTrip = lazy(() => import('@/pages/driver/DriverTrip'));
 const DriverHistory = lazy(() => import('@/pages/driver/DriverHistory'));
@@ -179,6 +180,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/indicadores" element={<Indicators />} />
             <Route path="/admin/portal-clientes" element={<ClientAccess />} />
             <Route path="/admin/portal-parceiros" element={<CarrierAccess />} />
+            <Route path="/admin/auditoria" element={<AuditLog />} />
           </Route>
         </Route>
       </Route>

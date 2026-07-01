@@ -32,6 +32,7 @@ import {
   FileText, FileDown, AlertTriangle, Copy, MoreHorizontal, XCircle, ArrowRight, Send, Wallet
 } from "lucide-react";
 import OfferToCarrierDialog from "@/components/admin/OfferToCarrierDialog";
+import { logAction } from "@/utils/auditLog";
 
 const STATUS_FLOW = ["new", "confirmed", "collecting", "in_transit", "delivered"];
 const STATUS_LABELS = {
@@ -125,6 +126,7 @@ export default function OrderWorkspace() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["order", id] });
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      logAction("Lançou pagamento ao parceiro", "order", order?.protocol, order?.carrier_amount ? `R$ ${order.carrier_amount}` : null);
       toast({ title: "Pagamento ao parceiro lançado!", description: "Despesa criada em Financeiro → Despesas (a pagar)." });
     },
     onError: (e) => toast({ title: "Não foi possível lançar", description: e?.message, variant: "destructive" }),
@@ -254,6 +256,7 @@ export default function OrderWorkspace() {
       queryClient.invalidateQueries({ queryKey: ["revenues"] });
       queryClient.invalidateQueries({ queryKey: ["revenues-for-order", id] });
       queryClient.invalidateQueries({ queryKey: ["trip-for-order", order.trip_id] });
+      logAction("Cancelou pedido", "order", order?.protocol, reason || null);
       toast({ title: "Pedido cancelado" });
       setCancelOpen(false); setCancelReason(""); setUnproductiveFee("");
       return;

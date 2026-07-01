@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, CalendarDays, Truck, DollarSign, Settings, BookUser,
   FolderOpen, MessageSquare, Route as RouteIcon, AlertTriangle, ShieldAlert,
-  BarChart3, ArrowLeftRight, Users, ChevronDown, UserCheck, Handshake, RadioTower,
+  BarChart3, ArrowLeftRight, Users, ChevronDown, UserCheck, Handshake, RadioTower, ScrollText,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
@@ -57,6 +57,7 @@ const AREAS = [
     adminOnly: true,
     items: [
       { icon: Users, label: "Usuários", path: "/admin/usuarios" },
+      { icon: ScrollText, label: "Auditoria", path: "/admin/auditoria" },
       { icon: Settings, label: "Configurações", path: "/admin/config" },
     ],
   },

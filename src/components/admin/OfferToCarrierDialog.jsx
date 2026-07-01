@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { Send } from "lucide-react";
 import { parseBRNumber } from "@/utils/number";
+import { logAction } from "@/utils/auditLog";
 
 const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const OFFER_LABEL = { offered: "ofertado", accepted: "aceito", refused: "recusado" };
@@ -39,6 +40,7 @@ export default function OfferToCarrierDialog({ order, open, onOpenChange }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["order", order.id] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
+      logAction("Ofertou pedido a parceiro", "order", order.protocol, `${carriers.find(c => c.id === carrierId)?.company_name || "parceiro"} · ${brl(parseBRNumber(amount))}`);
       toast({ title: "Pedido ofertado!", description: "O parceiro verá a oferta no Portal da Transportadora." });
       onOpenChange(false);
       setCarrierId(""); setAmount("");

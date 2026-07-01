@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import StatCard from "@/components/shared/StatCard";
 import { useToast } from "@/components/ui/use-toast";
 import { FileText, Plus, CheckCircle2, Receipt, FileDown } from "lucide-react";
+import { logAction } from "@/utils/auditLog";
 import { formatDateBR } from "@/utils/dateUtils";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
@@ -68,6 +69,7 @@ export default function Invoices() {
     mutationFn: async (id) => {
       const { error } = await supabase.rpc("pay_invoice", { p_invoice_id: id });
       if (error) throw error;
+      logAction("Baixou (pagou) fatura", "invoice", id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });

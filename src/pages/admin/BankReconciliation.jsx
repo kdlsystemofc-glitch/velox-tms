@@ -10,6 +10,7 @@ import { Upload, ArrowDownCircle, ArrowUpCircle, CheckCircle2, Link2, Ban, Undo2
 import { formatDateBR } from "@/utils/dateUtils";
 import { parseBankStatement } from "@/utils/parseBankStatement";
 import { suggestMatch, matchCandidates } from "@/utils/reconcileMatch";
+import { logAction } from "@/utils/auditLog";
 
 const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const CONF = {
@@ -76,6 +77,7 @@ export default function BankReconciliation() {
     mutationFn: async ({ txId, type, targetId }) => {
       const { error } = await supabase.rpc("reconcile_bank_tx", { p_tx_id: txId, p_type: type, p_target_id: targetId });
       if (error) throw error;
+      logAction("Conciliou lançamento bancário", "bank_tx", txId, `→ ${type}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
