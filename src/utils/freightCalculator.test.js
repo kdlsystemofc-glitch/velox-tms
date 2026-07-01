@@ -60,3 +60,38 @@ describe("calculateFreightFull", () => {
     expect(fora.total).toBeCloseTo(10, 2);   // volta ao padrão 1/kg
   });
 });
+
+describe("rating engine 2.1 — faixas de peso", () => {
+  const brackets = [
+    { up_to_kg: 30, price: 45 },                 // até 30kg: fixo R$45
+    { up_to_kg: 100, price_per_kg: 1.8, min: 60 }, // 30–100kg: 1,80/kg (mín 60)
+    { up_to_kg: "", price_per_kg: 1.2 },          // acima: 1,20/kg (catch-all)
+  ];
+  it("faixa fixa para peso leve", () => {
+    const r = calculateFreightFull({ items: [{ weight_kg: 20 }], pricing: { weight_brackets: brackets } });
+    expect(r.total).toBeCloseTo(45, 2);
+  });
+  it("limite da faixa é inclusivo (30kg = faixa até 30)", () => {
+    const r = calculateFreightFull({ items: [{ weight_kg: 30 }], pricing: { weight_brackets: brackets } });
+    expect(r.total).toBeCloseTo(45, 2); // 30kg ainda é "até 30" → fixo 45
+  });
+  it("faixa por kg com mínimo", () => {
+    const r = calculateFreightFull({ items: [{ weight_kg: 31 }], pricing: { weight_brackets: brackets } });
+    expect(r.total).toBeCloseTo(60, 2); // 31×1,8=55,8 → mínimo 60
+    const r2 = calculateFreightFull({ items: [{ weight_kg: 50 }], pricing: { weight_brackets: brackets } });
+    expect(r2.total).toBeCloseTo(90, 2); // 50×1,8
+  });
+  it("faixa catch-all para peso alto", () => {
+    const r = calculateFreightFull({ items: [{ weight_kg: 200 }], pricing: { weight_brackets: brackets } });
+    expect(r.total).toBeCloseTo(240, 2); // 200×1,2
+  });
+});
+
+describe("rating engine 2.1 — fuel surcharge", () => {
+  it("aplica % sobre o frete-base (peso + distância)", () => {
+    const r = calculateFreightFull({ items: [{ weight_kg: 100 }], pricing: { price_per_kg: 1, fuel_surcharge_percent: 10 } });
+    expect(r.freightByWeight).toBeCloseTo(100, 2);
+    expect(r.fuelValue).toBeCloseTo(10, 2);
+    expect(r.total).toBeCloseTo(110, 2);
+  });
+});

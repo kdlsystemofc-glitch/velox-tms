@@ -77,6 +77,32 @@ function resolvePricing(basePricing, clientPricing, originState, destState, sett
  *   destState    - UF de destino (ex: "PR") — para lookup de route_pricing
  *   settings     - CompanySettings completo (para acessar route_pricing)
  */
+
+/**
+ * Rating engine (2.1) — resolve a FAIXA DE PESO aplicável.
+ * brackets: [{ up_to_kg, price, price_per_kg, min }] — up_to_kg vazio/null = faixa
+ * final (catch-all). Retorna a primeira faixa cujo up_to_kg >= kg.
+ */
+export function resolveWeightBracket(brackets, kg) {
+  if (!Array.isArray(brackets) || brackets.length === 0) return null;
+  const sorted = [...brackets].sort((a, b) =>
+    (a.up_to_kg == null || a.up_to_kg === "" ? Infinity : Number(a.up_to_kg)) -
+    (b.up_to_kg == null || b.up_to_kg === "" ? Infinity : Number(b.up_to_kg)));
+  return sorted.find(b => b.up_to_kg == null || b.up_to_kg === "" || kg <= Number(b.up_to_kg))
+    || sorted[sorted.length - 1];
+}
+
+// Frete-peso: usa faixas (brackets) quando existirem; senão o price_per_kg plano.
+function weightFreight(pricing, taxableKg) {
+  const b = resolveWeightBracket(pricing.weight_brackets, taxableKg);
+  if (b) {
+    let v = (b.price != null && b.price !== "") ? Number(b.price) : taxableKg * (Number(b.price_per_kg) || 0);
+    if (b.min != null && b.min !== "") v = Math.max(v, Number(b.min));
+    return v;
+  }
+  return taxableKg * (pricing.price_per_kg || 0);
+}
+
 export function calculateFreightFull(params) {
   const {
     items = [], distanceKm = null, nfCount = 1,
@@ -134,8 +160,11 @@ export function calculateFreightFull(params) {
   const taxableKg = totalCubicKg > totalRealKg ? totalCubicKg : totalRealKg;
   const usedCubic = totalCubicKg > totalRealKg;
 
-  const freightByWeight = taxableKg * (pricing.price_per_kg || 0);
+  const freightByWeight = weightFreight(pricing, taxableKg);
   const freightByDistance = (distanceKm || 0) * (pricing.price_per_km || 0);
+  // Adicional de combustível (fuel surcharge) — % sobre o frete-base (peso + distância).
+  const fuelPct = Number(pricing.fuel_surcharge_percent) || 0;
+  const fuelValue = (freightByWeight + freightByDistance) * (fuelPct / 100);
   const grisRate = pricing.gris_percent || 0;
   const grisValue = totalDeclaredValue * (grisRate / 100);
   const adValoremRate = pricing.ad_valorem_percent || 0;
@@ -151,7 +180,7 @@ export function calculateFreightFull(params) {
   // Cobranças avulsas do pedido (espera, devolução, emergência, etc.)
   const extraTotal = (extraCharges || []).reduce((s, c) => s + (Number(c.amount) || 0), 0);
 
-  const baseSubtotal = freightByWeight + freightByDistance + grisValue +
+  const baseSubtotal = freightByWeight + freightByDistance + fuelValue + grisValue +
                    adValoremValue + tdeValue + tdaValue + tollValue + fixedFee +
                    pickupFee + deliveryFee + trtValue + extraTotal;
 
@@ -179,6 +208,9 @@ export function calculateFreightFull(params) {
     totalDeclaredValue,
     freightByWeight:   Number(freightByWeight.toFixed(2)),
     freightByDistance: Number(freightByDistance.toFixed(2)),
+    fuelPct,
+    fuelValue:         Number(fuelValue.toFixed(2)),
+    appliedBracket:    resolveWeightBracket(pricing.weight_brackets, taxableKg) || null,
     grisValue:         Number(grisValue.toFixed(2)),
     adValoremValue:    Number(adValoremValue.toFixed(2)),
     tdeValue:          Number(tdeValue.toFixed(2)),
