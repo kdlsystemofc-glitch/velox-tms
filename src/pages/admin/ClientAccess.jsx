@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { UserCheck, Inbox } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { can } from "@/lib/permissions";
 
 export default function ClientAccess() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const mayApprove = can(user, "approve_access");
   const [picks, setPicks] = useState({}); // userId -> clientId
 
   const { data: requests = [], isLoading } = useQuery({
@@ -65,7 +69,8 @@ export default function ClientAccess() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button size="sm" disabled={!picks[r.id] || approve.isPending}
+                  <Button size="sm" disabled={!picks[r.id] || approve.isPending || !mayApprove}
+                    title={mayApprove ? "" : "Sem permissão para aprovar acessos"}
                     onClick={() => approve.mutate({ userId: r.id, clientId: picks[r.id] })}>
                     Aprovar
                   </Button>

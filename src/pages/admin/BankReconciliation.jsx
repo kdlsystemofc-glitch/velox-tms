@@ -11,6 +11,8 @@ import { formatDateBR } from "@/utils/dateUtils";
 import { parseBankStatement } from "@/utils/parseBankStatement";
 import { suggestMatch, matchCandidates } from "@/utils/reconcileMatch";
 import { logAction } from "@/utils/auditLog";
+import { useAuth } from "@/lib/AuthContext";
+import { can } from "@/lib/permissions";
 
 const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const CONF = {
@@ -22,6 +24,8 @@ const CONF = {
 export default function BankReconciliation() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const mayReconcile = can(user, "reconcile");
   const fileRef = useRef(null);
   const [importing, setImporting] = useState(false);
   const [manual, setManual] = useState({}); // txId -> targetId
@@ -175,7 +179,8 @@ export default function BankReconciliation() {
                               : cands.map(c => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}
                           </SelectContent>
                         </Select>
-                        <Button size="sm" className="h-8 gap-1" disabled={!chosen || reconcile.isPending}
+                        <Button size="sm" className="h-8 gap-1" disabled={!chosen || reconcile.isPending || !mayReconcile}
+                          title={mayReconcile ? "" : "Sem permissão para conciliar"}
                           onClick={() => reconcile.mutate({ txId: t.id, type: chosenType, targetId: chosen })}>
                           <CheckCircle2 className="w-3.5 h-3.5" /> Conciliar
                         </Button>
