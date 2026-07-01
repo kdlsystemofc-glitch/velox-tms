@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import OfferToCarrierDialog from "@/components/admin/OfferToCarrierDialog";
 import { logAction } from "@/utils/auditLog";
+import { useAuth } from "@/lib/AuthContext";
+import { can } from "@/lib/permissions";
 
 const STATUS_FLOW = ["new", "confirmed", "collecting", "in_transit", "delivered"];
 const STATUS_LABELS = {
@@ -59,6 +61,7 @@ export default function OrderWorkspace() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { settings } = useCompanySettings();
+  const { user } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
@@ -510,7 +513,7 @@ export default function OrderWorkspace() {
                     <Truck className="w-4 h-4 text-muted-foreground" /> Ver viagem
                   </button>
                 )}
-                {!isCancelled && order.status !== "delivered" && (
+                {!isCancelled && order.status !== "delivered" && can(user, "offer_carrier") && (
                   <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/40 text-left"
                     onClick={() => { setMenuOpen(false); setOfferOpen(true); }}>
                     <Send className="w-4 h-4 text-muted-foreground" /> Ofertar a parceiro
@@ -529,7 +532,7 @@ export default function OrderWorkspace() {
                     </button>
                   )
                 )}
-                {!isCancelled && order.status !== "delivered" && (
+                {!isCancelled && order.status !== "delivered" && can(user, "cancel_order") && (
                   <button className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-red-500/10 text-red-600 dark:text-red-300 text-left border-t border-border/50"
                     onClick={() => { setMenuOpen(false); setCancelOpen(true); }}>
                     <XCircle className="w-4 h-4" /> Cancelar pedido

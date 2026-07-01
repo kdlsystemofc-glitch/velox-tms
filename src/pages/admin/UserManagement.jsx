@@ -12,6 +12,7 @@ import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import StatCard from "@/components/shared/StatCard";
 import { Users, Power, Trash2, ShieldCheck, Plus, KeyRound, UserCog, Truck, Clock } from "lucide-react";
+import { CAPABILITIES } from "@/lib/permissions";
 
 const ROLE_LABEL = { admin: "Administrador", operator: "Operador", motorista: "Motorista", pending: "Pendente" };
 const ROLE_CLS = {
@@ -32,6 +33,8 @@ export default function UserManagement() {
   const [createForm, setCreateForm] = useState(EMPTY_CREATE);
   const [resetUser, setResetUser] = useState(null);
   const [resetPass, setResetPass] = useState("");
+  const [permUser, setPermUser] = useState(null);
+  const [permDraft, setPermDraft] = useState({});
 
   const { data: profiles = [] } = useQuery({
     queryKey: ["user-profiles"],
@@ -88,6 +91,22 @@ export default function UserManagement() {
     },
     onSuccess: (_d, vars) => { logAction("Redefiniu senha", vars.email); setResetUser(null); setResetPass(""); toast({ title: "Senha redefinida!" }); },
     onError: (e) => toast({ title: "Erro ao redefinir", description: e?.message, variant: "destructive" }),
+  });
+
+  const openPerms = (p) => { setPermDraft(p.permissions || {}); setPermUser(p); };
+  const savePerms = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("admin_set_user_permissions", { p_user_id: permUser.id, p_permissions: permDraft });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-profiles"] });
+      const denied = Object.entries(permDraft).filter(([, v]) => v === false).map(([k]) => k);
+      logAction("Alterou permissões", permUser.email, denied.length ? `negado: ${denied.join(", ")}` : "sem restrições");
+      setPermUser(null);
+      toast({ title: "Permissões atualizadas!" });
+    },
+    onError: (e) => toast({ title: "Erro", description: e?.message, variant: "destructive" }),
   });
 
   const setRole = (p, role) => run.mutate({ fn: "admin_set_user_role", args: { p_user_id: p.id, p_role: role }, log: { action: "Alterou papel", target: p.email, detail: `→ ${ROLE_LABEL[role] || role}` } });
@@ -165,6 +184,9 @@ export default function UserManagement() {
             const isSelf = p.id === user?.id;
             return (
               <div className="flex justify-end whitespace-nowrap">
+                {(p.role === "admin" || p.role === "operator") && (
+                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" disabled={run.isPending} onClick={() => openPerms(p)}><UserCog className="w-3.5 h-3.5" /> Permissões</Button>
+                )}
                 <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" disabled={run.isPending} onClick={() => { setResetUser(p); setResetPass(""); }}><KeyRound className="w-3.5 h-3.5" /> Senha</Button>
                 <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" disabled={run.isPending || isSelf} onClick={() => toggleActive(p)}><Power className="w-3.5 h-3.5" /> {p.active === false ? "Ativar" : "Desativar"}</Button>
                 <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-red-500" disabled={run.isPending || isSelf} onClick={() => remove(p)}><Trash2 className="w-3.5 h-3.5" /></Button>
@@ -197,6 +219,26 @@ export default function UserManagement() {
       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
         <ShieldCheck className="w-3.5 h-3.5" /> O sistema impede remover/desativar o último administrador. Motoristas também recebem login no cadastro do motorista.
       </p>
+
+      {/* Permissões (RBAC granular / SoD) */}
+      <Dialog open={!!permUser} onOpenChange={(o) => !o && setPermUser(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><UserCog className="w-4 h-4 text-velox-amber" /> Permissões — {permUser?.full_name || permUser?.email}</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground">Desmarque para <strong>negar</strong> a capacidade a este usuário (segregação de funções). Marcado = permitido (padrão do papel).</p>
+          <div className="space-y-2 mt-2">
+            {CAPABILITIES.map(cap => {
+              const allowed = permDraft[cap.key] !== false;
+              return (
+                <label key={cap.key} className="flex items-center gap-2.5 text-sm py-1 cursor-pointer">
+                  <input type="checkbox" checked={allowed} onChange={e => setPermDraft(d => ({ ...d, [cap.key]: e.target.checked }))} className="w-4 h-4" />
+                  <span className={allowed ? "" : "text-muted-foreground line-through"}>{cap.label}</span>
+                </label>
+              );
+            })}
+          </div>
+          <Button className="w-full mt-3 font-bold" disabled={savePerms.isPending} onClick={() => savePerms.mutate()}>{savePerms.isPending ? "Salvando…" : "Salvar permissões"}</Button>
+        </DialogContent>
+      </Dialog>
 
       {/* Criar usuário */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>

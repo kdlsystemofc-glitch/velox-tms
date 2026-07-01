@@ -12,6 +12,8 @@ import StatCard from "@/components/shared/StatCard";
 import { useToast } from "@/components/ui/use-toast";
 import { FileText, Plus, CheckCircle2, Receipt, FileDown } from "lucide-react";
 import { logAction } from "@/utils/auditLog";
+import { useAuth } from "@/lib/AuthContext";
+import { can } from "@/lib/permissions";
 import { formatDateBR } from "@/utils/dateUtils";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
@@ -22,6 +24,8 @@ const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractio
 export default function Invoices() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const mayPay = can(user, "pay_invoice");
   const [open, setOpen] = useState(false);
   const [clientId, setClientId] = useState("");
   const [picked, setPicked] = useState([]);
@@ -128,7 +132,7 @@ export default function Invoices() {
                     <td className="py-2.5 px-4"><StatusBadge status={inv.status} config={invoiceStatusConfig} /></td>
                     <td className="py-2.5 px-4 text-right whitespace-nowrap">
                       <Button size="sm" variant="ghost" className="gap-1" onClick={() => downloadPdf(inv)}><FileDown className="w-3.5 h-3.5" /> PDF</Button>
-                      {inv.status === "open" && (
+                      {inv.status === "open" && mayPay && (
                         <Button size="sm" variant="outline" disabled={pay.isPending} onClick={() => pay.mutate(inv.id)}>Dar baixa</Button>
                       )}
                     </td>
@@ -217,7 +221,7 @@ export default function Invoices() {
                 <div className="flex justify-between font-semibold border-t border-border pt-2"><span>Total</span><span className="font-mono">{brl(detail.total)}</span></div>
                 <div className="flex gap-2 pt-1">
                   <Button variant="outline" className="flex-1 gap-1" onClick={() => downloadPdf(detail)}><FileDown className="w-4 h-4" /> Baixar PDF</Button>
-                  {detail.status === "open" && (
+                  {detail.status === "open" && mayPay && (
                     <Button className="flex-1" disabled={pay.isPending} onClick={() => { pay.mutate(detail.id); setDetail(null); }}>Dar baixa</Button>
                   )}
                 </div>

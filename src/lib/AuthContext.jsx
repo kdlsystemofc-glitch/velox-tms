@@ -61,6 +61,7 @@ export const AuthProvider = ({ children }) => {
         driver_id: profile?.driver_id || null,
         client_id: profile?.client_id || null,
         carrier_id: profile?.carrier_id || null,
+        permissions: profile?.permissions || null,
       };
 
       setUser(userWithRole);
