@@ -786,6 +786,13 @@ export default function OrderWorkspace() {
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Valor do frete (R$)</label>
                       <Input type="number" step="0.01" value={freightValue} onChange={e => setFreightValue(e.target.value)} className="font-mono" />
+                      {order.freight_estimate != null && (
+                        <button type="button" className="text-[11px] text-velox-amber hover:underline"
+                          onClick={() => setFreightValue(Number(order.freight_estimate).toFixed(2))}
+                          title="Estimativa informada pelo cliente no site (referência)">
+                          Estimativa do cliente: R$ {Number(order.freight_estimate).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </button>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Forma de pagamento</label>

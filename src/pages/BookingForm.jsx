@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, ArrowRight, Plus, Trash2, CheckCircle2, AlertCircle, MapPinOff } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useLocation } from "react-router-dom";
 import VeloxDatePicker from "@/components/public/VeloxDatePicker";
 import { motion, AnimatePresence } from "framer-motion";
@@ -320,12 +321,10 @@ export default function BookingForm() {
     });
 
     try {
-    const { data } = await base44.functions.invoke("generateProtocol", {});
-    const proto = data?.protocol;
-    if (!proto) throw new Error("Não foi possível gerar o protocolo. Tente novamente.");
-
-    await base44.entities.Order.create({
-      protocol: proto,
+    // P02.2: pedido público entra por RPC autoritativa — o servidor gera o
+    // protocolo, decide o status e NÃO grava o freight_value do cliente (só a
+    // estimativa). O frete de cobrança é definido pela equipe na confirmação.
+    const payload = {
       requester_name: form.requester_name || undefined,
       requester_role: form.requester_role || undefined,
       client_name: form.client_name,
@@ -333,9 +332,8 @@ export default function BookingForm() {
       client_phone: form.phone,
       client_email: form.email,
       preferred_contact: form.preferred_contact,
-      status: settings?.require_order_approval ? "awaiting_approval" : "new",
       freight_type: form.freight_type,
-      freight_value: estimate?.total || undefined,
+      freight_estimate: estimate?.total || undefined,
       origin: {
         cep: form.origin_cep,
         street: form.origin_street,
@@ -356,8 +354,10 @@ export default function BookingForm() {
       freight_payer: form.freight_payer || "cif",
       transport_modal: form.transport_modal || "road",
       payment_terms: form.payment_terms || "after_delivery",
-      status_history: [{ status: settings?.require_order_approval ? "awaiting_approval" : "new", timestamp: new Date().toISOString(), user: form.client_name, note: "Solicitação via site" }],
-    });
+    };
+    const { data: proto, error } = await supabase.rpc("create_public_order", { p: payload });
+    if (error) throw error;
+    if (!proto) throw new Error("Não foi possível registrar a solicitação. Tente novamente.");
 
     setProtocol(proto);
     setSuccess(true);
