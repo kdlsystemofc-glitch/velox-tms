@@ -53,6 +53,8 @@ END; $$;
 GRANT EXECUTE ON FUNCTION public.pay_invoice(UUID) TO authenticated;
 
 -- admin_list_users passa a retornar as permissões (para a UI de Usuários).
+-- DROP necessário: CREATE OR REPLACE não altera o tipo de retorno (nova coluna).
+DROP FUNCTION IF EXISTS public.admin_list_users();
 CREATE OR REPLACE FUNCTION public.admin_list_users()
 RETURNS TABLE (
   id UUID, email TEXT, full_name TEXT, role TEXT, active BOOLEAN,
