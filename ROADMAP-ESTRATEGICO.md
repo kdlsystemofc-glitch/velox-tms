@@ -149,10 +149,12 @@ Migrations novas a aplicar: `20260655_carrier_settlement`, `20260656_reconcile_i
 - 🟡 2.6 Boleto/CNAB/PIX: **adiado** — aguarda decisão de banco/gateway
 
 **Onda 2 — Governança & Visibilidade (em andamento):**
+- ✅ 2.3 Audit log central (`f85709c`) + RBAC granular/SoD (`91701f5`)
 - ✅ 2.4 Torre de Controle — exceções unificadas (`60ba2ee`)
 - ✅ 2.5 Scorecard de transportadoras (`a842a0b`) — falta tendering-waterfall automático
-- ⬜ 2.3 RBAC granular + SoD + audit log (maior/mais sensível)
 - ⬜ 2.7 BI/Analytics (OTIF, custo por lane/cliente)
 - ⬜ 1.3 (parte milestones — sem o e-mail)
+
+Migrations novas a aplicar: `20260657_audit_log`, `20260658_rbac_permissions`.
 
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).
