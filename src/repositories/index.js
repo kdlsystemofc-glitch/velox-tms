@@ -22,4 +22,21 @@ export const db = new Proxy({}, {
   },
 });
 
+/**
+ * Mapa de domínios (Projeto 02.5) — agrupa as entidades por domínio de negócio.
+ *
+ * Torna os limites de domínio explícitos no seam de dados SEM mover fisicamente
+ * 66 arquivos (reorganização de pastas = churn de imports e risco, sem valor
+ * funcional — deliberadamente adiada). Combinado com `ARQUITETURA-FUNCIONAL.md`,
+ * documenta a fronteira de cada domínio de forma verificável.
+ */
+export const domains = {
+  operacao:   ["Order", "Trip", "Incident", "Transfer", "Alert", "OrderTemplate", "ScheduleBlock"],
+  frota:      ["Truck", "Driver"],
+  masterData: ["Client", "Recipient", "Supplier", "Branch", "Carrier"],
+  financeiro: ["Revenue", "Expense", "Invoice", "BankTransaction"],
+  sistema:    ["CompanySettings", "AuditLog", "ClientError"],
+  comercial:  ["ContactMessage", "Testimonial"],
+};
+
 export default db;

@@ -320,6 +320,10 @@ export default function OrdersWorkspace() {
                       {order.freight_type === "urgent" && (
                         <span className="ml-1.5 text-[9px] bg-red-500/15 text-red-700 dark:text-red-300 font-bold px-1 py-0.5 rounded uppercase">Urg</span>
                       )}
+                      {order.requester_name && (
+                        <span className="ml-1.5 text-[9px] bg-blue-500/15 text-blue-700 dark:text-blue-300 font-bold px-1 py-0.5 rounded uppercase"
+                          title={`Solicitação via site${order.freight_estimate != null ? ` · estimativa R$ ${Number(order.freight_estimate).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}` : ""}`}>Site</span>
+                      )}
                     </td>
                     <td className="py-2.5 px-4 max-w-[180px] truncate">{order.client_name}</td>
                     <td className="py-2.5 px-4 text-xs text-muted-foreground hidden lg:table-cell max-w-[200px] truncate">
