@@ -182,5 +182,10 @@ Migrations novas a aplicar: `20260659_sod_enforcement`, `20260660_client_errors`
   utils críticos (suíte 183), **gate de migrations no CI** (schema.sql + todas as
   migrations + idempotência, via Postgres+stubs), captura global de erros. O gate
   teria pego o erro do `20260658` antes de aplicar.
+- ✅ **Projeto 02.1 — Serviço único de precificação** concluído: `quoteFreight`
+  em `src/services/pricing.js` consumido por 8 telas + auditoria (suíte 188,
+  comportamento preservado). Sub-projetos P02.2 (servidor autoritativo, via
+  plpgSQL) · P02.3 (retire base44) · P02.4 (público→lead) · P02.5 (domínios)
+  ficam gated. Ver `PLANO-EXECUCAO.md`.
 
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).
