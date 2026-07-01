@@ -187,5 +187,11 @@ Migrations novas a aplicar: `20260659_sod_enforcement`, `20260660_client_errors`
   comportamento preservado). Sub-projetos P02.2 (servidor autoritativo, via
   plpgSQL) · P02.3 (retire base44) · P02.4 (público→lead) · P02.5 (domínios)
   ficam gated. Ver `PLANO-EXECUCAO.md`.
+- ✅ **Projeto 02.2 — Frete autoritativo no servidor** concluído: `/agendar` via
+  RPC `create_public_order` (frete do cliente vira estimativa; `freight_value`
+  NULL até a equipe precificar); RLS de INSERT anônimo removida (`20260661`).
+  Restam P02.3 (retire base44), P02.4 (público→lead completo), P02.5 (domínios).
+
+Migration nova a aplicar: `20260661_public_order_authoritative` (⚠️ testar `/agendar` após).
 
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).
