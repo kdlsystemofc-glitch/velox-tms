@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, CalendarDays, Truck, DollarSign, Settings, BookUser,
   FolderOpen, MessageSquare, Route as RouteIcon, AlertTriangle, ShieldAlert,
-  BarChart3, ArrowLeftRight, Users, ChevronDown, UserCheck, Handshake,
+  BarChart3, ArrowLeftRight, Users, ChevronDown, UserCheck, Handshake, RadioTower,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
@@ -18,6 +18,7 @@ const AREAS = [
   {
     label: "Operação",
     items: [
+      { icon: RadioTower, label: "Torre de Controle", path: "/admin/torre" },
       { icon: Package, label: "Pedidos", path: "/admin/coletas", badge: "pendingOrders" },
       { icon: CalendarDays, label: "Despacho", path: "/admin/despacho", badge: "toDispatch" },
       { icon: AlertTriangle, label: "Replanejamento", path: "/admin/replanejamento", badge: "replan" },

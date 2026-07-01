@@ -33,6 +33,7 @@ const QuickQuote = lazy(() => import('@/pages/QuickQuote'));
 const QuoteForm = lazy(() => import('@/pages/QuoteForm'));
 const UserManagement = lazy(() => import('@/pages/admin/UserManagement'));
 const OperationsHub = lazy(() => import('@/pages/admin/OperationsHub'));
+const ControlTower = lazy(() => import('@/pages/admin/ControlTower'));
 const OrdersWorkspace = lazy(() => import('@/pages/admin/OrdersWorkspace'));
 const Cotacao = lazy(() => import('@/pages/admin/Cotacao'));
 const DispatchBoard = lazy(() => import('@/pages/admin/DispatchBoard'));
@@ -120,6 +121,7 @@ const AuthenticatedApp = () => {
           {/* Rotas operacionais — admin e operador (inclui Painel e detalhe da viagem) */}
           <Route element={<OperatorRoute />}>
             <Route path="/admin" element={<OperationsHub />} />
+            <Route path="/admin/torre" element={<ControlTower />} />
             <Route path="/admin/viagens/:id" element={<TripDetailPage />} />
             {/* Pedidos (nova rota canônica) */}
             <Route path="/admin/coletas" element={<OrdersWorkspace />} />
