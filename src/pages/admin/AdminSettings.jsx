@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Building2, DollarSign, Bell, Globe, Save, MapPin, CalendarDays, Shield, Clock, Plus, BarChart3, Package, Route, Check, Download, Upload, History } from "lucide-react";
+import { Building2, DollarSign, Bell, Globe, Save, MapPin, CalendarDays, Shield, Clock, Plus, Trash2, BarChart3, Package, Route, Check, Download, Upload, History } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -144,6 +144,12 @@ export default function AdminSettings({ only = null }) {
 
   const setF = (field, value) => setForm(f => ({ ...f, [field]: value }));
   const setNested = (parent, field, value) => setForm(f => ({ ...f, [parent]: { ...(f[parent] || {}), [field]: value } }));
+
+  // Faixas de peso (rating engine 2.1)
+  const setBrackets = (arr) => setNested("pricing", "weight_brackets", arr);
+  const addBracket = () => setBrackets([...(form.pricing?.weight_brackets || []), { up_to_kg: "", price: "", price_per_kg: "", min: "" }]);
+  const setBracket = (i, k, v) => { const arr = [...(form.pricing?.weight_brackets || [])]; arr[i] = { ...arr[i], [k]: v }; setBrackets(arr); };
+  const removeBracket = (i) => setBrackets((form.pricing?.weight_brackets || []).filter((_, j) => j !== i));
 
   // ── Governança (Cfg-3): histórico + backup ──
   const fileRef = useRef(null);
@@ -438,6 +444,46 @@ export default function AdminSettings({ only = null }) {
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
                     </div>
                   </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Adicional de combustível (%)</label>
+                    <div className="relative">
+                      <NumericInput value={form.pricing?.fuel_surcharge_percent || ""} onChange={v => setNested("pricing", "fuel_surcharge_percent", v)} placeholder="ex: 12" />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">% sobre o frete-base (peso + distância)</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Faixas de peso (rating engine 2.1) */}
+              <div>
+                <h3 className="text-sm font-semibold mb-1 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-velox-amber" /> Faixas de peso (opcional)
+                </h3>
+                <p className="text-[10px] text-muted-foreground mb-2">Se definidas, substituem o "Preço por kg" plano: cada faixa (até X kg) cobra um valor fixo OU um preço/kg, com mínimo opcional. Deixe "Até" vazio na última faixa para valer acima de tudo.</p>
+                <div className="space-y-2">
+                  {(form.pricing?.weight_brackets || []).map((b, i) => (
+                    <div key={i} className="flex flex-wrap items-end gap-2">
+                      <div className="space-y-1 w-24">
+                        <label className="text-[10px] text-muted-foreground">Até (kg)</label>
+                        <NumericInput integer value={b.up_to_kg ?? ""} onChange={v => setBracket(i, "up_to_kg", v)} placeholder="30" />
+                      </div>
+                      <div className="space-y-1 w-28">
+                        <label className="text-[10px] text-muted-foreground">Valor fixo (R$)</label>
+                        <NumericInput currency value={b.price ?? ""} onChange={v => setBracket(i, "price", v)} placeholder="45,00" />
+                      </div>
+                      <div className="space-y-1 w-28">
+                        <label className="text-[10px] text-muted-foreground">ou R$/kg</label>
+                        <NumericInput currency value={b.price_per_kg ?? ""} onChange={v => setBracket(i, "price_per_kg", v)} placeholder="1,80" />
+                      </div>
+                      <div className="space-y-1 w-28">
+                        <label className="text-[10px] text-muted-foreground">Mínimo (R$)</label>
+                        <NumericInput currency value={b.min ?? ""} onChange={v => setBracket(i, "min", v)} placeholder="60,00" />
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 text-red-400 flex-shrink-0" onClick={() => removeBracket(i)}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" className="gap-1" onClick={addBracket}><Plus className="w-3.5 h-3.5" /> Adicionar faixa</Button>
                 </div>
               </div>
 

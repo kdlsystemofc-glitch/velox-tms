@@ -34,6 +34,12 @@ export function FreightBreakdown({ breakdown, compact = false }) {
       show: breakdown.freightByDistance > 0,
     },
     {
+      label: "Adicional de combustível",
+      value: breakdown.fuelValue,
+      detail: breakdown.fuelPct ? `${breakdown.fuelPct}% sobre o frete-base` : null,
+      show: breakdown.fuelValue > 0,
+    },
+    {
       label: "GRIS (Seguro risco)",
       value: breakdown.grisValue,
       detail: `${breakdown.grisRate}% sobre ${fmt(breakdown.totalDeclaredValue)} declarado`,
