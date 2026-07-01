@@ -514,23 +514,14 @@ export const functions = {
 // ============================================================
 // Objeto principal compatível com o código que usa base44
 // ============================================================
+// P02.3: a fachada de ENTIDADES (base44.entities.*) foi aposentada — o acesso a
+// dados agora é pela camada de repositórios (`import { db } from "@/repositories"`).
+// Restam aqui apenas auth/storage/functions/integrations (facetas menores ainda
+// usadas em poucos pontos).
 export const base44 = {
   auth,
   storage,
   functions,
-  entities: new Proxy({}, {
-    get(_, entityName) {
-      // Ignora acessos internos (symbols, then/inspeção) — não são entidades.
-      if (typeof entityName !== "string") return undefined;
-      const tableName = TABLE_MAP[entityName];
-      if (!tableName) {
-        // A3: em vez de adivinhar a tabela (entity+'s') e falhar silenciosamente
-        // num typo, falha alto e claro. Toda entidade legítima está no TABLE_MAP.
-        throw new Error(`base44.entities.${entityName}: entidade não registrada. Adicione em TABLE_MAP (src/api/supabaseClient.js).`);
-      }
-      return createEntityLayer(tableName);
-    },
-  }),
   // Compatibilidade com base44.integrations.Core.UploadFile
   integrations: {
     Core: {

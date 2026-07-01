@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -145,15 +146,15 @@ export default function NewOrder() {
     };
   });
 
-  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
-  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
-  const { data: templates = [] } = useQuery({ queryKey: ["order-templates"], queryFn: () => base44.entities.OrderTemplate.list("-created_at", 100) });
-  const { data: recipientBook = [] } = useQuery({ queryKey: ["recipients"], queryFn: () => base44.entities.Recipient.list("-created_date") });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => db.Driver.list() });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => db.Client.list() });
+  const { data: templates = [] } = useQuery({ queryKey: ["order-templates"], queryFn: () => db.OrderTemplate.list("-created_at", 100) });
+  const { data: recipientBook = [] } = useQuery({ queryKey: ["recipients"], queryFn: () => db.Recipient.list("-created_date") });
   // Histórico do cliente p/ autofill inteligente (5.1)
   const { data: clientPastOrders = [] } = useQuery({
     queryKey: ["client-past-orders", form.client_id],
-    queryFn: () => base44.entities.Order.filter({ client_id: form.client_id }, "-created_at", 50),
+    queryFn: () => db.Order.filter({ client_id: form.client_id }, "-created_at", 50),
     enabled: !!form.client_id,
   });
   // Sugestões a partir do histórico: destinatários frequentes + valor médio declarado.
@@ -207,13 +208,13 @@ export default function NewOrder() {
   };
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Order.create(data),
+    mutationFn: (data) => db.Order.create(data),
     onSuccess: (order) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       submittingRef.current = false;
       // Lead → pedido: marca a mensagem de origem como convertida (Msg-2)
       if (fromMessage?.message_id) {
-        base44.entities.ContactMessage.update(fromMessage.message_id, {
+        db.ContactMessage.update(fromMessage.message_id, {
           status: "convertido", read: true, converted_order_id: order.id, converted_order_protocol: order.protocol,
         }).then(() => queryClient.invalidateQueries({ queryKey: ["contact-messages"] })).catch(() => {});
       }
@@ -279,7 +280,7 @@ export default function NewOrder() {
     if (!form.client_id) { toast({ title: "Selecione um cliente cadastrado primeiro", variant: "destructive" }); return; }
     setRepeating(true);
     try {
-      const orders = await base44.entities.Order.filter({ client_id: form.client_id }, "-created_at", 1);
+      const orders = await db.Order.filter({ client_id: form.client_id }, "-created_at", 1);
       const last = orders?.[0];
       if (!last) { toast({ title: "Este cliente ainda não tem pedidos", variant: "destructive" }); return; }
       setForm(f => ({
@@ -320,7 +321,7 @@ export default function NewOrder() {
     const name = window.prompt("Nome do modelo (ex: Remessa mensal Curitiba):");
     if (!name?.trim()) return;
     try {
-      await base44.entities.OrderTemplate.create({
+      await db.OrderTemplate.create({
         name: name.trim(), client_id: form.client_id || null, client_name: form.client_name || null,
         data: templateData(),
       });
@@ -1217,7 +1218,7 @@ export default function NewOrder() {
             <Button size="sm" className="font-bold" onClick={async () => {
               const p = createClientPrompt?.protocol;
               try {
-                await base44.entities.Client.create({ company_name: form.client_name, cpf_cnpj: form.client_cpf_cnpj || "", phone: form.client_phone || "", email: form.client_email || "", client_type: "eventual", status: "active" });
+                await db.Client.create({ company_name: form.client_name, cpf_cnpj: form.client_cpf_cnpj || "", phone: form.client_phone || "", email: form.client_email || "", client_type: "eventual", status: "active" });
                 queryClient.invalidateQueries({ queryKey: ["clients"] });
                 toast({ title: "Cliente cadastrado!" });
               } catch { toast({ title: "Erro ao cadastrar cliente", variant: "destructive" }); }

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -115,14 +115,14 @@ export default function Suppliers({ hideTitle = false }) {
 
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers"],
-    queryFn: () => base44.entities.Supplier.list("-created_date"),
+    queryFn: () => db.Supplier.list("-created_date"),
   });
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const allSuppliers = await base44.entities.Supplier.list("-created_date", 1000);
+      const allSuppliers = await db.Supplier.list("-created_date", 1000);
       const code = await generateSupplierCode(allSuppliers);
-      return base44.entities.Supplier.create({ ...data, code });
+      return db.Supplier.create({ ...data, code });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["suppliers"] });
@@ -134,7 +134,7 @@ export default function Suppliers({ hideTitle = false }) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Supplier.update(id, data),
+    mutationFn: ({ id, data }) => db.Supplier.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["suppliers"] });
       setEditingId(null);

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { differenceInDays, parseISO } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Truck, Users, Boxes, Wrench, UserCheck, FileWarning } from "lucide-react";
@@ -14,10 +14,10 @@ const within = (d, days = 60) => d && differenceInDays(parseISO(d), new Date()) 
 
 export default function FrotaPage() {
   const [tab, setTab] = useState("carretas");
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
-  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
-  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => base44.entities.Trip.list("-created_date", 200) });
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => db.Driver.list() });
+  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => db.Trip.list("-created_date", 200) });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 500) });
 
   // "Em rota" (BUG-04): um caminhão está em rota se está marcado on_route,
   // OU está numa viagem em andamento, OU tem pedido ativo (coleta/trânsito).

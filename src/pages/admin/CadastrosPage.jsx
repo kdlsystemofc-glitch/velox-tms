@@ -6,7 +6,7 @@ import Suppliers from "@/pages/admin/Suppliers";
 import Recipients from "@/pages/admin/Recipients";
 import Branches from "@/pages/admin/Branches";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import PageHeader, { segmentedTabsClass, segmentedTriggerClass } from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 
@@ -18,19 +18,19 @@ export default function CadastrosPage() {
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients"],
-    queryFn: () => base44.entities.Client.list("-created_date"),
+    queryFn: () => db.Client.list("-created_date"),
   });
   const { data: suppliers = [] } = useQuery({
     queryKey: ["suppliers"],
-    queryFn: () => base44.entities.Supplier.list("-created_date"),
+    queryFn: () => db.Supplier.list("-created_date"),
   });
   const { data: recipients = [] } = useQuery({
     queryKey: ["recipients"],
-    queryFn: () => base44.entities.Recipient.list("-created_date"),
+    queryFn: () => db.Recipient.list("-created_date"),
   });
   const { data: branches = [] } = useQuery({
     queryKey: ["branches"],
-    queryFn: () => base44.entities.Branch.list("-created_date"),
+    queryFn: () => db.Branch.list("-created_date"),
   });
 
   return (

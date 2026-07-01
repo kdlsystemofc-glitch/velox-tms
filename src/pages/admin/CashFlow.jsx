@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,12 +21,12 @@ export default function CashFlow({ hideTitle = false }) {
   const [editingBalance, setEditingBalance] = useState(false);
   const [balanceDraft, setBalanceDraft] = useState("");
 
-  const { data: settings = {} } = useQuery({ queryKey: ["settings"], queryFn: () => base44.entities.CompanySettings.list(), select: d => d[0] || {} });
+  const { data: settings = {} } = useQuery({ queryKey: ["settings"], queryFn: () => db.CompanySettings.list(), select: d => d[0] || {} });
   const openingBalance = Number(settings.opening_cash_balance) || 0;
 
   const { data: revenues = [] } = useQuery({
     queryKey: ["revenues"],
-    queryFn: () => base44.entities.Revenue.list("-due_date", 500),
+    queryFn: () => db.Revenue.list("-due_date", 500),
     // Sem due_date a conta sumia da projeção (FND-08). Mantém e assume hoje.
     select: (d) => d.filter(r => r.status === "receivable" || r.status === "overdue")
       .map(r => ({ ...r, due_date: r.due_date || todayLocalISO() })),
@@ -34,7 +34,7 @@ export default function CashFlow({ hideTitle = false }) {
 
   const { data: expenses = [] } = useQuery({
     queryKey: ["expenses"],
-    queryFn: () => base44.entities.Expense.list("-due_date", 500),
+    queryFn: () => db.Expense.list("-due_date", 500),
     // Idem: despesa "a pagar" sem vencimento cai no vencimento = competência (date) ou hoje.
     select: (d) => d.filter(e => e.status === "pending" || e.status === "installment")
       .map(e => ({ ...e, due_date: e.due_date || e.date || todayLocalISO() })),
@@ -43,7 +43,7 @@ export default function CashFlow({ hideTitle = false }) {
   const saveBalance = useMutation({
     mutationFn: (value) => {
       if (!settings.id) throw new Error("Configure a empresa primeiro (Configurações).");
-      return base44.entities.CompanySettings.update(settings.id, { opening_cash_balance: value, opening_cash_date: todayLocalISO() });
+      return db.CompanySettings.update(settings.id, { opening_cash_balance: value, opening_cash_date: todayLocalISO() });
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["settings"] }); setEditingBalance(false); toast({ title: "Saldo em caixa atualizado" }); },
     onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),

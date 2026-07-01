@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/api/supabaseClient";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,7 +25,7 @@ export default function ClientAccess() {
       return data || [];
     },
   });
-  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => db.Client.list() });
 
   const approve = useMutation({
     mutationFn: async ({ userId, clientId }) => {

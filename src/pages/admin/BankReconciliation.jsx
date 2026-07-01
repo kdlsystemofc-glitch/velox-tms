@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,16 +32,16 @@ export default function BankReconciliation() {
 
   const { data: txs = [], isLoading } = useQuery({
     queryKey: ["bank-transactions"],
-    queryFn: () => base44.entities.BankTransaction.list("-posted_at", 500),
+    queryFn: () => db.BankTransaction.list("-posted_at", 500),
   });
   const { data: revenues = [] } = useQuery({
-    queryKey: ["revenues"], queryFn: () => base44.entities.Revenue.list("-created_date", 1000),
+    queryKey: ["revenues"], queryFn: () => db.Revenue.list("-created_date", 1000),
   });
   const { data: expenses = [] } = useQuery({
-    queryKey: ["expenses"], queryFn: () => base44.entities.Expense.list("-date", 1000),
+    queryKey: ["expenses"], queryFn: () => db.Expense.list("-date", 1000),
   });
   const { data: invoices = [] } = useQuery({
-    queryKey: ["invoices"], queryFn: () => base44.entities.Invoice.list("-issue_date", 1000),
+    queryKey: ["invoices"], queryFn: () => db.Invoice.list("-issue_date", 1000),
   });
   const openRevenues = revenues.filter(r => r.status === "receivable");
   const openExpenses = expenses.filter(e => e.status === "pending");
@@ -64,7 +64,7 @@ export default function BankReconciliation() {
       let added = 0, skipped = 0;
       for (const r of rows) {
         if (existing.has(r.fitid)) { skipped++; continue; }
-        try { await base44.entities.BankTransaction.create({ ...r, batch, status: "pending" }); added++; }
+        try { await db.BankTransaction.create({ ...r, batch, status: "pending" }); added++; }
         catch { skipped++; } // provável duplicidade (unique fitid)
       }
       queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
@@ -93,7 +93,7 @@ export default function BankReconciliation() {
   });
 
   const ignore = useMutation({
-    mutationFn: (txId) => base44.entities.BankTransaction.update(txId, { status: "ignored" }),
+    mutationFn: (txId) => db.BankTransaction.update(txId, { status: "ignored" }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bank-transactions"] }),
   });
   const undo = useMutation({

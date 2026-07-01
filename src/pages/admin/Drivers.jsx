@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,11 +38,11 @@ export default function Drivers({ hideTitle = false }) {
   const EMPTY_DRIVER = { name: "", cpf: "", phone: "", email: "", birth_date: "", hire_date: "", cnh_number: "", cnh_category: "C", cnh_expiry: "", ear: true, cnh_points: "", exam_aso_expiry: "", exam_toxic_expiry: "", default_truck_id: "", role: "motorista", contract_type: "clt", base_salary: "", commission_percent: "", status: "active", address: { street: "", number: "", neighborhood: "", city: "", state: "", cep: "" }, bank_info: { bank: "", agency: "", account: "", pix_key: "" }, notes: "" };
   const [form, setForm] = useState(EMPTY_DRIVER);
 
-  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => db.Driver.list() });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Driver.create(data),
+    mutationFn: (data) => db.Driver.create(data),
     onSuccess: (driver) => {
       queryClient.invalidateQueries({ queryKey: ["drivers"] });
       setShowAdd(false);

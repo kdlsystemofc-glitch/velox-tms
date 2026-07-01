@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,10 +26,10 @@ export default function DRE({ hideTitle = false }) {
   const [selectedYear, setSelectedYear] = useState(String(now.getFullYear()));
 
   const { settings } = useCompanySettings();
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
-  const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => base44.entities.Expense.list("-date", 500) });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
-  const { data: revenues = [] } = useQuery({ queryKey: ["revenues"], queryFn: () => base44.entities.Revenue.list("-due_date", 500) });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 500) });
+  const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => db.Expense.list("-date", 500) });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
+  const { data: revenues = [] } = useQuery({ queryKey: ["revenues"], queryFn: () => db.Revenue.list("-due_date", 500) });
 
   const month = parseInt(selectedMonth);
   const year = parseInt(selectedYear);

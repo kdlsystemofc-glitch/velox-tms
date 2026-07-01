@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const { Revenue } = vi.hoisted(() => ({
   Revenue: { filter: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
 }));
-vi.mock("@/api/base44Client", () => ({ base44: { entities: { Revenue } } }));
+vi.mock("@/repositories", () => ({ db: { Revenue } }));
 
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "./revenueHelper";
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,19 +33,19 @@ export default function DriverDetailPage() {
 
   const { data: driver } = useQuery({
     queryKey: ["driver", id],
-    queryFn: () => base44.entities.Driver.filter({ id }),
+    queryFn: () => db.Driver.filter({ id }),
     select: (d) => d[0],
   });
 
   const { data: orders = [] } = useQuery({
     queryKey: ["orders"],
-    queryFn: () => base44.entities.Order.list("-created_date", 200),
+    queryFn: () => db.Order.list("-created_date", 200),
   });
 
   useEffect(() => { if (driver) setForm(driver); }, [driver]);
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.Driver.update(id, data),
+    mutationFn: (data) => db.Driver.update(id, data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["driver", id] }); queryClient.invalidateQueries({ queryKey: ["drivers"] }); setEditing(false); toast({ title: "Motorista atualizado!" }); },
     onError: (e) => toast({ title: "Erro ao salvar", description: e?.message || "Tente novamente.", variant: "destructive" }),
   });

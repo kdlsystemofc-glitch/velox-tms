@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,15 +30,15 @@ export default function Branches({ hideTitle = false }) {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY);
 
-  const { data: branches = [] } = useQuery({ queryKey: ["branches"], queryFn: () => base44.entities.Branch.list("-created_date") });
+  const { data: branches = [] } = useQuery({ queryKey: ["branches"], queryFn: () => db.Branch.list("-created_date") });
 
   const save = useMutation({
-    mutationFn: (data) => editingId ? base44.entities.Branch.update(editingId, data) : base44.entities.Branch.create({ ...data, code: data.code || generateBranchCode(branches) }),
+    mutationFn: (data) => editingId ? db.Branch.update(editingId, data) : db.Branch.create({ ...data, code: data.code || generateBranchCode(branches) }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["branches"] }); setShowForm(false); setEditingId(null); setForm(EMPTY); toast({ title: editingId ? "Filial atualizada!" : "Filial cadastrada!" }); },
     onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),
   });
   const remove = useMutation({
-    mutationFn: (id) => base44.entities.Branch.delete(id),
+    mutationFn: (id) => db.Branch.delete(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["branches"] }); toast({ title: "Filial removida" }); },
     onError: (e) => {
       const inUse = /foreign key|violates|referenced/i.test(e?.message || "");

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,10 +47,10 @@ export default function Fleet({ hideTitle = false }) {
   const EMPTY_FORM = { plate: "", model: "", manufacturer: "", year: "", truck_type: "truck", capacity_kg: "", status: "available", color: "", renavam: "", chassis: "", dimensions: { length_m: "", width_m: "", height_m: "" }, axles: "", tare_weight: "", body_type: "", ownership: "proprio", owner_name: "", tracker_provider: "", tracker_id: "", crlv_expiry: "", insurance_expiry: "", tachograph_last: "", tachograph_next: "", total_km: "", km_alert_oil: "", km_alert_review: "", km_alert_tires: "", notes: "" };
   const [form, setForm] = useState(EMPTY_FORM);
 
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Truck.create(data),
+    mutationFn: (data) => db.Truck.create(data),
     onSuccess: (truck) => {
       queryClient.invalidateQueries({ queryKey: ["trucks"] });
       setShowAdd(false);

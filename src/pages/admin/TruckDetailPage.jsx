@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,7 @@ export default function TruckDetailPage() {
 
   const { data: truck } = useQuery({
     queryKey: ["truck", id],
-    queryFn: () => base44.entities.Truck.filter({ id }),
+    queryFn: () => db.Truck.filter({ id }),
     select: (d) => d[0],
   });
 
@@ -54,11 +54,11 @@ export default function TruckDetailPage() {
     }
   }, [truck]);
 
-  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
-  const { data: suppliers = [] } = useQuery({ queryKey: ["suppliers"], queryFn: () => base44.entities.Supplier.list() });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => db.Driver.list() });
+  const { data: suppliers = [] } = useQuery({ queryKey: ["suppliers"], queryFn: () => db.Supplier.list() });
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.Truck.update(id, data),
+    mutationFn: (data) => db.Truck.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["truck", id] });
       queryClient.invalidateQueries({ queryKey: ["trucks"] }); // reflete status/dados na lista da Frota
@@ -94,7 +94,7 @@ export default function TruckDetailPage() {
     if (maintForm._editIndex === undefined) {
       const maintAmount = Number(maintForm.amount) || 0;
       if (maintAmount > 0) {
-        await base44.entities.Expense.create({
+        await db.Expense.create({
           category: "maintenance",
           description: `Manutenção (${maintForm.type}) — ${truck.plate}: ${maintForm.description || ""}`.trim(),
           amount: maintAmount,

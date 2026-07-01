@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/api/supabaseClient";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,7 +25,7 @@ export default function CarrierAccess() {
       return data || [];
     },
   });
-  const { data: carriers = [] } = useQuery({ queryKey: ["carriers"], queryFn: () => base44.entities.Carrier.list() });
+  const { data: carriers = [] } = useQuery({ queryKey: ["carriers"], queryFn: () => db.Carrier.list() });
 
   const approve = useMutation({
     mutationFn: async ({ userId, carrierId }) => {

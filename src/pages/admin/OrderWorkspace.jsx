@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -82,37 +82,37 @@ export default function OrderWorkspace() {
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", id],
-    queryFn: () => base44.entities.Order.filter({ id }),
+    queryFn: () => db.Order.filter({ id }),
     select: d => d[0],
   });
-  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
-  const { data: allOrders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => db.Driver.list() });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
+  const { data: allOrders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 500) });
   const { data: incidents = [] } = useQuery({
     queryKey: ["incidents", id],
-    queryFn: () => base44.entities.Incident.filter({ order_id: id }),
+    queryFn: () => db.Incident.filter({ order_id: id }),
     enabled: !!id,
   });
   const { data: trip } = useQuery({
     queryKey: ["trip-for-order", order?.trip_id],
-    queryFn: () => base44.entities.Trip.filter({ id: order.trip_id }),
+    queryFn: () => db.Trip.filter({ id: order.trip_id }),
     select: d => d[0],
     enabled: !!order?.trip_id,
   });
   const { data: orderClient } = useQuery({
     queryKey: ["client", order?.client_id],
-    queryFn: () => base44.entities.Client.filter({ id: order.client_id }),
+    queryFn: () => db.Client.filter({ id: order.client_id }),
     select: d => d[0],
     enabled: !!order?.client_id,
   });
   const { data: orderRevenues = [] } = useQuery({
     queryKey: ["revenues-for-order", id],
-    queryFn: () => base44.entities.Revenue.filter({ order_id: id }),
+    queryFn: () => db.Revenue.filter({ order_id: id }),
     enabled: !!id,
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.Order.update(id, data),
+    mutationFn: (data) => db.Order.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["order", id] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
@@ -273,7 +273,7 @@ export default function OrderWorkspace() {
           s.order_id === order.id ? { ...s, status: "skipped", skip_reason: "Pedido cancelado", skipped_at: new Date().toISOString() } : s
         );
         const newRevenue = Math.max(0, (trip.total_revenue || 0) - (order.freight_value || 0));
-        await base44.entities.Trip.update(trip.id, {
+        await db.Trip.update(trip.id, {
           stops,
           total_revenue: newRevenue,
           order_ids: (trip.order_ids || []).filter(oid => oid !== order.id),
@@ -284,7 +284,7 @@ export default function OrderWorkspace() {
           }],
         });
         queryClient.invalidateQueries({ queryKey: ["trip-for-order", order.trip_id] });
-        await base44.entities.Alert.create({
+        await db.Alert.create({
           type: "order_cancelled_in_trip", level: "warning",
           message: `${order.protocol} cancelado durante a viagem ${trip.truck_plate || ""} — motorista avisado`,
           reference_id: order.id, reference_type: "order", read: false, resolved: false,
@@ -296,7 +296,7 @@ export default function OrderWorkspace() {
     if (fee > 0) {
       await updateMutation.mutateAsync({ unproductive_fee: fee });
       try {
-        await base44.entities.Revenue.create({
+        await db.Revenue.create({
           order_id: order.id, client_id: order.client_id || undefined,
           description: `Taxa de deslocamento improdutivo — ${order.protocol}`,
           amount: fee, due_date: todayLocalISO(), status: "receivable",
@@ -332,12 +332,12 @@ export default function OrderWorkspace() {
         (s.type === "delivery" && s.order_id === order.id && s.recipient_name === recName)
           ? { ...s, address: newAddr, cep: addrForm.cep, address_changed: true, address_changed_at: new Date().toISOString() } : s
       );
-      await base44.entities.Trip.update(trip.id, {
+      await db.Trip.update(trip.id, {
         stops,
         events: [...(trip.events || []), { type: "address_changed", description: `Endereço de entrega de ${recName} alterado para ${newAddr}`, timestamp: new Date().toISOString(), user: "Admin" }],
       });
       queryClient.invalidateQueries({ queryKey: ["trip-for-order", order.trip_id] });
-      await base44.entities.Alert.create({ type: "address_changed", level: "warning", message: `Endereço de entrega alterado — ${order.protocol} (${recName})`, reference_id: order.id, reference_type: "order", read: false, resolved: false }).catch(() => {});
+      await db.Alert.create({ type: "address_changed", level: "warning", message: `Endereço de entrega alterado — ${order.protocol} (${recName})`, reference_id: order.id, reference_type: "order", read: false, resolved: false }).catch(() => {});
       toast({ title: "Endereço atualizado", description: "A rota do motorista foi atualizada." });
     } else {
       toast({ title: "Endereço atualizado" });
@@ -1213,7 +1213,7 @@ export default function OrderWorkspace() {
                 <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white font-bold"
                   disabled={!resolutionNotes.trim()}
                   onClick={async () => {
-                    await base44.entities.Incident.update(resolvingIncident.id, {
+                    await db.Incident.update(resolvingIncident.id, {
                       status: "resolved",
                       resolution_notes: resolutionNotes.trim(),
                       resolved_at: new Date().toISOString(),

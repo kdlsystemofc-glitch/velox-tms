@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -106,7 +106,7 @@ export default function Trips() {
   const [period, setPeriod] = useState("all");
   const { data: trips = [], isLoading } = useQuery({
     queryKey: ["trips"],
-    queryFn: () => base44.entities.Trip.list("-created_date", 100),
+    queryFn: () => db.Trip.list("-created_date", 100),
   });
 
   const now = new Date();

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Link } from "react-router-dom";
 import StatCard from "@/components/shared/StatCard";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -21,9 +21,9 @@ export default function FreightAudit() {
   const [tab, setTab] = useState("diverg");
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 1000),
+    queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 1000),
   });
-  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => db.Client.list() });
   const clientById = useMemo(() => Object.fromEntries(clients.map(c => [c.id, c])), [clients]);
 
   // Audita pedidos com frete cobrado (não cancelados).

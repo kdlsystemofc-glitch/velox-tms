@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ export default function TripDetailPage() {
 
   const { data: trip } = useQuery({
     queryKey: ["trip", id],
-    queryFn: () => base44.entities.Trip.filter({ id }),
+    queryFn: () => db.Trip.filter({ id }),
     select: (d) => d[0],
     staleTime: 15_000,
     refetchInterval: (query) => query?.state?.data?.[0]?.status === "in_progress" ? 30_000 : false,
@@ -45,19 +45,19 @@ export default function TripDetailPage() {
   // Motoristas — necessário para calcular a comissão no encerramento (acerto Fase 6).
   const { data: drivers = [] } = useQuery({
     queryKey: ["drivers"],
-    queryFn: () => base44.entities.Driver.list(),
+    queryFn: () => db.Driver.list(),
   });
 
   // Pedidos — para sugestão de retorno (backhaul, S9).
   const { data: allOrders = [] } = useQuery({
     queryKey: ["orders"],
-    queryFn: () => base44.entities.Order.list("-created_date", 500),
+    queryFn: () => db.Order.list("-created_date", 500),
   });
 
   // Viagens concluídas — referência de custo/km da frota (estimativa Vi-2).
   const { data: allTrips = [] } = useQuery({
     queryKey: ["trips"],
-    queryFn: () => base44.entities.Trip.list("-created_date", 100),
+    queryFn: () => db.Trip.list("-created_date", 100),
   });
   const fleetCostPerKm = useMemo(() => {
     const done = allTrips.filter(t => t.status === "completed" && Number(t.real_km) > 0 && Number(t.total_cost) > 0);
@@ -67,7 +67,7 @@ export default function TripDetailPage() {
   }, [allTrips]);
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.Trip.update(id, data),
+    mutationFn: (data) => db.Trip.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["trip", id] }),
   });
 
@@ -107,14 +107,14 @@ export default function TripDetailPage() {
         address: [order.origin?.street, order.origin?.number, order.origin?.city, order.origin?.state].filter(Boolean).join(", "),
         cep: order.origin?.cep || "", status: "pending", stop_order: (trip.stops || []).length + 1,
       };
-      await base44.entities.Trip.update(trip.id, {
+      await db.Trip.update(trip.id, {
         stops: [...(trip.stops || []), stop],
         order_ids: [...(trip.order_ids || []), order.id],
         order_protocols: [...(trip.order_protocols || []), order.protocol],
         total_revenue: (trip.total_revenue || 0) + (order.freight_value || 0),
         events: [...(trip.events || []), { type: "backhaul_added", description: `Coleta de retorno adicionada: ${order.protocol} (${order.client_name}) em ${order.origin?.city}`, timestamp: new Date().toISOString(), user: userName }],
       });
-      await base44.entities.Order.update(order.id, {
+      await db.Order.update(order.id, {
         trip_id: trip.id, truck_id: trip.truck_id, driver_id: trip.driver_id, status: "collecting",
         status_history: [...(order.status_history || []), { status: "collecting", timestamp: new Date().toISOString(), user: userName, note: `Aproveitamento de retorno — viagem ${trip.truck_plate}` }],
       });
@@ -135,7 +135,7 @@ export default function TripDetailPage() {
       if (pending.length === 0) throw new Error("Nenhuma estadia pendente com pedido vinculado.");
       for (const r of pending) {
         const order = allOrders.find(o => o.id === r.order_id);
-        await base44.entities.Revenue.create({
+        await db.Revenue.create({
           order_id: r.order_id,
           client_id: order?.client_id || undefined,
           description: `Estadia (${formatMinutes(r.minutes)} no local, ${r.billableHours}h cobrada) — ${order?.protocol || trip.truck_plate}`,
@@ -143,7 +143,7 @@ export default function TripDetailPage() {
         });
       }
       const stops = (trip.stops || []).map((s, i) => pending.some(p => p.index === i) ? { ...s, estadia_charged: true } : s);
-      await base44.entities.Trip.update(id, {
+      await db.Trip.update(id, {
         stops,
         events: [...(trip.events || []), { type: "estadia_charged", description: `Estadia lançada: R$ ${summary.pendingFee.toFixed(2)} em ${pending.length} parada(s)`, timestamp: new Date().toISOString(), user: userName }],
       });
@@ -177,12 +177,12 @@ export default function TripDetailPage() {
     // Sync Order status when a stop is completed
     if (newStatus === "completed" && stop.order_id) {
       try {
-        const orders = await base44.entities.Order.filter({ id: stop.order_id });
+        const orders = await db.Order.filter({ id: stop.order_id });
         const order = orders[0];
         if (!order) return;
 
         if (stop.type === "collection") {
-          await base44.entities.Order.update(stop.order_id, {
+          await db.Order.update(stop.order_id, {
             status: "in_transit",
             status_history: [...(order.status_history || []), {
               status: "in_transit",
@@ -199,7 +199,7 @@ export default function TripDetailPage() {
           });
           const allDelivered = recipients.every(r => r.delivery_status === "delivered");
           const newOrderStatus = allDelivered ? "delivered" : "in_transit";
-          await base44.entities.Order.update(stop.order_id, {
+          await db.Order.update(stop.order_id, {
             recipients,
             status: newOrderStatus,
             status_history: [...(order.status_history || []), {
@@ -235,16 +235,16 @@ export default function TripDetailPage() {
 
     // Update truck status to on_route (todos os veículos do comboio)
     const crewTrucks = (trip.vehicles && trip.vehicles.length) ? trip.vehicles.map(v => v.truck_id) : [trip.truck_id];
-    crewTrucks.filter(Boolean).forEach(tid => base44.entities.Truck.update(tid, { status: "on_route" }));
+    crewTrucks.filter(Boolean).forEach(tid => db.Truck.update(tid, { status: "on_route" }));
 
     // Update all linked orders to "collecting"
     if (trip.order_ids && trip.order_ids.length > 0) {
       await Promise.all(trip.order_ids.map(async (orderId) => {
         try {
-          const orders = await base44.entities.Order.filter({ id: orderId });
+          const orders = await db.Order.filter({ id: orderId });
           const order = orders[0];
           if (!order) return;
-          await base44.entities.Order.update(orderId, {
+          await db.Order.update(orderId, {
             status: "collecting",
             status_history: [...(order.status_history || []), {
               status: "collecting",
@@ -332,12 +332,12 @@ export default function TripDetailPage() {
     const kmPerLiter = (realKm > 0 && liters > 0) ? Math.round((realKm / liters) * 100) / 100 : null;
     const recordEfficiency = async () => {
       const leadId = (trip.vehicles && trip.vehicles[0]?.truck_id) || trip.truck_id;
-      try { await base44.entities.Trip.update(id, { km_per_liter: kmPerLiter }); } catch { /* não bloqueia */ }
+      try { await db.Trip.update(id, { km_per_liter: kmPerLiter }); } catch { /* não bloqueia */ }
       if (!kmPerLiter || !leadId) return;
       try {
-        const t = (await base44.entities.Truck.filter({ id: leadId }))[0];
+        const t = (await db.Truck.filter({ id: leadId }))[0];
         const hist = [...((t?.consumption_history) || []), { date: todayLocalISO(), km: realKm, liters, km_per_liter: kmPerLiter, trip_id: id }];
-        await base44.entities.Truck.update(leadId, { last_km_per_liter: kmPerLiter, consumption_history: hist });
+        await db.Truck.update(leadId, { last_km_per_liter: kmPerLiter, consumption_history: hist });
         queryClient.invalidateQueries({ queryKey: ["trucks"] });
       } catch { /* não bloqueia o encerramento */ }
     };
@@ -462,7 +462,7 @@ export default function TripDetailPage() {
       });
     });
     if (expensesToCreate.length > 0) {
-      await Promise.all(expensesToCreate.map(e => base44.entities.Expense.create(e)));
+      await Promise.all(expensesToCreate.map(e => db.Expense.create(e)));
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
     }
 
@@ -470,19 +470,19 @@ export default function TripDetailPage() {
     crew.map(v => v.truck_id).filter(Boolean).forEach((tid, i) => {
       const upd = { status: "available" };
       if (i === 0 && Number(closeForm.real_km) > 0) upd.total_km = Number(closeForm.real_km);
-      base44.entities.Truck.update(tid, upd);
+      db.Truck.update(tid, upd);
     });
 
     // Ensure all linked orders are delivered
     if (trip.order_ids && trip.order_ids.length > 0) {
       await Promise.all(trip.order_ids.map(async (orderId) => {
         try {
-          const orders = await base44.entities.Order.filter({ id: orderId });
+          const orders = await db.Order.filter({ id: orderId });
           const order = orders[0];
           // Preserva estados de exceção registrados pelo motorista (Onda 1):
           // só conclui como entregue quem ainda estava em coleta/trânsito.
           if (!order || !["in_transit", "collecting"].includes(order.status)) return;
-          await base44.entities.Order.update(orderId, {
+          await db.Order.update(orderId, {
             status: "delivered",
             status_history: [...(order.status_history || []), {
               status: "delivered",
@@ -510,7 +510,7 @@ export default function TripDetailPage() {
       const orderIds = trip.order_ids || [];
       const orders = [];
       for (const oid of orderIds) {
-        const res = await base44.entities.Order.filter({ id: oid });
+        const res = await db.Order.filter({ id: oid });
         if (res?.[0]) orders.push(res[0]);
       }
       let tripForPdf = trip, ordersForPdf = orders, suffix = "";

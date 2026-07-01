@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,8 +56,8 @@ export default function Incidents() {
   const [form, setForm] = useState({ assigned_to: "", action_plan: "", due_date: "", financial_impact: "", root_cause: "", note: "", resolution: "" });
   const { settings } = useCompanySettings();
 
-  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => base44.entities.Incident.list("-created_date", 300) });
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
+  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => db.Incident.list("-created_date", 300) });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 500) });
   const orderById = Object.fromEntries(orders.map(o => [o.id, o]));
 
   const openOnly = statusFilter === "open" ? incidents.filter(i => i.status !== "resolved")
@@ -135,7 +135,7 @@ export default function Incidents() {
   };
 
   const update = useMutation({
-    mutationFn: ({ id, patch }) => base44.entities.Incident.update(id, patch),
+    mutationFn: ({ id, patch }) => db.Incident.update(id, patch),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["incidents-all"] });
       queryClient.invalidateQueries({ queryKey: ["incidents"] });

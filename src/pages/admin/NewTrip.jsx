@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,19 +34,19 @@ export default function NewTrip() {
 
   const { data: orders = [] } = useQuery({
     queryKey: ["orders"],
-    queryFn: () => base44.entities.Order.list("-created_date", 100),
+    queryFn: () => db.Order.list("-created_date", 100),
     select: (data) => data.filter(o => o.status === "confirmed" && !o.trip_id),
   });
 
   const { data: drivers = [] } = useQuery({
     queryKey: ["drivers"],
-    queryFn: () => base44.entities.Driver.list(),
+    queryFn: () => db.Driver.list(),
     select: (d) => d.filter(dr => dr.status === "active"),
   });
 
   const { data: trucks = [] } = useQuery({
     queryKey: ["trucks"],
-    queryFn: () => base44.entities.Truck.list(),
+    queryFn: () => db.Truck.list(),
     select: (t) => t.filter(tr => tr.status === "available"),
   });
 
@@ -54,25 +54,25 @@ export default function NewTrip() {
     mutationFn: async (data) => {
       let trip;
       try {
-        trip = await base44.entities.Trip.create(data);
+        trip = await db.Trip.create(data);
       } catch (e) {
         // Banco ainda sem colunas novas (migration pendente) — recria sem elas
         const msg = String(e?.message || "");
         if (msg.includes("advance") || msg.includes("vehicles")) {
           const { advance_amount, advance_date, vehicles, ...rest } = data;
-          trip = await base44.entities.Trip.create(rest);
+          trip = await db.Trip.create(rest);
         } else {
           throw e;
         }
       }
       // Update orders with trip_id
       await Promise.all(selectedOrders.map(oid =>
-        base44.entities.Order.update(oid, { trip_id: trip.id, driver_id: driverId, truck_id: truckId })
+        db.Order.update(oid, { trip_id: trip.id, driver_id: driverId, truck_id: truckId })
       ));
       // Adiantamento ao motorista vira despesa pendente automaticamente
       const adv = Number(advanceAmount) || 0;
       if (adv > 0) {
-        await base44.entities.Expense.create({
+        await db.Expense.create({
           category: "other",
           description: `Adiantamento de viagem — ${selectedDriver?.name || "motorista"} (${selectedTruck?.plate || ""})`,
           amount: adv,

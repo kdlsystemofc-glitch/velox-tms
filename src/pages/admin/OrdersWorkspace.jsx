@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,9 +66,9 @@ export default function OrdersWorkspace() {
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders"],
-    queryFn: () => base44.entities.Order.list("-created_date", 1000),
+    queryFn: () => db.Order.list("-created_date", 1000),
   });
-  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => db.Client.list() });
 
   // Limite de crédito do cliente do pedido em confirmação (exposição em aberto).
   const confirmCredit = (() => {
@@ -176,7 +176,7 @@ export default function OrdersWorkspace() {
         throw error;
       } catch { /* fallback cliente abaixo */ }
       // Confirmar NÃO atribui caminhão — isso é feito no Despacho.
-      await base44.entities.Order.update(order.id, {
+      await db.Order.update(order.id, {
         status: "confirmed",
         collection_date: form.date || order.collection_date,
         freight_value: fv,
@@ -200,7 +200,7 @@ export default function OrdersWorkspace() {
 
   const rejectMutation = useMutation({
     mutationFn: async (order) => {
-      await base44.entities.Order.update(order.id, {
+      await db.Order.update(order.id, {
         status: "cancelled",
         status_history: [...(order.status_history || []), { status: "cancelled", timestamp: new Date().toISOString(), user: "Admin", note: "Recusado na fila de pedidos" }],
       });

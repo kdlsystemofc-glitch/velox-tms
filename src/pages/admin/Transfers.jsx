@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -31,11 +31,11 @@ export default function Transfers() {
   const [receiveForm, setReceiveForm] = useState({ km: "", cost: "", divergences: {} });
   const [form, setForm] = useState({ from_branch_id: "", to_branch_id: "", truck_id: "", driver_id: "", order_ids: [], start: false });
 
-  const { data: transfers = [] } = useQuery({ queryKey: ["transfers"], queryFn: () => base44.entities.Transfer.list("-created_date", 100) });
-  const { data: branches = [] } = useQuery({ queryKey: ["branches"], queryFn: () => base44.entities.Branch.list() });
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
-  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
+  const { data: transfers = [] } = useQuery({ queryKey: ["transfers"], queryFn: () => db.Transfer.list("-created_date", 100) });
+  const { data: branches = [] } = useQuery({ queryKey: ["branches"], queryFn: () => db.Branch.list() });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 500) });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => db.Driver.list() });
 
   const branchName = (id) => branches.find(b => b.id === id)?.name || "—";
 
@@ -90,7 +90,7 @@ export default function Transfers() {
     try {
       const list = [];
       for (const oid of t.order_ids || []) {
-        const o = orders.find(x => x.id === oid) || (await base44.entities.Order.filter({ id: oid }))[0];
+        const o = orders.find(x => x.id === oid) || (await db.Order.filter({ id: oid }))[0];
         if (o) list.push(o);
       }
       const { generateTransferManifest } = await import("@/utils/generateTransferManifest");
@@ -114,7 +114,7 @@ export default function Transfers() {
       const to = branches.find(b => b.id === form.to_branch_id);
       const truck = trucks.find(t => t.id === form.truck_id);
       const driver = drivers.find(d => d.id === form.driver_id);
-      const transfer = await base44.entities.Transfer.create({
+      const transfer = await db.Transfer.create({
         protocol: `TRF-${Date.now().toString().slice(-8)}`,
         from_branch_id: form.from_branch_id || null, to_branch_id: form.to_branch_id || null,
         from_branch_name: from?.name, to_branch_name: to?.name,
@@ -126,13 +126,13 @@ export default function Transfers() {
       });
       for (const oid of form.order_ids) {
         const o = orders.find(x => x.id === oid);
-        await base44.entities.Order.update(oid, {
+        await db.Order.update(oid, {
           status: "in_transfer",
           status_history: [...(o?.status_history || []), { status: "in_transfer", timestamp: new Date().toISOString(), user: userName, note: `Em transferência: ${from?.name || "?"} → ${to?.name || "?"}` }],
         });
       }
       // Se já sai em trânsito, o caminhão fica on_route (evita double-booking com viagens).
-      if (form.start && form.truck_id) await base44.entities.Truck.update(form.truck_id, { status: "on_route" });
+      if (form.start && form.truck_id) await db.Truck.update(form.truck_id, { status: "on_route" });
       return transfer;
     },
     onSuccess: () => {
@@ -148,8 +148,8 @@ export default function Transfers() {
 
   const dispatch = useMutation({
     mutationFn: async (t) => {
-      await base44.entities.Transfer.update(t.id, { status: "in_transit", departure_date: new Date().toISOString(), events: [...(t.events || []), { type: "departed", description: "Saiu da origem", timestamp: new Date().toISOString(), user: userName }] });
-      if (t.truck_id) await base44.entities.Truck.update(t.truck_id, { status: "on_route" });
+      await db.Transfer.update(t.id, { status: "in_transit", departure_date: new Date().toISOString(), events: [...(t.events || []), { type: "departed", description: "Saiu da origem", timestamp: new Date().toISOString(), user: userName }] });
+      if (t.truck_id) await db.Truck.update(t.truck_id, { status: "on_route" });
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["transfers"] }); queryClient.invalidateQueries({ queryKey: ["trucks"] }); toast({ title: "Transferência em trânsito" }); },
     onError: (e) => toast({ title: "Erro", description: e?.message, variant: "destructive" }),
@@ -164,16 +164,16 @@ export default function Transfers() {
         if (!error) return;
         throw error;
       } catch { /* fallback cliente abaixo */ }
-      await base44.entities.Transfer.update(t.id, { status: "cancelled", events: [...(t.events || []), { type: "cancelled", description: "Transferência estornada", timestamp: new Date().toISOString(), user: userName }] });
+      await db.Transfer.update(t.id, { status: "cancelled", events: [...(t.events || []), { type: "cancelled", description: "Transferência estornada", timestamp: new Date().toISOString(), user: userName }] });
       for (const os of orderStatus) {
         const o = orders.find(x => x.id === os.id);
         if (o?.status === "in_transfer") {
-          await base44.entities.Order.update(os.id, { status: os.status, status_history: [...(o.status_history || []), { status: os.status, timestamp: new Date().toISOString(), user: userName, note: "Transferência estornada — pedido devolvido" }] });
+          await db.Order.update(os.id, { status: os.status, status_history: [...(o.status_history || []), { status: os.status, timestamp: new Date().toISOString(), user: userName, note: "Transferência estornada — pedido devolvido" }] });
         }
       }
       if (t.truck_id) {
         const truck = trucks.find(x => x.id === t.truck_id);
-        if (truck?.status === "on_route") await base44.entities.Truck.update(t.truck_id, { status: "available" });
+        if (truck?.status === "on_route") await db.Truck.update(t.truck_id, { status: "available" });
       }
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["transfers"] }); queryClient.invalidateQueries({ queryKey: ["orders"] }); queryClient.invalidateQueries({ queryKey: ["trucks"] }); toast({ title: "Transferência estornada", description: "Pedidos devolvidos ao status anterior." }); },
@@ -193,11 +193,11 @@ export default function Transfers() {
         if (!error) viaRpc = true; else throw error;
       } catch { /* fallback cliente abaixo */ }
       if (!viaRpc) {
-        await base44.entities.Transfer.update(t.id, { status: "received", arrival_date: now, events: [...(t.events || []), { type: "received", description: `Recebido em ${to?.name || "destino"}`, timestamp: now, user: userName }] });
+        await db.Transfer.update(t.id, { status: "received", arrival_date: now, events: [...(t.events || []), { type: "received", description: `Recebido em ${to?.name || "destino"}`, timestamp: now, user: userName }] });
         for (const oid of t.order_ids || []) {
           const o = orders.find(x => x.id === oid);
           const branchOrigin = to?.address ? { ...to.address } : (o?.origin || {});
-          await base44.entities.Order.update(oid, {
+          await db.Order.update(oid, {
             current_branch_id: t.to_branch_id, status: "confirmed",
             trip_id: null, scheduled_truck_id: null, scheduled_date: null,
             origin: branchOrigin,
@@ -206,14 +206,14 @@ export default function Transfers() {
         }
         if (t.truck_id) {
           const truck = trucks.find(x => x.id === t.truck_id);
-          if (truck?.status === "on_route") await base44.entities.Truck.update(t.truck_id, { status: "available" });
+          if (truck?.status === "on_route") await db.Truck.update(t.truck_id, { status: "available" });
         }
       }
 
       // ── Malha: registra o hop de cada pedido (branch_history) ──
       for (const oid of t.order_ids || []) {
         const o = orders.find(x => x.id === oid);
-        await base44.entities.Order.update(oid, {
+        await db.Order.update(oid, {
           branch_history: [...(o?.branch_history || []), { branch_id: t.to_branch_id, branch_name: to?.name, from_branch_name: t.from_branch_name, at: now }],
         });
       }
@@ -221,10 +221,10 @@ export default function Transfers() {
       // ── Custo da transferência → Financeiro ──
       const costNum = Number(cost) || 0;
       if (costNum > 0 || Number(km) > 0) {
-        await base44.entities.Transfer.update(t.id, { distance_km: Number(km) || null, cost: costNum || null });
+        await db.Transfer.update(t.id, { distance_km: Number(km) || null, cost: costNum || null });
       }
       if (costNum > 0) {
-        await base44.entities.Expense.create({
+        await db.Expense.create({
           category: "other",
           description: `Transferência ${t.protocol} — ${t.from_branch_name || "?"} → ${t.to_branch_name || "?"}${Number(km) > 0 ? ` (${km} km)` : ""}`,
           amount: costNum, date: todayLocalISO(), status: "paid", truck_id: t.truck_id || undefined,
@@ -235,7 +235,7 @@ export default function Transfers() {
       const divEntries = Object.entries(divergences).filter(([, note]) => (note || "").trim());
       for (const [oid, note] of divEntries) {
         try {
-          await base44.entities.Incident.create({
+          await db.Incident.create({
             order_id: oid, type: "avaria", status: "open",
             description: `Divergência no recebimento (${t.protocol}): ${note.trim()}`,
           });

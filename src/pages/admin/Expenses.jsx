@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,14 +64,14 @@ export default function Expenses({ hideTitle = false }) {
 
   const { data: expenses = [] } = useQuery({
     queryKey: ["expenses"],
-    queryFn: () => base44.entities.Expense.list("-date", 200),
+    queryFn: () => db.Expense.list("-date", 200),
   });
-  const { data: suppliers = [] } = useQuery({ queryKey: ["suppliers"], queryFn: () => base44.entities.Supplier.list() });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
-  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
+  const { data: suppliers = [] } = useQuery({ queryKey: ["suppliers"], queryFn: () => db.Supplier.list() });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => db.Driver.list() });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Expense.create(data),
+    mutationFn: (data) => db.Expense.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
       setShowModal(false);
@@ -105,7 +105,7 @@ export default function Expenses({ hideTitle = false }) {
 
   const confirmPayment = async () => {
     try {
-      await base44.entities.Expense.update(payingExpense.id, {
+      await db.Expense.update(payingExpense.id, {
         status: "paid",
         paid_date: payForm.paid_date,
         payment_method: payForm.payment_method,

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -33,10 +33,10 @@ export default function Replanning() {
   const { settings } = useCompanySettings();
   const slaRisk = (list) => list.filter((o) => ["late", "at_risk"].includes(slaStatus(o, settings))).length;
 
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
-  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => base44.entities.Trip.list("-created_date", 80) });
-  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 500) });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
+  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => db.Trip.list("-created_date", 80) });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => db.Driver.list() });
 
   const truckCases = trucksNeedingReplan(trucks, orders, trips);
   const driverCases = driversNeedingReplan(drivers, trips);
@@ -61,7 +61,7 @@ export default function Replanning() {
       } catch { /* fallback cliente abaixo */ }
       if (!done) {
         for (const o of affectedOrders) {
-          await base44.entities.Order.update(o.id, {
+          await db.Order.update(o.id, {
             scheduled_truck_id: replacementId,
             status_history: [...(o.status_history || []), { status: o.status, timestamp: new Date().toISOString(), user: "Admin", note: `Redistribuído para ${newTruck.plate} (caminhão anterior indisponível)` }],
           });
@@ -74,12 +74,12 @@ export default function Replanning() {
           if (t.vehicles && t.vehicles.length) {
             upd.vehicles = t.vehicles.map((v) => v.truck_id === brokenTruckId ? { ...v, truck_id: replacementId, truck_plate: newTruck.plate } : v);
           }
-          await base44.entities.Trip.update(t.id, upd);
+          await db.Trip.update(t.id, upd);
         }
       }
       // Substituto assume "em rota" se herdou uma viagem em andamento
       if (affectedTrips.some((t) => t.status === "in_progress")) {
-        await base44.entities.Truck.update(replacementId, { status: "on_route" });
+        await db.Truck.update(replacementId, { status: "on_route" });
       }
     },
     onSuccess: () => {
@@ -105,7 +105,7 @@ export default function Replanning() {
         throw error;
       } catch { /* fallback cliente abaixo */ }
       for (const t of affectedTrips) {
-        await base44.entities.Trip.update(t.id, {
+        await db.Trip.update(t.id, {
           driver_id: replacementId,
           driver_name: newDriver.name,
           events: [...(t.events || []), { type: "driver_reassigned", description: `Motorista trocado para ${newDriver.name} (anterior ausente)`, timestamp: new Date().toISOString(), user: "Admin" }],

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,14 +48,14 @@ export default function OperationsHub() {
 
   // Torre "ao vivo": auto-atualiza com a tela aberta (TMS deixa o painel num telão).
   const LIVE = 45000;
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 400), refetchInterval: LIVE });
-  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => base44.entities.Trip.list("-created_date", 80), refetchInterval: LIVE });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list(), refetchInterval: LIVE });
-  const { data: alerts = [] } = useQuery({ queryKey: ["alerts"], queryFn: () => base44.entities.Alert.list("-created_date", 100), select: d => d.filter(a => !a.resolved), refetchInterval: LIVE });
-  const { data: revenues = [] } = useQuery({ queryKey: ["revenues"], queryFn: () => base44.entities.Revenue.list("-due_date", 100), enabled: isAdmin });
-  const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => base44.entities.Expense.list("-date", 100), enabled: isAdmin });
-  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
-  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => base44.entities.Incident.list("-created_date", 300), select: d => d.filter(i => i.status !== "resolved"), refetchInterval: LIVE });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 400), refetchInterval: LIVE });
+  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => db.Trip.list("-created_date", 80), refetchInterval: LIVE });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list(), refetchInterval: LIVE });
+  const { data: alerts = [] } = useQuery({ queryKey: ["alerts"], queryFn: () => db.Alert.list("-created_date", 100), select: d => d.filter(a => !a.resolved), refetchInterval: LIVE });
+  const { data: revenues = [] } = useQuery({ queryKey: ["revenues"], queryFn: () => db.Revenue.list("-due_date", 100), enabled: isAdmin });
+  const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => db.Expense.list("-date", 100), enabled: isAdmin });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => db.Driver.list() });
+  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => db.Incident.list("-created_date", 300), select: d => d.filter(i => i.status !== "resolved"), refetchInterval: LIVE });
 
   useEffect(() => {
     base44.functions.invoke("syncAlerts", {}).then(() => {

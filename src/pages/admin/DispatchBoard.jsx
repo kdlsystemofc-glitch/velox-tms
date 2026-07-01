@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -43,9 +43,9 @@ export default function DispatchBoard() {
   const [onlyUrgent, setOnlyUrgent] = useState(false);
   const { settings } = useCompanySettings();
 
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list(), select: d => d.filter(t => t.status !== "inactive") });
-  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => base44.entities.Trip.list("-created_date", 50) });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 500) });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list(), select: d => d.filter(t => t.status !== "inactive") });
+  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => db.Trip.list("-created_date", 50) });
 
   // Fila: confirmados sem viagem
   const queue = orders.filter(o => o.status === "confirmed" && !o.trip_id);
@@ -103,7 +103,7 @@ export default function DispatchBoard() {
         throw error;
       } catch { /* fallback cliente */ }
       for (const order of selectedOrders) {
-        await base44.entities.Order.update(order.id, {
+        await db.Order.update(order.id, {
           scheduled_truck_id: truckId,
           scheduled_date: dateStr,
           status_history: [...(order.status_history || []), {
@@ -125,7 +125,7 @@ export default function DispatchBoard() {
 
   // ── Remover programação de um pedido ──────────────────────────
   const unassignMutation = useMutation({
-    mutationFn: (order) => base44.entities.Order.update(order.id, { scheduled_truck_id: null, scheduled_date: null }),
+    mutationFn: (order) => db.Order.update(order.id, { scheduled_truck_id: null, scheduled_date: null }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       toast({ title: "Pedido devolvido à fila." });
@@ -142,7 +142,7 @@ export default function DispatchBoard() {
         throw error;
       } catch { /* fallback cliente */ }
       for (const o of scheduled) {
-        await base44.entities.Order.update(o.id, { scheduled_truck_id: null, scheduled_date: null });
+        await db.Order.update(o.id, { scheduled_truck_id: null, scheduled_date: null });
       }
     },
     onSuccess: () => {
@@ -172,7 +172,7 @@ export default function DispatchBoard() {
       } catch { /* fallback cliente */ }
       for (const load of plan.loads) {
         for (const o of load.orders) {
-          await base44.entities.Order.update(o.id, { scheduled_truck_id: load.truck.id, scheduled_date: load.date });
+          await db.Order.update(o.id, { scheduled_truck_id: load.truck.id, scheduled_date: load.date });
         }
       }
     },
@@ -244,7 +244,7 @@ export default function DispatchBoard() {
 
   // ── Drag-and-drop: arrastar pedido → célula (ou de volta à fila) ──
   const assignOne = useMutation({
-    mutationFn: ({ order, truckId, dateStr }) => base44.entities.Order.update(order.id, {
+    mutationFn: ({ order, truckId, dateStr }) => db.Order.update(order.id, {
       scheduled_truck_id: truckId, scheduled_date: dateStr,
       status_history: [...(order.status_history || []), { status: order.status, timestamp: new Date().toISOString(), user: "Admin", note: `Programado (arrastar) para ${formatDateBR(dateStr)}` }],
     }),

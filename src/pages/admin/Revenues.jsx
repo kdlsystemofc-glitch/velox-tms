@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,11 +54,11 @@ export default function Revenues({ hideTitle = false }) {
 
   const { data: revenues = [] } = useQuery({
     queryKey: ["revenues"],
-    queryFn: () => base44.entities.Revenue.list("-due_date", 200),
+    queryFn: () => db.Revenue.list("-due_date", 200),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Revenue.create(data),
+    mutationFn: (data) => db.Revenue.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["revenues"] });
       setShowModal(false);
@@ -69,7 +69,7 @@ export default function Revenues({ hideTitle = false }) {
   });
 
   const markReceivedMutation = useMutation({
-    mutationFn: ({ id, date }) => base44.entities.Revenue.update(id, { status: "received", received_date: date }),
+    mutationFn: ({ id, date }) => db.Revenue.update(id, { status: "received", received_date: date }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["revenues"] }); toast({ title: "Recebimento confirmado!" }); },
     onError: (e) => toast({ title: "Erro ao confirmar", description: e?.message, variant: "destructive" }),
   });

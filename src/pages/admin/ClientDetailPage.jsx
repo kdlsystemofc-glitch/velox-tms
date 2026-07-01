@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,20 +43,20 @@ export default function ClientDetailPage() {
 
   const { data: client } = useQuery({
     queryKey: ["client", id],
-    queryFn: () => base44.entities.Client.filter({ id }),
+    queryFn: () => db.Client.filter({ id }),
     select: (d) => d[0],
   });
 
   const { data: orders = [] } = useQuery({
     queryKey: ["orders"],
-    queryFn: () => base44.entities.Order.list("-created_date", 200),
+    queryFn: () => db.Order.list("-created_date", 200),
     select: (d) => d.filter(o => o.client_id === id || o.client_cpf_cnpj === (client?.cpf_cnpj || "")),
   });
 
   useEffect(() => { if (client) setForm(client); }, [client]);
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.Client.update(id, data),
+    mutationFn: (data) => db.Client.update(id, data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["client", id] }); queryClient.invalidateQueries({ queryKey: ["clients"] }); setEditing(false); toast({ title: "Cliente atualizado!" }); },
     onError: (e) => toast({ title: "Erro ao salvar", description: e?.message || "Tente novamente.", variant: "destructive" }),
   });
@@ -71,7 +71,7 @@ export default function ClientDetailPage() {
     } else {
       updated.push({ ...contactForm });
     }
-    await base44.entities.Client.update(client.id, { contacts: updated });
+    await db.Client.update(client.id, { contacts: updated });
     queryClient.invalidateQueries({ queryKey: ["client", id] });
     setShowContactModal(false);
     setNewContact({ name: "", role: "", phone: "", whatsapp: "", email: "", is_primary: false });
@@ -82,7 +82,7 @@ export default function ClientDetailPage() {
 
   const handleRemoveContact = async (index) => {
     const updated = (client.contacts || []).filter((_, i) => i !== index);
-    await base44.entities.Client.update(client.id, { contacts: updated });
+    await db.Client.update(client.id, { contacts: updated });
     queryClient.invalidateQueries({ queryKey: ["client", id] });
   };
 
@@ -408,7 +408,7 @@ export default function ClientDetailPage() {
                   ))}
                   <div className="flex gap-2 pt-2">
                     <Button size="sm" variant="outline" className="flex-1 text-xs text-red-600 dark:text-red-300" onClick={async () => {
-                      await base44.entities.Client.update(client.id, { custom_pricing: {} });
+                      await db.Client.update(client.id, { custom_pricing: {} });
                       queryClient.invalidateQueries({ queryKey: ["client", id] });
                       setEditingPricing(false);
                       toast({ title: "Tabela personalizada removida", description: "Cliente voltou a usar a tabela padrão." });
@@ -419,7 +419,7 @@ export default function ClientDetailPage() {
                         const v = pricingForm[f.key];
                         if (v !== "" && v != null && !isNaN(Number(v))) cleaned[f.key] = Number(v);
                       });
-                      await base44.entities.Client.update(client.id, { custom_pricing: cleaned });
+                      await db.Client.update(client.id, { custom_pricing: cleaned });
                       queryClient.invalidateQueries({ queryKey: ["client", id] });
                       setEditingPricing(false);
                       toast({ title: "Tabela de frete salva!" });

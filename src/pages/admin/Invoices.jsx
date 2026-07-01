@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,9 +41,9 @@ export default function Invoices() {
     URL.revokeObjectURL(url);
   };
 
-  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: () => base44.entities.Invoice.list("-created_date", 300) });
-  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 1000) });
+  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: () => db.Invoice.list("-created_date", 300) });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => db.Client.list() });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 1000) });
 
   // Pedidos faturáveis do cliente escolhido: entregues, com frete, sem fatura.
   const billable = orders.filter(o => o.client_id === clientId && o.status === "delivered" && Number(o.freight_value) > 0 && !o.invoice_id);

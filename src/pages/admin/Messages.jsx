@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,11 +35,11 @@ export default function Messages() {
 
   const { data: messages = [] } = useQuery({
     queryKey: ["contact-messages"],
-    queryFn: () => base44.entities.ContactMessage.list("-created_date"),
+    queryFn: () => db.ContactMessage.list("-created_date"),
   });
 
   const patch = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.ContactMessage.update(id, data),
+    mutationFn: ({ id, data }) => db.ContactMessage.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contact-messages"] }),
     onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),
   });

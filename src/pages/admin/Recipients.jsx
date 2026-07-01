@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,13 +37,13 @@ export default function Recipients({ hideTitle = false }) {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY);
 
-  const { data: recipients = [] } = useQuery({ queryKey: ["recipients"], queryFn: () => base44.entities.Recipient.list("-created_date") });
-  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
+  const { data: recipients = [] } = useQuery({ queryKey: ["recipients"], queryFn: () => db.Recipient.list("-created_date") });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => db.Client.list() });
 
   const save = useMutation({
     mutationFn: (data) => {
-      if (editingId) return base44.entities.Recipient.update(editingId, data);
-      return base44.entities.Recipient.create({ ...data, code: data.code || generateRecipientCode(recipients) });
+      if (editingId) return db.Recipient.update(editingId, data);
+      return db.Recipient.create({ ...data, code: data.code || generateRecipientCode(recipients) });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["recipients"] });
@@ -53,7 +53,7 @@ export default function Recipients({ hideTitle = false }) {
     onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),
   });
   const remove = useMutation({
-    mutationFn: (id) => base44.entities.Recipient.delete(id),
+    mutationFn: (id) => db.Recipient.delete(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["recipients"] }); toast({ title: "Destinatário removido" }); },
   });
 

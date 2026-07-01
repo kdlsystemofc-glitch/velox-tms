@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,19 +21,19 @@ export default function Carriers() {
 
   const { data: carriers = [], isLoading } = useQuery({
     queryKey: ["carriers"],
-    queryFn: () => base44.entities.Carrier.list("-created_at", 200),
+    queryFn: () => db.Carrier.list("-created_at", 200),
   });
   // Scorecard (2.5): desempenho a partir dos pedidos subcontratados.
   const { data: orders = [] } = useQuery({
-    queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 1000),
+    queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 1000),
   });
 
   const save = useMutation({
     mutationFn: async () => {
       if (!form.company_name.trim()) throw new Error("Informe a razão social da transportadora.");
       const payload = { ...form, payment_term_days: Number(form.payment_term_days) || 30 };
-      if (form.id) await base44.entities.Carrier.update(form.id, payload);
-      else await base44.entities.Carrier.create(payload);
+      if (form.id) await db.Carrier.update(form.id, payload);
+      else await db.Carrier.create(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["carriers"] });

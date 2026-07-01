@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import PageHeader from "@/components/shared/PageHeader";
 import { ScrollText, ChevronLeft, ChevronRight, Bug } from "lucide-react";
 import { formatDateTimeBR } from "@/utils/dateUtils";
@@ -15,7 +15,7 @@ export default function AuditLog() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["audit-log", tab, page],
-    queryFn: () => (isErrors ? base44.entities.ClientError : base44.entities.AuditLog)
+    queryFn: () => (isErrors ? db.ClientError : db.AuditLog)
       .page({ orderBy: "-created_at", page, pageSize: PAGE_SIZE }),
     placeholderData: keepPreviousData,
   });

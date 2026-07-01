@@ -1,6 +1,6 @@
 import React, { useState, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, Truck, Plus, RotateCcw, AlertTriangle, Box, Scale, ShieldAlert, FileDown } from "lucide-react";
@@ -33,10 +33,10 @@ function Bar({ label, used, total, unit, pct, warn }) {
 }
 
 export default function LoadingSimulator() {
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
   const { data: orders = [] } = useQuery({
     queryKey: ["orders"],
-    queryFn: () => base44.entities.Order.list("-created_date", 100),
+    queryFn: () => db.Order.list("-created_date", 100),
     select: d => d.filter(o => o.status === "confirmed" || o.status === "new"),
   });
 

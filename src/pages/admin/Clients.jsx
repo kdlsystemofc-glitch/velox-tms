@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,11 +45,11 @@ export default function Clients({ hideTitle = false }) {
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients"],
-    queryFn: () => base44.entities.Client.list("-created_date"),
+    queryFn: () => db.Client.list("-created_date"),
   });
   const { data: orders = [] } = useQuery({
     queryKey: ["orders"],
-    queryFn: () => base44.entities.Order.list("-created_date", 1000),
+    queryFn: () => db.Order.list("-created_date", 1000),
   });
 
   // Uso por cliente: nº de pedidos + data do último (Cad-3).
@@ -64,11 +64,11 @@ export default function Clients({ hideTitle = false }) {
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const allClients = await base44.entities.Client.list("-created_date", 1000);
+      const allClients = await db.Client.list("-created_date", 1000);
       const code = await generateClientCode(allClients);
       const { contacts: formContacts, ...rest } = data;
       const contacts = (formContacts || []).filter(c => c.name?.trim());
-      return base44.entities.Client.create({ ...rest, code, contacts });
+      return db.Client.create({ ...rest, code, contacts });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["clients"] });

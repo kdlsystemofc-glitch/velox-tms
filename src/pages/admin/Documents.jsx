@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -78,19 +78,19 @@ export default function Documents() {
   const [expFilter, setExpFilter] = useState("60");
   const [companyCatFilter, setCompanyCatFilter] = useState("all");
 
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 300) });
-  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => base44.entities.Truck.list() });
-  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => base44.entities.Driver.list() });
-  const { data: settings = {} } = useQuery({ queryKey: ["settings"], queryFn: () => base44.entities.CompanySettings.list(), select: d => d[0] || {} });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 300) });
+  const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list() });
+  const { data: drivers = [] } = useQuery({ queryKey: ["drivers"], queryFn: () => db.Driver.list() });
+  const { data: settings = {} } = useQuery({ queryKey: ["settings"], queryFn: () => db.CompanySettings.list(), select: d => d[0] || {} });
   const companyDocs = settings.documents || [];
 
   const updateTruck = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Truck.update(id, data),
+    mutationFn: ({ id, data }) => db.Truck.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["trucks"] }),
     onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),
   });
   const updateDriver = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Driver.update(id, data),
+    mutationFn: ({ id, data }) => db.Driver.update(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["drivers"] }),
     onError: (e) => toast({ title: "Erro ao salvar", description: e?.message, variant: "destructive" }),
   });
@@ -99,7 +99,7 @@ export default function Documents() {
 
   const saveCompanyDocs = async (docs) => {
     if (!settings.id) { toast({ title: "Configure a empresa primeiro", variant: "destructive" }); return; }
-    await base44.entities.CompanySettings.update(settings.id, { documents: docs });
+    await db.CompanySettings.update(settings.id, { documents: docs });
     queryClient.invalidateQueries({ queryKey: ["settings"] });
   };
 

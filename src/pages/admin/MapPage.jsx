@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Truck, MapPin, Package, ArrowRight } from "lucide-react";
@@ -10,7 +10,7 @@ import { formatDateTimeBR } from "@/utils/dateUtils";
 export default function MapPage() {
   const { data: trips = [] } = useQuery({
     queryKey: ["trips"],
-    queryFn: () => base44.entities.Trip.list("-created_date", 50),
+    queryFn: () => db.Trip.list("-created_date", 50),
     select: (d) => d.filter(t => t.status === "in_progress" || t.status === "planned"),
     refetchInterval: 20_000,        // posições atualizam ~a cada 20s
     refetchOnWindowFocus: true,
@@ -18,7 +18,7 @@ export default function MapPage() {
 
   const { data: orders = [] } = useQuery({
     queryKey: ["orders"],
-    queryFn: () => base44.entities.Order.list("-created_date", 50),
+    queryFn: () => db.Order.list("-created_date", 50),
     select: (d) => d.filter(o => o.status === "in_transit" || o.status === "collecting"),
   });
 

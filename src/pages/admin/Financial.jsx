@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, TrendingDown, ArrowUpRight, Wallet, AlertCircle, CalendarClock, Users } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -17,10 +17,10 @@ function Kpi({ label, value, tone = "", icon: Icon, hint }) {
 }
 
 export default function Financial({ hideTitle = false }) {
-  const { data: revenues = [] } = useQuery({ queryKey: ["revenues"], queryFn: () => base44.entities.Revenue.list("-due_date", 500) });
-  const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => base44.entities.Expense.list("-date", 500) });
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 500) });
-  const { data: settings = {} } = useQuery({ queryKey: ["settings"], queryFn: () => base44.entities.CompanySettings.list(), select: d => d[0] || {} });
+  const { data: revenues = [] } = useQuery({ queryKey: ["revenues"], queryFn: () => db.Revenue.list("-due_date", 500) });
+  const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => db.Expense.list("-date", 500) });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 500) });
+  const { data: settings = {} } = useQuery({ queryKey: ["settings"], queryFn: () => db.CompanySettings.list(), select: d => d[0] || {} });
 
   const now = new Date();
   const thisMonth = now.getMonth();

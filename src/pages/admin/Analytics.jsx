@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -14,10 +14,10 @@ const pctColor = (p) => p == null ? "" : p >= 95 ? "text-green-600 dark:text-gre
 export default function Analytics() {
   const { settings } = useCompanySettings();
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 1000),
+    queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 1000),
   });
   const { data: trips = [] } = useQuery({
-    queryKey: ["trips"], queryFn: () => base44.entities.Trip.list("-created_date", 500),
+    queryKey: ["trips"], queryFn: () => db.Trip.list("-created_date", 500),
   });
 
   const otif = useMemo(() => computeOTIF(orders, settings), [orders, settings]);

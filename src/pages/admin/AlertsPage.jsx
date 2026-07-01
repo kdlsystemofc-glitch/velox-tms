@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,16 +32,16 @@ export default function AlertsPage() {
 
   const { data: alerts = [], isLoading } = useQuery({
     queryKey: ["alerts"],
-    queryFn: () => base44.entities.Alert.list("-created_date", 200),
+    queryFn: () => db.Alert.list("-created_date", 200),
   });
 
   const resolveMutation = useMutation({
-    mutationFn: (id) => base44.entities.Alert.update(id, { resolved: true, read: true }),
+    mutationFn: (id) => db.Alert.update(id, { resolved: true, read: true }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["alerts"] }),
   });
 
   const markReadMutation = useMutation({
-    mutationFn: (id) => base44.entities.Alert.update(id, { read: true }),
+    mutationFn: (id) => db.Alert.update(id, { read: true }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["alerts"] }),
   });
 

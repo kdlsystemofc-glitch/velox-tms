@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,7 +91,7 @@ export default function AdminSettings({ only = null }) {
 
   const { data: settings = [] } = useQuery({
     queryKey: ["settings"],
-    queryFn: () => base44.entities.CompanySettings.list(),
+    queryFn: () => db.CompanySettings.list(),
     select: (d) => d[0] || {},
   });
 
@@ -122,8 +122,8 @@ export default function AdminSettings({ only = null }) {
       // Não toca em campos geridos por outros módulos (saldo, documentos) — evita clobber.
       EXTERNAL_KEYS.forEach(k => delete cleanData[k]);
       return settings?.id
-        ? base44.entities.CompanySettings.update(settings.id, cleanData)
-        : base44.entities.CompanySettings.create(cleanData);
+        ? db.CompanySettings.update(settings.id, cleanData)
+        : db.CompanySettings.create(cleanData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });

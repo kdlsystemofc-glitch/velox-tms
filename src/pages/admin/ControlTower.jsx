@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { db } from "@/repositories";
 import { Link } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
@@ -23,12 +23,12 @@ const SEV = {
 export default function ControlTower() {
   const { settings } = useCompanySettings();
 
-  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => base44.entities.Incident.list("-created_date", 300), select: d => d.filter(i => i.status !== "resolved"), refetchInterval: LIVE });
-  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => base44.entities.Order.list("-created_date", 600), refetchInterval: LIVE });
-  const { data: alerts = [] } = useQuery({ queryKey: ["alerts"], queryFn: () => base44.entities.Alert.list("-created_date", 100), select: d => d.filter(a => !a.resolved), refetchInterval: LIVE });
-  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: () => base44.entities.Invoice.list("-issue_date", 500) });
-  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => base44.entities.Trip.list("-created_date", 120), refetchInterval: LIVE });
-  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
+  const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => db.Incident.list("-created_date", 300), select: d => d.filter(i => i.status !== "resolved"), refetchInterval: LIVE });
+  const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 600), refetchInterval: LIVE });
+  const { data: alerts = [] } = useQuery({ queryKey: ["alerts"], queryFn: () => db.Alert.list("-created_date", 100), select: d => d.filter(a => !a.resolved), refetchInterval: LIVE });
+  const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: () => db.Invoice.list("-issue_date", 500) });
+  const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => db.Trip.list("-created_date", 120), refetchInterval: LIVE });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => db.Client.list() });
   const clientById = useMemo(() => Object.fromEntries(clients.map(c => [c.id, c])), [clients]);
 
   const staleDays = settings?.stale_order_days || DEFAULT_STALE_DAYS;
