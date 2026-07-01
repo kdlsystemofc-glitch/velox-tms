@@ -177,4 +177,10 @@ dinâmico (plataforma de dados).
 
 Migrations novas a aplicar: `20260659_sod_enforcement`, `20260660_client_errors`.
 
+**Rearquitetura (ver `PLANO-EXECUCAO.md`):**
+- ✅ **Projeto 01 — Fundação de Qualidade & Migração** concluído: +32 testes de
+  utils críticos (suíte 183), **gate de migrations no CI** (schema.sql + todas as
+  migrations + idempotência, via Postgres+stubs), captura global de erros. O gate
+  teria pego o erro do `20260658` antes de aplicar.
+
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).

@@ -51,6 +51,12 @@ capacidade (M13) — reabrir por demanda/quando crescer.
 - **Riscos:** baixo (aditivo); atenção ao ambiente de CI para migrations (Supabase/auth).
 - **Avaliação:** Complexidade **Média** · Negócio **Baixo** (habilitador) · Arquitetural **Médio** · Timing **Imediatamente**.
 - **Critérios de conclusão:** utils críticos puros cobertos; **CI aplica todas as migrations em banco limpo + reteste de idempotência**; captura global de erros do front.
+- **✅ STATUS: CONCLUÍDO** (2026-07-01):
+  - *Workstream A* — +32 testes cobrindo `coverageChecker`, `availabilityChecker`, `routePlanner`, `nfeUtils`, `nfeXml` (suíte 151→**183**).
+  - *Workstream B* — job `migrations` no CI: Postgres limpo + `ci/db-stubs.sql` (roles/auth/storage) + `schema.sql` + todas as migrations em ordem + reaplicação (idempotência). Auto-auditoria já corrigiu 1 lacuna de stub (`storage.buckets.public`) e confirmou idempotência (todo ADD CONSTRAINT/CREATE POLICY tem DROP antes; seeds com WHERE NOT EXISTS/ON CONFLICT). *Validação executa no GitHub Actions (Docker local indisponível no ambiente).* 
+  - *Workstream C* — captura global de erros já existia (`main.jsx`, "Onda E") e agora persiste em `client_errors` via `reportError`.
+  - *Desvio informado:* preferência por Supabase CLI reavaliada — as migrations não são auto-contidas (baseline em `schema.sql`) e o stack do CLI auto-aplica migrations no start, o que não encaixa sem reestruturar o baseline (impacto em produção, fora do escopo P01). O gate Postgres+stubs valida o **mesmo** objetivo, sem reestruturar. Adotar o projeto Supabase CLI (migrations auto-contidas) fica como tarefa separada.
+  - *Validação:* lint limpo · 183 testes · build OK · 5 E2E — nenhuma funcionalidade existente quebrada.
 
 ### **Projeto 02 — Núcleo de Domínio & Precificação Única**
 - **Objetivo:** thin client; regras no servidor; 1 serviço de precificação; iniciar reestruturação de domínios (Order/Shipment vs Operação; Master Data vs Frota); pedido público vira cotação/lead.
