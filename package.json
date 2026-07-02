@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:full": "node supabase/build-schema-full.mjs"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",

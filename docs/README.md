@@ -15,7 +15,7 @@ que existia antes (múltiplos roadmaps/contextos/simulações na raiz).
 | **1. Técnica** | [`../README.md`](../README.md) | stack, scripts npm, `.env`, deps (`package.json`) |
 | **2. Funcional** | [`funcional/`](funcional/) | módulos, perfis, fluxos e **portais** |
 | **3. Arquitetura** | [`arquitetura/`](arquitetura/) | camadas, domínios, backbone de eventos, RLS |
-| **4. SQL** | `../supabase/` | **migrations** = verdade; `schema.sql` = referência; `verificacoes.sql`/`seed_simulation.sql` |
+| **4. SQL** | `../supabase/` | **migrations** = verdade; `schema_full.sql` = consolidado p/ backup; `verificacoes.sql`/`seed_simulation.sql` |
 | **5. APIs** | código | RPCs `SECURITY DEFINER` (`supabase/migrations/*`) + Edge Functions (`supabase/functions/*`) |
 | **6. Implantação** | [`implantacao/DEPLOY.md`](implantacao/DEPLOY.md) | ordem de migrations, deploy de functions, pg_cron/MFA/Realtime, `.env` |
 | **7. Operacional** | [`operacional/`](operacional/) | runbook, jobs, simulação de 30 dias |
@@ -38,5 +38,5 @@ que existia antes (múltiplos roadmaps/contextos/simulações na raiz).
 
 ## Notas de fonte de verdade
 - **Permissões/SoD:** a autoridade é o **código** — `src/lib/permissions.js` (`can`) + `has_capability` no banco. Documentos descrevem, não definem.
-- **Schema do banco:** as **migrations** (`supabase/migrations/*`, ordenadas) mandam; `schema.sql` é snapshot de referência/bootstrap.
+- **Schema do banco:** as **migrations** (`supabase/migrations/*`, ordenadas) mandam; `schema.sql` é o snapshot inicial. Para **backup/recriação ágil** há um consolidado **gerado**: `supabase/schema_full.sql` (schema + todas as migrations num único script idempotente). Regenerar com `npm run db:full` — **não editar à mão** (é derivado).
 - **Adaptadores adiados (decisão de produto):** e-mail (notificações externas), banco/gateway, provedor fiscal — ver `ROADMAP-ESTRATEGICO.md` e as memórias do projeto.

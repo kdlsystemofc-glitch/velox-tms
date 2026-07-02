@@ -24,6 +24,16 @@ do Supabase (ou via CLI). São **idempotentes**. Marcos recentes que exigem aten
 
 Verificação pós-migração: rodar `supabase/verificacoes.sql` (as linhas `RAZAO` devem ficar em 0).
 
+### Backup / recriação em um único arquivo
+Para recriar o banco de uma vez (ou guardar um snapshot do schema), use o consolidado
+**`supabase/schema_full.sql`** (schema + todas as migrations num único script idempotente).
+É **gerado** — regenere após adicionar migrations:
+```
+npm run db:full        # gera supabase/schema_full.sql
+```
+Rodar num projeto Supabase novo reconstrói toda a estrutura (não inclui dados;
+`seed_simulation.sql` é separado).
+
 ## 3. Configurações do painel Supabase (uma vez)
 - **Realtime:** habilitar Realtime nas tabelas publicadas (as migrations já as adicionam à `supabase_realtime`).
 - **pg_cron:** habilitar a extensão (Database → Extensions) e reexecutar `20260669` para o job diário `velox-daily-jobs`. Sem pg_cron, usar o botão **"Rodar jobs agora"** (Torre de Controle).
