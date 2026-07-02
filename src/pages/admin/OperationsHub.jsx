@@ -22,6 +22,7 @@ import { slaStatus } from "@/utils/sla";
 import { findStaleOrders, DEFAULT_STALE_DAYS } from "@/utils/staleOrders";
 import { orderVolumeM3, truckVolumeM3, fmtM3 } from "@/utils/cargoVolume";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useRealtime } from "@/hooks/useRealtime";
 import { Truck, CheckCircle2, AlertCircle, ArrowRight, Plus,
   Clock, MapPin, DollarSign, CalendarDays, Inbox, Wrench, UserX,
   TrendingUp, Percent, ShieldAlert, Activity
@@ -46,8 +47,9 @@ export default function OperationsHub() {
   const { settings } = useCompanySettings();
   const [period, setPeriod] = useState("today"); // today | tomorrow | week
 
-  // Torre "ao vivo": auto-atualiza com a tela aberta (TMS deixa o painel num telão).
-  const LIVE = 45000;
+  // Torre "ao vivo": realtime (P05.2) atualiza por push; LIVE fica como fallback longo.
+  const LIVE = 120_000;
+  useRealtime(["orders", "trips", "alerts", "incidents"], ["orders", "trips", "trucks", "alerts", "incidents-all"]);
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 400), refetchInterval: LIVE });
   const { data: trips = [] } = useQuery({ queryKey: ["trips"], queryFn: () => db.Trip.list("-created_date", 80), refetchInterval: LIVE });
   const { data: trucks = [] } = useQuery({ queryKey: ["trucks"], queryFn: () => db.Truck.list(), refetchInterval: LIVE });

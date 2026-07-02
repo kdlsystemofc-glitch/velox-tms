@@ -6,13 +6,16 @@ import { Link } from "react-router-dom";
 import { Truck, MapPin, Package, ArrowRight } from "lucide-react";
 import LiveMap from "@/components/shared/LiveMap";
 import { formatDateTimeBR } from "@/utils/dateUtils";
+import { useRealtime } from "@/hooks/useRealtime";
 
 export default function MapPage() {
+  // Rastreio por push (P05.2); o refetchInterval fica como fallback longo.
+  useRealtime(["trips", "orders"], ["trips", "orders"]);
   const { data: trips = [] } = useQuery({
     queryKey: ["trips"],
     queryFn: () => db.Trip.list("-created_date", 50),
     select: (d) => d.filter(t => t.status === "in_progress" || t.status === "planned"),
-    refetchInterval: 20_000,        // posições atualizam ~a cada 20s
+    refetchInterval: 120_000,       // fallback; realtime é a via primária
     refetchOnWindowFocus: true,
   });
 

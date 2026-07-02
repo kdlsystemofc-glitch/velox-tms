@@ -4,12 +4,14 @@ import { db } from "@/repositories";
 import { Link } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useRealtime } from "@/hooks/useRealtime";
 import { incidentSlaStatus } from "@/utils/incidentSla";
 import { findStaleOrders, DEFAULT_STALE_DAYS } from "@/utils/staleOrders";
 import { auditOrderFreight } from "@/utils/freightAudit";
+import EventStreamCard from "@/components/admin/EventStreamCard";
 import { RadioTower, ShieldAlert, PackageX, Bell, FileWarning, ScanLine, Navigation, CheckCircle2, ArrowRight } from "lucide-react";
 
-const LIVE = 30_000;
+const LIVE = 120_000; // fallback longo; o realtime (useRealtime) é a via primária (P05.2)
 const todayISO = () => new Date().toISOString().slice(0, 10);
 // minutos desde um timestamp
 const minsSince = (ts) => ts ? Math.round((Date.now() - new Date(ts).getTime()) / 60000) : Infinity;
@@ -22,6 +24,8 @@ const SEV = {
 
 export default function ControlTower() {
   const { settings } = useCompanySettings();
+  // Realtime substitui o polling curto (P05.2); LIVE fica como fallback longo.
+  useRealtime(["orders", "trips", "alerts", "incidents"], ["orders", "trips", "alerts", "incidents-all"]);
 
   const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => db.Incident.list("-created_date", 300), select: d => d.filter(i => i.status !== "resolved"), refetchInterval: LIVE });
   const { data: orders = [] } = useQuery({ queryKey: ["orders"], queryFn: () => db.Order.list("-created_date", 600), refetchInterval: LIVE });
@@ -120,6 +124,8 @@ export default function ControlTower() {
           </div>
         </>
       )}
+
+      <EventStreamCard />
     </div>
   );
 }

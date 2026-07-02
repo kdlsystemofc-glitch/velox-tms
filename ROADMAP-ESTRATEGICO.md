@@ -224,4 +224,12 @@ Migrations novas a aplicar: `20260662`, `20260663`, `20260664` (⚠️ testar co
 **➡️ Projeto 04 (Razão Financeiro Unificado & Auditoria): 100% concluído** — 213 testes / lint / build / E2E verdes.
 Migrations novas a aplicar: `20260665`, `20260666` (⚠️ testar baixa/estorno/conciliação e a aba Razão após).
 
+- ✅ **Projeto 05.1 — Outbox / event bus** concluído: `domain_events` + `emit_event` + triggers nas transições-chave (order/settlement/incident/transfer).
+- ✅ **Projeto 05.2 — Realtime** concluído: `useRealtime` + publication; ControlTower/OperationsHub/MapPage fora do polling (fallback longo). Portal segue via RPC/polling por RLS.
+- ✅ **Projeto 05.3 — Jobs/agendador** concluído: `sweep_overdue`/`run_due_jobs` + `job_runs` + pg_cron tolerante + RPC manual.
+- ✅ **Projeto 05.4 — Observabilidade** concluída: `EventStreamCard` (eventos ao vivo + jobs) na Torre de Controle.
+
+**➡️ Projeto 05 (Backbone de Eventos & Assíncrono): 100% concluído** — 213 testes / lint / build / E2E verdes.
+Migrations novas a aplicar: `20260667`, `20260668`, `20260669` (⚠️ habilitar pg_cron no Supabase; senão usar "Rodar jobs agora").
+
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).

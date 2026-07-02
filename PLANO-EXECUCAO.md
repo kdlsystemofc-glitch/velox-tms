@@ -120,6 +120,14 @@ capacidade (M13) — reabrir por demanda/quando crescer.
 - **Riscos:** Médio (nova infra).
 - **Avaliação:** Complexidade **Alta** · Negócio **Baixo** (habilitador) · Arquitetural **Alto** · Timing **Próxima versão**.
 - **Critérios de conclusão:** eventos publicados nas transições-chave; ≥1 consumidor assíncrono em produção; rastreio/listas fora do polling.
+- ✅ **CONCLUÍDO (2026-07-02)** — abordagem aditiva (emissão por triggers, sem tocar nas RPCs; realtime com fallback de polling longo). Sub-projetos:
+  - **P05.1 — Outbox / event bus** (`domain_events` append-only + `emit_event`): emissão por **triggers** nas transições-chave — `order.created`/`order.status_changed`, `settlement.created`/`reversed`, `incident.opened`/`resolved`, `transfer.status_changed`. Um evento é só um INSERT (zero mudança de comportamento; captura RPC e update direto). Migration `20260667`.
+  - **P05.2 — Realtime substitui polling** (`useRealtime` + publication `supabase_realtime`): ControlTower, OperationsHub e MapPage assinam `postgres_changes` e invalidam o cache; `refetchInterval` vira fallback longo (120s). Portal segue em polling **por design** (cliente lê via RPC, sem SELECT direto em `orders` → RLS não entrega realtime). Migration `20260668` (idempotente/tolerante).
+  - **P05.3 — Jobs/agendador + consumidor assíncrono**: `sweep_overdue()` (marca receitas vencidas, idempotente, emite evento) despachada por `run_due_jobs()`; agendamento **pg_cron tolerante** (no-op se a extensão faltar) + RPC manual `run_due_jobs`; `job_runs` registra execuções. Migration `20260669`.
+  - **P05.4 — Observabilidade**: `EventStreamCard` na Torre de Controle (fluxo de eventos ao vivo + último job + botão "Rodar jobs agora").
+  - **Segurança (autoauditoria):** funções internas (`domain_event_write`, `sweep_overdue`) revogadas de PUBLIC; `run_due_jobs` aceita cron (sem auth) ou staff.
+  - **Critérios atendidos:** ① eventos nas transições-chave (triggers) · ② consumidor assíncrono (`sweep_overdue` via pg_cron/`run_due_jobs`) · ③ rastreio/listas via realtime (polling só fallback).
+  - **Validação:** 213 testes · lint · build · E2E (5) verdes. ⚠️ Aplicar `20260667`→`20260669`; habilitar **pg_cron** no painel Supabase (senão usar "Rodar jobs agora"); conferir realtime nas telas ao vivo.
 
 ### **Projeto 06 — Automação de Processos**
 - **Objetivo:** faturamento por corte, acerto na entrega, conciliação auto de alta confiança, workflow de exceções, notificações multicanal.

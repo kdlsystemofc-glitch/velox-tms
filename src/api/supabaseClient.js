@@ -47,6 +47,8 @@ export const TABLE_MAP = {
   TariffTable:     'tariff_tables',
   TariffVersion:   'tariff_versions',
   Settlement:      'settlements',
+  DomainEvent:     'domain_events',
+  JobRun:          'job_runs',
 };
 
 // Converte campos created_date/updated_date do base44 para created_at/updated_at do Supabase
