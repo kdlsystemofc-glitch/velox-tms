@@ -1,39 +1,43 @@
-**Welcome to your Base44 project** 
+# Velox TMS
 
-**About**
+Sistema de gestão de transportes (TMS) para transporte rodoviário de cargas.
+SPA **React 18 + Vite** com backend **Supabase** (Postgres + Auth + Storage + Realtime + Edge Functions).
 
-View and Edit  your app on [Base44.com](http://Base44.com) 
+> **Documentação oficial:** ver [`docs/`](docs/README.md).
+> **Planejamento/execução:** [`PLANO-EXECUCAO.md`](PLANO-EXECUCAO.md) e [`ROADMAP-ESTRATEGICO.md`](ROADMAP-ESTRATEGICO.md).
 
-This project contains everything you need to run your app locally.
+## Stack
+- **Front:** React 18, Vite, React Router, Tailwind, shadcn/ui, `@tanstack/react-query` v5.
+- **Back:** Supabase (Postgres + RLS + RPCs `SECURITY DEFINER`, Auth, Storage, Realtime), Edge Functions (Deno).
+- **Testes:** Vitest (unit) + Playwright (E2E smoke).
 
-**Edit the code in your local development environment**
+## Setup local
+1. Clonar o repositório e entrar na pasta.
+2. `npm ci` (ou `npm install`).
+3. Criar `.env.local` com as credenciais do Supabase:
+   ```
+   VITE_SUPABASE_URL=https://<seu-projeto>.supabase.co
+   VITE_SUPABASE_ANON_KEY=<sua-anon-key>
+   ```
+4. Aplicar as migrations do banco — ver [`docs/implantacao/DEPLOY.md`](docs/implantacao/DEPLOY.md).
+5. `npm run dev`.
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+## Scripts
+| Comando | O quê |
+|---|---|
+| `npm run dev` | servidor de desenvolvimento (Vite) |
+| `npm run build` | build de produção |
+| `npm run lint` | ESLint |
+| `npx vitest run` | testes unitários |
+| `npx playwright test` | testes E2E (smoke) |
 
-**Prerequisites:** 
+## Estrutura
+- `src/` — aplicação (páginas, componentes, hooks, serviços, repositórios).
+- `supabase/migrations/` — schema/RPCs (fonte de verdade do banco; ordenadas por nome).
+- `supabase/functions/` — Edge Functions (`render-documents`, `fiscal-emit`).
+- `docs/` — documentação oficial (funcional, arquitetura, implantação, operacional).
+- `qa-runner/` — harness de QA (simulação de 30 dias).
 
-1. Clone the repository using the project's Git URL 
-2. Navigate to the project directory
-3. Install dependencies: `npm install`
-4. Create an `.env.local` file and set the right environment variables
-
-```
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=your_backend_url
-
-e.g.
-VITE_BASE44_APP_ID=cbef744a8545c389ef439ea6
-VITE_BASE44_APP_BASE_URL=https://my-to-do-list-81bfaad7.base44.app
-```
-
-Run the app: `npm run dev`
-
-**Publish your changes**
-
-Open [Base44.com](http://Base44.com) and click on Publish.
-
-**Docs & Support**
-
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+## Implantação
+Ordem de migrations, deploy de Edge Functions e configurações do painel Supabase
+(pg_cron, MFA, Realtime): [`docs/implantacao/DEPLOY.md`](docs/implantacao/DEPLOY.md).

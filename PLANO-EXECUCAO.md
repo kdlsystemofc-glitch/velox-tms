@@ -1,6 +1,6 @@
 # 🗂️ Plano Estratégico de Execução — Velox TMS
 
-> Transformação do `RELATORIO-CONSULTORIA.md` em plano executável, sob as lentes
+> Transformação do `docs/historico/RELATORIO-CONSULTORIA.md` em plano executável, sob as lentes
 > **Arquiteto Sênior + PO + Tech Lead** (skills: `vibe-code-auditor`, `ux-flow`).
 > Projetos **1-indexados** e independentes; cada um é concluído (dev → teste →
 > auditoria → done) antes do próximo iniciar. Gerado em 2026-07-01.
@@ -72,7 +72,7 @@ capacidade (M13) — reabrir por demanda/quando crescer.
   - **P02.2 — Precificação autoritativa no servidor** — ✅ **CONCLUÍDO** (2026-07-01, `78167d8`). Refinamento da decisão: **não** portamos a fórmula para SQL (evita duas fontes de verdade). Em vez disso, `create_public_order` (RPC `SECURITY DEFINER`, migr. `20260661`) passou a ser o **único** caminho do `/agendar`: gera protocolo/status no servidor, grava a **estimativa** do cliente (`freight_estimate`) e deixa `freight_value` **NULL** (autoritativo); RLS de INSERT anônimo removida; cobrança segue autoritativa em `confirm_order`. ⚠️ *Requer teste do fluxo anônimo `/agendar` em produção após aplicar a migration.*
   - **P02.3 — Aposentar `base44`** (fachada de entidades) — ✅ **CONCLUÍDO** (2026-07-01, lotes `a4f92d6` + `0a78794`). Nova camada `src/repositories/index.js` (`db`); as **276 chamadas** `base44.entities.*` migradas em lotes (não-admin → admin → utils) para `db.*`; Proxy `base44.entities` **removida**. `base44` mantém só `auth/storage/functions/integrations` (facetas menores, ~8 usos — retire opcional futuro). Comportamento idêntico; 188 testes/lint/build/E2E verdes.
   - **P02.4 — Pedido público → lead/cotação** — ✅ **CONCLUÍDO** (2026-07-01, `ce13aa1`). O essencial saiu no P02.2 (INSERT anônimo removido + frete = estimativa); o pipeline de triagem já existia (aba "Aprovação" + precificação/confirmação pela equipe). Acabamento: badge **"Site"** (com estimativa no tooltip) na fila de pedidos, distinguindo leads do site. *(CRM de leads completo — estágios/won-lost — não é necessário agora; seria scope creep.)*
-  - **P02.5 — Reestruturação de domínios** — ✅ **RESOLVIDO** (2026-07-01, `ce13aa1`). Mapa de domínios explícito em `src/repositories` (`domains`) + `ARQUITETURA-FUNCIONAL.md`. A **reorganização física de pastas** (mover 66 arquivos + reescrever imports) foi **deliberadamente adiada**: churn de alto risco sem valor funcional — o seam de dados (`db`) já expõe as fronteiras.
+  - **P02.5 — Reestruturação de domínios** — ✅ **RESOLVIDO** (2026-07-01, `ce13aa1`). Mapa de domínios explícito em `src/repositories` (`domains`) + `docs/arquitetura/ARQUITETURA-FUNCIONAL.md`. A **reorganização física de pastas** (mover 66 arquivos + reescrever imports) foi **deliberadamente adiada**: churn de alto risco sem valor funcional — o seam de dados (`db`) já expõe as fronteiras.
 
   **➡️ PROJETO 02: 100% concluído** (P02.1–P02.5).
 

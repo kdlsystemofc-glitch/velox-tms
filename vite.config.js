@@ -22,7 +22,6 @@ export default defineConfig({
         // Separa libs pesadas em chunks próprios (carregadas só quando usadas).
         manualChunks: {
           pdf: ['jspdf'],
-          canvas: ['html2canvas'],
           charts: ['recharts'],
           vendor: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
         },

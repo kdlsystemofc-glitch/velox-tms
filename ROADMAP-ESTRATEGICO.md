@@ -1,8 +1,8 @@
 # 🚀 Roadmap Estratégico de Evolução — Velox TMS
 
 > Plano de evolução por **níveis de maturidade**, derivado de
-> `INVENTARIO-SISTEMA.md`, `ARQUITETURA-FUNCIONAL.md`, `MAPA-FLUXOS-PERFIS.md` e
-> `GAP-ANALYSIS-ENTERPRISE.md`.
+> `docs/funcional/INVENTARIO-SISTEMA.md`, `docs/arquitetura/ARQUITETURA-FUNCIONAL.md`,
+> `docs/funcional/MAPA-FLUXOS-PERFIS.md` e `docs/historico/GAP-ANALYSIS-ENTERPRISE.md`.
 >
 > Gerado em 2026-06-30 (skills: `redesign-existing-projects`, `ui-ux-designer`,
 > `vibe-code-auditor`).
