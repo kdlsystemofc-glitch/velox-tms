@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/repositories";
+import { supabase } from "@/api/supabaseClient";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,12 +106,16 @@ export default function Expenses({ hideTitle = false }) {
 
   const confirmPayment = async () => {
     try {
-      await db.Expense.update(payingExpense.id, {
-        status: "paid",
-        paid_date: payForm.paid_date,
-        payment_method: payForm.payment_method,
-        ...(payForm.receipt_url ? { receipt_url: payForm.receipt_url } : {}),
+      // Baixa única (P04.1): razão (settlements) + status via RPC, com SoD e
+      // trilha. O comprovante (receipt_url) é metadado — gravado à parte.
+      const { error } = await supabase.rpc("settle", {
+        p_target_type: "expense", p_target_id: payingExpense.id,
+        p_date: payForm.paid_date, p_method: payForm.payment_method, p_source: "manual",
       });
+      if (error) throw error;
+      if (payForm.receipt_url) {
+        await db.Expense.update(payingExpense.id, { receipt_url: payForm.receipt_url });
+      }
       queryClient.invalidateQueries({ queryKey: ["expenses"] });
       setPayingExpense(null);
       toast({ title: "Despesa baixada com sucesso!" });

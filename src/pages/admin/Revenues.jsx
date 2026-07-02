@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/repositories";
+import { supabase } from "@/api/supabaseClient";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +70,12 @@ export default function Revenues({ hideTitle = false }) {
   });
 
   const markReceivedMutation = useMutation({
-    mutationFn: ({ id, date }) => db.Revenue.update(id, { status: "received", received_date: date }),
+    // Baixa única (P04.1): registra no razão (settlements) + vira o status, com
+    // SoD e trilha — em vez do update direto que burlava permissão/auditoria.
+    mutationFn: async ({ id, date }) => {
+      const { error } = await supabase.rpc("settle", { p_target_type: "revenue", p_target_id: id, p_date: date, p_source: "manual" });
+      if (error) throw error;
+    },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["revenues"] }); toast({ title: "Recebimento confirmado!" }); },
     onError: (e) => toast({ title: "Erro ao confirmar", description: e?.message, variant: "destructive" }),
   });

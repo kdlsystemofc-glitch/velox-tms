@@ -46,6 +46,7 @@ export const TABLE_MAP = {
   ClientError:     'client_errors',
   TariffTable:     'tariff_tables',
   TariffVersion:   'tariff_versions',
+  Settlement:      'settlements',
 };
 
 // Converte campos created_date/updated_date do base44 para created_at/updated_at do Supabase

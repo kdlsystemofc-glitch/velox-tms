@@ -215,4 +215,13 @@ Migration nova a aplicar: `20260661_public_order_authoritative` (⚠️ testar `
 **➡️ Projeto 03 (Tarifação & Contratos Governados): 100% concluído** — 208 testes / lint / build / E2E verdes.
 Migrations novas a aplicar: `20260662`, `20260663`, `20260664` (⚠️ testar cotação e edição de tarifa após).
 
+- ✅ **Projeto 04.1 — Razão único + baixa única** concluído: `settlements` (grão conta) + `settle`/`unsettle`;
+  `pay_invoice`/`reconcile_bank_tx`/updates diretos unificados numa cascata única; estorno simétrico.
+- ✅ **Projeto 04.2 — Auditoria 3-way** concluída: `freightThreeWay` (contratado×executado×cobrado); `FreightAudit` 3-way.
+- ✅ **Projeto 04.3 — Backfill + reconciliação** concluído: razão semeado do histórico; view `v_ledger_reconciliation` + verificações; `financeSubdomains`.
+- ✅ **Projeto 04.4 — UI** concluída: aba **Razão** (ledger + estornos + indicador de reconciliação).
+
+**➡️ Projeto 04 (Razão Financeiro Unificado & Auditoria): 100% concluído** — 213 testes / lint / build / E2E verdes.
+Migrations novas a aplicar: `20260665`, `20260666` (⚠️ testar baixa/estorno/conciliação e a aba Razão após).
+
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).

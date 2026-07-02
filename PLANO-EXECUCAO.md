@@ -102,6 +102,14 @@ capacidade (M13) — reabrir por demanda/quando crescer.
 - **Riscos:** Médio/Alto (dados financeiros).
 - **Avaliação:** Complexidade **Alta** · Negócio **Alto** · Arquitetural **Médio** · Timing **Próxima versão**.
 - **Critérios de conclusão:** baixa única; auditoria contratado×executado×cobrado; relatórios batem com o razão.
+- ✅ **CONCLUÍDO (2026-07-02)** — abordagem aditiva (colunas de status preservadas como cache; razão como fonte de verdade dos eventos + alvo de reconciliação). Sub-projetos:
+  - **P04.1 — Razão único + baixa única** (`settlements`, grão receita/despesa; RPCs `settle`/`unsettle`): `pay_invoice`, `reconcile_bank_tx` (todos os ramos) e os botões manuais de Receitas/Despesas passam a delegar a **uma** cascata (`settlement_apply`/`settlement_apply_invoice`). Corrige a duplicação da cascata de fatura e a **assimetria de estorno** (`unreconcile` agora reverte razão + status). Migration `20260665`.
+  - **P04.2 — Auditoria contratado × executado × cobrado** (`src/services/freightThreeWay.js`): contratado = snapshot do P03; executado = recálculo pelo motor; cobrado = receita/fatura. `FreightAudit` elevado a 3-way.
+  - **P04.3 — Backfill + reconciliação + subdomínios**: seed idempotente do razão a partir de received/paid (`20260666`); view `v_ledger_reconciliation` (relatório × razão) + verificações em `verificacoes.sql`; mapa `financeSubdomains` (AR/Payables/Treasury/Audit).
+  - **P04.4 — UI**: aba **Razão** (ledger de eventos + estornos + indicador "bate/não bate") no Financeiro; `FreightAudit` 3-way.
+  - **Segurança (autoauditoria):** funções internas revogadas de PUBLIC (evita bypass de SoD); baixa restrita a status liquidáveis (não baixa cancelada).
+  - **Critérios atendidos:** ① baixa única (razão + `settle`) · ② 3-way (contratado×executado×cobrado) · ③ relatórios reconciliam via `v_ledger_reconciliation`/verificações.
+  - **Validação:** 213 testes · lint · build · E2E (5) verdes. ⚠️ Aplicar migrations `20260665`→`20260666` no Supabase; após, testar baixa/estorno/conciliação e conferir a aba Razão.
 
 ### **Projeto 05 — Backbone de Eventos & Assíncrono**
 - **Objetivo:** outbox/event bus + filas/jobs/agendador + realtime (substituir polling).

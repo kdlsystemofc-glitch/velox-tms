@@ -107,4 +107,33 @@ SELECT secao, indicador, valor, situacao FROM (
         - coalesce((SELECT sum(amount) FROM revenues WHERE notes LIKE '%[SIM]%' AND status<>'cancelled'),0), 2) = 0
       THEN 'OK' ELSE '⚠ PROBLEMA' END
 
+  -- ░░ RAZÃO (P04): baixas × razão de liquidação (diferença deve ser 0) ░░
+  -- Requer o backfill (20260666) aplicado; antes disso a diferença acusa o gap.
+  UNION ALL
+  SELECT 40,'RAZAO','Receitas recebidas × razão (deve ser 0)',
+    round(
+      coalesce((SELECT sum(amount) FROM revenues WHERE notes LIKE '%[SIM]%' AND status='received'),0)
+      - coalesce((SELECT sum(s.amount) FROM settlements s
+                    JOIN revenues r ON r.id = s.target_id
+                   WHERE s.target_type='revenue' AND r.notes LIKE '%[SIM]%'),0), 2),
+    CASE WHEN round(
+      coalesce((SELECT sum(amount) FROM revenues WHERE notes LIKE '%[SIM]%' AND status='received'),0)
+      - coalesce((SELECT sum(s.amount) FROM settlements s
+                    JOIN revenues r ON r.id = s.target_id
+                   WHERE s.target_type='revenue' AND r.notes LIKE '%[SIM]%'),0), 2) = 0
+      THEN 'OK' ELSE '⚠ PROBLEMA' END
+  UNION ALL
+  SELECT 41,'RAZAO','Despesas pagas × razão (deve ser 0)',
+    round(
+      coalesce((SELECT sum(amount) FROM expenses WHERE notes LIKE '%[SIM]%' AND status='paid'),0)
+      - coalesce((SELECT sum(s.amount) FROM settlements s
+                    JOIN expenses e ON e.id = s.target_id
+                   WHERE s.target_type='expense' AND e.notes LIKE '%[SIM]%'),0), 2),
+    CASE WHEN round(
+      coalesce((SELECT sum(amount) FROM expenses WHERE notes LIKE '%[SIM]%' AND status='paid'),0)
+      - coalesce((SELECT sum(s.amount) FROM settlements s
+                    JOIN expenses e ON e.id = s.target_id
+                   WHERE s.target_type='expense' AND e.notes LIKE '%[SIM]%'),0), 2) = 0
+      THEN 'OK' ELSE '⚠ PROBLEMA' END
+
 ) q ORDER BY ord;

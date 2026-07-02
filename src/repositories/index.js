@@ -34,10 +34,23 @@ export const domains = {
   operacao:   ["Order", "Trip", "Incident", "Transfer", "Alert", "OrderTemplate", "ScheduleBlock"],
   frota:      ["Truck", "Driver"],
   masterData: ["Client", "Recipient", "Supplier", "Branch", "Carrier"],
-  financeiro: ["Revenue", "Expense", "Invoice", "BankTransaction"],
+  financeiro: ["Revenue", "Expense", "Invoice", "BankTransaction", "Settlement"],
   tarifacao:  ["TariffTable", "TariffVersion"],
   sistema:    ["CompanySettings", "AuditLog", "ClientError"],
   comercial:  ["ContactMessage", "Testimonial"],
+};
+
+/**
+ * Subdomínios financeiros (Projeto 04.3) — separa o financeiro amalgamado em
+ * fronteiras claras, sem reorg física. O razão (`settlements`) é transversal:
+ * é onde AR e Payables registram a liquidação; Treasury concilia o extrato
+ * contra ele; Auditoria cruza contratado×executado×cobrado.
+ */
+export const financeSubdomains = {
+  receivables: ["Revenue", "Invoice"],        // AR — a receber + faturamento
+  payables:    ["Expense"],                    // AP — a pagar (inclui acerto de parceiro)
+  treasury:    ["BankTransaction", "Settlement"], // Tesouraria — extrato + razão de liquidação
+  audit:       ["Settlement", "AuditLog"],     // Auditoria — razão + trilha
 };
 
 export default db;
