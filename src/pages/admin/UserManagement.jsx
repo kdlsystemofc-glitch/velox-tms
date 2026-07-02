@@ -93,6 +93,13 @@ export default function UserManagement() {
     onError: (e) => toast({ title: "Erro ao redefinir", description: e?.message, variant: "destructive" }),
   });
 
+  // Recuperação de 2FA (P07.3): apaga os fatores do usuário (auditado no servidor).
+  const resetMfa = useMutation({
+    mutationFn: async ({ id }) => { const { error } = await supabase.rpc("admin_reset_mfa", { p_user_id: id }); if (error) throw error; },
+    onSuccess: (_d, vars) => { logAction("Redefiniu 2FA", vars.email); toast({ title: "2FA redefinido", description: "O usuário precisará ativar o 2FA novamente." }); },
+    onError: (e) => toast({ title: "Erro ao redefinir 2FA", description: e?.message, variant: "destructive" }),
+  });
+
   const openPerms = (p) => { setPermDraft(p.permissions || {}); setPermUser(p); };
   const savePerms = useMutation({
     mutationFn: async () => {
@@ -188,6 +195,7 @@ export default function UserManagement() {
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" disabled={run.isPending} onClick={() => openPerms(p)}><UserCog className="w-3.5 h-3.5" /> Permissões</Button>
                 )}
                 <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" disabled={run.isPending} onClick={() => { setResetUser(p); setResetPass(""); }}><KeyRound className="w-3.5 h-3.5" /> Senha</Button>
+                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" disabled={resetMfa.isPending} onClick={() => { if (window.confirm(`Redefinir o 2FA de ${p.email}? O usuário precisará cadastrar novamente.`)) resetMfa.mutate({ id: p.id, email: p.email }); }}><ShieldCheck className="w-3.5 h-3.5" /> 2FA</Button>
                 <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" disabled={run.isPending || isSelf} onClick={() => toggleActive(p)}><Power className="w-3.5 h-3.5" /> {p.active === false ? "Ativar" : "Desativar"}</Button>
                 <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-red-500" disabled={run.isPending || isSelf} onClick={() => remove(p)}><Trash2 className="w-3.5 h-3.5" /></Button>
               </div>

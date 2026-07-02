@@ -241,4 +241,12 @@ Migrations novas a aplicar: `20260667`, `20260668`, `20260669` (⚠️ habilitar
 **➡️ Projeto 06 (Automação de Processos): 100% concluído** (canal externo de notificação pendente de provedor — critério ③ parcial/documentado) — 213 testes / lint / build / E2E verdes.
 Migrations novas a aplicar: `20260670`, `20260671` (⚠️ acionar via "Rodar jobs agora" ou pg_cron).
 
+- ✅ **Projeto 07.1 — Política central + SoD 100%** concluído: `has_capability` (porteira única); fechou furo do `pay_invoice`; 5/5 capacidades no servidor; `can()` alinhado + testado.
+- ✅ **Projeto 07.2 — MFA (TOTP) opt-in** concluído: página Segurança (enroll/verify/remove) + desafio AAL2 no login.
+- ✅ **Projeto 07.3 — Recuperação de MFA** concluída: `admin_reset_mfa` (apaga `auth.mfa_factors`, auditado) + botão em Usuários.
+- ⏸️ **Projeto 07.4 — SSO corporativo**: adiado (Google OAuth cobre social; SAML/SSO "quando crescer").
+
+**➡️ Projeto 07 (Identidade & Autorização): 100% concluído** (SSO corporativo adiado por decisão) — 219 testes / lint / build / E2E verdes.
+Migrations novas a aplicar: `20260672`, `20260673` (⚠️ habilitar MFA/TOTP no painel Supabase Auth).
+
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).

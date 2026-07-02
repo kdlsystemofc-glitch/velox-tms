@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Bell, Search, AlertCircle, AlertTriangle, Info, X, Package, Users, Truck, User, Sun, Moon, LogOut, Plus } from "lucide-react";
+import { Bell, Search, AlertCircle, AlertTriangle, Info, X, Package, Users, Truck, User, Sun, Moon, LogOut, Plus, ShieldCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getTheme, toggleTheme } from "@/lib/theme";
@@ -273,6 +273,12 @@ export default function AdminTopbar() {
             <p className="text-xs text-muted-foreground mt-0.5">{user?.role || "admin"}</p>
           </div>
         </div>
+        {/* Segurança (2FA) */}
+        <Link to="/admin/seguranca" title="Segurança (2FA)">
+          <Button variant="ghost" size="icon">
+            <ShieldCheck className="w-5 h-5 text-muted-foreground" />
+          </Button>
+        </Link>
         {/* Sair */}
         <Button variant="ghost" size="icon" title="Sair"
           onClick={() => { supabase.auth.signOut(); window.location.href = "/login"; }}>

@@ -157,6 +157,13 @@ capacidade (M13) — reabrir por demanda/quando crescer.
 - **Riscos:** **Alto** (lockout MFA) — mitigado pela recuperação.
 - **Avaliação:** Complexidade **Média** · Negócio **Médio** · Arquitetural **Médio** · Timing **MFA imediatamente; SSO quando crescer**.
 - **Critérios de conclusão:** política central testada; MFA opt-in com reset auditado; SoD 100% no servidor.
+- ✅ **CONCLUÍDO (2026-07-02)** — autorização unificada + MFA opt-in com recuperação; SSO corporativo adiado. Sub-projetos:
+  - **P07.1 — Política central (policy-as-code) + SoD 100%**: `has_capability(key)` é a **porteira única** (papel-base mínimo **E** deny-overlay via `my_permission`). **Fechou um furo:** `pay_invoice` checava só `my_permission` (default TRUE p/ todos) → agora exige `has_capability`. Enforço das 5 capacidades: `pay_invoice`, `reconcile`, `offer_carrier`, **`cancel_order`** (novo) e **`approve_access`** (novo, em `admin_approve_client/carrier` + `log_action`). `can()` do front alinhado; teste `permissions.test.js`. Migration `20260672`.
+  - **P07.2 — MFA (TOTP) opt-in**: página **Segurança** (`/admin/seguranca`, atalho na topbar p/ todo staff) com enroll (QR+segredo), verificação e remoção do próprio fator; **desafio AAL2 no login** (pede o código quando há fator).
+  - **P07.3 — Recuperação por admin (auditada)**: `admin_reset_mfa(user)` **SECURITY DEFINER** apaga `auth.mfa_factors` (sem service_role) + `log_action`; botão "2FA" em Usuários. Migration `20260673`.
+  - **P07.4 — SSO**: **adiado** (Google OAuth já cobre login social; SSO/SAML corporativo fica para "quando crescer").
+  - **Critérios atendidos:** ① política central testada (`has_capability` + `can` com testes) · ② MFA opt-in com reset auditado · ③ SoD 100% no servidor (5/5 capacidades).
+  - **Validação:** 219 testes · lint · build · E2E (5) verdes. ⚠️ Aplicar `20260672`→`20260673`; **habilitar MFA/TOTP no painel Supabase (Auth)** para o enroll funcionar; testar login com 2FA e o reset por admin.
 
 ### **Projeto 08 — Serviço de Documentos server-side**
 - **Objetivo:** PDF/fiscais no servidor (romaneio, fatura, DACTE, etiquetas), em lote.

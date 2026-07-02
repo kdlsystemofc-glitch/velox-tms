@@ -57,6 +57,7 @@ const AlertsPage = lazy(() => import('@/pages/admin/AlertsPage'));
 const FrotaPage = lazy(() => import('@/pages/admin/FrotaPage'));
 const FinanceiroPage = lazy(() => import('@/pages/admin/FinanceiroPage'));
 const ConfigPage = lazy(() => import('@/pages/admin/ConfigPage'));
+const Security = lazy(() => import('@/pages/admin/Security'));
 const ClientAccess = lazy(() => import('@/pages/admin/ClientAccess'));
 const Carriers = lazy(() => import('@/pages/admin/Carriers'));
 const CarrierAccess = lazy(() => import('@/pages/admin/CarrierAccess'));
@@ -149,6 +150,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/documentos" element={<Documents />} />
             <Route path="/admin/mensagens" element={<Messages />} />
             <Route path="/admin/alertas" element={<AlertsPage />} />
+            <Route path="/admin/seguranca" element={<Security />} />
             <Route path="/admin/mapa" element={<Navigate to="/admin/config" replace />} />
             <Route path="/admin/carregamento" element={<Navigate to="/admin/frota" replace />} />
 

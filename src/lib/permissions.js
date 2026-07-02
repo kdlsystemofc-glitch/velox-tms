@@ -12,11 +12,18 @@ export const CAPABILITIES = [
 ];
 
 /**
+ * Espelha a porteira única do servidor `has_capability` (Projeto 07.1):
+ * papel-base mínimo da capacidade E deny-overlay (negada só se explicitamente
+ * false em user.permissions). O servidor é sempre a autoridade; isto é só a UI.
+ *
  * @param {object} user  objeto do AuthContext (com .permissions e .role)
  * @param {string} key   capacidade (ver CAPABILITIES)
- * @returns {boolean} permitido? (default true; false só se negado explicitamente)
+ * @returns {boolean} permitido?
  */
 export function can(user, key) {
   if (!user) return false;
-  return user.permissions?.[key] !== false;
+  const base = key === "approve_access"
+    ? user.role === "admin"                              // aprovar acesso: só admin
+    : user.role === "admin" || user.role === "operator"; // demais: equipe
+  return base && user.permissions?.[key] !== false;
 }
