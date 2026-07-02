@@ -21,6 +21,7 @@ do Supabase (ou via CLI). São **idempotentes**. Marcos recentes que exigem aten
 | `20260672`–`20260673` | P07 Identidade/MFA | login com 2FA + reset por admin |
 | `20260674` | P08 Documentos | fila de documentos |
 | `20260675` | P09 Fiscal (arquitetura) | painel fiscal (fica `provider_pending` sem provedor) |
+| `20260676` | PA-01 Analítico server-side | Análises (views `v_lane_analysis`/`v_client_analysis`/`v_monthly_financials`) — antes da migração, cai no fallback cliente |
 
 Verificação pós-migração: rodar `supabase/verificacoes.sql` (as linhas `RAZAO` devem ficar em 0).
 

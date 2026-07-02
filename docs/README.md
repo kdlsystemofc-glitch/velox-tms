@@ -7,6 +7,7 @@ que existia antes (múltiplos roadmaps/contextos/simulações na raiz).
 - [`README.md`](../README.md) — visão geral e setup rápido do projeto.
 - [`PLANO-EXECUCAO.md`](../PLANO-EXECUCAO.md) — execução gated (P01–P09), status oficial.
 - [`ROADMAP-ESTRATEGICO.md`](../ROADMAP-ESTRATEGICO.md) — roadmap oficial + itens adiados/futuro.
+- [`PLANO-PORTAL-ADMIN.md`](PLANO-PORTAL-ADMIN.md) — plano de evolução do Portal Administrativo (projetos PA-XX).
 
 ## As 7 trilhas de documentação
 
@@ -28,6 +29,7 @@ que existia antes (múltiplos roadmaps/contextos/simulações na raiz).
   - [`MAPA-FLUXOS-PERFIS.md`](funcional/MAPA-FLUXOS-PERFIS.md) — fluxos por perfil.
 - **arquitetura/**
   - [`ARQUITETURA-FUNCIONAL.md`](arquitetura/ARQUITETURA-FUNCIONAL.md) — arquitetura funcional.
+  - [`ANALYTICS.md`](arquitetura/ANALYTICS.md) — camada analítica (serviço `utils/analytics` + views server-side, PA-01).
 - **implantacao/**
   - [`DEPLOY.md`](implantacao/DEPLOY.md) — runbook de implantação (consolida os avisos ⚠️ do PLANO).
 - **operacional/**

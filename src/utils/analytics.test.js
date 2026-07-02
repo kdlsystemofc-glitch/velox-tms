@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { computeOTIF, laneAnalysis, clientAnalysis } from "./analytics";
+import { computeOTIF, laneAnalysis, clientAnalysis,
+  periodRange, computePeriodKpis, buildMonthlySeries, rankClientsByRevenue,
+  rankDestinations, rankDriversByRevenue, tripEconomics, leadTimeAvgDays, computeIndicators } from "./analytics";
 
 // SLA: sem deadline calculável, slaStatus retorna "on_time" para entregues.
 const delivered = (extra = {}) => ({ status: "delivered", status_history: [{ status: "delivered", timestamp: "2024-01-10T10:00:00Z" }], ...extra });
@@ -51,5 +53,88 @@ describe("clientAnalysis", () => {
     expect(r[0].client_name).toBe("ACME");
     expect(r[0].freight).toBe(400);
     expect(r[0].avgTicket).toBe(200);
+  });
+});
+
+// ============================================================
+// Indicadores (PA-01) — agregações extraídas de Indicators.jsx
+// ============================================================
+const NOW = new Date(2026, 5, 15); // 15/jun/2026
+
+describe("periodRange", () => {
+  it("mês atual = [1º do mês, 1º do mês seguinte)", () => {
+    const [s, e] = periodRange("this_month", NOW);
+    expect(s).toEqual(new Date(2026, 5, 1));
+    expect(e).toEqual(new Date(2026, 6, 1));
+  });
+  it("mês anterior e 3m", () => {
+    expect(periodRange("last_month", NOW)[0]).toEqual(new Date(2026, 4, 1));
+    expect(periodRange("3m", NOW)[0]).toEqual(new Date(2026, 3, 1));
+    expect(periodRange("ytd", NOW)[0]).toEqual(new Date(2026, 0, 1));
+  });
+});
+
+describe("computePeriodKpis", () => {
+  const s = new Date(2026, 5, 1), e = new Date(2026, 6, 1);
+  const data = {
+    orders: [
+      { status_history: [{ status: "delivered", timestamp: new Date(2026, 5, 10).toISOString() }] },
+      { status_history: [{ status: "collecting", timestamp: new Date(2026, 5, 5).toISOString() }] },
+      { status_history: [{ status: "delivered", timestamp: new Date(2026, 4, 20).toISOString() }] }, // fora do período
+    ],
+    revenues: [{ status: "received", received_date: new Date(2026, 5, 8).toISOString(), amount: 1000 }],
+    expenses: [{ status: "paid", paid_date: new Date(2026, 5, 9).toISOString(), amount: 400 }],
+    incidents: [{ created_date: new Date(2026, 5, 3).toISOString() }],
+  };
+  it("conta entregas/coletas/financeiro do período", () => {
+    const k = computePeriodKpis(data, {}, s, e);
+    expect(k.delivered).toBe(1);           // só a de junho
+    expect(k.collected).toBe(1);
+    expect(k.faturamento).toBe(1000);
+    expect(k.despesa).toBe(400);
+    expect(k.resultado).toBe(600);
+    expect(k.margin).toBeCloseTo(60, 1);
+    expect(k.incidentsCreated).toBe(1);
+  });
+});
+
+describe("rankings e economia", () => {
+  const delivered = [
+    { client_name: "ACME", freight_value: 300, recipients: [{ city: "Curitiba" }] },
+    { client_name: "ACME", freight_value: 100, recipients: [{ city: "Curitiba" }] },
+    { client_name: "Beta", freight_value: 200, recipients: [{ city: "SP" }] },
+  ];
+  it("rankClientsByRevenue ordena por receita", () => {
+    const r = rankClientsByRevenue(delivered);
+    expect(r[0]).toMatchObject({ name: "ACME", entregas: 2, receita: 400 });
+  });
+  it("rankDestinations conta por cidade", () => {
+    expect(rankDestinations(delivered)[0]).toMatchObject({ city: "Curitiba", entregas: 2 });
+  });
+  it("rankDriversByRevenue soma receita de viagens", () => {
+    const trips = [{ driver_name: "João", total_revenue: 500 }, { driver_name: "João", total_revenue: 300 }];
+    expect(rankDriversByRevenue(trips)[0]).toMatchObject({ name: "João", viagens: 2, receita: 800 });
+  });
+  it("tripEconomics calcula custo/receita por km", () => {
+    const econ = tripEconomics([{ real_km: 100, total_cost: 500, total_revenue: 900 }]);
+    expect(econ.custoKm).toBe(5);
+    expect(econ.receitaKm).toBe(9);
+  });
+  it("leadTimeAvgDays entre coleta e entrega", () => {
+    const orders = [{ status_history: [
+      { status: "collecting", timestamp: new Date(2026, 5, 1).toISOString() },
+      { status: "delivered", timestamp: new Date(2026, 5, 4).toISOString() },
+    ] }];
+    expect(leadTimeAvgDays(orders)).toBeCloseTo(3, 1);
+  });
+});
+
+describe("computeIndicators (agregado)", () => {
+  it("retorna cur/prev/series + rankings num único ponto", () => {
+    const r = computeIndicators({ orders: [], trips: [], revenues: [], expenses: [], incidents: [] }, {}, "this_month", NOW);
+    expect(r.series).toHaveLength(12);
+    expect(r).toHaveProperty("cur");
+    expect(r).toHaveProperty("econ");
+    expect(Array.isArray(r.topClientes)).toBe(true);
   });
 });

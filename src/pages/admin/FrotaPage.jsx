@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/repositories";
 import { differenceInDays, parseISO } from "date-fns";
@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Truck, Users, Boxes, Wrench, UserCheck, FileWarning } from "lucide-react";
 import Fleet from "@/pages/admin/Fleet";
 import Drivers from "@/pages/admin/Drivers";
-import LoadingSimulator from "@/pages/admin/LoadingSimulator";
+// Lazy: o simulador (e o Truck3D/three.js) só carrega ao abrir a aba (PA-01 perf).
+const LoadingSimulator = lazy(() => import("@/pages/admin/LoadingSimulator"));
 import PageHeader, { segmentedTabsClass, segmentedTriggerClass } from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 
@@ -60,7 +61,11 @@ export default function FrotaPage() {
 
         <TabsContent value="carretas" className="mt-4"><Fleet hideTitle /></TabsContent>
         <TabsContent value="motoristas" className="mt-4"><Drivers hideTitle /></TabsContent>
-        <TabsContent value="simulador" className="mt-4"><LoadingSimulator /></TabsContent>
+        <TabsContent value="simulador" className="mt-4">
+          <Suspense fallback={<div className="p-8 text-center text-sm text-muted-foreground">Carregando simulador…</div>}>
+            <LoadingSimulator />
+          </Suspense>
+        </TabsContent>
       </Tabs>
     </div>
   );

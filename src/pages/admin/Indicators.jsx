@@ -1,35 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/repositories";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PageHeader from "@/components/shared/PageHeader";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
-import { slaStatus } from "@/utils/sla";
+import { computeIndicators } from "@/utils/analytics";
 import { ComposedChart, Bar, Line, BarChart, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
 import {
   BarChart3, Package, CheckCircle2, Clock, Truck, AlertTriangle, DollarSign, TrendingUp, Percent, Activity, Users, MapPin, Download, Gauge,
 } from "lucide-react";
 import { downloadCsv } from "@/utils/exportCsv";
 
-const MONTHS_SHORT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
 const PERIODS = [
   ["this_month", "Mês atual"], ["last_month", "Mês anterior"], ["3m", "3 meses"], ["6m", "6 meses"], ["12m", "12 meses"], ["ytd", "Ano"],
 ];
-
-function periodRange(key, now) {
-  const y = now.getFullYear(), m = now.getMonth();
-  const end = new Date(y, m + 1, 1);
-  switch (key) {
-    case "last_month": return [new Date(y, m - 1, 1), new Date(y, m, 1)];
-    case "3m": return [new Date(y, m - 2, 1), end];
-    case "6m": return [new Date(y, m - 5, 1), end];
-    case "12m": return [new Date(y, m - 11, 1), end];
-    case "ytd": return [new Date(y, 0, 1), end];
-    default: return [new Date(y, m, 1), end]; // this_month
-  }
-}
 
 const fmt = (v) => `R$ ${(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const TARGET_OTD = 95, TARGET_MARGIN = 15;
@@ -45,70 +30,13 @@ export default function Indicators() {
   const { data: expenses = [] } = useQuery({ queryKey: ["expenses"], queryFn: () => db.Expense.list("-date", 1000) });
   const { data: incidents = [] } = useQuery({ queryKey: ["incidents-all"], queryFn: () => db.Incident.list("-created_date", 500) });
 
-  const now = new Date();
-  const [start, end] = periodRange(period, now);
-  const durationMs = end - start;
-  const prevStart = new Date(start.getTime() - durationMs);
-
-  const computeKpis = (s, e) => {
-    const inR = (ts) => { if (!ts) return false; const d = new Date(ts); return d >= s && d < e; };
-    const histIn = (o, st) => (o.status_history || []).some(h => h.status === st && inR(h.timestamp));
-    const deliveredOrders = orders.filter(o => histIn(o, "delivered"));
-    const delivered = deliveredOrders.length;
-    const onTime = deliveredOrders.filter(o => slaStatus(o, settings) === "on_time").length;
-    const late = deliveredOrders.filter(o => slaStatus(o, settings) === "late").length;
-    const collected = orders.filter(o => histIn(o, "in_transit") || histIn(o, "collecting")).length;
-    const faturamento = revenues.filter(r => r.status === "received" && inR(r.received_date || r.due_date)).reduce((a, r) => a + (r.amount || 0), 0);
-    const despesa = expenses.filter(x => x.status === "paid" && inR(x.paid_date || x.date)).reduce((a, x) => a + (x.amount || 0), 0);
-    const resultado = faturamento - despesa;
-    const margin = faturamento > 0 ? (resultado / faturamento) * 100 : 0;
-    const otd = delivered > 0 ? (onTime / delivered) * 100 : 0;
-    const incidentsCreated = incidents.filter(i => inR(i.created_date)).length;
-    return { collected, delivered, onTime, late, otd, faturamento, despesa, resultado, margin, incidentsCreated };
-  };
-
-  const cur = computeKpis(start, end);
-  const prev = computeKpis(prevStart, start);
-
-  // Série dos últimos 12 meses (tendências, Ind-2)
-  const series = Array.from({ length: 12 }, (_, idx) => {
-    const i = 11 - idx;
-    const s = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const e = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-    const k = computeKpis(s, e);
-    return { name: MONTHS_SHORT[s.getMonth()], entregas: k.delivered, otd: Number(k.otd.toFixed(0)), receita: k.faturamento, despesa: k.despesa, resultado: k.resultado, ocorrencias: k.incidentsCreated };
-  });
-
-  // ── Rankings e indicadores avançados do período (Ind-3) ──
-  const inSel = (ts) => { if (!ts) return false; const d = new Date(ts); return d >= start && d < end; };
-  const deliveredInPeriod = orders.filter(o => (o.status_history || []).some(h => h.status === "delivered" && inSel(h.timestamp)));
-  const byClient = {};
-  deliveredInPeriod.forEach(o => { const k = o.client_name || "—"; (byClient[k] ||= { name: k, entregas: 0, receita: 0 }); byClient[k].entregas++; byClient[k].receita += o.freight_value || 0; });
-  const topClientes = Object.values(byClient).sort((a, b) => b.receita - a.receita).slice(0, 5);
-  const byCity = {};
-  deliveredInPeriod.forEach(o => (o.recipients || []).forEach(r => { const c = r.city || "—"; (byCity[c] ||= { city: c, entregas: 0 }); byCity[c].entregas++; }));
-  const topDestinos = Object.values(byCity).sort((a, b) => b.entregas - a.entregas).slice(0, 5);
-  const tripsInPeriod = trips.filter(t => t.status === "completed" && inSel(t.arrival_date || t.departure_date));
-  const byDriver = {};
-  tripsInPeriod.forEach(t => { const k = t.driver_name || "—"; (byDriver[k] ||= { name: k, viagens: 0, receita: 0 }); byDriver[k].viagens++; byDriver[k].receita += Number(t.total_revenue) || 0; });
-  const topMotoristas = Object.values(byDriver).sort((a, b) => b.receita - a.receita).slice(0, 5);
-
-  const totKm = tripsInPeriod.reduce((s, t) => s + (Number(t.real_km) || 0), 0);
-  const totCost = tripsInPeriod.reduce((s, t) => s + (Number(t.total_cost) || 0), 0);
-  const totRev = tripsInPeriod.reduce((s, t) => s + (Number(t.total_revenue) || 0), 0);
-  const custoKm = totKm > 0 ? totCost / totKm : 0;
-  const receitaKm = totKm > 0 ? totRev / totKm : 0;
-  const freightDelivered = deliveredInPeriod.reduce((s, o) => s + (o.freight_value || 0), 0);
-  const ticket = deliveredInPeriod.length > 0 ? freightDelivered / deliveredInPeriod.length : 0;
-  const leadTimes = deliveredInPeriod.map(o => {
-    const h = o.status_history || [];
-    const startEv = h.find(x => x.status === "collecting" || x.status === "in_transit");
-    const delEv = [...h].reverse().find(x => x.status === "delivered");
-    if (!startEv || !delEv) return null;
-    const v = (new Date(delEv.timestamp) - new Date(startEv.timestamp)) / 86400000;
-    return v >= 0 ? v : null;
-  }).filter(v => v != null);
-  const leadAvg = leadTimes.length ? leadTimes.reduce((a, b) => a + b, 0) / leadTimes.length : null;
+  // Agregações centralizadas e memoizadas (PA-01: utils/analytics).
+  const { cur, prev, series, topClientes, topDestinos, topMotoristas, econ, ticket, leadAvg } = useMemo(
+    () => computeIndicators({ orders, trips, revenues, expenses, incidents }, settings, period, new Date()),
+    [orders, trips, revenues, expenses, incidents, settings, period],
+  );
+  const custoKm = econ.custoKm;
+  const receitaKm = econ.receitaKm;
 
   const exportSummary = () => {
     const rows = [

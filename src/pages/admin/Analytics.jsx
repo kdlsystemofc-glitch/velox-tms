@@ -1,12 +1,24 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/repositories";
+import { supabase } from "@/api/supabaseClient";
 import PageHeader from "@/components/shared/PageHeader";
 import StatCard from "@/components/shared/StatCard";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { computeOTIF, laneAnalysis, clientAnalysis } from "@/utils/analytics";
 import { fleetCO2 } from "@/utils/carbon";
 import { BarChart3, Target, DollarSign, Route, Leaf } from "lucide-react";
+
+// Consome uma view analítica do servidor (PA-01); se ausente/erro, retorna null
+// e o componente cai no cálculo cliente (utils/analytics) — fallback seguro.
+function useServerView(view) {
+  const { data } = useQuery({
+    queryKey: ["analytics-view", view],
+    queryFn: async () => { const { data, error } = await supabase.from(view).select("*").limit(12); if (error) throw error; return data || []; },
+    retry: false, staleTime: 60_000,
+  });
+  return data;
+}
 
 const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 const pctColor = (p) => p == null ? "" : p >= 95 ? "text-green-600 dark:text-green-300" : p >= 85 ? "text-amber-600 dark:text-amber-300" : "text-red-600 dark:text-red-300";
@@ -20,10 +32,18 @@ export default function Analytics() {
     queryKey: ["trips"], queryFn: () => db.Trip.list("-created_date", 500),
   });
 
+  // Agregações do servidor (views) com fallback ao cálculo cliente (PA-01).
+  const laneView = useServerView("v_lane_analysis");
+  const clientView = useServerView("v_client_analysis");
+
   const otif = useMemo(() => computeOTIF(orders, settings), [orders, settings]);
   const co2 = useMemo(() => fleetCO2(trips), [trips]);
-  const lanes = useMemo(() => laneAnalysis(orders).slice(0, 12), [orders]);
-  const clients = useMemo(() => clientAnalysis(orders).slice(0, 12), [orders]);
+  const lanes = useMemo(() => (laneView?.length
+    ? laneView.map(l => ({ lane: l.lane, orders: l.orders, freight: Number(l.freight), avgPerKg: Number(l.avg_per_kg) }))
+    : laneAnalysis(orders).slice(0, 12)), [laneView, orders]);
+  const clients = useMemo(() => (clientView?.length
+    ? clientView.map(c => ({ client_id: c.client_id, client_name: c.client_name, orders: c.orders, freight: Number(c.freight), avgTicket: Number(c.avg_ticket) }))
+    : clientAnalysis(orders).slice(0, 12)), [clientView, orders]);
   const freightSpend = useMemo(() => orders.filter(o => o.status !== "cancelled").reduce((s, o) => s + (Number(o.freight_value) || 0), 0), [orders]);
 
   return (
