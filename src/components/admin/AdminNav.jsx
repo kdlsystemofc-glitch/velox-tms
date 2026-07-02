@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, CalendarDays, Truck, DollarSign, Settings, BookUser,
   FolderOpen, MessageSquare, Route as RouteIcon, AlertTriangle, ShieldAlert,
-  BarChart3, ArrowLeftRight, Users, ChevronDown, UserCheck, Handshake, RadioTower, ScrollText, Target,
+  BarChart3, ArrowLeftRight, Users, ChevronDown, UserCheck, Handshake, RadioTower, ScrollText, Target, FileText,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
@@ -34,6 +34,7 @@ const AREAS = [
       { icon: BookUser, label: "Cadastros", path: "/admin/cadastros" },
       { icon: Handshake, label: "Transportadoras", path: "/admin/transportadoras" },
       { icon: FolderOpen, label: "Documentos", path: "/admin/documentos" },
+      { icon: FileText, label: "Documentos (fila)", path: "/admin/documentos-gerados" },
     ],
   },
   {

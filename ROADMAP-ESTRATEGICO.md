@@ -249,4 +249,12 @@ Migrations novas a aplicar: `20260670`, `20260671` (⚠️ acionar via "Rodar jo
 **➡️ Projeto 07 (Identidade & Autorização): 100% concluído** (SSO corporativo adiado por decisão) — 219 testes / lint / build / E2E verdes.
 Migrations novas a aplicar: `20260672`, `20260673` (⚠️ habilitar MFA/TOTP no painel Supabase Auth).
 
+- ✅ **Projeto 08.1 — Registro + Storage + fila** concluído: `documents` + bucket privado + `request_document`/batch + realtime.
+- ✅ **Projeto 08.2 — Modelo isomórfico** concluído: `documentModel.js` (6 documentos, puro, testado).
+- ✅ **Projeto 08.3 — Geração no servidor** concluída: Edge Function `render-documents` (Deno + pdf-lib) → Storage → ready, em lote.
+- ✅ **Projeto 08.4 — Frontend** concluído: aba Documentos (fila) com realtime + processar + download por signed URL; "Arquivar" nas Faturas.
+
+**➡️ Projeto 08 (Serviço de Documentos server-side): 100% concluído** — 226 testes / lint / build / E2E verdes.
+Migration nova: `20260674` (⚠️ + `supabase functions deploy render-documents`). DACTE = layout base; fiscal real = P09.
+
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).

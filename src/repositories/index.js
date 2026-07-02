@@ -37,6 +37,7 @@ export const domains = {
   financeiro: ["Revenue", "Expense", "Invoice", "BankTransaction", "Settlement"],
   tarifacao:  ["TariffTable", "TariffVersion"],
   eventos:    ["DomainEvent", "JobRun", "Notification"],
+  documentos: ["Document"],
   sistema:    ["CompanySettings", "AuditLog", "ClientError"],
   comercial:  ["ContactMessage", "Testimonial"],
 };

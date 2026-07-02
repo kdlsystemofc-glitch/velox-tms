@@ -174,6 +174,14 @@ capacidade (M13) — reabrir por demanda/quando crescer.
 - **Riscos:** Médio.
 - **Avaliação:** Complexidade **Média** · Negócio **Médio** · Arquitetural **Médio** · Timing **Próxima versão**.
 - **Critérios de conclusão:** documentos gerados/armazenados no servidor; lote assíncrono.
+- ✅ **CONCLUÍDO (2026-07-02)** — serviço de documentos server-side (Edge Function) sobre o backbone do P05. Sub-projetos:
+  - **P08.1 — Registro + Storage + fila**: tabela `documents` (fila: type/entity/status/storage_path/batch) + bucket **privado** `documents` + RLS staff + RPCs `request_document`/`request_documents_batch` (emitem `document.requested`) + realtime. Migration `20260674`.
+  - **P08.2 — Modelo isomórfico** (`src/services/documentModel.js`): fonte **única** do conteúdo dos 6 documentos (fatura, comprovante, doc. transporte, romaneio de viagem, manifesto de transferência, etiquetas), pura e **testada** (`documentModel.test.js`, 7 casos). Reusável no servidor e no cliente.
+  - **P08.3 — Geração no servidor** (`supabase/functions/render-documents`, Deno + pdf-lib): consome a fila, renderiza o PDF **no servidor** a partir do modelo, arquiva no bucket e marca `ready`. Processa em **lote** (`limit`). *Não validável localmente (sem Deno/deploy) — o modelo é testado em JS; a função é wrapper fino.*
+  - **P08.4 — Frontend**: aba **Documentos (fila)** (`/admin/documentos-gerados`) com status ao vivo (realtime), botão "Processar fila no servidor" (invoca a Edge Function) e download por **signed URL**; botão "Arquivar" nas Faturas. Os geradores client jsPDF (download imediato) **preservados**.
+  - **Decisão de escopo (autoauditoria):** os 6 geradores client ficaram **intactos** (zero regressão visual, não validável por mim); o modelo isomórfico é a fonte de conteúdo do servidor. **DACTE = layout base**, não emissão fiscal (SEFAZ = P09). Deploy da função com `verify_jwt` on (só autenticado invoca).
+  - **Critérios atendidos:** ① documentos **gerados e armazenados no servidor** (Edge Function + bucket privado) · ② **lote assíncrono** (fila processada pela função, acionável por app/pg_cron).
+  - **Validação:** 226 testes · lint · build · E2E (5) verdes. ⚠️ Aplicar `20260674`; **deploy** `supabase functions deploy render-documents`; testar "Arquivar" → "Processar fila" → download.
 
 ### **Projeto 09 — Motor Fiscal Eletrônico (CT-e/MDF-e/CIOT)**
 - **Objetivo:** emissão/integração com SEFAZ via provedor.

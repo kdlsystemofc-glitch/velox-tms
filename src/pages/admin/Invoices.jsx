@@ -17,6 +17,7 @@ import { can } from "@/lib/permissions";
 import { formatDateBR } from "@/utils/dateUtils";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
+import { requestDocument } from "@/services/documents";
 import StatusBadge, { invoiceStatusConfig } from "@/components/admin/StatusBadge";
 
 const brl = (n) => `R$ ${Number(n || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
@@ -40,6 +41,13 @@ export default function Invoices() {
     a.href = url; a.download = `${inv.number || "fatura"}.pdf`; a.click();
     URL.revokeObjectURL(url);
   };
+
+  // Arquiva no servidor (P08): enfileira a geração; a Edge Function renderiza e guarda.
+  const archive = useMutation({
+    mutationFn: (inv) => requestDocument("invoice", "invoice", inv.id, inv.number),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["documents-queue"] }); toast({ title: "Enviado para gerar no servidor", description: "Acompanhe em Documentos (fila)." }); },
+    onError: (e) => toast({ title: "Erro ao solicitar", description: e?.message, variant: "destructive" }),
+  });
 
   const { data: invoices = [] } = useQuery({ queryKey: ["invoices"], queryFn: () => db.Invoice.list("-created_date", 300) });
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => db.Client.list() });
@@ -132,6 +140,7 @@ export default function Invoices() {
                     <td className="py-2.5 px-4"><StatusBadge status={inv.status} config={invoiceStatusConfig} /></td>
                     <td className="py-2.5 px-4 text-right whitespace-nowrap">
                       <Button size="sm" variant="ghost" className="gap-1" onClick={() => downloadPdf(inv)}><FileDown className="w-3.5 h-3.5" /> PDF</Button>
+                      <Button size="sm" variant="ghost" className="gap-1" disabled={archive.isPending} onClick={() => archive.mutate(inv)} title="Gerar e arquivar no servidor"><FileText className="w-3.5 h-3.5" /> Arquivar</Button>
                       {inv.status === "open" && mayPay && (
                         <Button size="sm" variant="outline" disabled={pay.isPending} onClick={() => pay.mutate(inv.id)}>Dar baixa</Button>
                       )}

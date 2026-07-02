@@ -50,6 +50,7 @@ export const TABLE_MAP = {
   DomainEvent:     'domain_events',
   JobRun:          'job_runs',
   Notification:    'notifications',
+  Document:        'documents',
 };
 
 // Converte campos created_date/updated_date do base44 para created_at/updated_at do Supabase
