@@ -38,6 +38,7 @@ export const domains = {
   tarifacao:  ["TariffTable", "TariffVersion"],
   eventos:    ["DomainEvent", "JobRun", "Notification"],
   documentos: ["Document"],
+  fiscal:     ["FiscalDocument"],
   sistema:    ["CompanySettings", "AuditLog", "ClientError"],
   comercial:  ["ContactMessage", "Testimonial"],
 };

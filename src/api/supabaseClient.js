@@ -51,6 +51,7 @@ export const TABLE_MAP = {
   JobRun:          'job_runs',
   Notification:    'notifications',
   Document:        'documents',
+  FiscalDocument:  'fiscal_documents',
 };
 
 // Converte campos created_date/updated_date do base44 para created_at/updated_at do Supabase

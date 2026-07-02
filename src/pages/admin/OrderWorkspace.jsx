@@ -22,6 +22,7 @@ import { generateShipmentDoc } from "@/utils/generateShipmentDoc";
 import { generateVolumeLabels } from "@/utils/generateVolumeLabels";
 import { getDeliveryDaysByState } from "@/utils/freightCalculator";
 import { quoteFreight, buildFreightSnapshot } from "@/services/pricing";
+import FiscalPanel from "@/components/admin/FiscalPanel";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO, formatDateBR, toLocalISO, formatDateTimeBR } from "@/utils/dateUtils";
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
@@ -1089,12 +1090,13 @@ export default function OrderWorkspace() {
                 </Select>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">CT-e</p>
+                <p className="text-xs text-muted-foreground mb-1">CT-e (número manual)</p>
                 <div className="flex gap-2">
                   <Input placeholder="nº CT-e" value={cte} onChange={e => setCte(e.target.value)} className="h-8 text-xs font-mono" />
                   <Button variant="outline" size="sm" className="h-8 text-xs px-2" onClick={() => { updateMutation.mutate({ cte_number: cte }); toast({ title: "CT-e salvo" }); }}>OK</Button>
                 </div>
               </div>
+              <FiscalPanel order={order} company={settings} />
               {order.scheduled_date && (
                 <div className="text-xs bg-muted/30 rounded-lg p-2">
                   <span className="text-muted-foreground">Programado: </span>

@@ -257,4 +257,9 @@ Migrations novas a aplicar: `20260672`, `20260673` (⚠️ habilitar MFA/TOTP no
 **➡️ Projeto 08 (Serviço de Documentos server-side): 100% concluído** — 226 testes / lint / build / E2E verdes.
 Migration nova: `20260674` (⚠️ + `supabase functions deploy render-documents`). DACTE = layout base; fiscal real = P09.
 
-**Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).
+- 🟡 **Projeto 09 — Motor Fiscal (CT-e/MDF-e)**: **arquitetura 100% pronta** (`fiscal_documents` + config + payload builder testado + adaptador/estados/contingência + Edge Function esqueleto + painel no pedido). **Emissão real na SEFAZ PENDENTE de provedor fiscal (pago) + certificado digital** — decisão de produto (mesmo bloqueio de e-mail/bancário). Migration `20260675`.
+  - Critérios: ① autorizado homolog/prod → **pendente de provedor** · ② contingência → ✅ · ③ guarda XML/DACTE → ✅ (via P08).
+
+**➡️ Projeto 09 (Motor Fiscal): arquitetura concluída; emissão pendente de provedor** — 232 testes / lint / build / E2E verdes.
+
+**Adiados (mapeados):** provedor fiscal (P09 — CT-e/MDF-e/CIOT autorizados) — falta escolher provedor + certificado digital; 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).

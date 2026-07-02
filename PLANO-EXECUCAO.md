@@ -192,6 +192,14 @@ capacidade (M13) — reabrir por demanda/quando crescer.
 - **Riscos:** Alto (regulatório/integração).
 - **Avaliação:** Complexidade **Alta** · Negócio **Alto** · Arquitetural **Alto** · Timing **Próxima versão (após decisão de provedor)**.
 - **Critérios de conclusão:** CT-e/MDF-e autorizados em homologação e produção; contingência; guarda de XML/DACTE.
+- 🟡 **ARQUITETURA CONCLUÍDA (2026-07-02) — emissão real PENDENTE de provedor+certificado** (decisão de produto, conforme aprovado). Sub-projetos:
+  - **P09.1 — Modelo + config fiscal**: tabela `fiscal_documents` (CT-e/MDF-e: status draft/provider_pending/pending/authorized/rejected/**contingency**/cancelled, chave, protocolo, xml_path/dacte_path, ambiente, provider, tentativas) + campos fiscais em `company_settings` (IE, CRT, RNTRC, série, ambiente, ref. certificado) + RLS + realtime. Migration `20260675`.
+  - **P09.2 — Payload builder** (`src/services/fiscalPayload.js`): pedido + **tarifa versionada (P03)** + empresa → modelo CT-e/MDF-e provider-agnóstico, puro e **testado** (`fiscalPayload.test.js`, 6 casos).
+  - **P09.3 — Adaptador + estados + contingência**: RPCs `fiscal_request`/`fiscal_mark_contingency`/`fiscal_cancel` (máquina de estados, emitem eventos `fiscal.*`); serviço cliente `fiscal.js`; **Edge Function esqueleto** `fiscal-emit` com adaptador de provedor **stub** (`provider_pending` enquanto não houver provedor — ponto de integração documentado). Guarda de XML/DACTE via o serviço do P08.
+  - **P09.4 — Painel fiscal** (`FiscalPanel` no OrderWorkspace): emitir/contingência/cancelar CT-e, status ao vivo (realtime), com **rótulo explícito** "SEM PROVEDOR — não autoriza na SEFAZ". `orders.cte_number` manual preservado.
+  - **Escopo/decisões (autoauditoria):** nada é emitido de verdade sem provedor (fica `draft`/`provider_pending`); rótulos evitam falsa conformidade; **CIOT** e a **UI de config fiscal em Configurações** ficam para o "ligar o provedor" (campos já existem no banco). RPCs guardadas por `is_staff`.
+  - **Critérios:** ① CT-e/MDF-e autorizados em homolog/prod → **PENDENTE** (trava em provedor pago + certificado digital — decisão de produto) · ② contingência → **atendido** (estado + RPC) · ③ guarda de XML/DACTE → **atendido** (via P08, gravado na autorização).
+  - **Validação:** 232 testes · lint · build · E2E (5) verdes. ⚠️ Aplicar `20260675`. Para LIGAR o fiscal: escolher provedor + certificado, preencher `company_settings.fiscal_provider`/config, implementar `emitViaProvider` na Edge Function e fazer deploy.
 
 ### **Projeto 10 — Hub de Integrações** — *quando crescer*
 - **Objetivo:** conectores ERP/EDI, telemetria, bancos (CNAB/boleto/PIX).
