@@ -36,7 +36,7 @@ export const domains = {
   masterData: ["Client", "Recipient", "Supplier", "Branch", "Carrier"],
   financeiro: ["Revenue", "Expense", "Invoice", "BankTransaction", "Settlement"],
   tarifacao:  ["TariffTable", "TariffVersion"],
-  eventos:    ["DomainEvent", "JobRun"],
+  eventos:    ["DomainEvent", "JobRun", "Notification"],
   sistema:    ["CompanySettings", "AuditLog", "ClientError"],
   comercial:  ["ContactMessage", "Testimonial"],
 };

@@ -232,4 +232,13 @@ Migrations novas a aplicar: `20260665`, `20260666` (⚠️ testar baixa/estorno/
 **➡️ Projeto 05 (Backbone de Eventos & Assíncrono): 100% concluído** — 213 testes / lint / build / E2E verdes.
 Migrations novas a aplicar: `20260667`, `20260668`, `20260669` (⚠️ habilitar pg_cron no Supabase; senão usar "Rodar jobs agora").
 
+- ✅ **Projeto 06.1 — Faturamento por corte** concluído: `run_billing_cycle` + montador único `invoice_build`.
+- ✅ **Projeto 06.2 — Acerto na entrega** concluído: `sweep_carrier_settlements` (idempotente por `carrier_expense_id`).
+- ✅ **Projeto 06.3 — Conciliação automática** concluída: `auto_reconcile` (só alta confiança e única).
+- ✅ **Projeto 06.4 — Workflow de exceções** concluído: `sweep_incident_sla` (SLA no servidor → `incident.sla_breached`).
+- ✅ **Projeto 06.5 — Motor de notificações** concluído: `notifications` + regras + dispatch multicanal (in-app ativo; e-mail = adaptador pronto, pendente de provedor).
+
+**➡️ Projeto 06 (Automação de Processos): 100% concluído** (canal externo de notificação pendente de provedor — critério ③ parcial/documentado) — 213 testes / lint / build / E2E verdes.
+Migrations novas a aplicar: `20260670`, `20260671` (⚠️ acionar via "Rodar jobs agora" ou pg_cron).
+
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).

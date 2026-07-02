@@ -18,6 +18,20 @@ const LABEL = {
   "incident.resolved": "Ocorrência resolvida",
   "transfer.status_changed": "Transferência mudou de status",
   "maintenance.overdue_swept": "Varredura de vencidos",
+  "invoice.created": "Fatura gerada",
+  "carrier.settled": "Acerto de parceiro",
+  "incident.sla_breached": "SLA estourado",
+};
+
+// Rótulos do resumo do último job (P06).
+const JOB_LABEL = {
+  sweep_overdue: "vencidos",
+  run_billing_cycle: "faturas",
+  sweep_carrier: "acertos",
+  auto_reconcile: "conciliados",
+  sweep_incident_sla: "SLA",
+  notify_from_events: "notif.",
+  dispatch_notifications: "enviadas",
 };
 
 /**
@@ -53,7 +67,9 @@ export default function EventStreamCard() {
       queryClient.invalidateQueries({ queryKey: ["job-runs-last"] });
       queryClient.invalidateQueries({ queryKey: ["domain-events"] });
       queryClient.invalidateQueries({ queryKey: ["revenues"] });
-      toast({ title: "Jobs executados", description: "Varredura de vencidos concluída." });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["alerts"] });
+      toast({ title: "Jobs executados", description: "Automações e notificações processadas." });
     },
     onError: (e) => toast({ title: "Erro ao executar jobs", description: e?.message, variant: "destructive" }),
   });
@@ -69,6 +85,13 @@ export default function EventStreamCard() {
             <Play className="w-3 h-3" /> {runJobs.isPending ? "Rodando…" : "Rodar jobs agora"}
           </button>
         </div>
+        {lastRun?.result && (
+          <p className="w-full text-[11px] text-muted-foreground">
+            Último resultado: {Object.entries(JOB_LABEL)
+              .filter(([k]) => Number(lastRun.result[k]) > 0)
+              .map(([k, l]) => `${l} ${lastRun.result[k]}`).join(" · ") || "nada pendente"}
+          </p>
+        )}
       </div>
 
       {isLoading ? (

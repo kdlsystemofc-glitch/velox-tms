@@ -138,6 +138,15 @@ capacidade (M13) — reabrir por demanda/quando crescer.
 - **Riscos:** Médio.
 - **Avaliação:** Complexidade **Alta** · Negócio **Alto** · Arquitetural **Médio** · Timing **Próxima versão / quando crescer**.
 - **Critérios de conclusão:** fatura/acerto por evento/regra; conciliação auto; motor de notificação com ≥1 canal externo.
+- ✅ **CONCLUÍDO (2026-07-02)** — automações sobre o backbone do P05 (jobs em `run_due_jobs` + eventos) e o razão do P04; tudo aditivo/idempotente, com os fluxos manuais preservados. Sub-projetos:
+  - **P06.1 — Faturamento por corte** (`run_billing_cycle`): no `billing_day` do cliente `monthly`, gera fatura dos pedidos entregues não faturados (dia clampado ao fim do mês). `create_invoice` (manual) e o job passam por um montador único `invoice_build` (emite `invoice.created`). Migration `20260670`.
+  - **P06.2 — Acerto na entrega** (`sweep_carrier_settlements`): lança o acerto do parceiro dos pedidos entregues com oferta aceita (idempotente por `carrier_expense_id`; `settle_carrier_order` manual e o job usam `carrier_settle_internal`). Emite `carrier.settled`.
+  - **P06.3 — Conciliação automática** (`auto_reconcile`): aplica só matches de **alta confiança** (valor exato + ≤5 dias + candidato único); resto segue manual. `reconcile_bank_tx` (manual, com SoD) e o job usam `reconcile_internal`.
+  - **P06.4 — Workflow de exceções** (`sweep_incident_sla`): SLA vira regra de **servidor** — emite `incident.sla_breached` (idempotente por evento) quando estoura.
+  - **P06.5 — Motor de notificações** (`notifications` + `notify_from_events` + `dispatch_notifications`): eventos→regras→fila→despacho multicanal. Canal **in-app** ativo (grava alerta que o sino lê); canal **externo (e-mail)** é adaptador pronto → sem provedor, o dispatch marca `skipped`. Migration `20260671`.
+  - **Correção (autoauditoria):** removido o CHECK restritivo de `alerts.type` (o app já inseria tipos fora da lista e falhava em silêncio); funções internas revogadas de PUBLIC.
+  - **Critérios atendidos:** ① fatura/acerto por regra ✅ · ② conciliação auto ✅ · ③ motor de notificação **com in-app + adaptador externo pronto** — canal externo (e-mail) **pendente de provedor** (adiado por decisão de produto), portanto o critério fica **parcial e documentado**.
+  - **Validação:** 213 testes · lint · build · E2E (5) verdes. ⚠️ Aplicar `20260670`→`20260671`; rodar via "Rodar jobs agora" (ou pg_cron) para acionar as automações.
 
 ### **Projeto 07 — Identidade & Autorização**
 - **Objetivo:** autorização única (policy-as-code); MFA (TOTP) com recuperação; SSO (adiado).
