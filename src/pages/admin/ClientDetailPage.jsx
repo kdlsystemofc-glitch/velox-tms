@@ -413,7 +413,7 @@ export default function ClientDetailPage() {
                       await db.Client.update(client.id, { custom_pricing: {} });
                       // Governança (P03.3): publica versão vazia = volta à tabela padrão (auditável).
                       supabase.rpc("tariff_publish_version", {
-                        p_scope: "client", p_scope_key: client.id, p_name: `Contrato ${client.name || client.id}`,
+                        p_scope: "client", p_scope_key: client.id, p_name: `Contrato ${client.company_name || client.id}`,
                         p_payload: {}, p_valid_from: null, p_valid_until: null, p_note: "Removida (volta ao padrão)",
                       }).then(() => queryClient.invalidateQueries({ queryKey: ["tariff-history", client.id] })).catch(() => {});
                       queryClient.invalidateQueries({ queryKey: ["client", id] });
@@ -429,7 +429,7 @@ export default function ClientDetailPage() {
                       await db.Client.update(client.id, { custom_pricing: cleaned });
                       // Governança (P03.3): publica nova versão do contrato do cliente (auditável).
                       supabase.rpc("tariff_publish_version", {
-                        p_scope: "client", p_scope_key: client.id, p_name: `Contrato ${client.name || client.id}`,
+                        p_scope: "client", p_scope_key: client.id, p_name: `Contrato ${client.company_name || client.id}`,
                         p_payload: cleaned, p_valid_from: null, p_valid_until: null, p_note: "Alteração via ficha do cliente",
                       }).then(() => queryClient.invalidateQueries({ queryKey: ["tariff-history", client.id] })).catch(() => {});
                       queryClient.invalidateQueries({ queryKey: ["client", id] });

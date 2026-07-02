@@ -62,14 +62,14 @@ BEGIN
 
   -- ---------- clientes com tabela negociada ----------
   FOR v_client IN
-    SELECT id, name, custom_pricing FROM public.clients
+    SELECT id, company_name, custom_pricing FROM public.clients
     WHERE custom_pricing IS NOT NULL AND custom_pricing <> '{}'::jsonb
   LOOP
     SELECT id INTO v_table_id FROM public.tariff_tables
       WHERE scope = 'client' AND COALESCE(scope_key,'') = v_client.id::text;
     IF v_table_id IS NULL THEN
       INSERT INTO public.tariff_tables (scope, scope_key, name)
-        VALUES ('client', v_client.id::text, 'Contrato ' || COALESCE(v_client.name, v_client.id::text))
+        VALUES ('client', v_client.id::text, 'Contrato ' || COALESCE(v_client.company_name, v_client.id::text))
         RETURNING id INTO v_table_id;
     END IF;
     IF NOT EXISTS (SELECT 1 FROM public.tariff_versions WHERE tariff_table_id = v_table_id) THEN
