@@ -204,4 +204,15 @@ Migration nova a aplicar: `20260661_public_order_authoritative` (⚠️ testar `
 
 **➡️ Projeto 02 (Núcleo de Domínio & Precificação Única): 100% concluído** — 188 testes / lint / build / E2E verdes.
 
+- ✅ **Projeto 03.1 — Snapshot imutável do frete** concluído: `orders.freight_breakdown`
+  congela total+componentes+fonte da tabela ao precificar/confirmar; motor expõe `pricingSource`.
+- ✅ **Projeto 03.2 — Tarifa versionada** concluído: `tariff_tables`/`tariff_versions`
+  (payload imutável, versão, vigência, status, autor) + RPCs `resolve_tariff_payload`/`tariff_publish_version`.
+- ✅ **Projeto 03.3 — Migração do legado + wiring** concluído: seed idempotente das 3 fontes JSON →
+  versões; resolução por-data com **fallback read-through**; saves publicam nova versão (não sobrescrevem).
+- ✅ **Projeto 03.4 — Governança** concluído: `TariffHistoryCard` (AdminSettings + ficha do cliente) + selo "Frete congelado" no pedido.
+
+**➡️ Projeto 03 (Tarifação & Contratos Governados): 100% concluído** — 208 testes / lint / build / E2E verdes.
+Migrations novas a aplicar: `20260662`, `20260663`, `20260664` (⚠️ testar cotação e edição de tarifa após).
+
 **Adiados (mapeados):** 1.2/1.3-notificação (provedor de e-mail), 2.6 integração bancária (banco/gateway), 3.4 multi-tenant (decisão de produto).

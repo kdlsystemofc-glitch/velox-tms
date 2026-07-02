@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db } from "@/repositories";
+import { supabase } from "@/api/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +13,7 @@ import { ArrowLeft, Building2, TrendingUp, Plus, Trash2, MessageCircle, FileText
 import StatCard from "@/components/shared/StatCard";
 import StatusBadge from "@/components/admin/StatusBadge";
 import ClientPriceHistoryCard from "@/components/admin/client/ClientPriceHistoryCard";
+import TariffHistoryCard from "@/components/admin/TariffHistoryCard";
 import ClientInvoiceModal from "@/components/admin/client/ClientInvoiceModal";
 
 const PRICING_FIELDS = [
@@ -409,6 +411,11 @@ export default function ClientDetailPage() {
                   <div className="flex gap-2 pt-2">
                     <Button size="sm" variant="outline" className="flex-1 text-xs text-red-600 dark:text-red-300" onClick={async () => {
                       await db.Client.update(client.id, { custom_pricing: {} });
+                      // Governança (P03.3): publica versão vazia = volta à tabela padrão (auditável).
+                      supabase.rpc("tariff_publish_version", {
+                        p_scope: "client", p_scope_key: client.id, p_name: `Contrato ${client.name || client.id}`,
+                        p_payload: {}, p_valid_from: null, p_valid_until: null, p_note: "Removida (volta ao padrão)",
+                      }).then(() => queryClient.invalidateQueries({ queryKey: ["tariff-history", client.id] })).catch(() => {});
                       queryClient.invalidateQueries({ queryKey: ["client", id] });
                       setEditingPricing(false);
                       toast({ title: "Tabela personalizada removida", description: "Cliente voltou a usar a tabela padrão." });
@@ -420,6 +427,11 @@ export default function ClientDetailPage() {
                         if (v !== "" && v != null && !isNaN(Number(v))) cleaned[f.key] = Number(v);
                       });
                       await db.Client.update(client.id, { custom_pricing: cleaned });
+                      // Governança (P03.3): publica nova versão do contrato do cliente (auditável).
+                      supabase.rpc("tariff_publish_version", {
+                        p_scope: "client", p_scope_key: client.id, p_name: `Contrato ${client.name || client.id}`,
+                        p_payload: cleaned, p_valid_from: null, p_valid_until: null, p_note: "Alteração via ficha do cliente",
+                      }).then(() => queryClient.invalidateQueries({ queryKey: ["tariff-history", client.id] })).catch(() => {});
                       queryClient.invalidateQueries({ queryKey: ["client", id] });
                       setEditingPricing(false);
                       toast({ title: "Tabela de frete salva!" });
@@ -484,6 +496,8 @@ export default function ClientDetailPage() {
         </div>
       </div>
     <ClientPriceHistoryCard orders={orders} />
+
+    <TariffHistoryCard scope="client" scopeKey={client.id} title="Versões do contrato de frete" />
 
     <ClientInvoiceModal open={showInvoiceModal} onOpenChange={setShowInvoiceModal} orders={orders} client={client} />
     </div>

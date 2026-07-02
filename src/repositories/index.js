@@ -35,6 +35,7 @@ export const domains = {
   frota:      ["Truck", "Driver"],
   masterData: ["Client", "Recipient", "Supplier", "Branch", "Carrier"],
   financeiro: ["Revenue", "Expense", "Invoice", "BankTransaction"],
+  tarifacao:  ["TariffTable", "TariffVersion"],
   sistema:    ["CompanySettings", "AuditLog", "ClientError"],
   comercial:  ["ContactMessage", "Testimonial"],
 };

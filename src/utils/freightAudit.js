@@ -32,6 +32,8 @@ export function auditOrderFreight(order, { client, settings, tolerancePct = 5 } 
     settings,
     originState, destState,
     freightType: order?.freight_type || "shared",
+    // Resolve a tarifa vigente na data do pedido (contratado), não a de hoje.
+    refDate: order?.collection_date || undefined,
   });
   const expected = calc ? calc.total : 0;
   const diff = charged - expected;

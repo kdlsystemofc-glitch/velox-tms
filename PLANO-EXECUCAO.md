@@ -85,6 +85,13 @@ capacidade (M13) — reabrir por demanda/quando crescer.
 - **Riscos:** Médio (migração dos preços).
 - **Avaliação:** Complexidade **Alta** · Negócio **Alto** · Arquitetural **Alto** · Timing **Próxima versão**.
 - **Critérios de conclusão:** todo preço resolvido a partir de contrato versionado; histórico/auditoria; JSON legado migrado.
+- ✅ **CONCLUÍDO (2026-07-02)** — abordagem aditiva/incremental (motor de frete intocado; fallback read-through ao JSON legado). Sub-projetos:
+  - **P03.1 — Snapshot imutável do frete** (`orders.freight_breakdown`; `buildFreightSnapshot`): ao precificar/confirmar, o cálculo é congelado (total + componentes + fonte da tabela + data efetiva). Migration `20260662`. Motor passou a expor `pricingSource` ("client"|"route:UF-UF"|"default").
+  - **P03.2 — Tarifa versionada** (`tariff_tables` + `tariff_versions`): payload imutável, `version_no`, vigência, status (draft/active/archived), autor. RPCs `resolve_tariff_payload` (staff-guarded) e `tariff_publish_version` (arquiva a anterior + `log_action`). Resolvedor puro no cliente (`src/services/tariff.js`). Migration `20260663`.
+  - **P03.3 — Migração do legado + wiring + auditoria de mudança**: seed idempotente `pricing`/`route_pricing[]`/`custom_pricing` → versões (`20260664`); overlay em `useCompanySettings` (default+route) e resolução por-data da tarifa do cliente em `quoteFreight`, ambos com **fallback**; saves em AdminSettings/ClientDetail publicam **nova versão** (não sobrescrevem). Todas as telas de cotação passaram a resolver via versão.
+  - **P03.4 — UI de governança**: `TariffHistoryCard` (versões: nº/vigência/status/autor/nota) em AdminSettings (tabela padrão) e ClientDetail (contrato do cliente); selo 🔒 "Frete congelado" no pedido.
+  - **Critérios atendidos:** ① preço resolvido de contrato versionado (com fallback durante transição) · ② histórico/auditoria (`tariff_versions` + `audit_log`/`log_action` + UI) · ③ JSON legado migrado (seed idempotente; JSON mantido como fallback).
+  - **Validação:** 208 testes · lint · build · E2E (5) verdes. ⚠️ Aplicar migrations `20260662`→`20260664` no Supabase; após, testar cotação e edição de tarifa (não validável em runtime local).
 
 ### **Projeto 04 — Razão Financeiro Unificado & Auditoria**
 - **Objetivo:** razão de liquidação único; unificar `pay_invoice`/`reconcile`; separar subdomínios (AR/Payables/Auditoria/Tesouraria); Freight Audit & Pay completo.

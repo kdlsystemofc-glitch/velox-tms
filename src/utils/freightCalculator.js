@@ -25,9 +25,12 @@ export function getTaxableWeight(item) {
 /**
  * Resolve a tabela de preços para um corredor, respeitando prioridade:
  * clientPricing > route_pricing (por corredor) > pricing padrão
+ *
+ * Retorna { pricing, source } — `source` identifica de ONDE veio o preço
+ * ("client" | `route:UF-UF` | "default"), usado no snapshot de auditoria (P03.1).
  */
 function resolvePricing(basePricing, clientPricing, originState, destState, settings, refDate) {
-  if (clientPricing) return clientPricing;
+  if (clientPricing) return { pricing: clientPricing, source: "client" };
 
   // Vigência: a tabela do corredor só vale entre valid_from e valid_until (ISO yyyy-mm-dd).
   const inEffect = (r) => {
@@ -46,6 +49,8 @@ function resolvePricing(basePricing, clientPricing, originState, destState, sett
     if (routeMatch) {
       // Mescla: campos definidos na rota sobrescrevem o padrão
       return {
+        source: `route:${originState}-${destState}`,
+        pricing: {
         ...(basePricing || {}),
         ...(routeMatch.price_per_kg     != null && routeMatch.price_per_kg     !== "" ? { price_per_kg:         Number(routeMatch.price_per_kg) }         : {}),
         ...(routeMatch.price_per_km     != null && routeMatch.price_per_km     !== "" ? { price_per_km:         Number(routeMatch.price_per_km) }         : {}),
@@ -57,11 +62,12 @@ function resolvePricing(basePricing, clientPricing, originState, destState, sett
         ...(routeMatch.tda_per_nf       != null && routeMatch.tda_per_nf       !== "" ? { tda_per_nf:           Number(routeMatch.tda_per_nf) }           : {}),
         ...(routeMatch.toll_per_kg      != null && routeMatch.toll_per_kg      !== "" ? { toll_per_kg:          Number(routeMatch.toll_per_kg) }          : {}),
         ...(routeMatch.cubage_factor    != null && routeMatch.cubage_factor    !== "" ? { cubage_factor:        Number(routeMatch.cubage_factor) }        : {}),
+        },
       };
     }
   }
 
-  return basePricing;
+  return { pricing: basePricing, source: "default" };
 }
 
 /**
@@ -112,7 +118,7 @@ export function calculateFreightFull(params) {
 
   // Data de referência para a vigência da tabela (padrão: hoje)
   const effectiveDate = refDate || new Date().toISOString().slice(0, 10);
-  const pricing = resolvePricing(p, clientPricing, originState, destState, settings, effectiveDate);
+  const { pricing, source: pricingSource } = resolvePricing(p, clientPricing, originState, destState, settings, effectiveDate);
   if (!pricing) return null;
 
   // Fator de cubagem (cm³/kg). Prioridade: pedido > rota/cliente > global > 6.000.
@@ -227,6 +233,9 @@ export function calculateFreightFull(params) {
     // metadados de rota (para debug/display)
     originState,
     destState,
+    // fonte da tabela aplicada ("client" | "route:UF-UF" | "default") + data efetiva — auditoria (P03.1)
+    pricingSource,
+    effectiveDate,
   };
 }
 

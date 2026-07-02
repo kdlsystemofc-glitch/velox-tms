@@ -17,10 +17,45 @@ import { useAuth } from "@/lib/AuthContext";
 import { resetSettingsCache } from "@/hooks/useCompanySettings";
 import { formatCpfCnpj, isValidCpfCnpj, onlyDigits } from "@/utils/validators";
 import { quoteFreight } from "@/services/pricing";
+import TariffHistoryCard from "@/components/admin/TariffHistoryCard";
 import { Calculator } from "lucide-react";
 
 // Campos da config geridos por OUTROS módulos — nunca sobrescrever ao salvar aqui (Cfg-1).
 const EXTERNAL_KEYS = ["opening_cash_balance", "opening_cash_date", "documents"];
+
+/**
+ * Governança de tarifa (Projeto 03.3): quando o preço muda, publica uma NOVA
+ * versão (tariff_publish_version arquiva a anterior + registra em audit_log) em
+ * vez de só sobrescrever o JSON. O JSON legado segue gravado como fallback.
+ * Best-effort: falha não bloqueia o save já efetivado.
+ */
+async function publishTariffChanges(next, prev) {
+  const tasks = [];
+  if (JSON.stringify(next.pricing || {}) !== JSON.stringify(prev?.pricing || {})) {
+    tasks.push(supabase.rpc("tariff_publish_version", {
+      p_scope: "default", p_scope_key: null, p_name: "Tabela padrão",
+      p_payload: next.pricing || {}, p_valid_from: null, p_valid_until: null,
+      p_note: "Alteração via configurações",
+    }));
+  }
+  const prevRoutes = new Map(
+    (prev?.route_pricing || [])
+      .filter((r) => r.origin_state && r.dest_state)
+      .map((r) => [`${r.origin_state}-${r.dest_state}`, JSON.stringify(r)])
+  );
+  for (const r of next.route_pricing || []) {
+    if (!r.origin_state || !r.dest_state) continue;
+    const key = `${r.origin_state}-${r.dest_state}`;
+    if (prevRoutes.get(key) !== JSON.stringify(r)) {
+      tasks.push(supabase.rpc("tariff_publish_version", {
+        p_scope: "route", p_scope_key: key, p_name: `Corredor ${r.origin_state}→${r.dest_state}`,
+        p_payload: r, p_valid_from: r.valid_from || null, p_valid_until: r.valid_until || null,
+        p_note: "Alteração via configurações",
+      }));
+    }
+  }
+  if (tasks.length) await Promise.all(tasks);
+}
 
 const UFS = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const brl = (v) => `R$ ${Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
@@ -134,6 +169,10 @@ export default function AdminSettings({ only = null }) {
         supabase.rpc("admin_log_action", { p_action: "Alterou configurações", p_target_email: null, p_detail: changed.slice(0, 8).join(", ") })
           .then(() => queryClient.invalidateQueries({ queryKey: ["settings-audit"] })).catch(() => {});
       }
+      // Tarifa governada (P03.3): publica nova versão quando pricing/route_pricing mudam.
+      publishTariffChanges(form, settings)
+        .then(() => queryClient.invalidateQueries({ queryKey: ["tariff-history"] }))
+        .catch(() => {});
       toast({ title: "Configurações salvas!", description: "As alterações já estão valendo." });
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 2200);
@@ -587,6 +626,8 @@ export default function AdminSettings({ only = null }) {
           </Card>
 
           <div className="mt-5"><FreightSim form={form} /></div>
+
+          <div className="mt-5"><TariffHistoryCard scope="default" title="Versões da tabela padrão" /></div>
         </TabsContent>
 
         {/* Alerts */}

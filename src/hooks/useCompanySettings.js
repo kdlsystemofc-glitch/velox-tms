@@ -1,10 +1,58 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/api/supabaseClient';
+import { buildTariffIndex, resolveTariffPayload, resolveTariffVersion, tariffKey, setTariffIndex } from '@/services/tariff';
 
 let settingsCache = null;
 
 export function resetSettingsCache() {
   settingsCache = null;
+  setTariffIndex(null);
+}
+
+/**
+ * Sobrepõe as tarifas VERSIONADAS (Projeto 03.3) sobre o settings legado, com
+ * fallback read-through: se não houver versão para um escopo, mantém o JSON atual.
+ * Publica o índice para o quoteFreight resolver a tarifa do cliente por data.
+ * Tolerante a falhas — se as tabelas ainda não existem ou o usuário é anônimo
+ * (RLS staff), a leitura falha em silêncio e tudo cai no legado.
+ */
+async function overlayTariffs(settings) {
+  let versions = [];
+  try {
+    const { data, error } = await supabase
+      .from('tariff_versions')
+      .select('version_no, payload, valid_from, valid_until, status, tariff_tables!inner(scope, scope_key, active)')
+      .eq('status', 'active');
+    if (error) throw error;
+    versions = (data || [])
+      .filter((v) => v.tariff_tables?.active)
+      .map((v) => ({ ...v, scope: v.tariff_tables.scope, scope_key: v.tariff_tables.scope_key }));
+  } catch {
+    setTariffIndex(null);
+    return settings; // sem versões → fallback total ao JSON legado
+  }
+
+  const index = buildTariffIndex(versions);
+  setTariffIndex(index);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const merged = { ...settings };
+
+  // Tabela padrão versionada > pricing legado
+  const defPayload = resolveTariffPayload(index, 'default', null, today, null);
+  if (defPayload) merged.pricing = defPayload;
+
+  // Corredores: o JSON legado é a fonte de EXISTÊNCIA (mantido em sync a cada
+  // save; exclusões persistem); a versão vigente governa o CONTEÚDO por corredor.
+  // Mescla por chave — nunca ressuscita um corredor removido.
+  const legacyRoutes = settings.route_pricing || [];
+  merged.route_pricing = legacyRoutes.map((r) => {
+    if (!r.origin_state || !r.dest_state) return r;
+    const versioned = resolveTariffVersion(index[tariffKey('route', `${r.origin_state}-${r.dest_state}`)], today)?.payload;
+    return versioned || r;
+  });
+
+  return merged;
 }
 
 const SETTINGS_DEFAULTS = {
@@ -51,7 +99,7 @@ export function useCompanySettings() {
         .limit(1)
         .maybeSingle();
       if (error && error.code !== 'PGRST116') throw error;
-      if (data) { settingsCache = data; return settingsCache; }
+      if (data) { settingsCache = await overlayTariffs(data); return settingsCache; }
       const { data: pub } = await supabase.rpc('public_settings');
       settingsCache = pub || {};
       return settingsCache;

@@ -21,7 +21,7 @@ import { generateDeliveryReceipt } from "@/utils/generateDeliveryReceipt";
 import { generateShipmentDoc } from "@/utils/generateShipmentDoc";
 import { generateVolumeLabels } from "@/utils/generateVolumeLabels";
 import { getDeliveryDaysByState } from "@/utils/freightCalculator";
-import { quoteFreight } from "@/services/pricing";
+import { quoteFreight, buildFreightSnapshot } from "@/services/pricing";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO, formatDateBR, toLocalISO, formatDateTimeBR } from "@/utils/dateUtils";
 import { ensureRevenueForOrder, cancelRevenuesForOrder } from "@/utils/revenueHelper";
@@ -159,25 +159,20 @@ export default function OrderWorkspace() {
   const nextAction = NEXT_ACTION[order.status];
   const isCancelled = order.status === "cancelled";
 
-  // Tabela negociada do cliente (prioridade máxima)
-  const clientPricing = (() => {
-    const cp = orderClient?.custom_pricing;
-    if (cp && Object.keys(cp).some(k => cp[k] != null && cp[k] !== "")) {
-      return { ...(settings?.pricing || {}), ...cp };
-    }
-    return null;
-  })();
-
   const allItems = (order.recipients || []).flatMap(r => r.items || []);
   const nfCount = allItems.filter(i => i.nf_number).length || 1;
   const firstDestState = (order.recipients || [])[0]?.state || null;
+  // Passa o cliente inteiro: o serviço resolve a tarifa VERSIONADA do cliente por
+  // data (contrato governado) e cai no custom_pricing legado quando não há versão.
   const breakdown = quoteFreight({
     items: allItems, distanceKm: null, nfCount,
-    clientPricing, settings,
+    client: orderClient, settings,
     originState: order.origin?.state || null, destState: firstDestState,
     freightType: order.freight_type, refDate: order.collection_date,
     cubageFactor: order.cubage_factor, extraCharges: order.extra_charges || [],
   });
+  // Tabela negociada do cliente aplicada? (para os rótulos da tela)
+  const hasClientTable = breakdown?.pricingSource === "client";
 
   // ── Avanço de status (mesma lógica de negócio) ───────────────
   const handleStatusChange = async (newStatus, note) => {
@@ -191,6 +186,12 @@ export default function OrderWorkspace() {
           p_payment_method: paymentMethod || order.payment_method || "pix", p_user: "Admin",
         });
         if (error) throw error;
+        // Congela o snapshot no momento definitivo (confirmação) — P03.1.
+        // Best-effort: falha aqui não desfaz a confirmação já efetivada.
+        const snapshot = buildFreightSnapshot(breakdown, { freightValue: fv, capturedBy: "confirm" });
+        if (snapshot) {
+          try { await db.Order.update(order.id, { freight_breakdown: snapshot }); } catch { /* snapshot best-effort */ }
+        }
         queryClient.invalidateQueries({ queryKey: ["order", id] });
         queryClient.invalidateQueries({ queryKey: ["orders"] });
         queryClient.invalidateQueries({ queryKey: ["revenues"] });
@@ -360,6 +361,9 @@ export default function OrderWorkspace() {
   const saveFinancial = () => {
     updateMutation.mutate({
       freight_value: Number(freightValue) || undefined,
+      // Congela o cálculo no momento da precificação (P03.1): a explicação do
+      // valor fica imutável mesmo que a tabela mude depois.
+      freight_breakdown: buildFreightSnapshot(breakdown, { freightValue, capturedBy: "manual" }) || undefined,
       payment_method: paymentMethod,
       payment_terms: paymentTerms,
       cubage_factor: cubageFactor === "" ? null : Number(cubageFactor),
@@ -660,7 +664,7 @@ export default function OrderWorkspace() {
                     {order.freight_payer && (
                       <p className="text-xs"><span className="text-muted-foreground">Modalidade:</span> {order.freight_payer === "cif" ? "CIF (remetente paga)" : "FOB (destinatário paga)"}</p>
                     )}
-                    {clientPricing && <p className="text-[11px] text-velox-amber">★ Cliente com tabela de frete negociada</p>}
+                    {hasClientTable && <p className="text-[11px] text-velox-amber">★ Cliente com tabela de frete negociada</p>}
                   </CardContent>
                 </Card>
                 <Card>
@@ -830,7 +834,7 @@ export default function OrderWorkspace() {
                     <div className="p-3 bg-muted/30 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-xs text-muted-foreground">
-                          Estimativa{clientPricing ? " (tabela do cliente)" : ""}:{" "}
+                          Estimativa{hasClientTable ? " (tabela do cliente)" : ""}:{" "}
                           <span className="font-mono font-semibold text-foreground">R$ {breakdown.total.toFixed(2)}</span>
                         </p>
                         <button className="text-velox-amber hover:underline text-xs font-medium" onClick={() => setFreightValue(breakdown.total.toFixed(2))}>
@@ -839,6 +843,14 @@ export default function OrderWorkspace() {
                       </div>
                       <FreightBreakdown breakdown={breakdown} compact />
                     </div>
+                  )}
+                  {/* Snapshot congelado (P03.1): explicação imutável do valor gravado. */}
+                  {order.freight_breakdown && (
+                    <p className="text-[11px] text-muted-foreground">
+                      🔒 Frete congelado{order.freight_breakdown.snapshot_freight_value != null ? `: R$ ${Number(order.freight_breakdown.snapshot_freight_value).toFixed(2)}` : ""}
+                      {order.freight_breakdown.pricingSource ? ` · tabela ${order.freight_breakdown.pricingSource}` : ""}
+                      {order.freight_breakdown.snapshot_at ? ` · em ${new Date(order.freight_breakdown.snapshot_at).toLocaleString("pt-BR")}` : ""}
+                    </p>
                   )}
                   {/* Cobranças adicionais (espera/devolução/emergência) */}
                   <div className="space-y-1.5">

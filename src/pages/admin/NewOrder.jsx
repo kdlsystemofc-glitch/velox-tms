@@ -15,7 +15,7 @@ import { NumericInput } from "@/components/shared/NumericInput";
 import { AddressFields } from "@/components/shared/AddressFields";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { calculateFreight, getDeliveryDaysByState } from "@/utils/freightCalculator";
-import { quoteFreight } from "@/services/pricing";
+import { quoteFreight, resolveClientPricing } from "@/services/pricing";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { todayLocalISO } from "@/utils/dateUtils";
 import { isAddressInCoverage } from "@/utils/coverageChecker";
@@ -409,13 +409,14 @@ export default function NewOrder() {
   // ───────── Cotação / totais ─────────
   const freightBreakdown = useMemo(() => {
     const selectedClient = clients.find(c => c.id === form.client_id);
-    const cp = selectedClient?.custom_pricing;
-    const clientPricing = cp && Object.keys(cp).some(k => cp[k] != null && cp[k] !== "") ? { ...(settings?.pricing || {}), ...cp } : null;
+    const refDate = form.collection_date || undefined;
 
-    // Modo simplificado: estima pelo peso total informado (sem cubagem/itens)
+    // Modo simplificado: estima pelo peso total informado (sem cubagem/itens).
+    // Resolve a tarifa do cliente (versionada por data > custom_pricing legado).
     if (isSimple) {
       const kg = parseNum(form.simple?.weight_kg);
       if (!kg) return null;
+      const clientPricing = resolveClientPricing(selectedClient, settings, refDate);
       const total = calculateFreight(kg, null, settings, clientPricing) || 0;
       return { taxableKg: kg, usedCubic: false, total, freightByWeight: total, grisValue: 0, adValoremValue: 0, tdeValue: 0, tdaValue: 0, tollValue: 0, fixedFee: 0 };
     }
@@ -424,9 +425,9 @@ export default function NewOrder() {
     const nfCount = allItems.filter(i => i.nf_number).length || 1;
     const firstDestState = form.recipients[0]?.state || null;
     return quoteFreight({
-      items: allItems, distanceKm: null, nfCount, clientPricing, settings,
+      items: allItems, distanceKm: null, nfCount, client: selectedClient, settings,
       originState: form.origin?.state || null, destState: firstDestState,
-      freightType: form.freight_type, refDate: form.collection_date || undefined,
+      freightType: form.freight_type, refDate,
     });
   }, [isSimple, form.simple, form.recipients, form.origin?.state, form.client_id, form.freight_type, form.collection_date, clients, settings?.pricing]);
 
